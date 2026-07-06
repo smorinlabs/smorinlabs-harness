@@ -9,8 +9,15 @@ manifests once the first plugin lands.
 
 ## Plugins
 
-_None yet — this marketplace was just stood up. Plugins land here as they graduate
-to public._
+| Plugin | What it does |
+|--------|--------------|
+| **repo-hygiene** | Repo & release-readiness skills: `ci-audit`, `version-check`, `readme-sync`, `manual-test-guide`. |
+| **factor-harness** | Architecture-aware review, refactor, and cross-implementation dedup (4 skills + subagents). |
+| **project-harness** | Lightweight `PROJECTS.md` project management (5 skills + subagents + templates). |
+
+`factor-harness` and `project-harness` were previously standalone repos (now archived);
+they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`
+via [`harness-kit`](https://github.com/smorinlabs/harness-kit).
 
 ## Install the marketplace
 

@@ -61,16 +61,16 @@ note; author `plugin.meta.toml`; generate; list.
 - [x] [P05-T01] Copy skills/refs/agents/templates/_conventions (exclude archive/)
 - [x] [P05-T02] `plugin.meta.toml`; `just gen`; CLAUDE.md pointer N/A (not carried); 3-vs-4 / 10-vs-11 doc drift deferred → P07
 
-## [ ] Project P06: Deprecate standalone repos + repoint + publish (v0.2.0)
+## [x] Project P06: Deprecate standalone repos + repoint + publish (v0.2.0)
 **Goal**: Deprecate + archive `smorinlabs/factor-harness` & `smorinlabs/project-harness`
 (content now in the monorepo, preserved); repoint the live `~/.claude/skills` dev-symlinks
 to the monorepo; bump to v0.2.0; publish; verify the marketplace lists all 3 plugins.
 
 ### Tests & Tasks
-- [ ] [P06-T01] Deprecate + archive the 2 standalone repos (README/CLAUDE.md notice → smorinlabs-harness)
-- [ ] [P06-T02] Repoint the 9 factor-*/project-* skill symlinks → `plugins/*/skills/*`
-- [ ] [P06-T03] Bump v0.2.0 + RELEASE-NOTES; commit; push
-- [ ] [P06-TS01] `/plugin marketplace add smorinlabs/smorinlabs-harness` lists 3 plugins; install smoke test
+- [x] [P06-T01] Deprecate + archive the 2 standalone repos (README/CLAUDE.md notice → smorinlabs-harness)
+- [x] [P06-T02] Repoint 9 factor-*/project-* symlinks + activate 4 repo-hygiene skills → monorepo; preserve 4 command originals (absorbs P03-T03)
+- [x] [P06-T03] Bump v0.2.0 + RELEASE-NOTES; regenerate; commit; tag; push
+- [~] [P06-TS01] Automated: marketplace.json valid + lists 3 plugins ✓. Manual (user): `/plugin marketplace add smorinlabs/smorinlabs-harness` + install smoke test
 
 ## [?] Project P07: Reconcile project-harness doc drift
 **Goal**: Reconcile cosmetic internal inconsistencies carried in from the standalone
