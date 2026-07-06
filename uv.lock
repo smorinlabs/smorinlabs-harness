@@ -9,7 +9,7 @@ source = { git = "https://github.com/smorinlabs/harness-kit#f2fc9a55932f5c6479ee
 
 [[package]]
 name = "smorinlabs-harness"
-version = "0.2.1"
+version = "0.3.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]

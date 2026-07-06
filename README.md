@@ -14,6 +14,7 @@ manifests once the first plugin lands.
 | **repo-hygiene** | Repo & release-readiness skills: `ci-audit`, `version-check`, `readme-sync`, `manual-test-guide`. |
 | **factor-harness** | Architecture-aware review, refactor, and cross-implementation dedup (4 skills + subagents). |
 | **project-harness** | Lightweight `PROJECTS.md` project management (5 skills + subagents + templates). |
+| **guided-research** | Orchestration layer over the built-in `/deep-research` — when to research, prompt shaping, and a durable reusable research tree. |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.2.1"
+    "version": "0.3.0"
   },
   "plugins": [
     {
@@ -22,6 +22,21 @@
         "dedup",
         "bug-hunting",
         "quality"
+      ]
+    },
+    {
+      "name": "guided-research",
+      "source": "./plugins/guided-research",
+      "description": "Orchestration layer over the built-in /deep-research skill \u2014 decides when deep research is worth doing, shapes the prompt with project constraints, invokes the engine, and organizes results into a durable, reusable research tree.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "research",
+        "deep-research",
+        "planning",
+        "architecture",
+        "decision-making",
+        "orchestration"
       ]
     },
     {

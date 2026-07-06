@@ -1,5 +1,15 @@
 # Release Notes
 
+## v0.3.0 — 2026-07-05
+
+### Added
+
+- **guided-research** — an orchestration layer over the built-in `/deep-research`: decides when
+  deep research is worth doing (four triggers + a value test), mode-gates (propose vs auto-run vs
+  defer), shapes the prompt from project constraints, and organizes results into a durable,
+  reusable research tree so knowledge gained once is never re-researched. Imported from a `.skill`
+  bundle; scrub-verified clean.
+
 ## v0.2.1 — 2026-07-05
 
 ### Fixed

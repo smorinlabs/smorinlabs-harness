@@ -78,6 +78,17 @@ repo — "≤3 vs ≤4 questions" (canonical is 4, fourth optional) across `_con
 `project-add/SKILL.md`, templates; and "ten vs 11 checks" in `project-audit`. Non-blocking
 quality cleanup; count the checks and pick the canonical value before editing.
 
+## [x] Project P08: guided-research plugin (v0.3.0)
+**Goal**: Add the `guided-research` skill (imported from a `.skill` bundle) as a public plugin —
+an orchestration layer over the built-in `/deep-research` that decides when to research, shapes
+prompts, and organizes results into a reusable research tree. Scrub-verified clean; attributed to
+Steve Morin (bundle carried no embedded author/license).
+
+### Tests & Tasks
+- [x] [P08-TS01] Scrub gate: no secrets/PII; SKILL.md + 4 references intact
+- [x] [P08-T01] Add plugin (`skills/guided-research/` + references); `plugin.meta.toml`; `just gen`
+- [x] [P08-T02] Bump marketplace v0.3.0; dev-symlink; README + RELEASE-NOTES; tag
+
 ---
 
 - [ ] Regression Test Status
