@@ -25,6 +25,21 @@
       ]
     },
     {
+      "name": "project-harness",
+      "source": "./plugins/project-harness",
+      "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "project-management",
+        "projects",
+        "planning",
+        "audit",
+        "roadmap",
+        "workflow"
+      ]
+    },
+    {
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
       "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, and manual test guides.",

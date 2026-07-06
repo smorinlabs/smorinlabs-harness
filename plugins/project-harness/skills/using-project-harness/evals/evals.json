@@ -1,0 +1,56 @@
+{
+  "skill_name": "using-project-harness",
+  "evals": [
+    {
+      "id": 1,
+      "name": "fresh-repo-cold-start",
+      "prompt": "I just cloned a fresh repo and I want to start using project-harness here. There's no PROJECTS.md, no AGENTS.md, no CLAUDE.md. Walk me through getting set up.",
+      "expected_output": "Skill runs the four-step bootstrap end-to-end: (1) offers to scaffold PROJECTS.md from templates, (2) offers to write the standard project-harness pointer block to a new AGENTS.md and a new CLAUDE.md, (3) asks the planning-system question and persists the answer to .project-harness/project-harness.config.json, (4) nudges about the **References** block convention without backfilling. Each step gates on [y/n]. The config file ends up with init_done: true and all step markers true.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "stale-agents-md-only",
+      "prompt": "I'm starting a new project P12 in this repo. Where's the trunk?",
+      "expected_output": "Skill detects the existing PROJECTS.md (skips step 1), notices that AGENTS.md is missing OR doesn't contain 'project-harness' (fires step 2's nudge for AGENTS.md only), respects the existing CLAUDE.md if it already mentions project-harness (skips CLAUDE.md sub-step), persists the new agents_md_done marker. Then orients the user toward project-next or project-add for the actual P12 work. Does not re-prompt for planning-system if config already has it set.",
+      "files": [
+        {
+          "path": "PROJECTS.md",
+          "content": "# Projects\n\n## Project index\n\n- [x] **P10** — Auth foundation → projects/P10-auth-foundation.md\n- [~] **P11** — Rate limiting → projects/P11-rate-limiting.md\n"
+        },
+        {
+          "path": "CLAUDE.md",
+          "content": "# Project notes\n\nThis repo uses project-harness — see SKILL files for routing.\n"
+        },
+        {
+          "path": ".project-harness/project-harness.config.json",
+          "content": "{\n  \"version\": 1,\n  \"init_done\": false,\n  \"projects_md_done\": true,\n  \"agents_md_done\": false,\n  \"claude_md_done\": true,\n  \"planning_system\": \"superpowers\",\n  \"planning_paths\": {\n    \"plans\": [\"~/.claude/plans/\", \"docs/superpowers/plans/\"],\n    \"specs\": [\"docs/superpowers/specs/\"]\n  },\n  \"references_block_nudged\": false\n}\n"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "fully-bootstrapped-no-op",
+      "prompt": "What's next on the roadmap? I want to pick something to work on.",
+      "expected_output": "Skill reads the config file, sees init_done: true, skips the entire bootstrap silently, and routes immediately to project-next (or summarizes the orientation table and suggests project-next). No bootstrap prompts appear. The skill is effectively a one-line read in this case.",
+      "files": [
+        {
+          "path": "PROJECTS.md",
+          "content": "# Projects\n\n## Project index\n\n- [~] **P21** — Configuration profiles → projects/P21-configuration-profiles.md\n"
+        },
+        {
+          "path": "AGENTS.md",
+          "content": "# Agents\n\nThis repo uses the project-harness plugin. Route project edits through the workflow skills.\n"
+        },
+        {
+          "path": "CLAUDE.md",
+          "content": "# Claude\n\nThis repo uses the project-harness plugin. Route project edits through the workflow skills.\n"
+        },
+        {
+          "path": ".project-harness/project-harness.config.json",
+          "content": "{\n  \"version\": 1,\n  \"init_done\": true,\n  \"projects_md_done\": true,\n  \"agents_md_done\": true,\n  \"claude_md_done\": true,\n  \"planning_system\": \"none\",\n  \"planning_paths\": {\n    \"plans\": [\"~/.claude/plans/\"],\n    \"specs\": [\"docs/specs/\"]\n  },\n  \"references_block_nudged\": true\n}\n"
+        }
+      ]
+    }
+  ]
+}

@@ -51,15 +51,15 @@ note; author `plugin.meta.toml`; generate; list.
 - [x] [P04-T01] Copy skills/agents/hooks/_conventions (exclude docs/); private note N/A — README not carried into monorepo
 - [x] [P04-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
 
-## [ ] Project P05: project-harness plugin (fold in + scrub)
+## [x] Project P05: project-harness plugin (fold in + scrub)
 **Goal**: Migrate project-harness's 5 skills + references + 2 agents + templates +
 `_conventions.md` into `plugins/project-harness/`; exclude `archive/research/`; fix the
 `CLAUDE.md:99` dead pointer; reconcile 3-vs-4 / 10-vs-11 doc drift; generate; list.
 
 ### Tests & Tasks
-- [ ] [P05-TS01] Scrub gate: no `/Users/`, no `team@smorinlabs.com`, dead pointer gone
-- [ ] [P05-T01] Copy skills/refs/agents/templates/_conventions (exclude archive/)
-- [ ] [P05-T02] Fix CLAUDE.md pointer; reconcile drift; `plugin.meta.toml`; `just gen`
+- [x] [P05-TS01] Scrub gate: no `/Users/`, no `team@smorinlabs.com`, dead pointer gone (all in files not carried into monorepo)
+- [x] [P05-T01] Copy skills/refs/agents/templates/_conventions (exclude archive/)
+- [x] [P05-T02] `plugin.meta.toml`; `just gen`; CLAUDE.md pointer N/A (not carried); 3-vs-4 / 10-vs-11 doc drift deferred → P07
 
 ## [ ] Project P06: Deprecate standalone repos + repoint + publish (v0.2.0)
 **Goal**: Deprecate + archive `smorinlabs/factor-harness` & `smorinlabs/project-harness`
@@ -71,6 +71,12 @@ to the monorepo; bump to v0.2.0; publish; verify the marketplace lists all 3 plu
 - [ ] [P06-T02] Repoint the 9 factor-*/project-* skill symlinks → `plugins/*/skills/*`
 - [ ] [P06-T03] Bump v0.2.0 + RELEASE-NOTES; commit; push
 - [ ] [P06-TS01] `/plugin marketplace add smorinlabs/smorinlabs-harness` lists 3 plugins; install smoke test
+
+## [?] Project P07: Reconcile project-harness doc drift
+**Goal**: Reconcile cosmetic internal inconsistencies carried in from the standalone
+repo — "≤3 vs ≤4 questions" (canonical is 4, fourth optional) across `_conventions.md`,
+`project-add/SKILL.md`, templates; and "ten vs 11 checks" in `project-audit`. Non-blocking
+quality cleanup; count the checks and pick the canonical value before editing.
 
 ---
 
