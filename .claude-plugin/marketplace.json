@@ -8,5 +8,22 @@
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
     "version": "0.1.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "repo-hygiene",
+      "source": "./plugins/repo-hygiene",
+      "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, and manual test guides.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "ci",
+        "release",
+        "readme",
+        "version",
+        "testing",
+        "hygiene",
+        "audit"
+      ]
+    }
+  ]
 }

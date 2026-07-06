@@ -30,16 +30,16 @@ use it; renderers already handle markdown-only multi-skill plugins. Wire
 - [x] [P02-T02] Publish `harness-kit` as a public repo
 - [x] [P02-T03] `smorinlabs-harness`: add `pyproject.toml` (git-dep on harness-kit) + `justfile` + `harness.toml`; wire `just gen` / `gen-check`
 
-## [ ] Project P03: repo-hygiene plugin (4 commands → skills)
+## [x] Project P03: repo-hygiene plugin (4 commands → skills)
 **Goal**: Convert the four kept loose commands (`ci-audit`, `version-check`,
 `readme-sync`, `manual-test-guide`) into skills; author `plugin.meta.toml`; generate
 manifests; list in the marketplace. Graduate them off `~/.claude/commands`.
 
 ### Tests & Tasks
-- [ ] [P03-TS01] Each skill has valid SKILL.md frontmatter + triggering description
-- [ ] [P03-T01] Convert the 4 commands → skills under `plugins/repo-hygiene/skills/`
-- [ ] [P03-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
-- [ ] [P03-T03] Remove the 4 files from `~/.claude/commands` (graduated)
+- [x] [P03-TS01] Each skill has valid SKILL.md frontmatter + triggering description
+- [x] [P03-T01] Convert the 4 commands → skills under `plugins/repo-hygiene/skills/`
+- [x] [P03-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
+- [>] [P03-T03] Remove the 4 command files + activate skills — folded into P06-T02 (live-env wiring)
 
 ## [ ] Project P04: factor-harness plugin (fold in + scrub)
 **Goal**: Migrate factor-harness's 4 skills + 3 agents + hooks + `_conventions.md` into
