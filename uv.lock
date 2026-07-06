@@ -4,8 +4,8 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "harness-kit"
-version = "0.1.0"
-source = { git = "https://github.com/smorinlabs/harness-kit#f2fc9a55932f5c6479ee1bfbfc4443edebea9c1c" }
+version = "0.2.0"
+source = { git = "https://github.com/smorinlabs/harness-kit#f41be221347801cd8ea2695e939979287cbc8df6" }
 
 [[package]]
 name = "smorinlabs-harness"
