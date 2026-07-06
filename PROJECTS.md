@@ -17,14 +17,60 @@ with no build tooling until the first cross-platform plugin lands.
 
 ---
 
-## [ ] Project P02: Shared harness-kit + first plugin (graduation)
-**Goal**: When the first cross-platform plugin arrives, add manifest generation by
-depending on the shared `harness-kit` (extracted from `smorin-harness`) rather than
-copying the generator; author the plugin's `plugin.meta.toml`; generate manifests.
+## [x] Project P02: Shared harness-kit + generator generalization (v0.2.0)
+**Goal**: Extract `smorin-harness/src/smorin_harness/manifests.py` into a standalone,
+installable `smorinlabs/harness-kit` (public); generalize the marketplace renderer
+(parameterize name/owner/metadata via a repo-root `harness.toml`) so any harness can
+use it; renderers already handle markdown-only multi-skill plugins. Wire
+`smorinlabs-harness` to depend on it via `just gen` / `gen-check`.
 
 ### Tests & Tasks
-- [ ] [P02-T01] Depend on shared `harness-kit`; wire `just gen` / `gen-check`
-- [ ] [P02-T02] First plugin `plugin.meta.toml`; generate `.claude-plugin` + `.codex-plugin`
+- [x] [P02-TS01] Generator renders a markdown-only, multi-skill plugin fixture → valid Claude + Codex manifests + parameterized marketplace.json (8 tests green)
+- [x] [P02-T01] Create `smorinlabs/harness-kit`: `harness_kit` package + `harness-kit` CLI (`gen [--check]`), pyproject/justfile/tests
+- [x] [P02-T02] Publish `harness-kit` as a public repo
+- [x] [P02-T03] `smorinlabs-harness`: add `pyproject.toml` (git-dep on harness-kit) + `justfile` + `harness.toml`; wire `just gen` / `gen-check`
+
+## [ ] Project P03: repo-hygiene plugin (4 commands → skills)
+**Goal**: Convert the four kept loose commands (`ci-audit`, `version-check`,
+`readme-sync`, `manual-test-guide`) into skills; author `plugin.meta.toml`; generate
+manifests; list in the marketplace. Graduate them off `~/.claude/commands`.
+
+### Tests & Tasks
+- [ ] [P03-TS01] Each skill has valid SKILL.md frontmatter + triggering description
+- [ ] [P03-T01] Convert the 4 commands → skills under `plugins/repo-hygiene/skills/`
+- [ ] [P03-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
+- [ ] [P03-T03] Remove the 4 files from `~/.claude/commands` (graduated)
+
+## [ ] Project P04: factor-harness plugin (fold in + scrub)
+**Goal**: Migrate factor-harness's 4 skills + 3 agents + hooks + `_conventions.md` into
+`plugins/factor-harness/`; exclude `docs/superpowers/`; reword the README private-repo
+note; author `plugin.meta.toml`; generate; list.
+
+### Tests & Tasks
+- [ ] [P04-TS01] Scrub gate: no `/Users/` paths, no `docs/superpowers/` in migrated tree
+- [ ] [P04-T01] Copy skills/agents/hooks/_conventions (exclude docs/); reword private note
+- [ ] [P04-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
+
+## [ ] Project P05: project-harness plugin (fold in + scrub)
+**Goal**: Migrate project-harness's 5 skills + references + 2 agents + templates +
+`_conventions.md` into `plugins/project-harness/`; exclude `archive/research/`; fix the
+`CLAUDE.md:99` dead pointer; reconcile 3-vs-4 / 10-vs-11 doc drift; generate; list.
+
+### Tests & Tasks
+- [ ] [P05-TS01] Scrub gate: no `/Users/`, no `team@smorinlabs.com`, dead pointer gone
+- [ ] [P05-T01] Copy skills/refs/agents/templates/_conventions (exclude archive/)
+- [ ] [P05-T02] Fix CLAUDE.md pointer; reconcile drift; `plugin.meta.toml`; `just gen`
+
+## [ ] Project P06: Deprecate standalone repos + repoint + publish (v0.2.0)
+**Goal**: Deprecate + archive `smorinlabs/factor-harness` & `smorinlabs/project-harness`
+(content now in the monorepo, preserved); repoint the live `~/.claude/skills` dev-symlinks
+to the monorepo; bump to v0.2.0; publish; verify the marketplace lists all 3 plugins.
+
+### Tests & Tasks
+- [ ] [P06-T01] Deprecate + archive the 2 standalone repos (README/CLAUDE.md notice → smorinlabs-harness)
+- [ ] [P06-T02] Repoint the 9 factor-*/project-* skill symlinks → `plugins/*/skills/*`
+- [ ] [P06-T03] Bump v0.2.0 + RELEASE-NOTES; commit; push
+- [ ] [P06-TS01] `/plugin marketplace add smorinlabs/smorinlabs-harness` lists 3 plugins; install smoke test
 
 ---
 

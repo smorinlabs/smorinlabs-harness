@@ -1,0 +1,11 @@
+# Marketplace identity — consumed by harness-kit to generate
+# .claude-plugin/marketplace.json. Per-plugin metadata lives in
+# plugins/<name>/plugin.meta.toml.
+[marketplace]
+name = "smorinlabs-harness"
+description = "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs"
+version = "0.1.0"
+
+[marketplace.owner]
+name = "Steve Morin"
+email = "steve.morin@gmail.com"

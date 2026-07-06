@@ -1,0 +1,23 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[[package]]
+name = "harness-kit"
+version = "0.1.0"
+source = { git = "https://github.com/smorinlabs/harness-kit#f2fc9a55932f5c6479ee1bfbfc4443edebea9c1c" }
+
+[[package]]
+name = "smorinlabs-harness"
+version = "0.1.0"
+source = { virtual = "." }
+
+[package.dev-dependencies]
+dev = [
+    { name = "harness-kit" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "harness-kit", git = "https://github.com/smorinlabs/harness-kit" }]
