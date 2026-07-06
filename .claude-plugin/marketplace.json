@@ -10,6 +10,21 @@
   },
   "plugins": [
     {
+      "name": "factor-harness",
+      "source": "./plugins/factor-harness",
+      "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "architecture",
+        "refactor",
+        "code-review",
+        "dedup",
+        "bug-hunting",
+        "quality"
+      ]
+    },
+    {
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
       "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, and manual test guides.",

@@ -41,15 +41,15 @@ manifests; list in the marketplace. Graduate them off `~/.claude/commands`.
 - [x] [P03-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
 - [>] [P03-T03] Remove the 4 command files + activate skills — folded into P06-T02 (live-env wiring)
 
-## [ ] Project P04: factor-harness plugin (fold in + scrub)
+## [x] Project P04: factor-harness plugin (fold in + scrub)
 **Goal**: Migrate factor-harness's 4 skills + 3 agents + hooks + `_conventions.md` into
 `plugins/factor-harness/`; exclude `docs/superpowers/`; reword the README private-repo
 note; author `plugin.meta.toml`; generate; list.
 
 ### Tests & Tasks
-- [ ] [P04-TS01] Scrub gate: no `/Users/` paths, no `docs/superpowers/` in migrated tree
-- [ ] [P04-T01] Copy skills/agents/hooks/_conventions (exclude docs/); reword private note
-- [ ] [P04-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
+- [x] [P04-TS01] Scrub gate: no `/Users/` paths, no `docs/superpowers/` in migrated tree
+- [x] [P04-T01] Copy skills/agents/hooks/_conventions (exclude docs/); private note N/A — README not carried into monorepo
+- [x] [P04-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
 
 ## [ ] Project P05: project-harness plugin (fold in + scrub)
 **Goal**: Migrate project-harness's 5 skills + references + 2 agents + templates +
