@@ -1,0 +1,12 @@
+{
+  "name": "smorinlabs-harness",
+  "owner": {
+    "name": "Steve Morin",
+    "email": "steve.morin@gmail.com"
+  },
+  "metadata": {
+    "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
+    "version": "0.1.0"
+  },
+  "plugins": []
+}

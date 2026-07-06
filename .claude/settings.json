@@ -1,0 +1,5 @@
+{
+  "companyAnnouncements": [
+    "smorinlabs-harness: the public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs — currently a lean, empty marketplace awaiting its first plugin. Commands: /project-next and /project-add (track the roadmap in PROJECTS.md), /skill-creator (author a plugin skill). Placement rules live in smorin-harness/docs/skills-placement-strategy.md; install with `/plugin marketplace add smorinlabs/smorinlabs-harness`."
+  ]
+}
