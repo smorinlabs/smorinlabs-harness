@@ -1,5 +1,14 @@
 # Release Notes
 
+## v0.2.1 — 2026-07-05
+
+### Fixed
+
+- **project-harness**: reconcile internal doc drift carried in from the standalone repo —
+  the idea-capture cap is **four questions (fourth optional)** across `_conventions.md`,
+  templates, and pointer blocks; `project-audit` runs **eleven** drift checks (its
+  description previously said "ten"). No behavior change.
+
 ## v0.2.0 — 2026-07-05
 
 First plugins land. The marketplace graduates from empty to three plugins, generated from

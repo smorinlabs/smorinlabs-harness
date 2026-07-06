@@ -105,11 +105,11 @@ skeleton; see its SKILL.md.
 A single bold rule, block-quoted, near the top of the body, used only
 for skills that need to enforce structural discipline.
 
-> **NO MORE THAN THREE QUESTIONS.** Friction kills idea capture. If
-> the user wants depth, that is `project-refine`'s job.
+> **NO MORE THAN FOUR QUESTIONS, THE FOURTH OPTIONAL.** Friction kills
+> idea capture. If the user wants depth, that is `project-refine`'s job.
 >
 > No exceptions: not "just one clarifying question", not "the user
-> seems to want depth", not "I'll ask the third combined". Three is
+> seems to want depth", not "I'll ask the fifth combined". Four is
 > the cap.
 >
 > Violating the letter of this rule is violating the spirit of it.
@@ -128,7 +128,7 @@ Three structural moves are mandatory after the headline:
 
 In project-harness:
 
-- `project-add` — `NO MORE THAN THREE QUESTIONS`
+- `project-add` — `NO MORE THAN FOUR QUESTIONS`
 - `project-refine` — `NO PROMOTION WITHOUT EXPLICIT CONFIRMATION`
 - `project-audit` — `NO FIX WITHOUT POST-FIX RE-VERIFICATION`
 - `project-next` and `using-project-harness` are not
@@ -145,7 +145,7 @@ in the left column, terse realities in the right. Adopted from
 | Thought | Reality |
 |---------|---------|
 | "This is just a simple question" | Questions are tasks. Run the skill. |
-| "I'll just ask one more question to be thorough" | Three is the cap. Excess belongs in `project-refine`. |
+| "I'll just ask one more question to be thorough" | Four is the cap. Excess belongs in `project-refine`. |
 
 Seed each table with **4–6 rows** of thoughts the model is genuinely
 likely to rationalize when running this skill. Generic rationalizations
@@ -232,7 +232,7 @@ rules:
    dispatches one subagent per check in parallel; the parent then
    walks findings with the user *one at a time*.
 4. **No subagents for trivial tasks.** `project-add` runs inline
-   because three questions is faster than one Agent dispatch.
+   because four questions is faster than one Agent dispatch.
 
 ## 9. Heading depth
 

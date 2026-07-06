@@ -7,7 +7,7 @@ backlog, route through one of:
 
 - `using-project-harness` — bootstrap and orientation
 - `project-next` — what's in progress / next / recently touched
-- `project-add` — capture an idea (≤3 questions, atomic ID reserve)
+- `project-add` — capture an idea (≤4 questions, atomic ID reserve)
 - `project-refine` — flesh out / scope / decompose / refine
   references
 - `project-audit` — verify state matches conventions; fix per

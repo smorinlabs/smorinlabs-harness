@@ -72,7 +72,7 @@ to the monorepo; bump to v0.2.0; publish; verify the marketplace lists all 3 plu
 - [x] [P06-T03] Bump v0.2.0 + RELEASE-NOTES; regenerate; commit; tag; push
 - [~] [P06-TS01] Automated: marketplace.json valid + lists 3 plugins ✓. Manual (user): `/plugin marketplace add smorinlabs/smorinlabs-harness` + install smoke test
 
-## [?] Project P07: Reconcile project-harness doc drift
+## [x] Project P07: Reconcile project-harness doc drift (v0.2.1)
 **Goal**: Reconcile cosmetic internal inconsistencies carried in from the standalone
 repo — "≤3 vs ≤4 questions" (canonical is 4, fourth optional) across `_conventions.md`,
 `project-add/SKILL.md`, templates; and "ten vs 11 checks" in `project-audit`. Non-blocking

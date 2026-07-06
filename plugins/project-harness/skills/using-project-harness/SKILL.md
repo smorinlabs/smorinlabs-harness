@@ -125,7 +125,7 @@ bundle exists:
 
 - `using-project-harness` — bootstrap: when to use which skill below
 - `project-next` — orient: what's in progress, what's next, what's recently touched
-- `project-add` — capture an idea (≤3 questions, reserves the ID with a commit)
+- `project-add` — capture an idea (≤4 questions, reserves the ID with a commit)
 - `project-refine` — flesh out / scope / decompose an existing project
 - `project-audit` — verify state matches conventions; fix per finding
 ```
