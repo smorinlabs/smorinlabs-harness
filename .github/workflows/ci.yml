@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gen-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - run: uv run harness-kit gen --check
+
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: No absolute personal paths
+        run: |
+          status=0
+          git grep -nE '/Users/[[:alnum:]_.-]+' -- ':!.github' || status=$?
+          case "$status" in
+            0) echo "::error::Absolute personal paths found (see above) — public-repo scrub rule"; exit 1 ;;
+            1) echo "No absolute personal paths found." ;;
+            *) echo "::error::personal-path scan failed (exit $status)"; exit "$status" ;;
+          esac
+
+      - name: No private-tooling references
+        run: |
+          needle='skill''smith'
+          status=0
+          git grep -niE "$needle" -- ':!.github/workflows/ci.yml' || status=$?
+          case "$status" in
+            0) echo "::error::private-tooling reference found while it is still private"; exit 1 ;;
+            1) echo "No private-tooling references found." ;;
+            *) echo "::error::private-tooling scan failed (exit $status)"; exit "$status" ;;
+          esac
+
+      - name: No unfilled placeholders in shipped docs
+        run: |
+          fail=0
+
+          status=0
+          grep -nE '\{\{|TBD|<TODO' README.md || status=$?
+          case "$status" in
+            0) echo "::error::Unfilled placeholder found in README.md"; fail=1 ;;
+            1) echo "No placeholders in README.md." ;;
+            *) echo "::error::README.md placeholder scan failed (exit $status)"; exit "$status" ;;
+          esac
+
+          if [ -d docs ]; then
+            status=0
+            grep -rnE '\{\{|TBD|<TODO' docs --exclude-dir=templates || status=$?
+            case "$status" in
+              0) echo "::error::Unfilled placeholder found in docs/"; fail=1 ;;
+              1) echo "No placeholders in docs/." ;;
+              *) echo "::error::docs/ placeholder scan failed (exit $status)"; exit "$status" ;;
+            esac
+          fi
+
+          exit "$fail"
+
+      - name: Marketplace parity (plugins/*/ vs marketplace.json)
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          plugin_dirs = {p.name for p in pathlib.Path("plugins").iterdir() if p.is_dir()}
+          data = json.loads(pathlib.Path(".claude-plugin/marketplace.json").read_text())
+
+          manifest_name_list = [p["name"] for p in data["plugins"]]
+          if len(manifest_name_list) != len(set(manifest_name_list)):
+              from collections import Counter
+
+              dupes = sorted(n for n, c in Counter(manifest_name_list).items() if c > 1)
+              print("Duplicate plugin names in marketplace.json:", dupes)
+              sys.exit(1)
+          manifest_names = set(manifest_name_list)
+
+          only_dirs = plugin_dirs - manifest_names
+          only_manifest = manifest_names - plugin_dirs
+
+          if only_dirs or only_manifest:
+              if only_dirs:
+                  print("Dirs missing from marketplace.json:", sorted(only_dirs))
+              if only_manifest:
+                  print("Manifest entries missing a plugins/ dir:", sorted(only_manifest))
+              sys.exit(1)
+
+          print("OK: plugin dirs and marketplace.json entries match:", sorted(plugin_dirs))
+          PY
+
+  # verify:
+  #   Joins once the private verification CLI publishes (>= v1.0). Once
+  #   public, run the static verification per plugin here, e.g.:
+  #     for d in plugins/*/; do
+  #       <verify-cli> verify "$d" --static
+  #     done
