@@ -3,7 +3,9 @@
   "name": "factor-harness",
   "version": "0.1.0",
   "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
-  "author": "Steve Morin",
+  "author": {
+    "name": "Steve Morin"
+  },
   "keywords": [
     "architecture",
     "refactor",

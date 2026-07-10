@@ -3,7 +3,9 @@
   "name": "guided-research",
   "version": "0.1.0",
   "description": "Orchestration layer over the built-in /deep-research skill \u2014 decides when deep research is worth doing, shapes the prompt with project constraints, invokes the engine, and organizes results into a durable, reusable research tree.",
-  "author": "Steve Morin",
+  "author": {
+    "name": "Steve Morin"
+  },
   "keywords": [
     "research",
     "deep-research",

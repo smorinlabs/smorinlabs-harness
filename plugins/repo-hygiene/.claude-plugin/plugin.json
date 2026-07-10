@@ -3,7 +3,9 @@
   "name": "repo-hygiene",
   "version": "0.1.0",
   "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, and manual test guides.",
-  "author": "Steve Morin",
+  "author": {
+    "name": "Steve Morin"
+  },
   "keywords": [
     "ci",
     "release",
