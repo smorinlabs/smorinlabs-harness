@@ -47,7 +47,7 @@ manifests; list in the marketplace. Graduate them off `~/.claude/commands`.
 note; author `plugin.meta.toml`; generate; list.
 
 ### Tests & Tasks
-- [x] [P04-TS01] Scrub gate: no `/Users/` paths, no `docs/superpowers/` in migrated tree
+- [x] [P04-TS01] Scrub gate: no absolute personal paths, no `docs/superpowers/` in migrated tree
 - [x] [P04-T01] Copy skills/agents/hooks/_conventions (exclude docs/); private note N/A — README not carried into monorepo
 - [x] [P04-T02] `plugin.meta.toml`; `just gen`; verify in `marketplace.json`
 
@@ -57,7 +57,7 @@ note; author `plugin.meta.toml`; generate; list.
 `CLAUDE.md:99` dead pointer; reconcile 3-vs-4 / 10-vs-11 doc drift; generate; list.
 
 ### Tests & Tasks
-- [x] [P05-TS01] Scrub gate: no `/Users/`, no `team@smorinlabs.com`, dead pointer gone (all in files not carried into monorepo)
+- [x] [P05-TS01] Scrub gate: no absolute personal paths, no team email, dead pointer gone (all in files not carried into monorepo)
 - [x] [P05-T01] Copy skills/refs/agents/templates/_conventions (exclude archive/)
 - [x] [P05-T02] `plugin.meta.toml`; `just gen`; CLAUDE.md pointer N/A (not carried); 3-vs-4 / 10-vs-11 doc drift deferred → P07
 
