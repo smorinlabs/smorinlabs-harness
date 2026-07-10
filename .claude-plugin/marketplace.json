@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.3.0"
+    "version": "9.9.9"
   },
   "plugins": [
     {
       "name": "factor-harness",
       "source": "./plugins/factor-harness",
-      "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
+      "description": "Architecture-aware review, refactor, and cross-implementation dedup — surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
       "version": "0.1.0",
       "author": "Steve Morin",
       "keywords": [
@@ -27,7 +27,7 @@
     {
       "name": "guided-research",
       "source": "./plugins/guided-research",
-      "description": "Orchestration layer over the built-in /deep-research skill \u2014 decides when deep research is worth doing, shapes the prompt with project constraints, invokes the engine, and organizes results into a durable, reusable research tree.",
+      "description": "Orchestration layer over the built-in /deep-research skill — decides when deep research is worth doing, shapes the prompt with project constraints, invokes the engine, and organizes results into a durable, reusable research tree.",
       "version": "0.1.0",
       "author": "Steve Morin",
       "keywords": [
@@ -42,7 +42,7 @@
     {
       "name": "project-harness",
       "source": "./plugins/project-harness",
-      "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
+      "description": "Lightweight PROJECTS.md project management — capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
       "version": "0.1.1",
       "author": "Steve Morin",
       "keywords": [
@@ -57,7 +57,7 @@
     {
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
-      "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, and manual test guides.",
+      "description": "Repo & release-readiness checks — CI/pre-commit audit, version drift, README sync, and manual test guides.",
       "version": "0.1.0",
       "author": "Steve Morin",
       "keywords": [
