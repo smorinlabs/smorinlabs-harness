@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gen-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - run: uv run harness-kit gen --check
+
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No absolute personal paths
+        run: |
+          if git grep -nE '/Users/' -- ':!.github'; then
+            echo "::error::Absolute personal paths found (see above) — public-repo scrub rule"
+            exit 1
+          fi
+
+      - name: No skillsmith references (private until it publishes)
+        run: |
+          if git grep -niE 'skillsmith' -- ':!.github'; then
+            echo "::error::skillsmith reference found while it is still private"
+            exit 1
+          fi
+
+      - name: No unfilled placeholders in shipped docs
+        run: |
+          fail=0
+          if grep -nE '\{\{|TBD|<TODO' README.md; then
+            echo "::error::Unfilled placeholder found in README.md"
+            fail=1
+          fi
+          if [ -d docs ]; then
+            if grep -rnE '\{\{|TBD|<TODO' docs --exclude-dir=templates; then
+              echo "::error::Unfilled placeholder found in docs/"
+              fail=1
+            fi
+          fi
+          exit "$fail"
+
+      - name: Marketplace parity (plugins/*/ vs marketplace.json)
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          plugin_dirs = {p.name for p in pathlib.Path("plugins").iterdir() if p.is_dir()}
+          data = json.loads(pathlib.Path(".claude-plugin/marketplace.json").read_text())
+          manifest_names = {p["name"] for p in data["plugins"]}
+
+          only_dirs = plugin_dirs - manifest_names
+          only_manifest = manifest_names - plugin_dirs
+
+          if only_dirs or only_manifest:
+              if only_dirs:
+                  print("Dirs missing from marketplace.json:", sorted(only_dirs))
+              if only_manifest:
+                  print("Manifest entries missing a plugins/ dir:", sorted(only_manifest))
+              sys.exit(1)
+
+          print("OK: plugin dirs and marketplace.json entries match:", sorted(plugin_dirs))
+          PY
+
+  # verify:
+  #   Joins after skillsmith publishes (>= v1.0). Once public, run
+  #   `skillsmith verify plugins/<name> --static` per plugin here, e.g.:
+  #     for d in plugins/*/; do
+  #       skillsmith verify "$d" --static
+  #     done
