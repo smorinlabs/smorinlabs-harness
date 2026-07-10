@@ -1,5 +1,19 @@
 # Release Notes
 
+## v0.3.1 — 2026-07-10
+
+### Fixed
+
+- **factor-harness** — `using-factor-harness` SKILL frontmatter corrected; same
+  defect class as the document-merge frontmatter fix. A fleet-wide scan came
+  back clean.
+
+### Added
+
+- **CI workflow** — `harness-kit gen --check` plus hardened static gates
+  (absolute-path scrub, private-tooling-reference scrub, placeholder scan,
+  marketplace parity); red-green proven on PR #1.
+
 ## v0.3.0 — 2026-07-05
 
 ### Added

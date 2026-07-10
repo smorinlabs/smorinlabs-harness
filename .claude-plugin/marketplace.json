@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.3.0"
+    "version": "0.3.1"
   },
   "plugins": [
     {
       "name": "factor-harness",
       "source": "./plugins/factor-harness",
       "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": "Steve Morin",
       "keywords": [
         "architecture",
