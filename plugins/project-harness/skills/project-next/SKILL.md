@@ -1,7 +1,7 @@
 ---
 name: project-next
 description: Reads PROJECTS.md and projects/ to surface a composite menu of in-progress projects, the next 2-3 lowest-ID unstarted projects, and the 2-3 most recently committed project files, then asks the user where to focus and points at the appropriate sibling skill or framework. Read-only — never edits PROJECTS.md or projects/.
-when_to_use: When the user asks "what's next?", "where are we?", "what should I work on?", or returns to a repo after time away.
+when_to_use: When the user asks "what's next?", "what should I work on?", or returns to a repo after time away.
 allowed-tools: Read Bash
 ---
 
@@ -15,7 +15,7 @@ dictating a single answer.
 ## When to use
 
 - *"What's next?"* / *"What should I work on?"*
-- *"Where are we?"* / *"Anything in progress I forgot about?"*
+- *"Anything in progress I forgot about?"*
 - Start of a session, or after time away from the repo.
 - Before deciding whether to capture a new idea, refine an existing
   project, or run an audit — `project-next` makes the choice

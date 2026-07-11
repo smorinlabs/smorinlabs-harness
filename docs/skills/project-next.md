@@ -8,8 +8,8 @@ filesystem mtime) — then asks the user where to focus and points them at
 the right sibling skill or framework in text, without ever invoking it or
 editing the trunk itself.
 
-**Triggers on:** "what's next?", "where are we?", "what should I work on?",
-returning to a repo after time away · **Arguments:** none
+**Triggers on:** "what's next?", "what should I work on?", returning to a
+repo after time away · **Arguments:** none
 
 ## Install
 

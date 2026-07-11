@@ -1,5 +1,5 @@
 name = "project-harness"
-version = "0.1.1"
+version = "0.1.2"
 description = "Lightweight PROJECTS.md project management — capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers."
 author = "Steve Morin"
 keywords = ["project-management", "projects", "planning", "audit", "roadmap", "workflow"]

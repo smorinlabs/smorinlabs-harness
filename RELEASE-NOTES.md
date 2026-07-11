@@ -1,5 +1,14 @@
 # Release Notes
 
+## v0.3.3 — 2026-07-10
+
+### Fixed
+
+- **project-next** — no longer claims "where are we?"; that utterance is now
+  owned exclusively by the `session-recap` skill. Trigger carved out of the
+  frontmatter `when_to_use`, the body's "When to use" list, and the docs
+  page's "Triggers on" line.
+
 ## v0.3.2 — 2026-07-10
 
 ### Added

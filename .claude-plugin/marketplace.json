@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.3.2"
+    "version": "0.3.3"
   },
   "plugins": [
     {
@@ -43,7 +43,7 @@
       "name": "project-harness",
       "source": "./plugins/project-harness",
       "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": "Steve Morin",
       "keywords": [
         "project-management",
