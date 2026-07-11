@@ -35,7 +35,7 @@ in control.
 | Skill                  | Use when…                                              |
 |------------------------|--------------------------------------------------------|
 | `using-project-harness`| starting a session, or about to hand-edit `PROJECTS.md`|
-| `project-next`         | the user asks "what's next?" / "where are we?"         |
+| `project-next`         | the user asks "what's next?" / "what should I work on?"         |
 | `project-add`          | the user has an idea to capture                        |
 | `project-refine`       | the user wants to flesh out / scope / decompose a project |
 | `project-audit`        | the user asks "is everything in order?" / "audit"      |
