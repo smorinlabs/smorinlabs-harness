@@ -1,6 +1,6 @@
 # Override grammar
 
-Three overlapping mechanisms to override the session theme choice. All are
+Two overlapping mechanisms to override the session theme choice. Both are
 supported simultaneously.
 
 ## Inline flags (one-off, do NOT change session state)
@@ -24,16 +24,6 @@ Recognize at the start, end, or anywhere in the request:
 
 Example: `[theme: dark]` and `[theme: high-contrast-dark]` are equivalent.
 
-## Slash commands (change SESSION state, may change PERSISTED state)
-
-| Command | Effect |
-|---------|--------|
-| `/theme <name>` | Set session theme to `<name>` |
-| `/theme none` | Set session state to NOTHEME (skill stops asking and applying) |
-| `/theme clear` | Set session state to NONE; offer to delete the persistence file |
-| `/theme list` | Print the catalog |
-| `/theme persist` | Write the current session choice to `.claude/use-html-theme.local.md` |
-
 ## Natural language (change SESSION state)
 
 Treat these phrases as session-level switches:
@@ -48,6 +38,13 @@ Treat these as one-off overrides (do NOT change session state):
 - "no theme this time" / "plain html this time" / "skip the theme"
 - "just for this page, use <theme>" / "this one in <theme>"
 
+Treat these as catalog / persistence actions (no HTML generated):
+
+- "list the themes" / "what themes are there?" / "show me the options" → print
+  the catalog, or render the preview per SKILL.md's "Previewing the catalog".
+- "remember this theme" / "save it for the project" / "make it the default" →
+  write `.claude/use-html-theme.local.md` (see `persistence.md`).
+
 If the phrasing is ambiguous between session and one-off, prefer one-off and
 ask "Make this the session default too?" only if the user repeats the
 override on the next request.
@@ -58,8 +55,7 @@ When multiple mechanisms appear in the same request, apply in this order
 (highest first):
 
 1. Inline flag (`[theme: x]`, `[notheme]`)
-2. Slash command (`/theme x`)
-3. Natural-language override
-4. Session state (SESSION/PERSISTED/NOTHEME)
-5. Persistence file (`.claude/use-html-theme.local.md`)
-6. Ask the picker (no state, no file, no overrides)
+2. Natural-language override
+3. Session state (SESSION/PERSISTED/NOTHEME)
+4. Persistence file (`.claude/use-html-theme.local.md`)
+5. Ask the picker (no state, no file, no overrides)

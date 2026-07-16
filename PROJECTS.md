@@ -107,4 +107,20 @@ in scrub-verified clean; attributed to Steve Morin.
 
 ---
 
+## [x] Project P10: use-html-theme → pure skill (v0.5.0)
+**Goal**: Migrate `use-html-theme` to skills-only by removing the `/theme` and `/theme-preview`
+slash commands. Rationale: slash commands are Claude Code-only (Codex and the other `~/.agents/skills`
+consumers read skills, not plugin `commands/`), and the fleet is deliberately skills-only. All control
+folds into the skill's natural-language grammar + inline flags; the preview renders on request. No
+capability lost; behavior now identical across tools.
+
+### Tests & Tasks
+- [x] [P10-T01] Remove commands/ + validator command checks
+- [x] [P10-T02] Fold theme-control + preview into the skill (SKILL.md, references)
+- [x] [P10-T03] Scrub slash-command refs (skill, meta, preview template, docs, README)
+- [x] [P10-T04] Regen; validator green; skill-quality green; verify --deep green (both tools)
+- [x] [P10-T05] Bump plugin 0.2.0 / marketplace v0.5.0; RELEASE-NOTES; tag + push
+
+---
+
 - [ ] Regression Test Status

@@ -39,17 +39,20 @@ On every user request that will produce HTML:
    e. Apply, generate.
 ```
 
-## Slash commands
+## Session-control phrases
 
-- `/theme <name>` → state = SESSION(<name>) (or PERSISTED if file exists and
-  user wants persistence updated; default is to leave the file alone)
-- `/theme none` → state = NOTHEME (clear any prior SESSION/PERSISTED choice
-  in memory; file untouched unless `/theme persist` follows)
-- `/theme clear` → state = NONE; delete the persistence file if it exists
-  (confirm with the user before deleting)
-- `/theme list` → print the catalog, do not change state
-- `/theme persist` → write the current session theme to the file; state
-  becomes PERSISTED(<name>)
+Natural-language equivalents (full grammar in `override-grammar.md`):
+
+- "switch to <name>" / "use <name>" → state = SESSION(<name>) (file left alone
+  unless the user asks to persist)
+- "no theme" (session-level, e.g. "stop using a theme") → state = NOTHEME
+  (clear any prior SESSION/PERSISTED choice in memory; file untouched)
+- "clear the theme" / "forget the theme" → state = NONE; offer to delete the
+  persistence file if it exists (confirm before deleting)
+- "list the themes" / "show the options" → print the catalog (or render the
+  preview), do not change state
+- "remember this theme" / "save it for the project" → write the current session
+  theme to the file; state becomes PERSISTED(<name>)
 
 ## When the picker should NOT fire
 
@@ -64,8 +67,8 @@ On every user request that will produce HTML:
 ## Asking the picker only once per session
 
 If the user picks "No theme", do NOT re-ask on subsequent HTML requests in
-the same session. The state is NOTHEME until `/theme clear` or
-`/theme <name>`. This prevents nag.
+the same session. The state is NOTHEME until the user clears the theme or
+switches to a specific one. This prevents nag.
 
 ## Token loading discipline
 

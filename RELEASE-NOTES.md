@@ -1,5 +1,18 @@
 # Release Notes
 
+## v0.5.0 — 2026-07-16
+
+### Changed
+
+- **use-html-theme** (0.1.0 → 0.2.0) — **migrated to a pure skill**: removed the
+  `/theme` and `/theme-preview` slash commands. Slash commands are Claude
+  Code-only — Codex and the other agents that read `~/.agents/skills` consume
+  skills, not plugin `commands/` — so the plugin now behaves identically across
+  every tool. All theme control is natural language ("switch to birchline",
+  "no theme this session", "clear the theme", "list the themes", "remember this
+  theme", "preview the themes" → renders the side-by-side catalog) plus
+  `[theme: x]` / `[notheme]` inline flags. No capability lost.
+
 ## v0.4.0 — 2026-07-16
 
 ### Added

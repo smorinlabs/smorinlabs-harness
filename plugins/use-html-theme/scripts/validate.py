@@ -64,11 +64,7 @@ check("SKILL.md has frontmatter description", file_matches(skill_rel, r"^descrip
 for ref in ["activation-flow.md", "override-grammar.md", "persistence.md"]:
     check(f"references/{ref} exists", file_exists(f"skills/use-html-theme/references/{ref}"))
 
-# 4. Slash commands
-for cmd in ["theme.md", "theme-preview.md"]:
-    check(f"commands/{cmd} exists", file_exists(f"commands/{cmd}"))
-
-# 5. Preview template
+# 4. Preview template (rendered by the skill on a "preview the themes" request)
 check("assets/preview-template.html exists", file_exists("assets/preview-template.html"))
 
 # 6. Per-theme files

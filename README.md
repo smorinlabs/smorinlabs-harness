@@ -79,11 +79,11 @@ Orchestration layer over the built-in `/deep-research`.
 
 ### use-html-theme
 
-On any HTML-generation request, offers a 3-theme catalog and applies the chosen theme session-wide; also ships `/theme` and `/theme-preview` slash commands.
+On any HTML-generation request, offers a 3-theme catalog and applies the chosen theme session-wide. Pure skill — controlled entirely in natural language, portable across Claude Code and Codex.
 
 | Skill | Does | Details |
 |---|---|---|
-| `use-html-theme` | Offers a catalog of three fully-isolated visual themes (Birchline, Technical-minimal, High-contrast-dark) on any HTML request and applies the chosen one to all subsequent HTML, with inline-flag / slash-command / natural-language overrides and per-project persistence. | [docs/skills/use-html-theme.md](docs/skills/use-html-theme.md) |
+| `use-html-theme` | Offers a catalog of three fully-isolated visual themes (Birchline, Technical-minimal, High-contrast-dark) on any HTML request and applies the chosen one to all subsequent HTML, with inline-flag and natural-language overrides, a side-by-side preview, and per-project persistence. | [docs/skills/use-html-theme.md](docs/skills/use-html-theme.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

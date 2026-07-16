@@ -22,9 +22,9 @@ If yes, write `.claude/use-html-theme.local.md` in the working directory:
 theme: birchline
 ---
 
-Selected by user on YYYY-MM-DD via the use-html-theme plugin. Override with
-`/theme <name>`, `[theme: <name>]` inline, or `[notheme]` for one-off.
-Clear with `/theme clear`.
+Selected by user on YYYY-MM-DD via the use-html-theme plugin. Override by
+asking to switch themes, or with `[theme: <name>]` / `[notheme]` inline.
+Clear by asking to clear the theme.
 ```
 
 The file is single-key: only `theme:` is read. Other frontmatter keys are
@@ -51,16 +51,16 @@ Use this template exactly (replace `<theme>` and date):
 theme: <theme>
 ---
 
-Selected by user on <YYYY-MM-DD> via the use-html-theme plugin. Override with
-`/theme <name>`, `[theme: <name>]` inline, or `[notheme]` for one-off.
-Clear with `/theme clear`.
+Selected by user on <YYYY-MM-DD> via the use-html-theme plugin. Override by
+asking to switch themes, or with `[theme: <name>]` / `[notheme]` inline.
+Clear by asking to clear the theme.
 ```
 
 Always create the `.claude/` directory if missing (`mkdir -p .claude`).
 
 ## Clearing the file
 
-`/theme clear` should:
+Clearing the theme (the user asks to "clear" or "forget" it) should:
 
 1. Confirm with the user (one-line: "Delete .claude/use-html-theme.local.md?").
 2. If yes, remove the file.

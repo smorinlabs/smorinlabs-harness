@@ -10,10 +10,10 @@ description: |
   components, anti-patterns, and a worked example; only the chosen theme's
   files are read (progressive disclosure). The choice persists in session
   memory and can be saved per-project to `.claude/use-html-theme.local.md`.
-  Overrides via natural language, `[theme: <name>]` / `[notheme]` inline flags,
-  and the `/theme` and `/theme-preview` slash commands. Do NOT activate for
-  markdown, JSON, prose, or non-HTML code, or when the user said `[notheme]`
-  or `/theme none`.
+  Overrides via natural language and `[theme: <name>]` / `[notheme]` inline
+  flags; ask to preview or compare the themes to get a side-by-side catalog
+  page. Do NOT activate for markdown, JSON, prose, or non-HTML code, or when
+  the user said `[notheme]` or asked for no theme.
 allowed-tools: Read Write Edit Glob AskUserQuestion
 ---
 
@@ -65,17 +65,16 @@ Follow these steps in order. The state machine lives in
 
 # Overrides
 
-Three mechanisms — see `references/override-grammar.md` for full grammar and
+Two mechanisms — see `references/override-grammar.md` for full grammar and
 precedence. Quick reference:
 
 | Mechanism | Example | Scope |
 |-----------|---------|-------|
 | Inline flag | `[theme: dark]`, `[notheme]` | This request only |
-| Slash command | `/theme technical-minimal`, `/theme none` | Session |
-| Natural language | "switch to dark", "no theme this time" | Session or request |
+| Natural language | "switch to dark", "no theme this time", "clear the theme", "list the themes", "remember this theme" | Session or request |
 
-Precedence (highest first): inline flag → slash command → natural-language
-override → session memory → persistence file → ask. (Full ordering in
+Precedence (highest first): inline flag → natural-language override → session
+memory → persistence file → ask. (Full ordering in
 `references/override-grammar.md`.)
 
 # Hard rules (cross-theme)
@@ -114,3 +113,11 @@ Before delivering any themed artifact, ask:
 - **Don't extend the catalog ad-hoc.** Themes are bundled; adding a fourth
   means a new folder under `references/themes/` and a new entry in the
   picker. Don't invent a theme inline.
+
+# Previewing the catalog
+
+If the user asks to preview, compare, or "see the options" for the themes
+(e.g. "show me the theme choices", "preview the themes", "what do they look
+like?"), render `assets/preview-template.html` — a single self-contained page
+showing all three themes side-by-side as sample cards — and share it. This is
+the catalog showcase; it does not change the session theme.

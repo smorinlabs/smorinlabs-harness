@@ -17,17 +17,22 @@ session memory and can be persisted per-project in
 **Triggers on:** any request that will produce HTML — a page, artifact, mockup,
 dashboard, doc, status page, landing page, release-notes page, HTML email, or
 styled snippet, and restyling an existing HTML artifact. Does **not** fire on
-markdown, JSON, prose, or non-HTML code, or when the user says `[notheme]` /
-`/theme none` · **Arguments:** none for the skill itself; overrides via
-`[theme: <name>]` / `[notheme]` inline flags, natural language, and the two
-slash commands below.
+markdown, JSON, prose, or non-HTML code, or when the user says `[notheme]` or
+asks for no theme · **Arguments:** none — control it in natural language or
+with `[theme: <name>]` / `[notheme]` inline flags. See "Controlling the theme".
 
-## Commands
+## Controlling the theme
 
-- `/theme [birchline | technical-minimal | high-contrast-dark | none | clear | list | persist]`
-  — switch, clear, list, or persist the session theme (aliases: `birch`,
-  `minimal`/`tech`, `dark`/`hc-dark`/`hcdark`).
-- `/theme-preview` — render all three themes side-by-side as preview cards.
+All in natural language — this is a **pure skill** (no slash commands), so it
+behaves identically on Claude Code and Codex:
+
+- **Switch:** "switch to birchline" / "use dark instead", or `[theme: <name>]`
+  inline (aliases: `birch`, `minimal`/`tech`, `dark`/`hc-dark`/`hcdark`).
+- **One-off:** `[theme: <name>]` or `[notheme]` for a single request.
+- **No theme / clear / list / persist:** "no theme this session", "clear the
+  theme", "list the themes", "remember this theme for the project".
+- **Preview:** "preview the themes" / "show me the options" renders a
+  side-by-side catalog page (`assets/preview-template.html`).
 
 ## Install
 
@@ -37,9 +42,8 @@ slash commands below.
 | Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/use-html-theme/skills/use-html-theme" ~/.claude/skills/use-html-theme` |
 | Direct copy | No marketplace access | copy `plugins/use-html-theme/skills/use-html-theme/` into `~/.claude/skills/` |
 
-The dev-symlink and direct-copy modes install the **skill** (the theming
-behavior); the `/theme` and `/theme-preview` slash commands ship with the full
-**plugin**, so use the plugin install to get them too.
+All three modes install the same **skill** — the plugin is skills-only (no
+slash commands), so behavior is identical across install modes and tools.
 
-**Codex:** register the marketplace in `~/.codex/config.toml`. Codex loads the
-skill; the slash commands are Claude Code-specific.
+**Codex:** register the marketplace in `~/.codex/config.toml`. The skill loads
+and behaves identically on Codex and Claude Code.
