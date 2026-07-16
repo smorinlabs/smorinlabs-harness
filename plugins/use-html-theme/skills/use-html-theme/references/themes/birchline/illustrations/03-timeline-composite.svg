@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg" width="280" height="180">
+      <defs>
+        <filter id="sh3" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#141413" flood-opacity="0.07"/>
+        </filter>
+      </defs>
+      <!-- timeline line -->
+      <line x1="50" y1="35" x2="50" y2="135" stroke="#D1CFC5" stroke-width="2"/>
+      <!-- timeline dots -->
+      <circle cx="50" cy="40" r="7" fill="#D97757"/>
+      <circle cx="50" cy="85" r="7" fill="#788C5D"/>
+      <circle cx="50" cy="130" r="7" fill="#D1CFC5"/>
+      <!-- bars next to dots -->
+      <rect x="70" y="35" width="80" height="3" rx="1.5" fill="#D1CFC5"/>
+      <rect x="70" y="42" width="60" height="3" rx="1.5" fill="#D1CFC5"/>
+      <rect x="70" y="80" width="80" height="3" rx="1.5" fill="#D1CFC5"/>
+      <rect x="70" y="87" width="50" height="3" rx="1.5" fill="#D1CFC5"/>
+      <rect x="70" y="125" width="70" height="3" rx="1.5" fill="#D1CFC5"/>
+      <rect x="70" y="132" width="55" height="3" rx="1.5" fill="#D1CFC5"/>
+      <!-- mockup card -->
+      <g filter="url(#sh3)">
+        <rect x="180" y="30" width="70" height="55" rx="4" fill="#E3DACC" stroke="#141413" stroke-width="1.5"/>
+        <rect x="190" y="55" width="32" height="3" rx="1.5" fill="#141413"/>
+      </g>
+      <!-- second mockup card with clay accent -->
+      <g filter="url(#sh3)">
+        <rect x="180" y="100" width="70" height="45" rx="4" fill="#FFFFFF" stroke="#141413" stroke-width="1.5"/>
+        <rect x="190" y="118" width="40" height="3" rx="1.5" fill="#D97757"/>
+      </g>
+    </svg>

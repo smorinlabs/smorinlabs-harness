@@ -91,4 +91,20 @@ Steve Morin (bundle carried no embedded author/license).
 
 ---
 
+## [x] Project P09: use-html-theme plugin (v0.4.0)
+**Goal**: Add the `use-html-theme` skill + `/theme` and `/theme-preview` commands as a public
+plugin — on any HTML request, offer a 3-theme catalog (Birchline, Technical-minimal,
+High-contrast-dark) and apply the chosen theme session-wide, with fully-isolated themes,
+progressive disclosure, inline-flag / slash-command / natural-language overrides, and per-project
+persistence. Built + whole-branch-reviewed as a standalone repo (use-html-theme v0.1.0), folded
+in scrub-verified clean; attributed to Steve Morin.
+
+### Tests & Tasks
+- [x] [P09-TS01] Scrub gate: no secrets/PII/absolute paths; validator green in new home
+- [x] [P09-T01] Fold plugin in (skills + commands + assets + scripts); `plugin.meta.toml`; `just gen` + gen-check clean
+- [x] [P09-T02] Docs: `docs/skills/use-html-theme.md` + README section + count (five plugins, fifteen skills)
+- [x] [P09-T03] Bump marketplace v0.4.0; dev-symlink both tools; skill-quality gate; RELEASE-NOTES; tag + push
+
+---
+
 - [ ] Regression Test Status

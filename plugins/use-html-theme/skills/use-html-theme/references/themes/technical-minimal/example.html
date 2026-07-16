@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light">
+  <title>api-gateway · service status</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --surface: #FFFFFF;
+      --surface-2: #FAFAFA;
+      --surface-3: #F4F4F5;
+      --border: #E4E4E7;
+      --border-strong: #D4D4D8;
+      --ink: #18181B;
+      --ink-strong: #09090B;
+      --ink-muted: #71717A;
+      --ink-subtle: #A1A1AA;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --accent-soft: #EFF6FF;
+      --success: #16A34A;
+      --warning: #D97706;
+      --danger: #DC2626;
+      --success-bg: #F0FDF4;
+      --success-border: #DCFCE7;
+      --font-sans: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      --fs-caption: 12px; --fs-small: 13px; --fs-body: 15px;
+      --fs-h3: 18px; --fs-h2: 22px; --fs-h1: 30px;
+      --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600;
+      --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+      --r-sm: 4px; --r-md: 6px; --r-lg: 8px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    html, body {
+      background: var(--surface);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: var(--fs-body);
+      line-height: 1.5;
+      font-weight: var(--fw-regular);
+      margin: 0;
+    }
+    main { max-width: 800px; margin: 0 auto; padding: var(--sp-6) var(--sp-5); }
+    h1 { font-size: var(--fs-h1); font-weight: var(--fw-semibold); margin: 0 0 var(--sp-3); }
+    .lead { color: var(--ink-muted); margin: 0 0 var(--sp-6); }
+    .badge { display: inline-block; padding: 2px var(--sp-2); font-size: var(--fs-caption); font-weight: var(--fw-medium); border-radius: var(--r-sm); border: 1px solid var(--border); }
+    .badge-success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+    .badge-accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-5); box-shadow: var(--shadow-sm); margin-bottom: var(--sp-4); }
+    .card h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-h3); font-weight: var(--fw-semibold); }
+    .card p { margin: 0; color: var(--ink-muted); font-size: var(--fs-small); }
+    .tbl { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+    .tbl th, .tbl td { text-align: left; padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border); }
+    .tbl th { font-weight: var(--fw-semibold); color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: var(--fs-caption); }
+    .code { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-small); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>api-gateway service status</h1>
+    <p class="lead">Health and recent deploys for the api-gateway service, region us-east-1.</p>
+
+    <div class="card">
+      <h3>Health <span class="badge badge-success">Healthy</span></h3>
+      <p>All probes returning 200 OK. Last incident 14 days ago.</p>
+    </div>
+
+    <div class="card">
+      <h3>Recent deploys</h3>
+      <table class="tbl">
+        <thead><tr><th>Version</th><th>Deployed</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1.4.0</td><td>2026-05-19</td><td><span class="badge badge-success">Live</span></td></tr>
+          <tr><td>1.3.2</td><td>2026-05-12</td><td><span class="badge badge-accent">Rollback</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Restart command</h3>
+      <pre class="code"><code>kubectl rollout restart deploy/api-gateway -n prod</code></pre>
+    </div>
+  </main>
+</body>
+</html>

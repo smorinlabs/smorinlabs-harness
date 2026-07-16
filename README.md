@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Four
-plugins, fourteen skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Five
+plugins, fifteen skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -76,6 +76,14 @@ Orchestration layer over the built-in `/deep-research`.
 | Skill | Does | Details |
 |---|---|---|
 | `guided-research` | Decides when deep research is worth doing, shapes and runs it, and organizes results into a reusable research tree. | [docs/skills/guided-research.md](docs/skills/guided-research.md) |
+
+### use-html-theme
+
+On any HTML-generation request, offers a 3-theme catalog and applies the chosen theme session-wide; also ships `/theme` and `/theme-preview` slash commands.
+
+| Skill | Does | Details |
+|---|---|---|
+| `use-html-theme` | Offers a catalog of three fully-isolated visual themes (Birchline, Technical-minimal, High-contrast-dark) on any HTML request and applies the chosen one to all subsequent HTML, with inline-flag / slash-command / natural-language overrides and per-project persistence. | [docs/skills/use-html-theme.md](docs/skills/use-html-theme.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

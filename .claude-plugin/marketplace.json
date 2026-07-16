@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.3.3"
+    "version": "0.4.0"
   },
   "plugins": [
     {
@@ -68,6 +68,21 @@
         "testing",
         "hygiene",
         "audit"
+      ]
+    },
+    {
+      "name": "use-html-theme",
+      "source": "./plugins/use-html-theme",
+      "description": "On any HTML-generation request, offer a small catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project. Overrides via natural language, [theme: x] inline flags, and the /theme and /theme-preview slash commands. Fully-isolated themes with progressive disclosure \u2014 only the chosen theme's tokens are read.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "html",
+        "css",
+        "theme",
+        "design",
+        "artifacts",
+        "birchline"
       ]
     }
   ]

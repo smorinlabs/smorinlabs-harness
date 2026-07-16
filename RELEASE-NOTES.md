@@ -1,5 +1,21 @@
 # Release Notes
 
+## v0.4.0 — 2026-07-16
+
+### Added
+
+- **use-html-theme** — new plugin. On any HTML-generation (or restyle) request,
+  offers a catalog of three fully-isolated visual themes — Birchline
+  (warm editorial), Technical-minimal (docs-site neutral), High-contrast-dark
+  (dashboard) — and applies the chosen one to all subsequent HTML in the
+  session, with progressive disclosure (only the chosen theme's tokens are
+  read). Ships the `use-html-theme` skill plus `/theme` and `/theme-preview`
+  slash commands, a side-by-side preview template, and a structural validator.
+  Overrides via natural language, `[theme: x]` / `[notheme]` inline flags, and
+  the slash commands; the choice can persist per-project in
+  `.claude/use-html-theme.local.md`. Brings the marketplace to five plugins,
+  fifteen skills.
+
 ## v0.3.3 — 2026-07-10
 
 ### Fixed
