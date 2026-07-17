@@ -123,7 +123,7 @@ capability lost; behavior now identical across tools.
 
 ---
 
-## [~] Project P11: html-codesign skill (v0.6.0)
+## [x] Project P11: html-codesign skill (v0.6.0)
 **Goal**: First-principles rebuild of the unpublished birchline-html-artifacts codesign mode as a
 theme-agnostic pure skill in the use-html-theme plugin. Interactive "pick and export" decision pages:
 self-contained HTML, pick-one/pick-any sections, stable IDs, embedded machine-validated spec,
@@ -139,9 +139,9 @@ prototype is donor material, to be archived.
 - [x] [P11-T02] SKILL.md + 5 references (spec-format, id-grammar, export-formats, iteration-loop, theming)
 - [x] [P11-T03] codesign-template.html (neutral engine: embedded spec, exclusivity, exports, re-prompts)
 - [x] [P11-T04] Birchline codesign.md overlay + use-html-theme composition note
-- [ ] [P11-T05] Docs page + README; plugin 0.3.0 / marketplace v0.6.0; whole-branch review
-- [ ] [P11-TS03] E2E: fresh-session generation on claude-code AND codex; embedded spec passes validator
-- [ ] [P11-T06] Placements both tools; skill-quality; verify --deep; merge; tag v0.6.0 + push
+- [x] [P11-T05] Docs page + README; plugin 0.3.0 / marketplace v0.6.0; whole-branch review (fable; all 7 Important findings fixed + verified)
+- [x] [P11-TS03] E2E: fresh-session generation on claude-code AND codex; both embedded specs pass validate_spec.py
+- [x] [P11-T06] Placements both tools; verify --deep green both tools; merge; tag v0.6.0 + push
 
 ---
 
