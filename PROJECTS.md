@@ -158,7 +158,7 @@ neutral fallback. Overlays are 100% token-sourced; validator generalized to chec
 
 ---
 
-## [~] Project P13: html-codesign ergonomics — contexts, collapse, slim exports (v0.8.0)
+## [x] Project P13: html-codesign ergonomics — contexts, collapse, slim exports (v0.8.0)
 **Goal**: Per-question context-and-recommendation preambles (structured, choice-linked, ★ badges,
 validator-required at generation), three layers of manual collapse (context block, hide-unchosen
 options, section → dense summary row with followed/went-against rec markers, Collapse/Expand all),
@@ -176,7 +176,7 @@ export-IS-spec invariant consciously dropped. Design spec:
 - [x] [P13-T04] SKILL.md: context authoring step, collapse/export smoke tests, slim-default gotcha, design-notes pointer
 - [x] [P13-TS02] Plugin validate.py extended (design-notes, contexts-in-template, answers-export checks) — all green; gen-check green
 - [x] [P13-T05] Docs page + README row refreshed; plugin 0.4.0 → 0.5.0
-- [ ] [P13-T06] skill-quality gate; browser smoke test of template; commit; marketplace v0.8.0 tag + push
+- [x] [P13-T06] skill-quality gate (4/4 layers + verify --deep both tools); 49-assertion browser smoke test; commit a3a43db; marketplace v0.8.0 tag + push
 
 ---
 

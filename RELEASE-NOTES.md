@@ -1,5 +1,23 @@
 # Release Notes
 
+## v0.8.0 — 2026-07-17
+
+### Added
+
+- **html-codesign ergonomics** — every question now opens with a required
+  context-and-recommendation preamble (structured `contexts` layer joined to
+  the AskUserQuestion-shaped sections core; ★ badge on recommended options;
+  validator-enforced at generation), three layers of manual collapse
+  (context block, hide-unchosen options with the note kept visible, whole
+  sections folding to dense summary rows with followed/went-against-rec
+  markers, plus Collapse/Expand all), and exports rebuilt as purpose-built
+  `codesign-answers` documents — slim by default for the token-cheap agent
+  loop, full ADR-style by toggle for human decision records. New
+  `references/design-notes.md` records the AskUserQuestion lineage,
+  input/output schema split, and edit invariants. Fixtures cover six new
+  context error classes; template verified with 49 live-browser assertions.
+  use-html-theme 0.4.0 → 0.5.0.
+
 ## v0.7.0 — 2026-07-16
 
 ### Added
