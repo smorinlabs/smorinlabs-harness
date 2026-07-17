@@ -11,8 +11,9 @@ comes from a three-level cascade, resolved top-down at render time:
 3. Neutral built-in   the token block shipped inside codesign-template.html
 ```
 
-A theme with an overlay (Birchline) keeps every ounce of its personality —
-warm choice cards, its accent rhythm, its shadows. A theme without one still
+A theme with an overlay keeps every ounce of its personality — all three v1
+themes ship one (Birchline's warm cards, Technical-minimal's flat docs
+register, High-contrast-dark's layered near-black). A theme without one still
 works: the template's components are shaped generically and painted with that
 theme's tokens. No theme at all → the neutral built-in. Nothing is watered
 down; richness is opt-in per theme.

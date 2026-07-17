@@ -1,5 +1,19 @@
 # Release Notes
 
+## v0.7.0 — 2026-07-16
+
+### Added
+
+- **html-codesign theme overlays** — Technical-minimal and High-contrast-dark
+  now ship `codesign.md` overlays alongside Birchline, so codesign decision
+  pages render in each theme's full personality instead of the neutral
+  fallback: Technical-minimal's flat docs register (monospace IDs, tight
+  geometry, blue accent), High-contrast-dark's color-scheme flip to layered
+  near-black with off-white ink and a saturated accent. Every overlay value
+  is sourced from that theme's `tokens.md` (no invented colors). Plugin
+  validator generalized to assert all three overlays. use-html-theme 0.3.0 →
+  0.4.0.
+
 ## v0.6.0 — 2026-07-16
 
 ### Added

@@ -145,4 +145,17 @@ prototype is donor material, to be archived.
 
 ---
 
+## [x] Project P12: codesign overlays for all themes (v0.7.0)
+**Goal**: Ship `codesign.md` overlays for Technical-minimal and High-contrast-dark (Birchline already
+had one), so html-codesign pages get each theme's full personality via the cascade instead of the
+neutral fallback. Overlays are 100% token-sourced; validator generalized to check all three.
+
+### Tests & Tasks
+- [x] [P12-T01] technical-minimal/codesign.md (flat docs register, mono IDs, blue accent)
+- [x] [P12-T02] high-contrast-dark/codesign.md (color-scheme flip to dark, layered surfaces, off-white ink)
+- [x] [P12-TS01] Validator asserts all 3 overlays; token-purity checked (no invented hex); gen-check green
+- [x] [P12-T03] Docs updated (all three ship overlays); plugin 0.4.0 / marketplace v0.7.0; tag + push
+
+---
+
 - [ ] Regression Test Status

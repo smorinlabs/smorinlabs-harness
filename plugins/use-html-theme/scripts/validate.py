@@ -162,10 +162,11 @@ check(
     file_contains(f"{cd_base}/assets/codesign-template.html", 'id="codesign-spec"'),
 )
 check("html-codesign validator exists", file_exists(f"{cd_base}/scripts/validate_spec.py"))
-check(
-    "birchline codesign overlay exists",
-    file_exists("skills/use-html-theme/references/themes/birchline/codesign.md"),
-)
+for theme in THEMES:
+    check(
+        f"{theme} codesign overlay exists",
+        file_exists(f"skills/use-html-theme/references/themes/{theme}/codesign.md"),
+    )
 
 vs_script = ROOT / cd_base / "scripts/validate_spec.py"
 fx_good = ROOT / cd_base / "scripts/fixtures/valid-spec.json"

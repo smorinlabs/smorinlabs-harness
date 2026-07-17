@@ -25,8 +25,9 @@ natural language.
 ## How it composes with use-html-theme
 
 This skill owns structure, behavior, and exports; the page's *look* comes
-from a three-level cascade: the active theme's `codesign.md` overlay
-(Birchline ships one — warm choice cards, clay accents), else generic
+from a three-level cascade: the active theme's `codesign.md` overlay (all
+three themes ship one — Birchline's warm choice cards, Technical-minimal's
+flat docs register, High-contrast-dark's layered near-black), else generic
 components painted with the theme's tokens, else a neutral built-in style.
 Works with no theme at all; never mixes two.
 
