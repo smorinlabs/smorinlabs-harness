@@ -29,8 +29,11 @@ Same sources use-html-theme itself uses, in order:
 3. **Neither** → neutral built-in. Do NOT force the theme picker just for a
    codesign page; if use-html-theme is installed it will have asked already.
 
-Then check `skills/use-html-theme/references/themes/<name>/codesign.md`. If
-it exists, apply its component treatments; otherwise restyle the template's
+Then check the sibling skill's theme folder for an overlay — from this
+skill's directory that is
+`../use-html-theme/references/themes/<name>/codesign.md` (in the plugin
+tree: `skills/use-html-theme/references/themes/<name>/codesign.md`). If it
+exists, apply its component treatments; otherwise restyle the template's
 components using only that theme's `tokens.md` variables.
 
 ## Hard rules
@@ -46,6 +49,11 @@ components using only that theme's `tokens.md` variables.
   `.accent` span, in the H1; no pure-black shadows; sentence case).
 - **Keep the engine intact.** Theming changes tokens and component CSS —
   never the spec tag, `data-id`s, or the engine script.
+- **No remote font links.** Codesign pages are self-contained ("no external
+  requests" is a hard rule) and this wins over any theme guidance to load
+  webfonts: use the theme's font stacks and let local fallbacks carry them
+  (Birchline's serif falls back to Georgia). Never add a `<link>` to a font
+  CDN.
 
 ## The neutral built-in
 

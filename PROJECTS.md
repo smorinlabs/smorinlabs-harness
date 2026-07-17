@@ -133,7 +133,7 @@ overlay ports the original warm styling. Report mode abandoned (decision 2026-07
 prototype is donor material, to be archived.
 
 ### Tests & Tasks
-- [x] [P11-TS01] Plugin validator extended with 13 html-codesign checks, RED-first, then green
+- [x] [P11-TS01] Plugin validator extended with 14 html-codesign checks, RED-first, then green
 - [x] [P11-TS02] validate_spec.py fixture tests: valid → exit 0; invalid → exit 1 with 7 error classes
 - [x] [P11-T01] validate_spec.py (stdlib spec/export contract validator)
 - [x] [P11-T02] SKILL.md + 5 references (spec-format, id-grammar, export-formats, iteration-loop, theming)

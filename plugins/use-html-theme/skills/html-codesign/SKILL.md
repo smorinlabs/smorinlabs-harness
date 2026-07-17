@@ -60,10 +60,13 @@ anything else, because the page never needs a live connection to an agent.
    else the neutral built-in style. Never mix themes.
 
 5. **Render from the template.** Start from
-   `assets/codesign-template.html`. Embed the validated spec verbatim in the
-   `<script id="codesign-spec" type="application/json">` tag, author the DOM
-   to match it (every `data-id` mirrors a spec id), and keep the engine
-   script intact. Apply the theme layer per step 4.
+   `assets/codesign-template.html`. Embed the validated spec in the
+   `<script id="codesign-spec" type="application/json">` tag (the validator
+   already rejects strings containing `</script`; if you must keep such
+   text, escape `/` as `\/` — valid JSON, HTML-safe), author the DOM to
+   match it (every `data-id` mirrors a spec id; the engine hydrates
+   selection state from the spec on load), and keep the engine script
+   intact. Apply the theme layer per step 4.
 
 6. **Deliver and explain the loop.** Give the file path (and open/preview it
    when the platform can). Tell the user the reader can export MD/JSON or
@@ -98,9 +101,12 @@ anything else, because the page never needs a live connection to an agent.
 # Quick smoke test
 
 1. Does `validate_spec.py` exit 0 on the embedded spec?
-2. Click every choice: do exclusive sections enforce pick-one?
-3. Does Export → MD reflect exactly the current toggles and notes?
-4. Is the right `color-scheme` meta present?
+2. Does every spec id have a matching `data-id` in the DOM, and vice versa?
+   (On load the engine hydrates selections FROM the spec — a mismatched
+   `data-id` silently drops that choice from exports.)
+3. Click every choice: do exclusive sections enforce pick-one?
+4. Does Export → MD reflect exactly the current toggles and notes?
+5. Is the right `color-scheme` meta present?
 
 # Gotchas
 

@@ -148,7 +148,7 @@
   <h1 id="pageTitle">Sample decision — codesign</h1>
   <p class="lead" id="pageLead">Toggle choices, add notes, then export your picks.</p>
 
-  <section data-id="sec-01-direction" data-exclusive="true">
+  <section data-id="sec-01-direction" data-exclusive="true" role="radiogroup" aria-label="Overall direction">
     <div class="sec-head"><span class="id">sec-01</span><h2>Overall direction</h2></div>
     <p class="sec-lead"><span class="rule">Pick one</span> — these are mutually exclusive.</p>
     <div class="choice" data-id="ch-01-a" data-selected="true" tabindex="0" role="radio" aria-checked="true">
@@ -162,7 +162,7 @@
     <div class="notes"><label for="note-01">Why this one?</label><textarea id="note-01" placeholder="Why this one?"></textarea></div>
   </section>
 
-  <section data-id="sec-02-extras" data-exclusive="false">
+  <section data-id="sec-02-extras" data-exclusive="false" role="group" aria-label="Extras">
     <div class="sec-head"><span class="id">sec-02</span><h2>Extras</h2></div>
     <p class="sec-lead"><span class="rule">Include any</span> — these stack.</p>
     <div class="choice" data-id="ch-02-a" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
@@ -176,7 +176,7 @@
 
   <div class="feedback">
     <h3>Overall feedback</h3>
-    <textarea id="note-overall" placeholder="Anything the options above don't capture?"></textarea>
+    <textarea id="note-overall" aria-label="Overall feedback" placeholder="Anything the options above don't capture?"></textarea>
   </div>
 </div>
 
@@ -197,9 +197,20 @@
 
 <script>
 /* ============ ENGINE (keep intact) ============
-   Reads the embedded spec, binds by data-id, enforces exclusivity, and
-   builds MD/JSON exports + re-prompts from spec + live DOM state. */
-var SPEC = JSON.parse(document.getElementById("codesign-spec").textContent);
+   Reads the embedded spec, hydrates selection state FROM it (the spec is
+   the source of truth), binds by data-id, enforces exclusivity, and builds
+   MD/JSON exports + re-prompts from spec + live DOM state. */
+var SPEC;
+try {
+  SPEC = JSON.parse(document.getElementById("codesign-spec").textContent);
+} catch (e) {
+  var banner = document.createElement("div");
+  banner.textContent = "This page's embedded codesign-spec failed to parse (" + e.message + "). Buttons are disabled — regenerate the page.";
+  banner.style.cssText = "background:#8B2E2E;color:#fff;padding:12px 20px;font:14px/1.4 system-ui;position:sticky;top:0;z-index:99;";
+  document.body.prepend(banner);
+  document.querySelectorAll("button").forEach(function(b){ b.disabled = true; });
+  throw e;
+}
 
 function choiceEl(id){ return document.querySelector('.choice[data-id="'+id+'"]'); }
 function isSel(id){ var el=choiceEl(id); return !!el && el.getAttribute("data-selected")==="true"; }
@@ -213,6 +224,7 @@ SPEC.sections.forEach(function(s){
   if(!secEl) return;
   s.choices.forEach(function(c){
     var el = choiceEl(c.id); if(!el) return;
+    setSel(el, c.selected === true); // hydrate from the spec — it wins over authored data-selected
     function toggle(){
       if(s.exclusive){ s.choices.forEach(function(o){ var oe=choiceEl(o.id); if(oe) setSel(oe,false); }); setSel(el,true); }
       else { setSel(el, el.getAttribute("data-selected")!=="true"); }
@@ -265,7 +277,7 @@ function doExport(kind){
   if(kind==="json") show("Export · JSON — save as "+slug()+"-"+stamp()+".json", JSON.stringify(buildJSON(),null,2));
   else show("Export · Markdown — save as "+slug()+"-"+stamp()+".md", buildMD());
 }
-function slug(){ return SPEC.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60); }
+function slug(){ return SPEC.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "codesign"; }
 function reprompt(kind){
   var picks=selectedIds().join(", ")||"(none)";
   var body;
@@ -281,7 +293,11 @@ function reprompt(kind){
 }
 function copyPanel(){
   var t=document.getElementById("panelBody").textContent;
-  if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){ document.getElementById("copyBtn").textContent="Copied ✓"; });
+  var btn=document.getElementById("copyBtn");
+  if(!navigator.clipboard){ btn.textContent="Select the text manually"; return; }
+  navigator.clipboard.writeText(t)
+    .then(function(){ btn.textContent="Copied ✓"; })
+    .catch(function(){ btn.textContent="Copy failed — select manually"; });
 }
 refresh();
 </script>

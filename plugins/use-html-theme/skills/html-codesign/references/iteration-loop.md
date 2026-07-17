@@ -22,9 +22,10 @@ surviving ID; only new options get new IDs.
 
 ```
 Here are my answers for "{title}" — selected: {selected ids}.
-Notes: {non-empty note values, id-prefixed}.
-Proceed using exactly these choices.
+Notes — {id: value · id: value}. Proceed using exactly these choices.
 ```
+
+(The notes clause is omitted when every note is empty.)
 
 Pasting the full MD or JSON export works too and carries strictly more
 information; the buttons are the low-friction path.

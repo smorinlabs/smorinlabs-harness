@@ -47,6 +47,16 @@ def validate(spec: dict[str, Any]) -> None:
         return
 
     seen_ids: set[str] = set()
+    seen_sec_nums: set[str] = set()
+
+    def check_embeddable(value: object, where: str) -> None:
+        # A literal "</script" in any string would truncate the embedded
+        # <script id="codesign-spec"> tag and kill the page after validation.
+        if isinstance(value, str) and "</script" in value.lower():
+            err(f"{where}: string contains '</script' — breaks the embedded spec tag; rephrase it")
+
+    check_embeddable(spec.get("title"), "title")
+    check_embeddable(spec.get("lead"), "lead")
 
     def claim(eid: str, where: str) -> None:
         if eid in seen_ids:
@@ -67,6 +77,14 @@ def validate(spec: dict[str, Any]) -> None:
         else:
             sec_num = m.group(1)
             claim(sid, where)
+            if sec_num in seen_sec_nums:
+                err(
+                    f"{where}: section number {sec_num!r} already used — bare"
+                    f" references like sec-{sec_num} and note-{sec_num} would be ambiguous"
+                )
+            seen_sec_nums.add(sec_num)
+        check_embeddable(sec.get("title"), f"{where}.title")
+        check_embeddable(sec.get("lead"), f"{where}.lead")
         if not isinstance(sec.get("title"), str) or not sec["title"].strip():
             err(f"{where}: title must be a non-empty string")
         if not isinstance(sec.get("exclusive"), bool):
@@ -96,6 +114,8 @@ def validate(spec: dict[str, Any]) -> None:
                 err(f"{cwhere}: label must be a non-empty string")
             elif len(label) > 120:
                 err(f"{cwhere}: label exceeds 120 chars")
+            check_embeddable(label, f"{cwhere}.label")
+            check_embeddable(ch.get("detail"), f"{cwhere}.detail")
             if not isinstance(ch.get("selected", False), bool):
                 err(f"{cwhere}: selected must be boolean")
             if ch.get("selected") is True:
@@ -113,11 +133,16 @@ def validate(spec: dict[str, Any]) -> None:
                 claim(nid, f"{where}.note")
                 if sec_num and nm.group(1) != sec_num:
                     err(f"{where}: note {nid!r} numbered for a different section than {sid!r}")
+            if isinstance(note, dict):
+                check_embeddable(note.get("placeholder"), f"{where}.note.placeholder")
+                check_embeddable(note.get("value"), f"{where}.note.value")
 
     fb = spec.get("feedback")
     if fb is not None:
         if not isinstance(fb, dict) or fb.get("id") != "note-overall":
             err('feedback.id must be "note-overall"')
+        if isinstance(fb, dict):
+            check_embeddable(fb.get("value"), "feedback.value")
 
 
 def main() -> int:

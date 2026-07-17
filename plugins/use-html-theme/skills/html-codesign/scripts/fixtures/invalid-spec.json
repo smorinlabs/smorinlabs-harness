@@ -23,6 +23,14 @@
         { "id": "choice-3", "label": "Wrong prefix entirely" },
         { "id": "ch-03-a", "label": "Numbered for the wrong section" }
       ]
+    },
+    {
+      "id": "sec-01-duplicate-number",
+      "title": "Reuses section number 01",
+      "exclusive": false,
+      "choices": [
+        { "id": "ch-01-c", "label": "Label that would break embedding: </script>" }
+      ]
     }
   ],
   "feedback": { "id": "note-final", "value": "bad feedback id" }

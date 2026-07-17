@@ -54,8 +54,19 @@ moments: plan, page, export.
 | `note` | optional per-section free-text block (`id`, `placeholder`, `value`) |
 | `feedback` | optional page-level note; its id is always `note-overall` |
 
-All ids follow `references/id-grammar.md`. The validator enforces everything
-in this file; run it, don't eyeball it.
+All ids follow `references/id-grammar.md`.
+
+## What the validator does and doesn't check
+
+`validate_spec.py` enforces: the literal `version`/`skill`/`mode` values,
+non-empty `title`, the full ID grammar, global ID uniqueness, unique section
+numbers, choice/note numbers matching their section, `exclusive` present as a
+boolean, ≤1 selected choice in exclusive sections, label type/length, and
+that no string contains `</script` (which would truncate the embedded spec
+tag). It does NOT check: timestamp formats, `lead`/`detail`/`placeholder`
+types, or that the rendered DOM mirrors the spec — those are yours to honor
+(the SKILL.md smoke test covers the DOM mirror). Run the validator AND do the
+smoke test; neither replaces the other.
 
 ## Invariants
 

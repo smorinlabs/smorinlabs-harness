@@ -17,35 +17,41 @@ untouched — this is paint, not plumbing.
 - Section IDs and choice IDs render in the serif italic
   (`var(--font-serif)`, `font-style: italic`, clay for section IDs, muted
   for choice IDs) instead of monospace — Birchline's editorial register.
+- **No webfont `<link>`** — codesign pages are self-contained (html-codesign
+  hard rule, restated in its `theming.md`). Use the token font stacks and
+  let them fall back locally (the serif stack lands on Georgia).
 
 ## Tokens for the template's neutral slots
 
+Every value is a `tokens.md` token or a derivation `tokens.md` itself
+documents (the 12–16% tint recipe; slate-tinted shadows). No new hex.
+
 | Template token | Birchline value |
 |---|---|
-| `--ink` | `var(--slate)` `#141413` |
-| `--muted` | `#5C574E` |
-| `--bg` | `var(--ivory)` `#FAF9F5` |
-| `--card` | `#FFFFFF` |
-| `--line` | `var(--oat)` `#E3DACC` |
-| `--line-soft` | `var(--gray-100)` `#F0EEE6` |
-| `--accent` | `var(--clay)` `#D97757` |
-| `--accent-deep` | `#B85C3E` |
-| `--sel-bg` | `#FBF1EC` (12% clay tint on white) |
-| `--radius` | `10px` |
-| `--shadow` | `0 1px 2px rgba(20,20,19,.06), 0 6px 20px rgba(20,20,19,.06)` |
+| `--ink` | `var(--slate)` |
+| `--muted` | `var(--gray-700)` |
+| `--bg` | `var(--ivory)` |
+| `--card` | `#FFFFFF` (paper white, the card ground `tokens.md` composes on) |
+| `--line` | `var(--oat)` |
+| `--line-soft` | `var(--gray-100)` |
+| `--accent` | `var(--clay)` |
+| `--accent-deep` | `color-mix(in srgb, var(--clay) 82%, var(--slate))` (hover-darkened clay) |
+| `--sel-bg` | `color-mix(in srgb, var(--clay) 12%, #FFFFFF)` (the documented 12% tint) |
+| `--radius` | `var(--r-md)` |
+| `--shadow` | `var(--shadow-md)` |
 
 ## Component notes
 
-- **Choice cards**: selected state is clay border + `#FBF1EC` warm fill;
-  hover is clay border only. Check glyph on clay. Exclusive sections keep
-  the circular box (radio shape).
+- **Choice cards**: selected state is clay border + the `--sel-bg` warm fill
+  (the 12% clay tint above); hover is clay border only. Check glyph on clay.
+  Exclusive sections keep the circular box (radio shape).
 - **Control bars**: ivory with `backdrop-filter: blur(8px)` at 92% opacity,
   oat hairline. Primary buttons clay → clay-deep on hover; secondary white
   with oat border.
 - **Textareas**: ivory fill, oat border, clay focus ring.
-- **Export panel**: slate (`#141413`) ground, warm off-white text
-  (`#EDE7DC`), clay top border — the one dark surface on the page, framed as
-  "machine output".
+- **Export panel**: slate (`var(--slate)`) ground, ivory text
+  (`var(--ivory)`), clay top border — the one dark surface on the page,
+  framed as "machine output".
 - **Stat line / counters**: tabular numerals.
 
 ## Birchline rules that bind codesign pages
