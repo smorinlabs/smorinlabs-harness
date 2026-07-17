@@ -151,6 +151,7 @@ for ref in [
     "export-formats.md",
     "iteration-loop.md",
     "theming.md",
+    "design-notes.md",
 ]:
     check(f"html-codesign references/{ref} exists", file_exists(f"{cd_base}/references/{ref}"))
 check(
@@ -160,6 +161,14 @@ check(
 check(
     "html-codesign template embeds codesign-spec tag",
     file_contains(f"{cd_base}/assets/codesign-template.html", 'id="codesign-spec"'),
+)
+check(
+    "html-codesign template sample spec has contexts",
+    file_contains(f"{cd_base}/assets/codesign-template.html", '"contexts"'),
+)
+check(
+    "html-codesign template builds codesign-answers exports",
+    file_contains(f"{cd_base}/assets/codesign-template.html", "codesign-answers"),
 )
 check("html-codesign validator exists", file_exists(f"{cd_base}/scripts/validate_spec.py"))
 for theme in THEMES:

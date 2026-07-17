@@ -158,4 +158,26 @@ neutral fallback. Overlays are 100% token-sourced; validator generalized to chec
 
 ---
 
+## [~] Project P13: html-codesign ergonomics — contexts, collapse, slim exports (v0.8.0)
+**Goal**: Per-question context-and-recommendation preambles (structured, choice-linked, ★ badges,
+validator-required at generation), three layers of manual collapse (context block, hide-unchosen
+options, section → dense summary row with followed/went-against rec markers, Collapse/Expand all),
+and slim-default / full-toggle `codesign-answers` exports (MD+JSON) decoupled from the input schema.
+Input `sections` core stays AskUserQuestion-shaped; contexts live in a sibling array; the
+export-IS-spec invariant consciously dropped. Design spec:
+`docs/superpowers/specs/2026-07-17-html-codesign-ergonomics-design.md`. New
+`references/design-notes.md` records lineage + invariants for future editors.
+
+### Tests & Tasks
+- [x] [P13-TS01] Fixtures first: valid fixture gains contexts (exit 0); invalid fixture gains 6 new context error classes (15 errors total, exit 1)
+- [x] [P13-T01] validate_spec.py: contexts layer checks (one per section, ctx-NN grammar, resolvable recommended ids, answers-doc rejection)
+- [x] [P13-T02] codesign-template.html: ctx blocks + ★ badges, hide-unchosen, summary rows, Collapse/Expand all, Slim/Full toggle, codesign-answers exports (embedded sample spec validates; engine JS syntax-checked; DOM mirror verified)
+- [x] [P13-T03] References: spec-format + export-formats rewritten, id-grammar (ctx-NN), iteration-loop (re-author contexts), theming (new component classes), NEW design-notes.md
+- [x] [P13-T04] SKILL.md: context authoring step, collapse/export smoke tests, slim-default gotcha, design-notes pointer
+- [x] [P13-TS02] Plugin validate.py extended (design-notes, contexts-in-template, answers-export checks) — all green; gen-check green
+- [x] [P13-T05] Docs page + README row refreshed; plugin 0.4.0 → 0.5.0
+- [ ] [P13-T06] skill-quality gate; browser smoke test of template; commit; marketplace v0.8.0 tag + push
+
+---
+
 - [ ] Regression Test Status

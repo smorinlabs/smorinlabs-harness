@@ -15,7 +15,8 @@ manual copy). The user pastes it into whatever chat they share with the agent.
 ```
 Make a v2 of "{title}". Keep these picks: {selected ids}. Replace the
 unselected options in each section with fresh alternatives. Reuse every
-surviving ID; only new options get new IDs.
+surviving ID; only new options get new IDs. Re-author each section's
+context for the v2.
 ```
 
 **Here are my answers** — the decision is made; proceed:
@@ -27,8 +28,10 @@ Notes — {id: value · id: value}. Proceed using exactly these choices.
 
 (The notes clause is omitted when every note is empty.)
 
-Pasting the full MD or JSON export works too and carries strictly more
-information; the buttons are the low-friction path.
+Pasting an export works too. Slim (the page's default) is the right thing
+to paste back to the agent — it carries the decision without re-sending
+contexts the agent already holds. Full is for human records, not for the
+loop.
 
 ## Rules for generating a v2
 
@@ -40,14 +43,20 @@ information; the buttons are the low-friction path.
    section retires its number (don't renumber the rest).
 4. **Selections carry forward.** A surviving choice keeps the `selected`
    state from the user's export unless they said otherwise.
-5. **Re-validate.** The v2 spec goes through `validate_spec.py` before
+5. **Re-author every context.** The v2 input spec requires a context per
+   section (validator-enforced), and a slim export carries none — never
+   copy a v1 context forward blindly. Write fresh context that reflects
+   what v1 decided: what's now locked, what the remaining trade-off is,
+   and an updated recommendation.
+6. **Re-validate.** The v2 spec goes through `validate_spec.py` before
    rendering, same as v1.
-6. **Say what changed.** Alongside the v2, summarize in chat: kept / replaced
+7. **Say what changed.** Alongside the v2, summarize in chat: kept / replaced
    / added, by ID — that's the diff the stable IDs exist to make possible.
 
 ## When an export comes back
 
-Treat the JSON's `selected` values and note texts as the user's decision
-record. If they returned MD instead, the ✓/✗ marks and blockquoted notes
-carry the same information. Quote IDs back when confirming ("locking in
-ch-01-a and ch-02-a") so the record stays precise.
+Exports are `codesign-answers` documents (references/export-formats.md),
+not input specs. Treat each answer's `selected` entries and `note` text as
+the user's decision record. If they returned MD instead, the ✓ lines and
+note blockquotes carry the same information. Quote IDs back when confirming
+("locking in ch-01-a and ch-02-a") so the record stays precise.

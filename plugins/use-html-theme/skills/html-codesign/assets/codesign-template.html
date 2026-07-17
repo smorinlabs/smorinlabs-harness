@@ -18,6 +18,7 @@
     --ink:#1F2328; --muted:#5A6069; --bg:#FAFAF8; --card:#FFFFFF;
     --line:#E2E3DF; --line-soft:#EEEFEB;
     --accent:#35597E; --accent-deep:#274465; --sel-bg:#EFF3F8;
+    --warn:#8A5A00;
     --font:system-ui,-apple-system,"Segoe UI",sans-serif;
     --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
     --radius:9px;
@@ -39,16 +40,50 @@
   button:hover{border-color:var(--accent);}
   button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
   button.primary:hover{background:var(--accent-deep);}
-  button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  button:focus-visible,textarea:focus-visible,.summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .seg{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg .seg-label{font-size:12px;color:var(--muted);padding:0 8px 0 10px;}
+  .seg .seg-btn{border:0;border-radius:0;padding:7px 12px;background:var(--card);}
+  .seg .seg-btn[aria-pressed="true"]{background:var(--accent);color:#fff;}
   .wrap{max-width:720px;margin:0 auto;padding:36px 24px 64px;}
   h1{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.01em;
     margin:0 0 10px;text-wrap:balance;}
   .lead{font-size:17px;color:var(--muted);margin:0 0 8px;max-width:60ch;}
   section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:22px;margin:22px 0;box-shadow:var(--shadow);}
+  section[data-collapsed="true"]{padding:12px 16px;}
+  section[data-collapsed="true"] .sec-head,
+  section[data-collapsed="true"] .sec-body{display:none;}
+  section[data-collapsed="false"] .summary{display:none;}
   .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
   .sec-head .id{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
   .sec-head h2{font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em;}
+  .sec-head .spacer{flex:1;}
+  .fold{font-family:var(--mono);font-size:12px;padding:3px 9px;color:var(--muted);}
+  /* Collapsed one-line summary — dense scan row (see SKILL.md decision 4) */
+  .summary{display:block;width:100%;text-align:left;background:transparent;border:0;
+    padding:2px 4px;cursor:pointer;font:inherit;color:inherit;border-radius:6px;}
+  .summary:hover{background:var(--sel-bg);}
+  .summary .s-line{display:block;font-size:14.5px;}
+  .summary .s-line .id{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:8px;}
+  .summary .s-line .s-q{font-weight:600;}
+  .summary .s-line .s-sel{color:var(--accent-deep);}
+  .summary .s-line .s-mark-follow{color:var(--accent-deep);font-size:12.5px;margin-left:6px;}
+  .summary .s-line .s-mark-against{color:var(--warn);font-size:12.5px;margin-left:6px;}
+  .summary .s-note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;font-size:13px;color:var(--muted);margin-top:2px;}
+  /* Context & recommendation block — open on load, collapsible out of the way */
+  .ctx{border:1px solid var(--line-soft);border-radius:8px;margin:2px 0 14px;background:var(--bg);}
+  .ctx-toggle{display:flex;width:100%;align-items:center;gap:8px;text-align:left;
+    background:transparent;border:0;padding:9px 12px;border-radius:8px;
+    font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .ctx-toggle .chev{font-size:10px;transition:transform .14s ease;}
+  .ctx[data-open="false"] .ctx-toggle .chev{transform:rotate(-90deg);}
+  .ctx[data-open="false"] .ctx-body,.ctx[data-open="false"] .ctx-rec{display:none;}
+  .ctx-body{margin:0;padding:0 14px 10px;font-size:14px;}
+  .ctx-rec{margin:0 12px 12px;padding:9px 12px;border-left:3px solid var(--accent);
+    background:var(--sel-bg);border-radius:0 8px 8px 0;font-size:13.5px;}
+  .ctx-rec .cid{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 4px;}
   .sec-lead{font-size:14px;color:var(--muted);margin:0 0 14px;}
   .sec-lead .rule{color:var(--accent-deep);font-weight:600;}
   .choice{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;margin:8px 0;
@@ -56,6 +91,7 @@
     transition:border-color .14s ease,background .14s ease;}
   .choice:hover{border-color:var(--accent);}
   .choice[data-selected="true"]{border-color:var(--accent);background:var(--sel-bg);}
+  section[data-options-hidden="true"] .choice[data-selected="false"]{display:none;}
   .box{flex:none;width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line);
     display:grid;place-items:center;margin-top:1px;font-size:13px;color:#fff;
     transition:background .14s ease,border-color .14s ease;}
@@ -65,7 +101,11 @@
   .choice[data-selected="true"] .box::after{opacity:1;}
   .choice .label{font-size:15px;}
   .choice .label .cid{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:8px;}
+  .badge-rec{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;
+    background:var(--sel-bg);border:1px solid var(--accent);color:var(--accent-deep);
+    font-size:11px;font-weight:600;vertical-align:1px;}
   .choice .sub{display:block;font-size:13px;color:var(--muted);margin-top:2px;}
+  .opt-toggle{display:block;margin:8px 0 0;padding:5px 10px;font-size:12px;color:var(--muted);}
   .notes{margin-top:14px;}
   .notes label{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
   textarea{width:100%;margin-top:6px;font-family:var(--font);font-size:14px;color:var(--ink);
@@ -95,15 +135,16 @@
 <!-- ============ SPEC (source of truth) ============
      Replace with YOUR validated spec (references/spec-format.md).
      Must pass scripts/validate_spec.py BEFORE rendering. The DOM below
-     mirrors it: every data-id here exists in the spec and vice versa. -->
+     mirrors it: every data-id here exists in the spec and vice versa,
+     including one .ctx block per contexts[] entry. -->
 <script id="codesign-spec" type="application/json">
 {
   "version": "1",
   "skill": "html-codesign",
   "mode": "codesign",
   "title": "Sample decision — codesign",
-  "lead": "Toggle choices, add notes, then export your picks.",
-  "generated_at": "2026-07-16T00:00:00Z",
+  "lead": "Review each context, toggle choices, add notes, then export your picks.",
+  "generated_at": "2026-07-17T00:00:00Z",
   "sections": [
     {
       "id": "sec-01-direction",
@@ -128,6 +169,22 @@
       "note": { "id": "note-02", "placeholder": "Optional", "value": "" }
     }
   ],
+  "contexts": [
+    {
+      "id": "ctx-01",
+      "section": "sec-01-direction",
+      "body": "Option A concentrates attention on one thing and demotes the rest to on-demand detail; Option B spreads attention across a wider surface. The focused route is easier to ship and easier to undo.",
+      "recommendation": "Option A — the focused route matches the primary job and keeps v1 small.",
+      "recommended": ["ch-01-a"]
+    },
+    {
+      "id": "ctx-02",
+      "section": "sec-02-extras",
+      "body": "Both extras are independent of the direction choice and cheap to add later; neither blocks shipping.",
+      "recommendation": "Extra one now — it compounds; extra two can wait for a real request.",
+      "recommended": ["ch-02-a"]
+    }
+  ],
   "feedback": { "id": "note-overall", "value": "" }
 }
 </script>
@@ -137,41 +194,74 @@
   <button class="primary" onclick="doExport('json')">Export → JSON</button>
   <button onclick="reprompt('draft')">Another draft</button>
   <button onclick="reprompt('answers')">Here are my answers</button>
+  <span class="seg" role="group" aria-label="Export detail">
+    <span class="seg-label">Export</span>
+    <button class="seg-btn" id="segSlim" aria-pressed="true" onclick="setVariant('slim')">Slim</button>
+    <button class="seg-btn" id="segFull" aria-pressed="false" onclick="setVariant('full')">Full</button>
+  </span>
+  <button onclick="collapseAll()">Collapse all</button>
+  <button onclick="expandAll()">Expand all</button>
   <span class="spacer"></span>
   <span class="made" id="madeCount"></span>
 </div>
 
 <div class="wrap">
   <!-- Author the DOM to mirror the spec: one <section data-id data-exclusive>
-       per spec section, one .choice[data-id] per choice, textareas keyed by
-       note ids. Rewrite the sample content; keep the structure. -->
+       per spec section (with .summary row, .fold button, .ctx block for its
+       contexts[] entry, and .opt-toggle), one .choice[data-id] per choice
+       (recommended ones carry .badge-rec), textareas keyed by note ids.
+       Rewrite the sample content; keep the structure. -->
   <h1 id="pageTitle">Sample decision — codesign</h1>
-  <p class="lead" id="pageLead">Toggle choices, add notes, then export your picks.</p>
+  <p class="lead" id="pageLead">Review each context, toggle choices, add notes, then export your picks.</p>
 
-  <section data-id="sec-01-direction" data-exclusive="true" role="radiogroup" aria-label="Overall direction">
-    <div class="sec-head"><span class="id">sec-01</span><h2>Overall direction</h2></div>
-    <p class="sec-lead"><span class="rule">Pick one</span> — these are mutually exclusive.</p>
-    <div class="choice" data-id="ch-01-a" data-selected="true" tabindex="0" role="radio" aria-checked="true">
-      <span class="box"></span>
-      <span class="label"><span class="cid">ch-01-a</span>Option A<span class="sub">The focused route.</span></span>
+  <section data-id="sec-01-direction" data-exclusive="true" data-collapsed="false" data-options-hidden="false" role="radiogroup" aria-label="Overall direction">
+    <div class="sec-head"><span class="id">sec-01</span><h2>Overall direction</h2>
+      <span class="spacer"></span>
+      <button class="fold" data-sec="sec-01-direction" aria-expanded="true" aria-label="Collapse sec-01 to summary">[–]</button>
     </div>
-    <div class="choice" data-id="ch-01-b" data-selected="false" tabindex="0" role="radio" aria-checked="false">
-      <span class="box"></span>
-      <span class="label"><span class="cid">ch-01-b</span>Option B<span class="sub">The broader route.</span></span>
+    <div class="summary" data-sec="sec-01-direction" role="button" tabindex="0" aria-label="Expand sec-01"></div>
+    <div class="sec-body">
+      <div class="ctx" data-id="ctx-01" data-open="true">
+        <button class="ctx-toggle" aria-expanded="true"><span class="chev">▾</span>Context &amp; recommendation</button>
+        <p class="ctx-body">Option A concentrates attention on one thing and demotes the rest to on-demand detail; Option B spreads attention across a wider surface. The focused route is easier to ship and easier to undo.</p>
+        <p class="ctx-rec">★ Recommends<span class="cid">ch-01-a</span>Option A — the focused route matches the primary job and keeps v1 small.</p>
+      </div>
+      <p class="sec-lead"><span class="rule">Pick one</span> — these are mutually exclusive.</p>
+      <div class="choice" data-id="ch-01-a" data-selected="true" tabindex="0" role="radio" aria-checked="true">
+        <span class="box"></span>
+        <span class="label"><span class="cid">ch-01-a</span>Option A<span class="badge-rec">★ rec</span><span class="sub">The focused route.</span></span>
+      </div>
+      <div class="choice" data-id="ch-01-b" data-selected="false" tabindex="0" role="radio" aria-checked="false">
+        <span class="box"></span>
+        <span class="label"><span class="cid">ch-01-b</span>Option B<span class="sub">The broader route.</span></span>
+      </div>
+      <button class="opt-toggle" data-sec="sec-01-direction" aria-expanded="true">Hide unchosen options</button>
+      <div class="notes"><label for="note-01">Why this one?</label><textarea id="note-01" placeholder="Why this one?"></textarea></div>
     </div>
-    <div class="notes"><label for="note-01">Why this one?</label><textarea id="note-01" placeholder="Why this one?"></textarea></div>
   </section>
 
-  <section data-id="sec-02-extras" data-exclusive="false" role="group" aria-label="Extras">
-    <div class="sec-head"><span class="id">sec-02</span><h2>Extras</h2></div>
-    <p class="sec-lead"><span class="rule">Include any</span> — these stack.</p>
-    <div class="choice" data-id="ch-02-a" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
-      <span class="box"></span><span class="label"><span class="cid">ch-02-a</span>Extra one</span>
+  <section data-id="sec-02-extras" data-exclusive="false" data-collapsed="false" data-options-hidden="false" role="group" aria-label="Extras">
+    <div class="sec-head"><span class="id">sec-02</span><h2>Extras</h2>
+      <span class="spacer"></span>
+      <button class="fold" data-sec="sec-02-extras" aria-expanded="true" aria-label="Collapse sec-02 to summary">[–]</button>
     </div>
-    <div class="choice" data-id="ch-02-b" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
-      <span class="box"></span><span class="label"><span class="cid">ch-02-b</span>Extra two</span>
+    <div class="summary" data-sec="sec-02-extras" role="button" tabindex="0" aria-label="Expand sec-02"></div>
+    <div class="sec-body">
+      <div class="ctx" data-id="ctx-02" data-open="true">
+        <button class="ctx-toggle" aria-expanded="true"><span class="chev">▾</span>Context &amp; recommendation</button>
+        <p class="ctx-body">Both extras are independent of the direction choice and cheap to add later; neither blocks shipping.</p>
+        <p class="ctx-rec">★ Recommends<span class="cid">ch-02-a</span>Extra one — it compounds; extra two can wait for a real request.</p>
+      </div>
+      <p class="sec-lead"><span class="rule">Include any</span> — these stack.</p>
+      <div class="choice" data-id="ch-02-a" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
+        <span class="box"></span><span class="label"><span class="cid">ch-02-a</span>Extra one<span class="badge-rec">★ rec</span></span>
+      </div>
+      <div class="choice" data-id="ch-02-b" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
+        <span class="box"></span><span class="label"><span class="cid">ch-02-b</span>Extra two</span>
+      </div>
+      <button class="opt-toggle" data-sec="sec-02-extras" aria-expanded="true">Hide unchosen options</button>
+      <div class="notes"><label for="note-02">Optional</label><textarea id="note-02" placeholder="Optional"></textarea></div>
     </div>
-    <div class="notes"><label for="note-02">Optional</label><textarea id="note-02" placeholder="Optional"></textarea></div>
   </section>
 
   <div class="feedback">
@@ -198,8 +288,9 @@
 <script>
 /* ============ ENGINE (keep intact) ============
    Reads the embedded spec, hydrates selection state FROM it (the spec is
-   the source of truth), binds by data-id, enforces exclusivity, and builds
-   MD/JSON exports + re-prompts from spec + live DOM state. */
+   the source of truth), binds by data-id, enforces exclusivity, manages
+   view state (collapse/hide — DOM only, never exported), and builds the
+   codesign-answers exports (slim default / full toggle) + re-prompts. */
 var SPEC;
 try {
   SPEC = JSON.parse(document.getElementById("codesign-spec").textContent);
@@ -212,16 +303,108 @@ try {
   throw e;
 }
 
+var CONTEXTS = {};
+(SPEC.contexts || []).forEach(function(x){ CONTEXTS[x.section] = x; });
+var VARIANT = "slim"; // export detail — view state, toggled in the control bar
+
+function secEl(id){ return document.querySelector('section[data-id="'+id+'"]'); }
 function choiceEl(id){ return document.querySelector('.choice[data-id="'+id+'"]'); }
 function isSel(id){ var el=choiceEl(id); return !!el && el.getAttribute("data-selected")==="true"; }
 function noteVal(id){ var el=document.getElementById(id); return el ? el.value.trim() : ""; }
 function totals(){ var n=0,t=0; SPEC.sections.forEach(function(s){ s.choices.forEach(function(c){ t++; if(isSel(c.id)) n++; }); }); return [n,t]; }
-function refresh(){ var x=totals(); var el=document.getElementById("madeCount"); if(el) el.textContent = x[0]+" of "+x[1]+" chosen"; }
 function setSel(el,on){ el.setAttribute("data-selected", on?"true":"false"); el.setAttribute("aria-checked", on?"true":"false"); }
 
+/* Followed / went-against is DERIVED (selected vs recommended) — never stored. */
+function verdict(s){
+  var ctx = CONTEXTS[s.id];
+  var rec = (ctx && Array.isArray(ctx.recommended)) ? ctx.recommended : [];
+  var sel = s.choices.filter(function(c){ return isSel(c.id); }).map(function(c){ return c.id; });
+  if(!sel.length) return { k: rec.length ? "unanswered" : "none", rec: rec };
+  if(!rec.length) return { k: "none", rec: rec };
+  var followed = s.exclusive
+    ? rec.indexOf(sel[0]) >= 0
+    : (sel.length === rec.length && sel.every(function(id){ return rec.indexOf(id) >= 0; }));
+  return { k: followed ? "followed" : "against", rec: rec };
+}
+
+/* Summary rows are built with DOM APIs (never innerHTML) — labels and notes
+   are user/author text and must not be parsed as markup. */
+function buildSummary(s){
+  var host = document.querySelector('.summary[data-sec="'+s.id+'"]');
+  if(!host) return;
+  while(host.firstChild) host.removeChild(host.firstChild);
+  var line = document.createElement("span"); line.className = "s-line";
+  function span(cls, text){ var e=document.createElement("span"); if(cls) e.className=cls; e.textContent=text; line.appendChild(e); }
+  span("id", "[+] " + s.id.replace(/^(sec-\d{2}).*$/, "$1"));
+  span("s-q", s.title);
+  var sel = s.choices.filter(function(c){ return isSel(c.id); });
+  if(sel.length){
+    span("s-sel", " → ✓ " + sel.map(function(c){ return c.id + " " + c.label; }).join(", "));
+  } else {
+    span("", " → (unanswered)");
+  }
+  var v = verdict(s);
+  if(v.k === "followed") span("s-mark-follow", "★ followed rec");
+  else if(v.k === "against") span("s-mark-against", "⚠ went against rec (" + v.rec.join(", ") + ")");
+  else if(v.k === "unanswered") span("s-mark-follow", "★ rec: " + v.rec.join(", "));
+  host.appendChild(line);
+  var nv = s.note ? noteVal(s.note.id) : "";
+  if(nv){
+    var note = document.createElement("span"); note.className = "s-note";
+    note.textContent = "“" + nv + "”";
+    host.appendChild(note);
+  }
+}
+
+function refresh(){
+  var x = totals();
+  var el = document.getElementById("madeCount");
+  if(el) el.textContent = x[0] + " of " + x[1] + " chosen";
+  SPEC.sections.forEach(function(s){
+    buildSummary(s);
+    var t = document.querySelector('.opt-toggle[data-sec="'+s.id+'"]');
+    if(t){
+      var secNode = secEl(s.id);
+      var hidden = secNode && secNode.getAttribute("data-options-hidden") === "true";
+      var unchosen = s.choices.filter(function(c){ return !isSel(c.id); }).length;
+      t.textContent = hidden
+        ? "Show " + unchosen + " hidden option" + (unchosen === 1 ? "" : "s")
+        : "Hide unchosen options";
+      t.setAttribute("aria-expanded", hidden ? "false" : "true");
+    }
+  });
+}
+
+/* ---- view state (DOM only — identical picks export identically regardless) ---- */
+function setCollapsed(sid, on){
+  var el = secEl(sid); if(!el) return;
+  el.setAttribute("data-collapsed", on ? "true" : "false");
+  var f = el.querySelector(".fold"); if(f) f.setAttribute("aria-expanded", on ? "false" : "true");
+  refresh();
+}
+function collapseAll(){ SPEC.sections.forEach(function(s){ setCollapsed(s.id, true); }); }
+function expandAll(){
+  SPEC.sections.forEach(function(s){
+    var el = secEl(s.id); if(!el) return;
+    el.setAttribute("data-collapsed", "false");
+    el.setAttribute("data-options-hidden", "false");
+    var f = el.querySelector(".fold"); if(f) f.setAttribute("aria-expanded", "true");
+    var ctx = el.querySelector(".ctx");
+    if(ctx){ ctx.setAttribute("data-open", "true");
+      var tg = ctx.querySelector(".ctx-toggle"); if(tg) tg.setAttribute("aria-expanded", "true"); }
+  });
+  refresh();
+}
+function setVariant(v){
+  VARIANT = v;
+  var s = document.getElementById("segSlim"), f = document.getElementById("segFull");
+  if(s) s.setAttribute("aria-pressed", v === "slim" ? "true" : "false");
+  if(f) f.setAttribute("aria-pressed", v === "full" ? "true" : "false");
+}
+
 SPEC.sections.forEach(function(s){
-  var secEl = document.querySelector('section[data-id="'+s.id+'"]');
-  if(!secEl) return;
+  var secNode = secEl(s.id);
+  if(!secNode) return;
   s.choices.forEach(function(c){
     var el = choiceEl(c.id); if(!el) return;
     setSel(el, c.selected === true); // hydrate from the spec — it wins over authored data-selected
@@ -233,37 +416,95 @@ SPEC.sections.forEach(function(s){
     el.addEventListener("click", toggle);
     el.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggle(); } });
   });
+  var fold = secNode.querySelector(".fold");
+  if(fold) fold.addEventListener("click", function(){ setCollapsed(s.id, true); });
+  var summ = secNode.querySelector(".summary");
+  if(summ){
+    summ.addEventListener("click", function(){ setCollapsed(s.id, false); });
+    summ.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); setCollapsed(s.id, false); } });
+  }
+  var optT = secNode.querySelector(".opt-toggle");
+  if(optT) optT.addEventListener("click", function(){
+    var on = secNode.getAttribute("data-options-hidden") !== "true";
+    secNode.setAttribute("data-options-hidden", on ? "true" : "false");
+    refresh();
+  });
+  var ctxT = secNode.querySelector(".ctx-toggle");
+  if(ctxT) ctxT.addEventListener("click", function(){
+    var box = ctxT.closest(".ctx");
+    var open = box.getAttribute("data-open") !== "true";
+    box.setAttribute("data-open", open ? "true" : "false");
+    ctxT.setAttribute("aria-expanded", open ? "true" : "false");
+  });
 });
 
-function buildJSON(){
-  var out = JSON.parse(JSON.stringify(SPEC));
-  out.exported_at = new Date().toISOString();
-  out.sections.forEach(function(s){
-    s.choices.forEach(function(c){ c.selected = isSel(c.id); });
-    if(s.note) s.note.value = noteVal(s.note.id);
-  });
-  if(out.feedback) out.feedback.value = noteVal(out.feedback.id);
-  return out;
+/* ---- exports: codesign-answers documents (references/export-formats.md) ---- */
+function verdictWord(s){
+  var v = verdict(s);
+  return v.k === "none" ? "no-recommendation" : (v.k === "followed" ? "followed" : (v.k === "against" ? "went-against" : "unanswered"));
 }
-function stamp(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function buildMD(){
-  var x=totals(); var L=["# "+SPEC.title,"","> _Choices made: "+x[0]+" of "+x[1]+" · Exported "+stamp()+"_",""];
-  if(SPEC.lead) L.push(SPEC.lead,"");
-  L.push("---","");
+function buildAnswers(variant){
+  var doc = { kind: "codesign-answers", version: "1", variant: variant,
+              title: SPEC.title, exported_at: new Date().toISOString(), answers: [] };
   SPEC.sections.forEach(function(s){
-    L.push("## "+s.id+" · "+s.title,"");
-    if(s.lead) L.push(s.lead,"");
-    s.choices.forEach(function(c){
-      var on=isSel(c.id);
-      L.push("- "+(on?"**":"")+"`"+c.id+"` "+(on?"✓":"✗")+" "+c.label+(on?"**":""));
-    });
-    if(s.note){ var nv=noteVal(s.note.id); if(nv) L.push("","> **Notes (`"+s.note.id+"`):** "+nv); }
-    L.push("","---","");
+    var a = { section: s.id, question: s.title,
+              selected: s.choices.filter(function(c){ return isSel(c.id); })
+                                 .map(function(c){ return { id: c.id, label: c.label }; }) };
+    var nv = s.note ? noteVal(s.note.id) : "";
+    if(nv) a.note = nv;
+    if(variant === "full"){
+      var ctx = CONTEXTS[s.id];
+      if(ctx) a.context = { body: ctx.body, recommendation: ctx.recommendation, recommended: ctx.recommended };
+      a.options = s.choices.map(function(c){ return { id: c.id, label: c.label, selected: isSel(c.id) }; });
+      a.verdict = verdictWord(s);
+    }
+    doc.answers.push(a);
   });
   var fb = SPEC.feedback ? noteVal(SPEC.feedback.id) : "";
-  if(fb) L.push("## Overall feedback","","> "+fb,"","---","");
-  var y=totals();
-  L.push("_Generated by html-codesign · exported "+stamp()+" · "+SPEC.sections.length+" sections · "+y[1]+" choices · "+y[0]+" selected._");
+  if(fb) doc.feedback = fb;
+  return doc;
+}
+function stamp(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function buildMD(variant){
+  var x = totals();
+  var L = ["# "+SPEC.title, "", "> _Choices made: "+x[0]+" of "+x[1]+" · Exported "+stamp()+" · "+variant+" export_", ""];
+  SPEC.sections.forEach(function(s){
+    L.push("## "+s.id+" · "+s.title, "");
+    var ctx = CONTEXTS[s.id];
+    var v = verdict(s);
+    if(variant === "full" && ctx){
+      L.push("**Context:** "+ctx.body, "");
+      if(ctx.recommended && ctx.recommended.length){
+        L.push("★ **Recommended:** "+ctx.recommended.map(function(r){ return "`"+r+"`"; }).join(", ")+" — "+ctx.recommendation, "");
+      } else {
+        L.push("★ **Recommendation:** "+ctx.recommendation, "");
+      }
+    }
+    var sel = s.choices.filter(function(c){ return isSel(c.id); });
+    if(variant === "full"){
+      s.choices.forEach(function(c){
+        var on = isSel(c.id);
+        var line = "- "+(on?"**":"")+"`"+c.id+"` "+(on?"✓":"✗")+" "+c.label+(on?"**":"");
+        if(on && s.exclusive){
+          if(v.k === "followed") line += " ★ _followed recommendation_";
+          else if(v.k === "against") line += " ⚠ _went against recommendation ("+v.rec.join(", ")+")_";
+        }
+        L.push(line);
+      });
+      if(!s.exclusive && v.k === "followed") L.push("", "★ _followed the recommendation_");
+      else if(!s.exclusive && v.k === "against") L.push("", "⚠ _went against the recommendation ("+v.rec.join(", ")+")_");
+    } else {
+      if(sel.length) sel.forEach(function(c){ L.push("- ✓ `"+c.id+"` "+c.label); });
+      else L.push("- (no selection)");
+    }
+    var nv = s.note ? noteVal(s.note.id) : "";
+    if(nv) L.push("", "> **Note (`"+s.note.id+"`):** "+nv);
+    L.push("");
+  });
+  var fb = SPEC.feedback ? noteVal(SPEC.feedback.id) : "";
+  if(fb) L.push("## Overall feedback", "", "> "+fb, "");
+  var y = totals();
+  L.push("_Generated by html-codesign · "+variant+" export · "+stamp()+" · "+SPEC.sections.length+" sections · "+y[1]+" choices · "+y[0]+" selected._");
   return L.join("\n");
 }
 function selectedIds(){ var ids=[]; SPEC.sections.forEach(function(s){ s.choices.forEach(function(c){ if(isSel(c.id)) ids.push(c.id); }); }); return ids; }
@@ -273,16 +514,17 @@ function show(title,body){
   document.getElementById("panel").classList.add("open");
   document.getElementById("copyBtn").textContent="Copy";
 }
-function doExport(kind){
-  if(kind==="json") show("Export · JSON — save as "+slug()+"-"+stamp()+".json", JSON.stringify(buildJSON(),null,2));
-  else show("Export · Markdown — save as "+slug()+"-"+stamp()+".md", buildMD());
-}
 function slug(){ return SPEC.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60) || "codesign"; }
+function doExport(kind){
+  var name = slug()+"-"+stamp()+"."+VARIANT+"."+(kind==="json"?"json":"md");
+  if(kind==="json") show("Export · JSON ("+VARIANT+") — save as "+name, JSON.stringify(buildAnswers(VARIANT),null,2));
+  else show("Export · Markdown ("+VARIANT+") — save as "+name, buildMD(VARIANT));
+}
 function reprompt(kind){
   var picks=selectedIds().join(", ")||"(none)";
   var body;
   if(kind==="draft"){
-    body='Make a v2 of "'+SPEC.title+'". Keep these picks: '+picks+'. Replace the unselected options in each section with fresh alternatives. Reuse every surviving ID; only new options get new IDs.';
+    body='Make a v2 of "'+SPEC.title+'". Keep these picks: '+picks+'. Replace the unselected options in each section with fresh alternatives. Reuse every surviving ID; only new options get new IDs. Re-author each section’s context for the v2.';
   } else {
     var notes=[]; SPEC.sections.forEach(function(s){ if(s.note){ var v=noteVal(s.note.id); if(v) notes.push(s.note.id+": "+v); } });
     var fb=SPEC.feedback?noteVal(SPEC.feedback.id):""; if(fb) notes.push("note-overall: "+fb);
@@ -299,6 +541,7 @@ function copyPanel(){
     .then(function(){ btn.textContent="Copied ✓"; })
     .catch(function(){ btn.textContent="Copy failed — select manually"; });
 }
+document.querySelectorAll("textarea").forEach(function(t){ t.addEventListener("input", refresh); });
 refresh();
 </script>
 </body>

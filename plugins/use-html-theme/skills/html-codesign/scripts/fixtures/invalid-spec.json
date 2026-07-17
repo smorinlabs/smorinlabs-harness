@@ -33,5 +33,21 @@
       ]
     }
   ],
+  "contexts": [
+    {
+      "id": "ctx-01",
+      "section": "sec-01-direction",
+      "body": "Context present but it recommends a choice that does not exist.",
+      "recommendation": "Pick the ghost option.",
+      "recommended": ["ch-01-z"]
+    },
+    {
+      "id": "ctx-9",
+      "section": "sec-02-extras",
+      "body": "",
+      "recommendation": "",
+      "recommended": "ch-02-a"
+    }
+  ],
   "feedback": { "id": "note-final", "value": "bad feedback id" }
 }

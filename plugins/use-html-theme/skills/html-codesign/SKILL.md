@@ -20,13 +20,19 @@ allowed-tools: Read Write Edit Glob Bash AskUserQuestion
 # What this makes
 
 A single `.html` file that turns a decision into something a person can
-*operate*: sections of choices (pick-one or pick-any), per-section notes, and
-a control bar whose four buttons are the whole contract — **Export → MD**,
-**Export → JSON**, **Another draft**, **Here are my answers**. The reader —
-who may not be in this chat at all — opens the file anywhere, clicks, and
-sends the export back. That text round-trip is the interface; it works
-identically whether the page was generated from Claude Code, Codex, or
-anything else, because the page never needs a live connection to an agent.
+*operate*: sections of choices (pick-one or pick-any), each opening with a
+collapsible **context & recommendation** preamble (★ badge on the
+recommended option), per-section notes, and three layers of manual collapse
+— fold the context away, hide unchosen options (note stays visible), or
+fold a whole section to a dense one-line summary (question · picks ·
+followed/went-against marker · note) so a finished page scans as a review
+of the decision. The control bar carries the contract — **Export → MD**,
+**Export → JSON** (slim by default, full by toggle), **Another draft**,
+**Here are my answers**, plus Collapse/Expand all. The reader — who may not
+be in this chat at all — opens the file anywhere, clicks, and sends the
+export back. That text round-trip is the interface; it works identically
+whether the page was generated from Claude Code, Codex, or anything else,
+because the page never needs a live connection to an agent.
 
 # When this skill applies
 
@@ -46,37 +52,49 @@ anything else, because the page never needs a live connection to an agent.
    clarifying question (AskUserQuestion if available; plain numbered chat
    list otherwise).
 
-2. **Write the spec first.** Author the `codesign-spec` JSON to
+2. **Author a context per section — always.** Each section gets a
+   `contexts` entry: a comprehensive `body` (landscape, constraints,
+   trade-offs), an argued `recommendation`, and the `recommended` choice
+   id(s). This is the preamble the reader reviews before choosing; a
+   generated page without one per section is invalid. An empty
+   `recommended` is allowed only when the recommendation text argues why
+   the trade-off is genuinely neutral.
+
+3. **Write the spec first.** Author the `codesign-spec` JSON to
    `references/spec-format.md`, with IDs per `references/id-grammar.md`.
    Write it to a file next to where the artifact will go.
 
-3. **Validate before rendering.** Run
+4. **Validate before rendering.** Run
    `scripts/validate_spec.py <spec-file>` (stdlib Python, no deps). Fix
-   until exit 0. Never render from an unvalidated spec — a duplicate ID or a
-   double-selected exclusive section breaks the page silently.
+   until exit 0. Never render from an unvalidated spec — a duplicate ID, a
+   missing context, or a double-selected exclusive section breaks the page
+   silently.
 
-4. **Resolve the theme.** Follow `references/theming.md`: use the
+5. **Resolve the theme.** Follow `references/theming.md`: use the
    use-html-theme session theme if one is active, else its persistence file,
    else the neutral built-in style. Never mix themes.
 
-5. **Render from the template.** Start from
+6. **Render from the template.** Start from
    `assets/codesign-template.html`. Embed the validated spec in the
    `<script id="codesign-spec" type="application/json">` tag (the validator
    already rejects strings containing `</script`; if you must keep such
    text, escape `/` as `\/` — valid JSON, HTML-safe), author the DOM to
-   match it (every `data-id` mirrors a spec id; the engine hydrates
-   selection state from the spec on load), and keep the engine script
-   intact. Apply the theme layer per step 4.
+   match it — every `data-id` mirrors a spec id, one `.ctx` block per
+   contexts entry, a `.badge-rec` on each recommended choice, and each
+   section's `.summary` row, `.fold` and `.opt-toggle` controls in place —
+   and keep the engine script intact. Apply the theme layer per step 5.
 
-6. **Deliver and explain the loop.** Give the file path (and open/preview it
-   when the platform can). Tell the user the reader can export MD/JSON or
+7. **Deliver and explain the loop.** Give the file path (and open/preview it
+   when the platform can). Tell the user the reader can review then collapse
+   each context, fold answered sections to scan their decisions, and export
+   MD/JSON (slim by default; Full toggle for a human decision record) or
    click "Another draft" / "Here are my answers" and paste the result back
    into any chat with you.
 
-7. **On a returned export or re-prompt**, follow
+8. **On a returned export or re-prompt**, follow
    `references/iteration-loop.md`: reuse every surviving ID, mint new IDs
-   only for new choices, and treat the returned `selected` values as the
-   user's decision.
+   only for new choices, re-author every section's context for the v2, and
+   treat the returned selections as the user's decision.
 
 # Hard rules
 
@@ -87,9 +105,15 @@ anything else, because the page never needs a live connection to an agent.
   `data-id`s mirror it exactly.
 - **IDs are stable.** Once shipped, an ID means the same thing in every
   export, chat message, and v2. Never re-letter surviving choices.
-- **Both exports, always.** MD for humans (PRs, Slack, docs — reads like a
-  lightweight decision record), JSON for machines (re-render, diff,
-  validate). Don't make the user choose.
+- **Every section gets a context.** Comprehensive view + argued
+  recommendation, validator-enforced at generation. Exports may omit it
+  (that's what slim is for) — the page never does.
+- **Both exports, always.** MD for humans, JSON for machines — both emitted
+  as `codesign-answers` documents (`references/export-formats.md`), slim by
+  default with a Full toggle. Don't make the user choose a format.
+- **Collapse is view state.** Section folding, hidden options, context
+  open/closed, and the Slim/Full toggle live in the DOM only — identical
+  picks export identically however the page is folded.
 - **Exclusive means exclusive.** Pick-one sections enforce a single
   selection in the UI and are validated to ship with at most one default.
 - **Declare the color scheme.** Light theme → `<meta name="color-scheme"
@@ -101,12 +125,20 @@ anything else, because the page never needs a live connection to an agent.
 # Quick smoke test
 
 1. Does `validate_spec.py` exit 0 on the embedded spec?
-2. Does every spec id have a matching `data-id` in the DOM, and vice versa?
-   (On load the engine hydrates selections FROM the spec — a mismatched
-   `data-id` silently drops that choice from exports.)
-3. Click every choice: do exclusive sections enforce pick-one?
-4. Does Export → MD reflect exactly the current toggles and notes?
-5. Is the right `color-scheme` meta present?
+2. Does every spec id have a matching `data-id` in the DOM, and vice versa —
+   including one `.ctx` block per contexts entry? (On load the engine
+   hydrates selections FROM the spec — a mismatched `data-id` silently
+   drops that choice from exports.)
+3. Click every choice: do exclusive sections enforce pick-one? Does each
+   recommended choice show its ★ badge?
+4. Collapse pass: does the context block fold and reopen; does
+   "Hide unchosen options" leave the question, picks, and note visible;
+   does folding a section show the dense summary (picks + rec marker +
+   note excerpt); do Collapse all / Expand all work?
+5. Export pass: does slim MD/JSON carry exactly ID · question · picks ·
+   note (no context, no verdict); does Full add context, all options, and
+   the followed/went-against verdict; do exports ignore collapse state?
+6. Is the right `color-scheme` meta present?
 
 # Gotchas
 
@@ -120,3 +152,9 @@ anything else, because the page never needs a live connection to an agent.
   decision is under-shaped — split the section or pre-filter with the user.
 - **A "report" request is not codesign.** If nothing is chosen or exported,
   it's a plain themed page; hand it to use-html-theme conventions instead.
+- **Slim is the default paste-back.** The agent already holds the contexts
+  it authored — a full export pasted into chat re-sends them for nothing.
+  Full is for human decision records (PRs, `docs/decisions/`).
+- **Editing this skill?** Read `references/design-notes.md` first — it
+  records the AskUserQuestion lineage of the sections core, the
+  input/output schema split, and the invariants edits must preserve.

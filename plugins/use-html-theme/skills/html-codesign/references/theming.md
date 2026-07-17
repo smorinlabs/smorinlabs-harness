@@ -50,6 +50,14 @@ components using only that theme's `tokens.md` variables.
   `.accent` span, in the H1; no pure-black shadows; sentence case).
 - **Keep the engine intact.** Theming changes tokens and component CSS —
   never the spec tag, `data-id`s, or the engine script.
+- **Cover the full component set.** Beyond the original bar/section/choice/
+  notes/panel components, a codesign page has: `.ctx` + `.ctx-toggle` +
+  `.ctx-body` + `.ctx-rec` (the context block and its recommendation
+  callout), `.badge-rec` (the ★ pill on recommended choices), `.summary`
+  with its `.s-line`/`.s-note`/`.s-mark-*` children (the collapsed
+  section's dense scan row), `.fold` and `.opt-toggle` (collapse
+  controls), and `.seg`/`.seg-btn` (the Slim/Full export toggle). A theme
+  overlay that skips these leaves neutral-styled islands in a themed page.
 - **No remote font links.** Codesign pages are self-contained ("no external
   requests" is a hard rule) and this wins over any theme guidance to load
   webfonts: use the theme's font stacks and let local fallbacks carry them

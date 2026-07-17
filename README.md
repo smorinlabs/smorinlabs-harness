@@ -84,7 +84,7 @@ Themed-HTML toolkit, two pure skills — controlled entirely in natural language
 | Skill | Does | Details |
 |---|---|---|
 | `use-html-theme` | Offers a catalog of three fully-isolated visual themes (Birchline, Technical-minimal, High-contrast-dark) on any HTML request and applies the chosen one to all subsequent HTML, with inline-flag and natural-language overrides, a side-by-side preview, and per-project persistence. | [docs/skills/use-html-theme.md](docs/skills/use-html-theme.md) |
-| `html-codesign` | Builds interactive "pick and export" decision pages — self-contained HTML with pick-one/pick-any sections, notes, stable IDs (`ch-01-a`), a validated embedded spec, and Markdown/JSON decision exports that round-trip through chat for diffable v2s. Styled by the active theme via a per-theme overlay, with a neutral fallback. | [docs/skills/html-codesign.md](docs/skills/html-codesign.md) |
+| `html-codesign` | Builds interactive "pick and export" decision pages — self-contained HTML with pick-one/pick-any sections, a collapsible context-and-recommendation preamble per question (★ badge on the recommended option), notes, stable IDs (`ch-01-a`), three layers of manual collapse (context, unchosen options, whole sections to dense summary rows) for reviewing decisions, a validated embedded spec, and slim-default / full-toggle Markdown/JSON answers exports that round-trip through chat for diffable v2s. Styled by the active theme via a per-theme overlay, with a neutral fallback. | [docs/skills/html-codesign.md](docs/skills/html-codesign.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`
