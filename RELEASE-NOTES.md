@@ -1,5 +1,22 @@
 # Release Notes
 
+## v0.6.0 — 2026-07-16
+
+### Added
+
+- **html-codesign** — new skill in the `use-html-theme` plugin (0.2.0 → 0.3.0):
+  interactive "pick and export" decision pages as single self-contained HTML
+  files. Sections of pick-one/pick-any choices with per-section notes; stable
+  IDs (`sec-01`, `ch-01-a`) that survive round-trips so "keep ch-01-a, swap
+  ch-02-b" yields a diffable v2; an embedded, machine-validated spec
+  (`validate_spec.py`, stdlib-only, fixture-tested); Markdown + JSON decision
+  exports and clipboard re-prompts — a plain-text back-channel that works
+  identically from Claude Code, Codex, or a stakeholder's browser. Theming
+  cascades from the active use-html-theme theme (Birchline ships a rich
+  `codesign.md` overlay) down to a neutral built-in. First-principles rebuild
+  of the unpublished birchline-html-artifacts prototype: report mode dropped,
+  constraints simplified to section-level exclusivity, theme lock-in removed.
+
 ## v0.5.0 — 2026-07-16
 
 ### Changed

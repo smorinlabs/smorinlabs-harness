@@ -2,7 +2,7 @@
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
 Claude Code marketplace and an OpenAI Codex marketplace from one tree. Five
-plugins, fifteen skills. Plugin metadata lives in a single source of truth
+plugins, sixteen skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -79,11 +79,12 @@ Orchestration layer over the built-in `/deep-research`.
 
 ### use-html-theme
 
-On any HTML-generation request, offers a 3-theme catalog and applies the chosen theme session-wide. Pure skill — controlled entirely in natural language, portable across Claude Code and Codex.
+Themed-HTML toolkit, two pure skills — controlled entirely in natural language, portable across Claude Code and Codex.
 
 | Skill | Does | Details |
 |---|---|---|
 | `use-html-theme` | Offers a catalog of three fully-isolated visual themes (Birchline, Technical-minimal, High-contrast-dark) on any HTML request and applies the chosen one to all subsequent HTML, with inline-flag and natural-language overrides, a side-by-side preview, and per-project persistence. | [docs/skills/use-html-theme.md](docs/skills/use-html-theme.md) |
+| `html-codesign` | Builds interactive "pick and export" decision pages — self-contained HTML with pick-one/pick-any sections, notes, stable IDs (`ch-01-a`), a validated embedded spec, and Markdown/JSON decision exports that round-trip through chat for diffable v2s. Styled by the active theme via a per-theme overlay, with a neutral fallback. | [docs/skills/html-codesign.md](docs/skills/html-codesign.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

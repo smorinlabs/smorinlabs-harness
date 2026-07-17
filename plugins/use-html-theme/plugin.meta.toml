@@ -1,5 +1,5 @@
 name = "use-html-theme"
-version = "0.2.0"
-description = "On any HTML-generation request, offer a small catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project. Overrides via natural language and [theme: x] inline flags; ask to preview the themes for a side-by-side catalog page. Fully-isolated themes with progressive disclosure — only the chosen theme's tokens are read."
+version = "0.3.0"
+description = "Themed-HTML toolkit, two pure skills. use-html-theme: on any HTML-generation request, offer a catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project — natural language and [theme: x] inline-flag control, side-by-side preview on request. html-codesign: interactive 'pick and export' decision pages — the reader toggles choices and notes in a self-contained HTML file, then exports the decision as Markdown/JSON with stable IDs for diffable iteration. Portable across Claude Code and Codex."
 author = "Steve Morin"
-keywords = ["html", "css", "theme", "design", "artifacts", "birchline"]
+keywords = ["html", "css", "theme", "design", "codesign", "decision", "artifacts", "birchline"]

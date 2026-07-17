@@ -123,4 +123,26 @@ capability lost; behavior now identical across tools.
 
 ---
 
+## [~] Project P11: html-codesign skill (v0.6.0)
+**Goal**: First-principles rebuild of the unpublished birchline-html-artifacts codesign mode as a
+theme-agnostic pure skill in the use-html-theme plugin. Interactive "pick and export" decision pages:
+self-contained HTML, pick-one/pick-any sections, stable IDs, embedded machine-validated spec,
+MD+JSON decision exports, clipboard re-prompts (portable text round-trip — identical on Claude Code
+and Codex). Theming cascade: theme codesign.md overlay > theme tokens > neutral built-in; Birchline
+overlay ports the original warm styling. Report mode abandoned (decision 2026-07-16); the old
+prototype is donor material, to be archived.
+
+### Tests & Tasks
+- [x] [P11-TS01] Plugin validator extended with 13 html-codesign checks, RED-first, then green
+- [x] [P11-TS02] validate_spec.py fixture tests: valid → exit 0; invalid → exit 1 with 7 error classes
+- [x] [P11-T01] validate_spec.py (stdlib spec/export contract validator)
+- [x] [P11-T02] SKILL.md + 5 references (spec-format, id-grammar, export-formats, iteration-loop, theming)
+- [x] [P11-T03] codesign-template.html (neutral engine: embedded spec, exclusivity, exports, re-prompts)
+- [x] [P11-T04] Birchline codesign.md overlay + use-html-theme composition note
+- [ ] [P11-T05] Docs page + README; plugin 0.3.0 / marketplace v0.6.0; whole-branch review
+- [ ] [P11-TS03] E2E: fresh-session generation on claude-code AND codex; embedded spec passes validator
+- [ ] [P11-T06] Placements both tools; skill-quality; verify --deep; merge; tag v0.6.0 + push
+
+---
+
 - [ ] Regression Test Status
