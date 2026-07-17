@@ -114,6 +114,14 @@ Before delivering any themed artifact, ask:
   means a new folder under `references/themes/` and a new entry in the
   picker. Don't invent a theme inline.
 
+# Composing with html-codesign
+
+If the request is an interactive pick-and-export decision page (codesign),
+the sibling `html-codesign` skill owns the structure, stable IDs, and
+exports — this skill still supplies the visual theme (its
+`themes/<name>/codesign.md` overlay when present). Don't reimplement
+toggles or export bars here.
+
 # Previewing the catalog
 
 If the user asks to preview, compare, or "see the options" for the themes

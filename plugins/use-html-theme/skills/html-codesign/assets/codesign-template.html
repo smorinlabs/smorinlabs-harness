@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Light neutral default. If rendering under a dark theme, switch BOTH
+     this meta and the :root color-scheme per references/theming.md. -->
+<meta name="color-scheme" content="light">
+<title>Sample decision — codesign</title>
+<style>
+  /* ================= THEME LAYER =================
+     Neutral built-in tokens. When a use-html-theme theme is active, replace
+     this :root block (and component colors below) per references/theming.md
+     — via the theme's codesign.md overlay if it has one, else derive from
+     its tokens.md. NEVER touch the engine script or data-ids. */
+  :root{
+    color-scheme: light;
+    --ink:#1F2328; --muted:#5A6069; --bg:#FAFAF8; --card:#FFFFFF;
+    --line:#E2E3DF; --line-soft:#EEEFEB;
+    --accent:#35597E; --accent-deep:#274465; --sel-bg:#EFF3F8;
+    --font:system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --radius:9px;
+    --shadow:0 1px 2px rgba(31,35,40,.05),0 4px 14px rgba(31,35,40,.05);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 20px;}
+  .bar.bottom{position:static;border-top:1px solid var(--line);border-bottom:0;}
+  .bar .spacer{flex:1;}
+  .bar .made{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  button{font-family:var(--font);font-size:13px;font-weight:550;cursor:pointer;
+    border-radius:8px;padding:8px 14px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);
+    transition:background .14s ease,border-color .14s ease;}
+  button:hover{border-color:var(--accent);}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  button.primary:hover{background:var(--accent-deep);}
+  button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .wrap{max-width:720px;margin:0 auto;padding:36px 24px 64px;}
+  h1{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.01em;
+    margin:0 0 10px;text-wrap:balance;}
+  .lead{font-size:17px;color:var(--muted);margin:0 0 8px;max-width:60ch;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;margin:22px 0;box-shadow:var(--shadow);}
+  .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
+  .sec-head .id{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+  .sec-head h2{font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em;}
+  .sec-lead{font-size:14px;color:var(--muted);margin:0 0 14px;}
+  .sec-lead .rule{color:var(--accent-deep);font-weight:600;}
+  .choice{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;margin:8px 0;
+    border:1px solid var(--line-soft);border-radius:8px;cursor:pointer;user-select:none;
+    transition:border-color .14s ease,background .14s ease;}
+  .choice:hover{border-color:var(--accent);}
+  .choice[data-selected="true"]{border-color:var(--accent);background:var(--sel-bg);}
+  .box{flex:none;width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line);
+    display:grid;place-items:center;margin-top:1px;font-size:13px;color:#fff;
+    transition:background .14s ease,border-color .14s ease;}
+  section[data-exclusive="true"] .box{border-radius:999px;}
+  .choice[data-selected="true"] .box{background:var(--accent);border-color:var(--accent);}
+  .choice .box::after{content:"✓";opacity:0;transition:opacity .14s ease;}
+  .choice[data-selected="true"] .box::after{opacity:1;}
+  .choice .label{font-size:15px;}
+  .choice .label .cid{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:8px;}
+  .choice .sub{display:block;font-size:13px;color:var(--muted);margin-top:2px;}
+  .notes{margin-top:14px;}
+  .notes label{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  textarea{width:100%;margin-top:6px;font-family:var(--font);font-size:14px;color:var(--ink);
+    background:var(--bg);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;resize:vertical;min-height:52px;}
+  .feedback{background:var(--line-soft);border-radius:var(--radius);padding:18px 20px;margin:22px 0;}
+  .feedback h3{margin:0 0 8px;font-size:14.5px;}
+  .panel{position:fixed;inset:auto 0 0 0;max-height:62vh;overflow:auto;z-index:40;
+    background:#24292F;color:#E7E9EC;border-top:2px solid var(--accent);
+    transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);}
+  .panel.open{transform:translateY(0);}
+  .panel-head{position:sticky;top:0;background:#24292F;display:flex;align-items:center;
+    gap:10px;padding:12px 18px;border-bottom:1px solid #3A4048;}
+  .panel-head .t{flex:1;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:#9AA3AD;}
+  .panel pre{margin:0;padding:16px 18px;font-family:var(--mono);font-size:12.5px;
+    line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+  .panel button{background:transparent;color:#E7E9EC;border-color:#4A515A;}
+  .panel button:hover{border-color:var(--accent);}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{transition:none !important;}
+    .panel{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SPEC (source of truth) ============
+     Replace with YOUR validated spec (references/spec-format.md).
+     Must pass scripts/validate_spec.py BEFORE rendering. The DOM below
+     mirrors it: every data-id here exists in the spec and vice versa. -->
+<script id="codesign-spec" type="application/json">
+{
+  "version": "1",
+  "skill": "html-codesign",
+  "mode": "codesign",
+  "title": "Sample decision — codesign",
+  "lead": "Toggle choices, add notes, then export your picks.",
+  "generated_at": "2026-07-16T00:00:00Z",
+  "sections": [
+    {
+      "id": "sec-01-direction",
+      "title": "Overall direction",
+      "lead": "Pick one — these are mutually exclusive.",
+      "exclusive": true,
+      "choices": [
+        { "id": "ch-01-a", "label": "Option A", "detail": "The focused route.", "selected": true },
+        { "id": "ch-01-b", "label": "Option B", "detail": "The broader route.", "selected": false }
+      ],
+      "note": { "id": "note-01", "placeholder": "Why this one?", "value": "" }
+    },
+    {
+      "id": "sec-02-extras",
+      "title": "Extras",
+      "lead": "Include any — these stack.",
+      "exclusive": false,
+      "choices": [
+        { "id": "ch-02-a", "label": "Extra one", "selected": false },
+        { "id": "ch-02-b", "label": "Extra two", "selected": false }
+      ],
+      "note": { "id": "note-02", "placeholder": "Optional", "value": "" }
+    }
+  ],
+  "feedback": { "id": "note-overall", "value": "" }
+}
+</script>
+
+<div class="bar" role="toolbar" aria-label="Codesign actions">
+  <button class="primary" onclick="doExport('md')">Export → MD</button>
+  <button class="primary" onclick="doExport('json')">Export → JSON</button>
+  <button onclick="reprompt('draft')">Another draft</button>
+  <button onclick="reprompt('answers')">Here are my answers</button>
+  <span class="spacer"></span>
+  <span class="made" id="madeCount"></span>
+</div>
+
+<div class="wrap">
+  <!-- Author the DOM to mirror the spec: one <section data-id data-exclusive>
+       per spec section, one .choice[data-id] per choice, textareas keyed by
+       note ids. Rewrite the sample content; keep the structure. -->
+  <h1 id="pageTitle">Sample decision — codesign</h1>
+  <p class="lead" id="pageLead">Toggle choices, add notes, then export your picks.</p>
+
+  <section data-id="sec-01-direction" data-exclusive="true">
+    <div class="sec-head"><span class="id">sec-01</span><h2>Overall direction</h2></div>
+    <p class="sec-lead"><span class="rule">Pick one</span> — these are mutually exclusive.</p>
+    <div class="choice" data-id="ch-01-a" data-selected="true" tabindex="0" role="radio" aria-checked="true">
+      <span class="box"></span>
+      <span class="label"><span class="cid">ch-01-a</span>Option A<span class="sub">The focused route.</span></span>
+    </div>
+    <div class="choice" data-id="ch-01-b" data-selected="false" tabindex="0" role="radio" aria-checked="false">
+      <span class="box"></span>
+      <span class="label"><span class="cid">ch-01-b</span>Option B<span class="sub">The broader route.</span></span>
+    </div>
+    <div class="notes"><label for="note-01">Why this one?</label><textarea id="note-01" placeholder="Why this one?"></textarea></div>
+  </section>
+
+  <section data-id="sec-02-extras" data-exclusive="false">
+    <div class="sec-head"><span class="id">sec-02</span><h2>Extras</h2></div>
+    <p class="sec-lead"><span class="rule">Include any</span> — these stack.</p>
+    <div class="choice" data-id="ch-02-a" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
+      <span class="box"></span><span class="label"><span class="cid">ch-02-a</span>Extra one</span>
+    </div>
+    <div class="choice" data-id="ch-02-b" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
+      <span class="box"></span><span class="label"><span class="cid">ch-02-b</span>Extra two</span>
+    </div>
+    <div class="notes"><label for="note-02">Optional</label><textarea id="note-02" placeholder="Optional"></textarea></div>
+  </section>
+
+  <div class="feedback">
+    <h3>Overall feedback</h3>
+    <textarea id="note-overall" placeholder="Anything the options above don't capture?"></textarea>
+  </div>
+</div>
+
+<div class="bar bottom" role="toolbar" aria-label="Codesign actions (bottom)">
+  <button class="primary" onclick="doExport('md')">Export → MD</button>
+  <button class="primary" onclick="doExport('json')">Export → JSON</button>
+  <button onclick="reprompt('draft')">Another draft</button>
+  <button onclick="reprompt('answers')">Here are my answers</button>
+</div>
+
+<div class="panel" id="panel" aria-live="polite">
+  <div class="panel-head"><span class="t" id="panelTitle">Export</span>
+    <button onclick="copyPanel()" id="copyBtn">Copy</button>
+    <button onclick="document.getElementById('panel').classList.remove('open')">Close</button>
+  </div>
+  <pre id="panelBody"></pre>
+</div>
+
+<script>
+/* ============ ENGINE (keep intact) ============
+   Reads the embedded spec, binds by data-id, enforces exclusivity, and
+   builds MD/JSON exports + re-prompts from spec + live DOM state. */
+var SPEC = JSON.parse(document.getElementById("codesign-spec").textContent);
+
+function choiceEl(id){ return document.querySelector('.choice[data-id="'+id+'"]'); }
+function isSel(id){ var el=choiceEl(id); return !!el && el.getAttribute("data-selected")==="true"; }
+function noteVal(id){ var el=document.getElementById(id); return el ? el.value.trim() : ""; }
+function totals(){ var n=0,t=0; SPEC.sections.forEach(function(s){ s.choices.forEach(function(c){ t++; if(isSel(c.id)) n++; }); }); return [n,t]; }
+function refresh(){ var x=totals(); var el=document.getElementById("madeCount"); if(el) el.textContent = x[0]+" of "+x[1]+" chosen"; }
+function setSel(el,on){ el.setAttribute("data-selected", on?"true":"false"); el.setAttribute("aria-checked", on?"true":"false"); }
+
+SPEC.sections.forEach(function(s){
+  var secEl = document.querySelector('section[data-id="'+s.id+'"]');
+  if(!secEl) return;
+  s.choices.forEach(function(c){
+    var el = choiceEl(c.id); if(!el) return;
+    function toggle(){
+      if(s.exclusive){ s.choices.forEach(function(o){ var oe=choiceEl(o.id); if(oe) setSel(oe,false); }); setSel(el,true); }
+      else { setSel(el, el.getAttribute("data-selected")!=="true"); }
+      refresh();
+    }
+    el.addEventListener("click", toggle);
+    el.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggle(); } });
+  });
+});
+
+function buildJSON(){
+  var out = JSON.parse(JSON.stringify(SPEC));
+  out.exported_at = new Date().toISOString();
+  out.sections.forEach(function(s){
+    s.choices.forEach(function(c){ c.selected = isSel(c.id); });
+    if(s.note) s.note.value = noteVal(s.note.id);
+  });
+  if(out.feedback) out.feedback.value = noteVal(out.feedback.id);
+  return out;
+}
+function stamp(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function buildMD(){
+  var x=totals(); var L=["# "+SPEC.title,"","> _Choices made: "+x[0]+" of "+x[1]+" · Exported "+stamp()+"_",""];
+  if(SPEC.lead) L.push(SPEC.lead,"");
+  L.push("---","");
+  SPEC.sections.forEach(function(s){
+    L.push("## "+s.id+" · "+s.title,"");
+    if(s.lead) L.push(s.lead,"");
+    s.choices.forEach(function(c){
+      var on=isSel(c.id);
+      L.push("- "+(on?"**":"")+"`"+c.id+"` "+(on?"✓":"✗")+" "+c.label+(on?"**":""));
+    });
+    if(s.note){ var nv=noteVal(s.note.id); if(nv) L.push("","> **Notes (`"+s.note.id+"`):** "+nv); }
+    L.push("","---","");
+  });
+  var fb = SPEC.feedback ? noteVal(SPEC.feedback.id) : "";
+  if(fb) L.push("## Overall feedback","","> "+fb,"","---","");
+  var y=totals();
+  L.push("_Generated by html-codesign · exported "+stamp()+" · "+SPEC.sections.length+" sections · "+y[1]+" choices · "+y[0]+" selected._");
+  return L.join("\n");
+}
+function selectedIds(){ var ids=[]; SPEC.sections.forEach(function(s){ s.choices.forEach(function(c){ if(isSel(c.id)) ids.push(c.id); }); }); return ids; }
+function show(title,body){
+  document.getElementById("panelTitle").textContent=title;
+  document.getElementById("panelBody").textContent=body;
+  document.getElementById("panel").classList.add("open");
+  document.getElementById("copyBtn").textContent="Copy";
+}
+function doExport(kind){
+  if(kind==="json") show("Export · JSON — save as "+slug()+"-"+stamp()+".json", JSON.stringify(buildJSON(),null,2));
+  else show("Export · Markdown — save as "+slug()+"-"+stamp()+".md", buildMD());
+}
+function slug(){ return SPEC.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60); }
+function reprompt(kind){
+  var picks=selectedIds().join(", ")||"(none)";
+  var body;
+  if(kind==="draft"){
+    body='Make a v2 of "'+SPEC.title+'". Keep these picks: '+picks+'. Replace the unselected options in each section with fresh alternatives. Reuse every surviving ID; only new options get new IDs.';
+  } else {
+    var notes=[]; SPEC.sections.forEach(function(s){ if(s.note){ var v=noteVal(s.note.id); if(v) notes.push(s.note.id+": "+v); } });
+    var fb=SPEC.feedback?noteVal(SPEC.feedback.id):""; if(fb) notes.push("note-overall: "+fb);
+    body='Here are my answers for "'+SPEC.title+'" — selected: '+picks+'.'+(notes.length?" Notes — "+notes.join(" · ")+".":"")+' Proceed using exactly these choices.';
+  }
+  show(kind==="draft"?"Another draft · paste into chat":"Here are my answers · paste into chat", body);
+  if(navigator.clipboard) navigator.clipboard.writeText(body).catch(function(){});
+}
+function copyPanel(){
+  var t=document.getElementById("panelBody").textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){ document.getElementById("copyBtn").textContent="Copied ✓"; });
+}
+refresh();
+</script>
+</body>
+</html>

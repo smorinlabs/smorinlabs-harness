@@ -1,0 +1,32 @@
+{
+  "version": "1",
+  "skill": "html-codesign",
+  "mode": "codesign",
+  "title": "Logo direction",
+  "lead": "Two decisions: overall direction, then extras.",
+  "generated_at": "2026-07-16T12:00:00-07:00",
+  "sections": [
+    {
+      "id": "sec-01-direction",
+      "title": "Direction",
+      "lead": "Pick one.",
+      "exclusive": true,
+      "choices": [
+        { "id": "ch-01-a", "label": "Wordmark", "selected": true },
+        { "id": "ch-01-b", "label": "Monogram", "selected": false }
+      ],
+      "note": { "id": "note-01", "value": "" }
+    },
+    {
+      "id": "sec-02-extras",
+      "title": "Extras",
+      "lead": "Include any.",
+      "exclusive": false,
+      "choices": [
+        { "id": "ch-02-a", "label": "Favicon set", "selected": true },
+        { "id": "ch-02-b", "label": "Social kit", "selected": true }
+      ]
+    }
+  ],
+  "feedback": { "id": "note-overall", "value": "" }
+}

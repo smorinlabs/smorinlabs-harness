@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -132,6 +133,58 @@ smoke_birchline()
 smoke_color_scheme_light("birchline")
 smoke_color_scheme_light("technical-minimal")
 smoke_color_scheme_dark("high-contrast-dark")
+
+# 8. html-codesign skill (interactive decision pages)
+cd_base = "skills/html-codesign"
+check("html-codesign/SKILL.md exists", file_exists(f"{cd_base}/SKILL.md"))
+check(
+    "html-codesign SKILL.md has frontmatter name",
+    file_matches(f"{cd_base}/SKILL.md", r"^name:\s*html-codesign"),
+)
+check(
+    "html-codesign SKILL.md has frontmatter description",
+    file_matches(f"{cd_base}/SKILL.md", r"^description:"),
+)
+for ref in [
+    "spec-format.md",
+    "id-grammar.md",
+    "export-formats.md",
+    "iteration-loop.md",
+    "theming.md",
+]:
+    check(f"html-codesign references/{ref} exists", file_exists(f"{cd_base}/references/{ref}"))
+check(
+    "html-codesign template exists",
+    file_exists(f"{cd_base}/assets/codesign-template.html"),
+)
+check(
+    "html-codesign template embeds codesign-spec tag",
+    file_contains(f"{cd_base}/assets/codesign-template.html", 'id="codesign-spec"'),
+)
+check("html-codesign validator exists", file_exists(f"{cd_base}/scripts/validate_spec.py"))
+check(
+    "birchline codesign overlay exists",
+    file_exists("skills/use-html-theme/references/themes/birchline/codesign.md"),
+)
+
+vs_script = ROOT / cd_base / "scripts/validate_spec.py"
+fx_good = ROOT / cd_base / "scripts/fixtures/valid-spec.json"
+fx_bad = ROOT / cd_base / "scripts/fixtures/invalid-spec.json"
+if vs_script.is_file() and fx_good.is_file() and fx_bad.is_file():
+    r_good = subprocess.run(
+        [sys.executable, str(vs_script), str(fx_good)], capture_output=True
+    )
+    r_bad = subprocess.run(
+        [sys.executable, str(vs_script), str(fx_bad)], capture_output=True
+    )
+    check("validate_spec accepts valid fixture", r_good.returncode == 0)
+    check(
+        "validate_spec rejects invalid fixture",
+        r_bad.returncode == 1,
+        detail=f"exit {r_bad.returncode}",
+    )
+else:
+    check("validate_spec fixtures present", False)
 
 print()
 if failures:

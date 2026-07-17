@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "skill": "html-codesign",
+  "mode": "codesign",
+  "title": "Broken spec (every error class)",
+  "sections": [
+    {
+      "id": "sec-01-direction",
+      "title": "Two selected in an exclusive section",
+      "exclusive": true,
+      "choices": [
+        { "id": "ch-01-a", "label": "Alpha", "selected": true },
+        { "id": "ch-01-b", "label": "Beta", "selected": true }
+      ],
+      "note": { "id": "note-9", "value": "bad note id (not zero-padded)" }
+    },
+    {
+      "id": "sec-02-extras",
+      "title": "Duplicate and malformed choice ids",
+      "exclusive": false,
+      "choices": [
+        { "id": "ch-01-a", "label": "Duplicate id from section 01" },
+        { "id": "choice-3", "label": "Wrong prefix entirely" },
+        { "id": "ch-03-a", "label": "Numbered for the wrong section" }
+      ]
+    }
+  ],
+  "feedback": { "id": "note-final", "value": "bad feedback id" }
+}
