@@ -203,4 +203,28 @@ accepted overlap with superpowers receiving-code-review recorded).
 
 ---
 
+## [~] Project P15: html-codesign ergonomics 2 — skip, ask channel, free-form context (v0.10.0)
+**Goal**: Close the gaps the first real codesign page exposed (governing principle: the page must
+work for a reader who wasn't in the room). Engine-level Skip on every section (MD omits skipped,
+JSON records `skipped: true`); per-section ask-a-question channel (`q-NN`) with a Questions-first
+batch paste-back; context split into a schema envelope (summary/recommendation/recommended — badges,
+verdicts, exports keep working) + free-form HTML body in the page (tables, inline SVG charts,
+data-URI images) shaped by a clarity scaffold (`.ctx-what`/`.ctx-why`/free zone/`.ctx-rec`) with
+hard authoring rules (question-shaped titles, zero session jargon); full exports carry the envelope
+only — the page file is the rich-context archive. Design spec:
+`docs/superpowers/specs/2026-07-18-html-codesign-ergonomics-2-design.md`. Sequenced before theme
+overlay work (component set changes here).
+
+### Tests & Tasks
+- [x] [P15-TS01] Fixtures first: valid fixture → envelope form (legacy `body` tolerated, exit 0); invalid fixture exercises missing-summary (15 errors, exit 1)
+- [x] [P15-T01] validate_spec.py: envelope checks (summary required, body ignored); docstring updated
+- [x] [P15-T02] codesign-template.html: skip/ask controls + q-NN fields, Questions-first button, ctx-what/ctx-why scaffold + ctx-free zone (sample pros/cons table), skipped/❓ summary markers, skip-aware exports with open_question, question-shaped sample titles
+- [x] [P15-T03] References: spec-format (envelope), id-grammar (q-NN, five prefixes), export-formats (skips/questions/envelope-only full), iteration-loop (Questions first, honor skips, answer q-NN), theming (new classes), design-notes (governing principle + decision history)
+- [x] [P15-T04] SKILL.md: two-part context authoring step, hard writing rules, skip/ask in process + hard rules, 8-step smoke test, clarity gotcha
+- [x] [P15-TS02] Plugin validate.py extended (scaffold/skip/ask/open_question checks) — green; gen-check green
+- [x] [P15-T05] Docs page + README row refreshed; plugin 0.5.0 → 0.6.0
+- [ ] [P15-T06] Browser assertion pass; skill-quality gate; surgical commits (parallel P14 work in-tree — stage own hunks only); optional release v0.10.0
+
+---
+
 - [ ] Regression Test Status

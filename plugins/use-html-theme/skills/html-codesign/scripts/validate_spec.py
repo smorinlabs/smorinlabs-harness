@@ -6,9 +6,10 @@ Usage: validate_spec.py path/to/spec.json
 Checks the codesign-spec contract defined in references/spec-format.md:
 required fields, the ID grammar from references/id-grammar.md, global ID
 uniqueness, section/choice number agreement, exclusive-section selection
-counts, and the contexts layer (exactly one context per section, resolvable
-`recommended` choice ids). Run it on the spec BEFORE rendering
-(plan-validate-execute).
+counts, and the contexts ENVELOPE (exactly one per section; non-empty
+summary and recommendation; resolvable `recommended` choice ids — the
+free-form context body lives in the page, not this schema). Run it on the
+spec BEFORE rendering (plan-validate-execute).
 
 Inputs only: `codesign-answers` export documents are a different schema
 (references/export-formats.md) and are rejected with a pointer — the engine
@@ -194,7 +195,9 @@ def validate(spec: dict[str, Any]) -> None:
             covered[target] += 1
             if xm and xm.group(1) != sec_nums[target]:
                 err(f"{where}: context {xid!r} numbered for a different section than {target!r}")
-        for field in ("body", "recommendation"):
+        # Envelope fields only. The context BODY is free-form HTML in the
+        # page, outside this schema; a legacy v0.8.0 "body" key is ignored.
+        for field in ("summary", "recommendation"):
             val = ctx.get(field)
             if not isinstance(val, str) or not val.strip():
                 err(f"{where}: {field} must be a non-empty string")

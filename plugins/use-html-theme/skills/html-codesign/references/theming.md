@@ -52,12 +52,17 @@ components using only that theme's `tokens.md` variables.
   never the spec tag, `data-id`s, or the engine script.
 - **Cover the full component set.** Beyond the original bar/section/choice/
   notes/panel components, a codesign page has: `.ctx` + `.ctx-toggle` +
-  `.ctx-body` + `.ctx-rec` (the context block and its recommendation
-  callout), `.badge-rec` (the ★ pill on recommended choices), `.summary`
-  with its `.s-line`/`.s-note`/`.s-mark-*` children (the collapsed
-  section's dense scan row), `.fold` and `.opt-toggle` (collapse
-  controls), and `.seg`/`.seg-btn` (the Slim/Full export toggle). A theme
-  overlay that skips these leaves neutral-styled islands in a themed page.
+  `.ctx-what`/`.ctx-why`/`.ctx-free` + `.ctx-rec` (the context block: the
+  clarity scaffold, the free-form zone — including its tables — and the
+  recommendation callout), `.badge-rec` (the ★ pill on recommended
+  choices), `.summary` with its `.s-line`/`.s-note`/`.s-mark-*` children
+  (the collapsed section's dense scan row), `.sec-actions` with `.fold`,
+  `.opt-toggle`, `.skip-toggle`, and `.ask-toggle` (collapse/skip/ask
+  controls), `.q-wrap` (the open-question field), and `.seg`/`.seg-btn`
+  (the Slim/Full export toggle). A theme overlay that skips these leaves
+  neutral-styled islands in a themed page. Free-form context bodies may
+  also carry inline SVG charts — style them with the theme's tokens per
+  the dataviz conventions, never with external assets.
 - **No remote font links.** Codesign pages are self-contained ("no external
   requests" is a hard rule) and this wins over any theme guidance to load
   webfonts: use the theme's font stacks and let local fallbacks carry them

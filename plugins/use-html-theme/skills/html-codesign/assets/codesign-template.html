@@ -60,7 +60,7 @@
   .sec-head h2{font-size:18px;font-weight:600;margin:0;letter-spacing:-.01em;}
   .sec-head .spacer{flex:1;}
   .fold{font-family:var(--mono);font-size:12px;padding:3px 9px;color:var(--muted);}
-  /* Collapsed one-line summary — dense scan row (see SKILL.md decision 4) */
+  /* Collapsed one-line summary — dense scan row */
   .summary{display:block;width:100%;text-align:left;background:transparent;border:0;
     padding:2px 4px;cursor:pointer;font:inherit;color:inherit;border-radius:6px;}
   .summary:hover{background:var(--sel-bg);}
@@ -70,17 +70,27 @@
   .summary .s-line .s-sel{color:var(--accent-deep);}
   .summary .s-line .s-mark-follow{color:var(--accent-deep);font-size:12.5px;margin-left:6px;}
   .summary .s-line .s-mark-against{color:var(--warn);font-size:12.5px;margin-left:6px;}
+  .summary .s-line .s-mark-skip{color:var(--muted);font-size:12.5px;margin-left:6px;}
+  .summary .s-line .s-mark-q{color:var(--warn);font-size:12.5px;margin-left:6px;}
   .summary .s-note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
     overflow:hidden;font-size:13px;color:var(--muted);margin-top:2px;}
-  /* Context & recommendation block — open on load, collapsible out of the way */
+  /* Context & recommendation block — schema carries only the envelope; this
+     block's BODY is free-form HTML: the ctx-what/ctx-why scaffold below is
+     the default shape, and the free zone may hold prose, tables, inline SVG
+     charts, or data:-URI images (self-contained only — no external requests). */
   .ctx{border:1px solid var(--line-soft);border-radius:8px;margin:2px 0 14px;background:var(--bg);}
   .ctx-toggle{display:flex;width:100%;align-items:center;gap:8px;text-align:left;
     background:transparent;border:0;padding:9px 12px;border-radius:8px;
     font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
   .ctx-toggle .chev{font-size:10px;transition:transform .14s ease;}
   .ctx[data-open="false"] .ctx-toggle .chev{transform:rotate(-90deg);}
-  .ctx[data-open="false"] .ctx-body,.ctx[data-open="false"] .ctx-rec{display:none;}
-  .ctx-body{margin:0;padding:0 14px 10px;font-size:14px;}
+  .ctx[data-open="false"] > :not(.ctx-toggle){display:none;}
+  .ctx-what,.ctx-why{margin:0;padding:0 14px 8px;font-size:14px;}
+  .ctx-what b,.ctx-why b{color:var(--accent-deep);}
+  .ctx-free{margin:0;padding:0 14px 10px;font-size:14px;}
+  .ctx-free table{border-collapse:collapse;margin:6px 0;font-size:13px;}
+  .ctx-free th,.ctx-free td{border:1px solid var(--line);padding:5px 9px;text-align:left;}
+  .ctx-free th{background:var(--line-soft);font-weight:600;}
   .ctx-rec{margin:0 12px 12px;padding:9px 12px;border-left:3px solid var(--accent);
     background:var(--sel-bg);border-radius:0 8px 8px 0;font-size:13.5px;}
   .ctx-rec .cid{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 4px;}
@@ -88,10 +98,11 @@
   .sec-lead .rule{color:var(--accent-deep);font-weight:600;}
   .choice{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;margin:8px 0;
     border:1px solid var(--line-soft);border-radius:8px;cursor:pointer;user-select:none;
-    transition:border-color .14s ease,background .14s ease;}
+    transition:border-color .14s ease,background .14s ease,opacity .14s ease;}
   .choice:hover{border-color:var(--accent);}
   .choice[data-selected="true"]{border-color:var(--accent);background:var(--sel-bg);}
   section[data-options-hidden="true"] .choice[data-selected="false"]{display:none;}
+  section[data-skipped="true"] .choice{opacity:.45;}
   .box{flex:none;width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line);
     display:grid;place-items:center;margin-top:1px;font-size:13px;color:#fff;
     transition:background .14s ease,border-color .14s ease;}
@@ -105,7 +116,12 @@
     background:var(--sel-bg);border:1px solid var(--accent);color:var(--accent-deep);
     font-size:11px;font-weight:600;vertical-align:1px;}
   .choice .sub{display:block;font-size:13px;color:var(--muted);margin-top:2px;}
-  .opt-toggle{display:block;margin:8px 0 0;padding:5px 10px;font-size:12px;color:var(--muted);}
+  .sec-actions{display:flex;gap:8px;margin:8px 0 0;flex-wrap:wrap;}
+  .opt-toggle,.skip-toggle,.ask-toggle{padding:5px 10px;font-size:12px;color:var(--muted);}
+  .skip-toggle[aria-pressed="true"]{background:var(--line-soft);border-color:var(--muted);color:var(--ink);}
+  .q-wrap{display:none;margin-top:12px;}
+  section[data-asking="true"] .q-wrap{display:block;}
+  .q-wrap label{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);}
   .notes{margin-top:14px;}
   .notes label{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
   textarea{width:100%;margin-top:6px;font-family:var(--font);font-size:14px;color:var(--ink);
@@ -136,19 +152,20 @@
      Replace with YOUR validated spec (references/spec-format.md).
      Must pass scripts/validate_spec.py BEFORE rendering. The DOM below
      mirrors it: every data-id here exists in the spec and vice versa,
-     including one .ctx block per contexts[] entry. -->
+     including one .ctx block per contexts[] envelope. The context BODY is
+     free-form page content — only the envelope lives in this JSON. -->
 <script id="codesign-spec" type="application/json">
 {
   "version": "1",
   "skill": "html-codesign",
   "mode": "codesign",
   "title": "Sample decision — codesign",
-  "lead": "Review each context, toggle choices, add notes, then export your picks.",
-  "generated_at": "2026-07-17T00:00:00Z",
+  "lead": "Review each context, answer or skip each question, then export your picks.",
+  "generated_at": "2026-07-18T00:00:00Z",
   "sections": [
     {
       "id": "sec-01-direction",
-      "title": "Overall direction",
+      "title": "Which direction should v1 take?",
       "lead": "Pick one — these are mutually exclusive.",
       "exclusive": true,
       "choices": [
@@ -159,7 +176,7 @@
     },
     {
       "id": "sec-02-extras",
-      "title": "Extras",
+      "title": "Which extras should ship with it?",
       "lead": "Include any — these stack.",
       "exclusive": false,
       "choices": [
@@ -173,14 +190,14 @@
     {
       "id": "ctx-01",
       "section": "sec-01-direction",
-      "body": "Option A concentrates attention on one thing and demotes the rest to on-demand detail; Option B spreads attention across a wider surface. The focused route is easier to ship and easier to undo.",
+      "summary": "Focused vs broad scope for the first shipped version.",
       "recommendation": "Option A — the focused route matches the primary job and keeps v1 small.",
       "recommended": ["ch-01-a"]
     },
     {
       "id": "ctx-02",
       "section": "sec-02-extras",
-      "body": "Both extras are independent of the direction choice and cheap to add later; neither blocks shipping.",
+      "summary": "Two independent, cheap add-ons; neither blocks shipping.",
       "recommendation": "Extra one now — it compounds; extra two can wait for a real request.",
       "recommended": ["ch-02-a"]
     }
@@ -194,6 +211,7 @@
   <button class="primary" onclick="doExport('json')">Export → JSON</button>
   <button onclick="reprompt('draft')">Another draft</button>
   <button onclick="reprompt('answers')">Here are my answers</button>
+  <button onclick="questionsFirst()">Questions first</button>
   <span class="seg" role="group" aria-label="Export detail">
     <span class="seg-label">Export</span>
     <button class="seg-btn" id="segSlim" aria-pressed="true" onclick="setVariant('slim')">Slim</button>
@@ -206,16 +224,19 @@
 </div>
 
 <div class="wrap">
-  <!-- Author the DOM to mirror the spec: one <section data-id data-exclusive>
-       per spec section (with .summary row, .fold button, .ctx block for its
-       contexts[] entry, and .opt-toggle), one .choice[data-id] per choice
-       (recommended ones carry .badge-rec), textareas keyed by note ids.
-       Rewrite the sample content; keep the structure. -->
+  <!-- Author the DOM to mirror the spec. Per section: .summary row, .fold
+       button, one .ctx block for its contexts[] envelope (ctx-what/ctx-why
+       scaffold + optional free zone + ctx-rec from the envelope text), one
+       .choice per spec choice (.badge-rec on recommended), the .sec-actions
+       row (opt/skip/ask toggles), a .q-wrap with <textarea id="q-NN">, and
+       the note. Section TITLES are real questions — write every ctx-what/
+       ctx-why for a reader who was never in your chat. Rewrite the sample
+       content; keep the structure. -->
   <h1 id="pageTitle">Sample decision — codesign</h1>
-  <p class="lead" id="pageLead">Review each context, toggle choices, add notes, then export your picks.</p>
+  <p class="lead" id="pageLead">Review each context, answer or skip each question, then export your picks.</p>
 
-  <section data-id="sec-01-direction" data-exclusive="true" data-collapsed="false" data-options-hidden="false" role="radiogroup" aria-label="Overall direction">
-    <div class="sec-head"><span class="id">sec-01</span><h2>Overall direction</h2>
+  <section data-id="sec-01-direction" data-exclusive="true" data-collapsed="false" data-options-hidden="false" data-skipped="false" data-asking="false" role="radiogroup" aria-label="Which direction should v1 take?">
+    <div class="sec-head"><span class="id">sec-01</span><h2>Which direction should v1 take?</h2>
       <span class="spacer"></span>
       <button class="fold" data-sec="sec-01-direction" aria-expanded="true" aria-label="Collapse sec-01 to summary">[–]</button>
     </div>
@@ -223,7 +244,15 @@
     <div class="sec-body">
       <div class="ctx" data-id="ctx-01" data-open="true">
         <button class="ctx-toggle" aria-expanded="true"><span class="chev">▾</span>Context &amp; recommendation</button>
-        <p class="ctx-body">Option A concentrates attention on one thing and demotes the rest to on-demand detail; Option B spreads attention across a wider surface. The focused route is easier to ship and easier to undo.</p>
+        <p class="ctx-what"><b>What this is:</b> The project ships its first version soon; "direction" means how much surface that first version covers. Option A does one thing well; Option B covers more at once.</p>
+        <p class="ctx-why"><b>Why you're being asked:</b> This choice sets the build order and how much can be undone later — everything after it stacks on this answer.</p>
+        <div class="ctx-free">
+          <table>
+            <tr><th></th><th>Ship effort</th><th>Undo cost</th></tr>
+            <tr><td>Option A — focused</td><td>Low</td><td>Low</td></tr>
+            <tr><td>Option B — broad</td><td>High</td><td>High</td></tr>
+          </table>
+        </div>
         <p class="ctx-rec">★ Recommends<span class="cid">ch-01-a</span>Option A — the focused route matches the primary job and keeps v1 small.</p>
       </div>
       <p class="sec-lead"><span class="rule">Pick one</span> — these are mutually exclusive.</p>
@@ -235,13 +264,18 @@
         <span class="box"></span>
         <span class="label"><span class="cid">ch-01-b</span>Option B<span class="sub">The broader route.</span></span>
       </div>
-      <button class="opt-toggle" data-sec="sec-01-direction" aria-expanded="true">Hide unchosen options</button>
+      <div class="sec-actions">
+        <button class="opt-toggle" data-sec="sec-01-direction" aria-expanded="true">Hide unchosen options</button>
+        <button class="skip-toggle" data-sec="sec-01-direction" aria-pressed="false">⏩ Skip this question</button>
+        <button class="ask-toggle" data-sec="sec-01-direction" aria-expanded="false">💬 Ask a question</button>
+      </div>
+      <div class="q-wrap"><label for="q-01">❓ Your question about this section</label><textarea id="q-01" placeholder="What do you need to know before you can answer?"></textarea></div>
       <div class="notes"><label for="note-01">Why this one?</label><textarea id="note-01" placeholder="Why this one?"></textarea></div>
     </div>
   </section>
 
-  <section data-id="sec-02-extras" data-exclusive="false" data-collapsed="false" data-options-hidden="false" role="group" aria-label="Extras">
-    <div class="sec-head"><span class="id">sec-02</span><h2>Extras</h2>
+  <section data-id="sec-02-extras" data-exclusive="false" data-collapsed="false" data-options-hidden="false" data-skipped="false" data-asking="false" role="group" aria-label="Which extras should ship with it?">
+    <div class="sec-head"><span class="id">sec-02</span><h2>Which extras should ship with it?</h2>
       <span class="spacer"></span>
       <button class="fold" data-sec="sec-02-extras" aria-expanded="true" aria-label="Collapse sec-02 to summary">[–]</button>
     </div>
@@ -249,7 +283,8 @@
     <div class="sec-body">
       <div class="ctx" data-id="ctx-02" data-open="true">
         <button class="ctx-toggle" aria-expanded="true"><span class="chev">▾</span>Context &amp; recommendation</button>
-        <p class="ctx-body">Both extras are independent of the direction choice and cheap to add later; neither blocks shipping.</p>
+        <p class="ctx-what"><b>What this is:</b> Two optional add-ons that can ship alongside v1. They are independent of each other and of the direction chosen above.</p>
+        <p class="ctx-why"><b>Why you're being asked:</b> Each extra costs build time now; deferring either is cheap because nothing depends on them.</p>
         <p class="ctx-rec">★ Recommends<span class="cid">ch-02-a</span>Extra one — it compounds; extra two can wait for a real request.</p>
       </div>
       <p class="sec-lead"><span class="rule">Include any</span> — these stack.</p>
@@ -259,7 +294,12 @@
       <div class="choice" data-id="ch-02-b" data-selected="false" tabindex="0" role="checkbox" aria-checked="false">
         <span class="box"></span><span class="label"><span class="cid">ch-02-b</span>Extra two</span>
       </div>
-      <button class="opt-toggle" data-sec="sec-02-extras" aria-expanded="true">Hide unchosen options</button>
+      <div class="sec-actions">
+        <button class="opt-toggle" data-sec="sec-02-extras" aria-expanded="true">Hide unchosen options</button>
+        <button class="skip-toggle" data-sec="sec-02-extras" aria-pressed="false">⏩ Skip this question</button>
+        <button class="ask-toggle" data-sec="sec-02-extras" aria-expanded="false">💬 Ask a question</button>
+      </div>
+      <div class="q-wrap"><label for="q-02">❓ Your question about this section</label><textarea id="q-02" placeholder="What do you need to know before you can answer?"></textarea></div>
       <div class="notes"><label for="note-02">Optional</label><textarea id="note-02" placeholder="Optional"></textarea></div>
     </div>
   </section>
@@ -275,6 +315,7 @@
   <button class="primary" onclick="doExport('json')">Export → JSON</button>
   <button onclick="reprompt('draft')">Another draft</button>
   <button onclick="reprompt('answers')">Here are my answers</button>
+  <button onclick="questionsFirst()">Questions first</button>
 </div>
 
 <div class="panel" id="panel" aria-live="polite">
@@ -287,10 +328,10 @@
 
 <script>
 /* ============ ENGINE (keep intact) ============
-   Reads the embedded spec, hydrates selection state FROM it (the spec is
-   the source of truth), binds by data-id, enforces exclusivity, manages
-   view state (collapse/hide — DOM only, never exported), and builds the
-   codesign-answers exports (slim default / full toggle) + re-prompts. */
+   Reads the embedded spec, hydrates selection state FROM it, binds by
+   data-id, enforces exclusivity, manages view state (collapse/hide/ask —
+   DOM only) and skip state, and builds the codesign-answers exports
+   (slim default / full toggle) + re-prompts. */
 var SPEC;
 try {
   SPEC = JSON.parse(document.getElementById("codesign-spec").textContent);
@@ -310,12 +351,16 @@ var VARIANT = "slim"; // export detail — view state, toggled in the control ba
 function secEl(id){ return document.querySelector('section[data-id="'+id+'"]'); }
 function choiceEl(id){ return document.querySelector('.choice[data-id="'+id+'"]'); }
 function isSel(id){ var el=choiceEl(id); return !!el && el.getAttribute("data-selected")==="true"; }
+function isSkipped(sid){ var el=secEl(sid); return !!el && el.getAttribute("data-skipped")==="true"; }
 function noteVal(id){ var el=document.getElementById(id); return el ? el.value.trim() : ""; }
-function totals(){ var n=0,t=0; SPEC.sections.forEach(function(s){ s.choices.forEach(function(c){ t++; if(isSel(c.id)) n++; }); }); return [n,t]; }
+function qNum(sid){ var m=/^sec-(\d{2})/.exec(sid); return m ? m[1] : null; }
+function qVal(sid){ var n=qNum(sid); return n ? noteVal("q-"+n) : ""; }
+function totals(){ var n=0,t=0,sk=0; SPEC.sections.forEach(function(s){ if(isSkipped(s.id)) sk++; s.choices.forEach(function(c){ t++; if(isSel(c.id)) n++; }); }); return [n,t,sk]; }
 function setSel(el,on){ el.setAttribute("data-selected", on?"true":"false"); el.setAttribute("aria-checked", on?"true":"false"); }
 
 /* Followed / went-against is DERIVED (selected vs recommended) — never stored. */
 function verdict(s){
+  if(isSkipped(s.id)) return { k: "skipped", rec: [] };
   var ctx = CONTEXTS[s.id];
   var rec = (ctx && Array.isArray(ctx.recommended)) ? ctx.recommended : [];
   var sel = s.choices.filter(function(c){ return isSel(c.id); }).map(function(c){ return c.id; });
@@ -327,8 +372,8 @@ function verdict(s){
   return { k: followed ? "followed" : "against", rec: rec };
 }
 
-/* Summary rows are built with DOM APIs (never innerHTML) — labels and notes
-   are user/author text and must not be parsed as markup. */
+/* Summary rows are built with DOM APIs (never innerHTML) — labels, notes,
+   and questions are user/author text and must not be parsed as markup. */
 function buildSummary(s){
   var host = document.querySelector('.summary[data-sec="'+s.id+'"]');
   if(!host) return;
@@ -337,21 +382,27 @@ function buildSummary(s){
   function span(cls, text){ var e=document.createElement("span"); if(cls) e.className=cls; e.textContent=text; line.appendChild(e); }
   span("id", "[+] " + s.id.replace(/^(sec-\d{2}).*$/, "$1"));
   span("s-q", s.title);
-  var sel = s.choices.filter(function(c){ return isSel(c.id); });
-  if(sel.length){
-    span("s-sel", " → ✓ " + sel.map(function(c){ return c.id + " " + c.label; }).join(", "));
-  } else {
-    span("", " → (unanswered)");
-  }
   var v = verdict(s);
-  if(v.k === "followed") span("s-mark-follow", "★ followed rec");
-  else if(v.k === "against") span("s-mark-against", "⚠ went against rec (" + v.rec.join(", ") + ")");
-  else if(v.k === "unanswered") span("s-mark-follow", "★ rec: " + v.rec.join(", "));
+  if(v.k === "skipped"){
+    span("s-mark-skip", " ⏩ skipped");
+  } else {
+    var sel = s.choices.filter(function(c){ return isSel(c.id); });
+    if(sel.length){
+      span("s-sel", " → ✓ " + sel.map(function(c){ return c.id + " " + c.label; }).join(", "));
+    } else {
+      span("", " → (unanswered)");
+    }
+    if(v.k === "followed") span("s-mark-follow", "★ followed rec");
+    else if(v.k === "against") span("s-mark-against", "⚠ went against rec (" + v.rec.join(", ") + ")");
+    else if(v.k === "unanswered") span("s-mark-follow", "★ rec: " + v.rec.join(", "));
+  }
+  if(qVal(s.id)) span("s-mark-q", "❓ question");
   host.appendChild(line);
+  var qv = qVal(s.id);
   var nv = s.note ? noteVal(s.note.id) : "";
-  if(nv){
+  if(qv || nv){
     var note = document.createElement("span"); note.className = "s-note";
-    note.textContent = "“" + nv + "”";
+    note.textContent = (qv ? "❓ " + qv + (nv ? " · " : "") : "") + (nv ? "“" + nv + "”" : "");
     host.appendChild(note);
   }
 }
@@ -359,18 +410,24 @@ function buildSummary(s){
 function refresh(){
   var x = totals();
   var el = document.getElementById("madeCount");
-  if(el) el.textContent = x[0] + " of " + x[1] + " chosen";
+  if(el) el.textContent = x[0] + " of " + x[1] + " chosen" + (x[2] ? " · " + x[2] + " skipped" : "");
   SPEC.sections.forEach(function(s){
     buildSummary(s);
+    var secNode = secEl(s.id);
     var t = document.querySelector('.opt-toggle[data-sec="'+s.id+'"]');
-    if(t){
-      var secNode = secEl(s.id);
-      var hidden = secNode && secNode.getAttribute("data-options-hidden") === "true";
+    if(t && secNode){
+      var hidden = secNode.getAttribute("data-options-hidden") === "true";
       var unchosen = s.choices.filter(function(c){ return !isSel(c.id); }).length;
       t.textContent = hidden
         ? "Show " + unchosen + " hidden option" + (unchosen === 1 ? "" : "s")
         : "Hide unchosen options";
       t.setAttribute("aria-expanded", hidden ? "false" : "true");
+    }
+    var sk = document.querySelector('.skip-toggle[data-sec="'+s.id+'"]');
+    if(sk){
+      var on = isSkipped(s.id);
+      sk.textContent = on ? "⏩ Skipped — click to reconsider" : "⏩ Skip this question";
+      sk.setAttribute("aria-pressed", on ? "true" : "false");
     }
   });
 }
@@ -401,6 +458,17 @@ function setVariant(v){
   if(s) s.setAttribute("aria-pressed", v === "slim" ? "true" : "false");
   if(f) f.setAttribute("aria-pressed", v === "full" ? "true" : "false");
 }
+/* Skip is decision state: skipping clears picks; picking clears skip. */
+function setSkipped(sid, on){
+  var el = secEl(sid); if(!el) return;
+  el.setAttribute("data-skipped", on ? "true" : "false");
+  if(on){
+    var s = null;
+    SPEC.sections.forEach(function(x){ if(x.id === sid) s = x; });
+    if(s) s.choices.forEach(function(c){ var ce = choiceEl(c.id); if(ce) setSel(ce, false); });
+  }
+  refresh();
+}
 
 SPEC.sections.forEach(function(s){
   var secNode = secEl(s.id);
@@ -409,6 +477,7 @@ SPEC.sections.forEach(function(s){
     var el = choiceEl(c.id); if(!el) return;
     setSel(el, c.selected === true); // hydrate from the spec — it wins over authored data-selected
     function toggle(){
+      if(isSkipped(s.id)) secNode.setAttribute("data-skipped", "false"); // picking reconsiders a skip
       if(s.exclusive){ s.choices.forEach(function(o){ var oe=choiceEl(o.id); if(oe) setSel(oe,false); }); setSel(el,true); }
       else { setSel(el, el.getAttribute("data-selected")!=="true"); }
       refresh();
@@ -429,6 +498,15 @@ SPEC.sections.forEach(function(s){
     secNode.setAttribute("data-options-hidden", on ? "true" : "false");
     refresh();
   });
+  var skT = secNode.querySelector(".skip-toggle");
+  if(skT) skT.addEventListener("click", function(){ setSkipped(s.id, !isSkipped(s.id)); });
+  var askT = secNode.querySelector(".ask-toggle");
+  if(askT) askT.addEventListener("click", function(){
+    var on = secNode.getAttribute("data-asking") !== "true";
+    secNode.setAttribute("data-asking", on ? "true" : "false");
+    askT.setAttribute("aria-expanded", on ? "true" : "false");
+    if(on){ var n = qNum(s.id); var q = n && document.getElementById("q-"+n); if(q) q.focus(); }
+  });
   var ctxT = secNode.querySelector(".ctx-toggle");
   if(ctxT) ctxT.addEventListener("click", function(){
     var box = ctxT.closest(".ctx");
@@ -441,21 +519,30 @@ SPEC.sections.forEach(function(s){
 /* ---- exports: codesign-answers documents (references/export-formats.md) ---- */
 function verdictWord(s){
   var v = verdict(s);
-  return v.k === "none" ? "no-recommendation" : (v.k === "followed" ? "followed" : (v.k === "against" ? "went-against" : "unanswered"));
+  return v.k === "skipped" ? "skipped"
+       : v.k === "none" ? "no-recommendation"
+       : v.k === "followed" ? "followed"
+       : v.k === "against" ? "went-against" : "unanswered";
 }
 function buildAnswers(variant){
   var doc = { kind: "codesign-answers", version: "1", variant: variant,
               title: SPEC.title, exported_at: new Date().toISOString(), answers: [] };
   SPEC.sections.forEach(function(s){
-    var a = { section: s.id, question: s.title,
-              selected: s.choices.filter(function(c){ return isSel(c.id); })
-                                 .map(function(c){ return { id: c.id, label: c.label }; }) };
+    var a = { section: s.id, question: s.title };
+    if(isSkipped(s.id)){
+      a.skipped = true;
+    } else {
+      a.selected = s.choices.filter(function(c){ return isSel(c.id); })
+                            .map(function(c){ return { id: c.id, label: c.label }; });
+    }
+    var qv = qVal(s.id);
+    if(qv) a.open_question = qv;
     var nv = s.note ? noteVal(s.note.id) : "";
     if(nv) a.note = nv;
     if(variant === "full"){
       var ctx = CONTEXTS[s.id];
-      if(ctx) a.context = { body: ctx.body, recommendation: ctx.recommendation, recommended: ctx.recommended };
-      a.options = s.choices.map(function(c){ return { id: c.id, label: c.label, selected: isSel(c.id) }; });
+      if(ctx) a.context = { summary: ctx.summary, recommendation: ctx.recommendation, recommended: ctx.recommended };
+      if(!isSkipped(s.id)) a.options = s.choices.map(function(c){ return { id: c.id, label: c.label, selected: isSel(c.id) }; });
       a.verdict = verdictWord(s);
     }
     doc.answers.push(a);
@@ -467,13 +554,24 @@ function buildAnswers(variant){
 function stamp(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function buildMD(variant){
   var x = totals();
-  var L = ["# "+SPEC.title, "", "> _Choices made: "+x[0]+" of "+x[1]+" · Exported "+stamp()+" · "+variant+" export_", ""];
+  var L = ["# "+SPEC.title, "", "> _Choices made: "+x[0]+" of "+x[1]+(x[2] ? " · "+x[2]+" skipped" : "")+" · Exported "+stamp()+" · "+variant+" export_", ""];
   SPEC.sections.forEach(function(s){
+    var qv = qVal(s.id);
+    var n = qNum(s.id);
+    if(isSkipped(s.id)){
+      // Skipped sections leave the record — unless a question is open
+      // (questions always surface; skip governs decision content only).
+      if(qv){
+        L.push("## "+s.id+" · "+s.title, "");
+        L.push("> ❓ **Open question (`q-"+n+"`):** "+qv+" _(section otherwise skipped)_", "");
+      }
+      return;
+    }
     L.push("## "+s.id+" · "+s.title, "");
     var ctx = CONTEXTS[s.id];
     var v = verdict(s);
     if(variant === "full" && ctx){
-      L.push("**Context:** "+ctx.body, "");
+      L.push("**Context:** "+ctx.summary+" _(full context, incl. any charts, lives in the page file)_", "");
       if(ctx.recommended && ctx.recommended.length){
         L.push("★ **Recommended:** "+ctx.recommended.map(function(r){ return "`"+r+"`"; }).join(", ")+" — "+ctx.recommendation, "");
       } else {
@@ -497,6 +595,7 @@ function buildMD(variant){
       if(sel.length) sel.forEach(function(c){ L.push("- ✓ `"+c.id+"` "+c.label); });
       else L.push("- (no selection)");
     }
+    if(qv) L.push("", "> ❓ **Open question (`q-"+n+"`):** "+qv);
     var nv = s.note ? noteVal(s.note.id) : "";
     if(nv) L.push("", "> **Note (`"+s.note.id+"`):** "+nv);
     L.push("");
@@ -504,10 +603,18 @@ function buildMD(variant){
   var fb = SPEC.feedback ? noteVal(SPEC.feedback.id) : "";
   if(fb) L.push("## Overall feedback", "", "> "+fb, "");
   var y = totals();
-  L.push("_Generated by html-codesign · "+variant+" export · "+stamp()+" · "+SPEC.sections.length+" sections · "+y[1]+" choices · "+y[0]+" selected._");
+  L.push("_Generated by html-codesign · "+variant+" export · "+stamp()+" · "+SPEC.sections.length+" sections · "+y[1]+" choices · "+y[0]+" selected"+(y[2] ? " · "+y[2]+" skipped" : "")+"._");
   return L.join("\n");
 }
 function selectedIds(){ var ids=[]; SPEC.sections.forEach(function(s){ s.choices.forEach(function(c){ if(isSel(c.id)) ids.push(c.id); }); }); return ids; }
+function openQuestions(){
+  var out = [];
+  SPEC.sections.forEach(function(s){
+    var qv = qVal(s.id);
+    if(qv){ var ctx = CONTEXTS[s.id]; out.push({ sec: s.id, ctx: ctx ? ctx.id : null, q: qv }); }
+  });
+  return out;
+}
 function show(title,body){
   document.getElementById("panelTitle").textContent=title;
   document.getElementById("panelBody").textContent=body;
@@ -520,15 +627,33 @@ function doExport(kind){
   if(kind==="json") show("Export · JSON ("+VARIANT+") — save as "+name, JSON.stringify(buildAnswers(VARIANT),null,2));
   else show("Export · Markdown ("+VARIANT+") — save as "+name, buildMD(VARIANT));
 }
+function questionsFirst(){
+  var qs = openQuestions();
+  if(!qs.length){ show("Questions first", "No questions raised yet — click “💬 Ask a question” on a section and type what you need to know."); return; }
+  var body = 'Before I decide "'+SPEC.title+'": '
+    + qs.map(function(o){ return o.sec+(o.ctx ? " ("+o.ctx+")" : "")+": "+o.q; }).join(" · ")
+    + " — answer these (expand the contexts if needed), then I'll continue deciding.";
+  show("Questions first · paste into chat", body);
+  if(navigator.clipboard) navigator.clipboard.writeText(body).catch(function(){});
+}
 function reprompt(kind){
   var picks=selectedIds().join(", ")||"(none)";
   var body;
   if(kind==="draft"){
-    body='Make a v2 of "'+SPEC.title+'". Keep these picks: '+picks+'. Replace the unselected options in each section with fresh alternatives. Reuse every surviving ID; only new options get new IDs. Re-author each section’s context for the v2.';
+    var skips = SPEC.sections.filter(function(s){ return isSkipped(s.id); }).map(function(s){ return s.id; });
+    body='Make a v2 of "'+SPEC.title+'". Keep these picks: '+picks+'.'
+      +(skips.length ? " I skipped "+skips.join(", ")+" — drop or re-frame those." : "")
+      +' Replace the unselected options in each section with fresh alternatives. Reuse every surviving ID; only new options get new IDs. Re-author each section\'s context for the v2.';
   } else {
     var notes=[]; SPEC.sections.forEach(function(s){ if(s.note){ var v=noteVal(s.note.id); if(v) notes.push(s.note.id+": "+v); } });
     var fb=SPEC.feedback?noteVal(SPEC.feedback.id):""; if(fb) notes.push("note-overall: "+fb);
-    body='Here are my answers for "'+SPEC.title+'" — selected: '+picks+'.'+(notes.length?" Notes — "+notes.join(" · ")+".":"")+' Proceed using exactly these choices.';
+    var skips2 = SPEC.sections.filter(function(s){ return isSkipped(s.id); }).map(function(s){ return s.id; });
+    var qs2 = openQuestions();
+    body='Here are my answers for "'+SPEC.title+'" — selected: '+picks+'.'
+      +(skips2.length ? " Skipped: "+skips2.join(", ")+"." : "")
+      +(notes.length ? " Notes — "+notes.join(" · ")+"." : "")
+      +(qs2.length ? " Open questions — "+qs2.map(function(o){ return o.sec+": "+o.q; }).join(" · ")+"." : "")
+      +' Proceed using exactly these choices.';
   }
   show(kind==="draft"?"Another draft · paste into chat":"Here are my answers · paste into chat", body);
   if(navigator.clipboard) navigator.clipboard.writeText(body).catch(function(){});

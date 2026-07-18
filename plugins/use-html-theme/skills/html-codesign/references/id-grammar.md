@@ -9,17 +9,18 @@ regeneration — that is what makes v1 → v2 a diff instead of a fresh blob.
 ## Grammar
 
 ```
-sec-{NN}-{slug}   sections     sec-01-direction, sec-02-extras
-ch-{NN}-{letter}  choices      ch-01-a, ch-01-b, ch-02-a
-note-{NN}         section note note-01, note-02
-ctx-{NN}          context      ctx-01, ctx-02 (one per section, NN matches)
-note-overall      page note    (exactly one, in `feedback`)
+sec-{NN}-{slug}   sections      sec-01-direction, sec-02-extras
+ch-{NN}-{letter}  choices       ch-01-a, ch-01-b, ch-02-a
+note-{NN}         section note  note-01, note-02
+ctx-{NN}          context       ctx-01, ctx-02 (one per section, NN matches)
+q-{NN}            open question q-01, q-02 (template-provided per section)
+note-overall      page note     (exactly one, in `feedback`)
 ```
 
-Four prefixes only. A pick-any choice IS the include/exclude toggle — no
+Five prefixes only. A pick-any choice IS the include/exclude toggle — no
 separate `tog-` type; stat tiles and illustrations are content, not
-choosables, so they carry no contract IDs. Collapsed summary rows are pure
-view state and carry no IDs either.
+choosables, so they carry no contract IDs. Collapsed summary rows and the
+Skip control are engine-provided and carry no IDs either.
 
 ## Rules
 
@@ -52,5 +53,7 @@ spec JSON (id: "ch-01-a")
 - `note-01` → section 01's note value
 - `ctx-02` → section 02's context block ("expand ctx-02's argument" = give
   a fuller version of that context/recommendation)
+- `q-01` → the open question raised on section 01 ("answering q-01: …" in
+  your reply keeps the record precise)
 - Bare letters ("option b in the second section") → resolve to `ch-02-b` and
   echo the resolved ID back in your reply so the record stays precise.

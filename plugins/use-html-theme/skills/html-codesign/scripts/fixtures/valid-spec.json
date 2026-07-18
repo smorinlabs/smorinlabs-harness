@@ -32,14 +32,15 @@
     {
       "id": "ctx-01",
       "section": "sec-01-direction",
-      "body": "A wordmark reads clearly at header sizes and needs no separate icon; a monogram scales to favicons but demands more brand recognition than a new project has.",
+      "summary": "Wordmark vs monogram for a brand nobody recognizes yet.",
       "recommendation": "Wordmark — legibility now beats compactness we don't need yet.",
       "recommended": ["ch-01-a"]
     },
     {
       "id": "ctx-02",
       "section": "sec-02-extras",
-      "body": "Extras are cheap to derive once the mark is chosen; both become useful the day the site ships.",
+      "summary": "Both extras are cheap once the mark exists.",
+      "body": "Legacy v0.8.0 field — tolerated as an ignored extra, never validated.",
       "recommendation": "Take both — each is under an hour of derivation work.",
       "recommended": ["ch-02-a", "ch-02-b"]
     }

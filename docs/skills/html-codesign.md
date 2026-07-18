@@ -2,24 +2,31 @@
 
 Builds an interactive **"codesign" decision page** as a single self-contained
 HTML file: sections of choices (pick-one or pick-any), each opening with a
-collapsible **context & recommendation preamble** (★ badge on the
-recommended option), per-section notes, and a control bar — **Export → MD**,
-**Export → JSON** (slim by default, full ADR-style by toggle), **Another
-draft**, **Here are my answers**, plus **Collapse/Expand all**. Three layers
+collapsible **context & recommendation preamble** — free-form rich content
+(prose, pros/cons tables, inline SVG charts, images) on a clarity scaffold
+(*What this is* → *Why you're being asked* → analysis → ★ recommendation),
+with a ★ badge on the recommended option — plus per-section notes, a
+**Skip control on every question** (deliberately-not-deciding is a
+first-class answer), an **Ask-a-question channel** for "I can't answer this
+yet", and a control bar — **Export → MD**, **Export → JSON** (slim by
+default, full ADR-style by toggle), **Another draft**, **Here are my
+answers**, **Questions first**, plus **Collapse/Expand all**. Three layers
 of manual collapse make review ergonomic: fold the context out of the way,
 hide unchosen options (the note stays visible), or fold a whole section to
-a dense one-line summary — question, picks, a followed/went-against-
-recommendation marker, and the note — so a finished page scans as a review
-of the decision. The reader — who may not be in the chat at all — opens the
-file anywhere, toggles what they want, and sends the export back. Every
-choosable element carries a **stable ID** (`sec-01`, `ch-01-a`, `ctx-01`)
-so a pasted line like "keep `ch-01-a`, swap `ch-02-b`" resolves precisely
-and a regenerated v2 is a *diff*, not a fresh blob. The spec behind the
-page is embedded JSON, machine-validated before rendering
+a dense one-line summary — question, picks, followed/went-against/skipped/❓
+markers, and the note — so a finished page scans as a review of the
+decision. The reader — who may not be in the chat at all — opens the file
+anywhere, toggles what they want, and sends the export back. Every
+choosable element carries a **stable ID** (`sec-01`, `ch-01-a`, `ctx-01`,
+`q-01`) so a pasted line like "keep `ch-01-a`, swap `ch-02-b`" resolves
+precisely and a regenerated v2 is a *diff*, not a fresh blob. The spec
+behind the page is embedded JSON, machine-validated before rendering
 (`scripts/validate_spec.py`, stdlib-only — every section must carry a
-context); exports are purpose-built `codesign-answers` documents — slim for
-the agent loop (ID · question · picks · note), full for human decision
-records in PRs, Slack, or `docs/decisions/`.
+context envelope; the rich body lives free-form in the page); exports are
+purpose-built `codesign-answers` documents — slim for the agent loop
+(ID · question · picks · note; skipped sections drop out of MD but export
+`skipped: true` in JSON; open questions always surface), full for human
+decision records in PRs, Slack, or `docs/decisions/`.
 
 **Triggers on:** wanting to choose between options and capture/export the
 decision — "give me 4 layout directions and let me pick", "decision page for
@@ -42,11 +49,13 @@ Works with no theme at all; never mixes two.
 ## The loop
 
 ```
-agent: spec JSON (sections + contexts) → validate_spec.py → themed HTML page
-reader: review contexts, toggle choices, add notes, fold sections to review
-        → Export MD/JSON (slim default / full toggle) or a re-prompt
-anyone: paste it back into any chat → v2 reuses every surviving ID,
-        contexts re-authored fresh
+agent: spec JSON (sections + context envelopes) → validate_spec.py
+       → themed HTML page (free-form context bodies on the clarity scaffold)
+reader: review contexts, answer / skip / raise questions, add notes,
+        fold sections to review → Export MD/JSON (slim default / full
+        toggle), "Questions first", or another re-prompt
+anyone: paste it back into any chat → questions answered by q-NN, skips
+        honored, v2 reuses every surviving ID, contexts re-authored fresh
 ```
 
 The back-channel is plain text, so the loop works identically from Claude

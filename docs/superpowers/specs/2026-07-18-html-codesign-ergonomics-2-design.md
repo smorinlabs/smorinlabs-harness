@@ -60,7 +60,9 @@ three features below close those gaps. Record this framing in
   `Before I decide "<title>": sec-01 (ctx-01): <question> · sec-04: <question>
   — answer these, then I'll continue.` Copies to clipboard like the other
   re-prompts.
-- **Exports:** JSON answer entries gain `"question": <text>` when raised.
+- **Exports:** JSON answer entries gain `"open_question": <text>` when
+  raised (`"question"` was already taken by the section title in the
+  answers schema).
   In MD, a section with an open question and no picks renders the question
   (`❓ **Open question (`q-01`):** …`) instead of a decision; with picks
   *and* a question, both render.

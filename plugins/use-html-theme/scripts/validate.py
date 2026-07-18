@@ -170,6 +170,15 @@ check(
     "html-codesign template builds codesign-answers exports",
     file_contains(f"{cd_base}/assets/codesign-template.html", "codesign-answers"),
 )
+for component in ["ctx-what", "ctx-why", "skip-toggle", "ask-toggle", "q-wrap", "open_question"]:
+    check(
+        f"html-codesign template has {component}",
+        file_contains(f"{cd_base}/assets/codesign-template.html", component),
+    )
+check(
+    "html-codesign references/design-notes.md records the envelope split",
+    file_contains(f"{cd_base}/references/design-notes.md", "envelope"),
+)
 check("html-codesign validator exists", file_exists(f"{cd_base}/scripts/validate_spec.py"))
 for theme in THEMES:
     check(
