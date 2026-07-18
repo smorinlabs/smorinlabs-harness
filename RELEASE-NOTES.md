@@ -1,5 +1,27 @@
 # Release Notes
 
+## v0.10.0 — 2026-07-18
+
+### Added
+
+- **html-codesign ergonomics 2** — closes the gaps the first real codesign
+  page exposed (governing principle: the page must work for a reader who
+  wasn't in the room). A **Skip control on every question** (skipping
+  clears picks; MD exports omit skipped sections while JSON records
+  `skipped: true` so a v2 never re-asks unchanged); an **ask-a-question
+  channel** per section (`q-NN` fields, a "Questions first" button that
+  bundles every open question into one paste-back, `open_question` in both
+  export formats — questions surface even on skipped sections); and
+  **free-form context bodies** — the spec now carries only a context
+  envelope (one-line summary, argued recommendation, recommended ids)
+  while the page's context block holds unrestricted HTML (prose, pros/cons
+  tables, inline SVG charts, data-URI images) on a clarity scaffold
+  ("What this is" → "Why you're being asked" → analysis → ★
+  recommendation) with hard authoring rules: question-shaped titles, zero
+  session jargon. Full exports carry the envelope only — the page file is
+  the durable rich-context archive. Legacy v0.8.0 `body` fields are
+  tolerated as ignored extras. use-html-theme 0.5.0 → 0.6.0.
+
 ## v0.9.0 — 2026-07-18
 
 ### Added
