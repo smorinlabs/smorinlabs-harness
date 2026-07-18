@@ -227,7 +227,7 @@ overlay work (component set changes here).
 
 ---
 
-## [~] Project P16: codesign theme overlays + fresh-session E2E (v0.11.0)
+## [x] Project P16: codesign theme overlays + fresh-session E2E (v0.11.0)
 **Goal**: Style the v0.9.0–v0.10.0 html-codesign component set in all three theme overlays
 (birchline, technical-minimal, high-contrast-dark `codesign.md`) — `.ctx-what`/`.ctx-why`/
 `.ctx-free` (incl. tables), `.summary` with `.s-mark-*` markers, `.badge-rec`, `.sec-actions`
@@ -245,7 +245,7 @@ pass), ch-02-a (fresh-session test), ch-04-b (no fleet audit for this cycle).
 - [x] [P16-T03] high-contrast-dark codesign.md overlay: new-components section (layered near-black; surface-step inset ctx, brighter-on-hover)
 - [x] [P16-TS01] Plugin validate.py: 10 coverage checks x 3 overlays (RED-first: 30 fails -> green) + var()-vs-tokens.md purity check per overlay; gen-check green
 - [x] [P16-TS02] Fresh-session E2E PASS both tools: codex exec (--skip-git-repo-check) and claude -p produce pages whose written AND embedded specs pass validate_spec.py, question titles, envelope contexts, full component set, clean ID mirror. Finding: headless claude -p outside the harness tree needs --add-dir <clone> to read dev-symlinked skill bodies (Skill tool accepts the name but cannot inline the body); interactive sessions unaffected
-- [ ] [P16-T04] Docs touch-ups; plugin + marketplace bump; release v0.11.0
+- [x] [P16-T04] Plugin 0.6.0 -> 0.7.0 (feature commit b62656f); marketplace v0.11.0; RELEASE-NOTES; tag + push
 
 ---
 

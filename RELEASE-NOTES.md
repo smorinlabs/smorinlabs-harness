@@ -1,5 +1,23 @@
 # Release Notes
 
+## v0.11.0 — 2026-07-18
+
+### Added
+
+- **Codesign theme overlay coverage + fresh-session E2E** — all three theme
+  overlays (Birchline, Technical-minimal, High-contrast-dark `codesign.md`)
+  gain a token-sourced "New components" section styling the v0.9.0–v0.10.0
+  html-codesign set: the context scaffold (what/why lead-ins, free-zone
+  tables, ★ recommendation callout), collapsed summary rows with
+  followed/went-against/skipped/question markers, the ★ rec badge, the
+  Skip/Ask/hide-options action row, the question field, and the Slim/Full
+  export toggle — no theme leaves neutral-styled islands. Plugin validator
+  gains 30 overlay-coverage checks plus a per-overlay token-purity check
+  (every var() must exist in that theme's tokens.md). Fresh-session E2E
+  passed on both tools: clean claude-code and codex sessions each generated
+  a page whose written and embedded specs pass validate_spec.py with the
+  full component set and clean ID mirrors. use-html-theme 0.6.0 → 0.7.0.
+
 ## v0.10.0 — 2026-07-18
 
 ### Added
