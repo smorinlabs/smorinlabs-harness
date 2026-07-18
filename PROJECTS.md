@@ -227,4 +227,26 @@ overlay work (component set changes here).
 
 ---
 
+## [ ] Project P16: codesign theme overlays + fresh-session E2E (v0.11.0)
+**Goal**: Style the v0.9.0–v0.10.0 html-codesign component set in all three theme overlays
+(birchline, technical-minimal, high-contrast-dark `codesign.md`) — `.ctx-what`/`.ctx-why`/
+`.ctx-free` (incl. tables), `.summary` with `.s-mark-*` markers, `.badge-rec`, `.sec-actions`
+(`.fold`/`.opt-toggle`/`.skip-toggle`/`.ask-toggle`), `.q-wrap`, `.seg` — per
+`references/theming.md`'s component list, 100% token-sourced (P12 pattern, no invented colors);
+and run the fresh-session E2E generation test on both tools (mirror P11-TS03: a clean session on
+claude-code AND codex generates a page from the updated SKILL.md alone; embedded specs pass
+`validate_spec.py`) — the one check the building sessions structurally could not run on
+themselves. Scope decided via codesign answers export 2026-07-18: ch-01-a (all three in one
+pass), ch-02-a (fresh-session test), ch-04-b (no fleet audit for this cycle).
+
+### Tests & Tasks
+- [ ] [P16-T01] birchline codesign.md overlay: cover the new component classes (token-sourced)
+- [ ] [P16-T02] technical-minimal codesign.md overlay: same coverage
+- [ ] [P16-T03] high-contrast-dark codesign.md overlay: same coverage
+- [ ] [P16-TS01] Plugin validate.py asserts new-component coverage in all three overlays; token purity; gen-check green
+- [ ] [P16-TS02] Fresh-session E2E on both tools: clean session generates a page; embedded spec validates; SKILL.md smoke test passes
+- [ ] [P16-T04] Docs touch-ups; plugin + marketplace bump; release v0.11.0
+
+---
+
 - [ ] Regression Test Status
