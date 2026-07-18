@@ -4,7 +4,7 @@
 [marketplace]
 name = "smorinlabs-harness"
 description = "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs"
-version = "0.8.0"
+version = "0.9.0"
 
 [marketplace.owner]
 name = "Steve Morin"

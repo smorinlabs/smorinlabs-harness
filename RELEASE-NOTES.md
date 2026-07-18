@@ -1,5 +1,21 @@
 # Release Notes
 
+## v0.9.0 — 2026-07-18
+
+### Added
+
+- **pr-merge-flow skill** (repo-hygiene) — drives an open GitHub PR to
+  merge by resolving every review thread: bounded wait for AI reviewer
+  bots (Claude, Codex, Greptile, Copilot), per-thread triage (validate →
+  verify by running code where possible → fix valid findings and push /
+  refute invalid ones with a reasoned reply), re-review cycles (max 3),
+  PR-title convention preflight, then ends per mode — `--auto`,
+  `--confirm` (default), `--ready`, with opt-in `--deep` review. Per-repo
+  preferences persist in a git-ignored `.claude/pr-merge-flow.local.md`.
+  Quota-safe throughout: rate-limit preflight, 20–30s poll floor,
+  hard-bounded monitors, gh → REST → curl ladder. repo-hygiene 0.1.0 →
+  0.2.0.
+
 ## v0.8.0 — 2026-07-17
 
 ### Added
