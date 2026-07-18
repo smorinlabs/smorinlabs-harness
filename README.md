@@ -2,7 +2,7 @@
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
 Claude Code marketplace and an OpenAI Codex marketplace from one tree. Five
-plugins, sixteen skills. Plugin metadata lives in a single source of truth
+plugins, seventeen skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
