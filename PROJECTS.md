@@ -313,7 +313,7 @@ similarity test + explicit ladder over the five literal rules).
 
 ---
 
-## [~] Project P20: explain gap diagnosis — replace the ladder (plugin v0.3.0, v0.13.0)
+## [x] Project P20: explain gap diagnosis — replace the ladder (plugin v0.3.0, v0.13.0)
 **Goal**: Replace the altitude ladder's mechanical climb with gap diagnosis, per user design
 discussion 2026-07-18: a follow-up `explain` means "not enough to act on" — re-read the prior
 answer and diagnose the block, trying remedies in observed-frequency order (too specific →
@@ -331,7 +331,7 @@ anatomy's context section, not just follow-ups.
 - [x] [P20-T03] Docs page + README row + plugin.meta.toml 0.2.0 → 0.3.0
 - [x] [P20-TS01] Re-gate: reviewer third pass (1 major: remedy-1 shape conflict; 3 moderate: anchor placement/boundary, circular go-deeper close; 6 minor) — all 10 fixed: deeper back to explicit-only, follow-ups keep prior mode shape, anchor moved to Rules with discriminator, non-circular close, description slimmed to 895 chars
 - [x] [P20-TS02] `skillsmith verify --deep` both tools: static + deep pass post-fix
-- [ ] [P20-T04] Release v0.13.0 (bump, RELEASE-NOTES, tag, push)
+- [x] [P20-T04] Release v0.13.0 cut: bump, RELEASE-NOTES, tag, push
 
 ---
 

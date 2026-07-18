@@ -1,5 +1,23 @@
 # Release Notes
 
+## v0.13.0 — 2026-07-18
+
+### Changed
+
+- **explain: gap diagnosis replaces the altitude ladder (explain 0.3.0)** —
+  a follow-up `explain` no longer climbs a fixed rung sequence; it means
+  "not enough to act on," and the skill re-reads its prior answer to
+  diagnose what's blocking the action, trying remedies in
+  observed-frequency order: step back to the bigger picture (the most
+  common fix — the first answer was usually too specific), clearer plainer
+  language, or a sharper more explicit example. Rewriting with the
+  expansion woven in is the default (appending only small, self-contained
+  deltas); follow-ups keep the prior answer's mode shape; a genuinely
+  undiagnosable gap asks which part is unclear, with candidates. New house
+  rule — the action anchor: every explanation is scoped to the live action
+  in front of the user (what it changes, the value, the rationale, how it
+  fits), or, with no live action, to recognizing when it matters later.
+
 ## v0.12.0 — 2026-07-18
 
 ### Added
