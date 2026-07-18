@@ -57,8 +57,8 @@
     {
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
-      "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, and manual test guides.",
-      "version": "0.1.0",
+      "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, manual test guides, and a PR merge flow that resolves every review thread before merging.",
+      "version": "0.2.0",
       "author": "Steve Morin",
       "keywords": [
         "ci",
@@ -67,7 +67,10 @@
         "version",
         "testing",
         "hygiene",
-        "audit"
+        "audit",
+        "pr",
+        "merge",
+        "review"
       ]
     },
     {

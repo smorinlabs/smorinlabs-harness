@@ -180,4 +180,27 @@ export-IS-spec invariant consciously dropped. Design spec:
 
 ---
 
+## [~] Project P14: pr-merge-flow skill (repo-hygiene) (v0.9.0)
+**Goal**: New `pr-merge-flow` skill in `plugins/repo-hygiene/` — drive an open PR to
+merge by resolving every review thread: bounded bot-wait (Claude/Codex/Greptile/Copilot),
+triage each comment (validate → verify by running where possible → fix valid / refute
+invalid with a reasoned reply), re-review cycles (max 3), title-convention preflight
+(repo CLAUDE.md, else Conventional Commits), then end per mode — `--auto` / `--confirm`
+(default) / `--ready`, with opt-in `--deep` review (/code-review, Codex,
+pr-review-toolkit). Per-repo prefs in git-ignored `.claude/pr-merge-flow.local.md`.
+Quota-safe: rate-limit preflight, 20–30s poll floor, hard-bounded monitors (5–10 min +
+one manual recheck), gh → gh api REST → curl ladder; GraphQL only for thread-state read
++ resolve mutation. Verdict: create-new (no fleet collision; boundary line to ci-audit;
+accepted overlap with superpowers receiving-code-review recorded).
+
+### Tests & Tasks
+- [x] [P14-T01] Author SKILL.md (Iron Law, 8-step workflow, Red Flags) + references/polling.md + references/triage.md
+- [x] [P14-T02] plugin.meta.toml 0.1.0 → 0.2.0 (description + keywords); `just gen` + gen-check green
+- [x] [P14-T03] Dev placement both tools via skillsmith (claude-code, then codex) — static verify pass ×2; caught+fixed a YAML plain-scalar defect in the description first
+- [x] [P14-T04] Docs: per-skill page docs/skills/pr-merge-flow.md + README table row; accepted-overlap baseline entry added in smorin-harness docs/doctor-baseline.md
+- [x] [P14-TS01] skill-quality gate PASS — 4 layers green (982-char description, no collisions, no placeholders/PII, verify pass claude-code+codex); skill-reviewer deep pass: 3 majors + 5 minors found, all fixed (thread-reply recipe + databaseId, pulls/comments data model, .git/info/exclude-only, per_page=100 probes, draft/mergeable-null/branch-protection handling, Iron Law label, close-without-merge disambiguation)
+- [ ] [P14-T05] Commit (conventional); optional release via skill-harness-release (v0.9.0)
+
+---
+
 - [ ] Regression Test Status

@@ -45,6 +45,7 @@ Repo & release-readiness skills.
 | `version-check` | Reports the project version across manifest, git tag, main branch, and (with `--full`) the registry, flagging mismatches. | [docs/skills/version-check.md](docs/skills/version-check.md) |
 | `readme-sync` | Audits README.md against the codebase (install steps, CLI usage, code examples, structure, links) and applies fixes with `--fix`. | [docs/skills/readme-sync.md](docs/skills/readme-sync.md) |
 | `manual-test-guide` | Generates a copy-pasteable manual testing guide, prioritizing recently changed areas. | [docs/skills/manual-test-guide.md](docs/skills/manual-test-guide.md) |
+| `pr-merge-flow` | Drives an open PR to merge: waits (bounded) for AI reviewer bots, triages every review thread — verify, fix or refute with a reply — cycles until clean, then merges per mode (`--auto`/`--confirm`/`--ready`, opt-in `--deep`). | [docs/skills/pr-merge-flow.md](docs/skills/pr-merge-flow.md) |
 
 ### factor-harness
 
