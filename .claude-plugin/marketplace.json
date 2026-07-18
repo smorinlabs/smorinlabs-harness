@@ -10,6 +10,21 @@
   },
   "plugins": [
     {
+      "name": "explain",
+      "source": "./plugins/explain",
+      "description": "Concrete-anchored explanation shorthand \u2014 /explain answers in a fixed anatomy: what it is, just-enough context, a real before/after example, and the payoff \u2014 with options/deeper/steps modes inferred from the target.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "explain",
+        "explanation",
+        "before-after",
+        "examples",
+        "communication",
+        "decision-support"
+      ]
+    },
+    {
       "name": "factor-harness",
       "source": "./plugins/factor-harness",
       "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",

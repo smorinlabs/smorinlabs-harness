@@ -227,7 +227,7 @@ overlay work (component set changes here).
 
 ---
 
-## [ ] Project P16: codesign theme overlays + fresh-session E2E (v0.11.0)
+## [~] Project P16: codesign theme overlays + fresh-session E2E (v0.11.0)
 **Goal**: Style the v0.9.0–v0.10.0 html-codesign component set in all three theme overlays
 (birchline, technical-minimal, high-contrast-dark `codesign.md`) — `.ctx-what`/`.ctx-why`/
 `.ctx-free` (incl. tables), `.summary` with `.s-mark-*` markers, `.badge-rec`, `.sec-actions`
@@ -246,6 +246,30 @@ pass), ch-02-a (fresh-session test), ch-04-b (no fleet audit for this cycle).
 - [ ] [P16-TS01] Plugin validate.py asserts new-component coverage in all three overlays; token purity; gen-check green
 - [ ] [P16-TS02] Fresh-session E2E on both tools: clean session generates a page; embedded spec validates; SKILL.md smoke test passes
 - [ ] [P16-T04] Docs touch-ups; plugin + marketplace bump; release v0.11.0
+
+---
+
+## [~] Project P17: explain plugin — concrete-anchored explanation shorthand (plugin v0.1.0)
+**Goal**: New single-skill plugin `explain`: `/explain <thing>` answers in a fixed anatomy
+(what it is → just-enough context → real before/after example → payoff → go-deeper offer)
+with modes inferred from the target (options / deeper / steps; explicit argument wins; one
+question only on genuine ambiguity). Design grounded in session-transcript research
+(2026-07-17: 172 sessions scanned, 104 matching messages, five recurring patterns —
+before/after examples, "more context on <item>", options-with-recommendation-and-runner-up,
+payoff framing, bigger-picture escalation). Trigger space verified clean against the
+74-skill fleet; steps mode carves manual testing out to manual-test-guide. Least-privilege
+tools: Read, Grep, Glob, AskUserQuestion, Bash scoped to git diff/log/show.
+
+### Tests & Tasks
+- [x] [P17-T01] Session-transcript research + pattern extraction with quotes
+- [x] [P17-T02] Pre-skill design: proposal confirmed, interview (modes/triggering/tools), verdict create-new, route home 3 / new plugin / name `explain`
+- [x] [P17-T03] Author plugin (plugin.meta.toml, SKILL.md, references/examples.md; description 966 chars after review revision)
+- [x] [P17-T04] Wire: `just gen` + `just gen-check` green; marketplace entry generated
+- [x] [P17-T05] Docs: docs/skills/explain.md + README section + plugin/skill count bump
+- [x] [P17-T06] Dev placement on both tools (skillsmith dev, claude-code then codex; static verify pass both)
+- [x] [P17-TS01] skill-quality gate: 4 layers run; skill-reviewer findings applied (anatomy scope, steps-mode triggers, session-recap dangling ref, numbered workflow naming Glob + git subcommands, calibration-example fix); re-verified green both tools
+- [x] [P17-TS02] `skillsmith verify --deep`: session-backed load pass on both tools (static + deep)
+- [ ] [P17-T07] Marketplace version fold-in with the next release cut (P16 in flight — not bumped here)
 
 ---
 

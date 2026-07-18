@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Five
-plugins, seventeen skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Six
+plugins, eighteen skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -86,6 +86,14 @@ Themed-HTML toolkit, two pure skills — controlled entirely in natural language
 |---|---|---|
 | `use-html-theme` | Offers a catalog of three fully-isolated visual themes (Birchline, Technical-minimal, High-contrast-dark) on any HTML request and applies the chosen one to all subsequent HTML, with inline-flag and natural-language overrides, a side-by-side preview, and per-project persistence. | [docs/skills/use-html-theme.md](docs/skills/use-html-theme.md) |
 | `html-codesign` | Builds interactive "pick and export" decision pages — self-contained HTML with pick-one/pick-any sections, a collapsible free-form context-and-recommendation preamble per question on a clarity scaffold (★ badge on the recommended option; rich bodies: tables, inline SVG charts, images), a Skip control and ask-a-question channel on every section, notes, stable IDs (`ch-01-a`), three layers of manual collapse (context, unchosen options, whole sections to dense summary rows) for reviewing decisions, a validated embedded spec, and slim-default / full-toggle Markdown/JSON answers exports (skips and open questions round-trip) for diffable v2s. Styled by the active theme via a per-theme overlay, with a neutral fallback. | [docs/skills/html-codesign.md](docs/skills/html-codesign.md) |
+
+### explain
+
+Concrete-anchored explanation shorthand.
+
+| Skill | Does | Details |
+|---|---|---|
+| `explain` | Answers `/explain <thing>` in a fixed anatomy — what it is, just-enough context, a real before/after example, the payoff — with options/deeper/steps modes inferred from the target (explicit argument wins). | [docs/skills/explain.md](docs/skills/explain.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

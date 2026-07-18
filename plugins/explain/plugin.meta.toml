@@ -1,0 +1,5 @@
+name = "explain"
+version = "0.1.0"
+description = "Concrete-anchored explanation shorthand — /explain answers in a fixed anatomy: what it is, just-enough context, a real before/after example, and the payoff — with options/deeper/steps modes inferred from the target."
+author = "Steve Morin"
+keywords = ["explain", "explanation", "before-after", "examples", "communication", "decision-support"]
