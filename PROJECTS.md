@@ -273,7 +273,7 @@ tools: Read, Grep, Glob, AskUserQuestion, Bash scoped to git diff/log/show.
 
 ---
 
-## [~] Project P18: pr-merge-flow post-merge cleanup + guarded default-branch sync (v0.12.0)
+## [x] Project P18: pr-merge-flow post-merge cleanup + guarded default-branch sync (v0.12.0)
 **Goal**: After a successful merge, pr-merge-flow surveys cleanup read-only and presents
 needs-cleanup vs already-clean lists — every item a named, discrete action with its exact
 command (local/remote PR branch, worktrees on the merged branch, prunable entries, stale
@@ -289,11 +289,11 @@ else `git pull --ff-only`) — never bare pull, rebase, or force.
 - [x] [P18-T02] Step 10 guarded double-checked default-branch sync (joins the step 9 menu) + Red Flags row; repo-hygiene 0.2.0 → 0.3.0
 - [x] [P18-T03] Docs page + README row refreshed; gen-check green; re-gated (verify static both tools)
 - [x] [P18-T04] CI scrub: 3 private-tooling references in P15/P17 notes removed (commit aeff13a; tree scan clean — latest CI run was red on this gate)
-- [~] [P18-T05] Commit + push; bounded CI watch; optional release v0.12.0
+- [x] [P18-T05] Commit + push done (3d5f349); released in v0.12.0 (cut alongside P19)
 
 ---
 
-## [~] Project P19: explain follow-up semantics — the altitude ladder (plugin v0.2.0, ships in v0.12.0)
+## [x] Project P19: explain follow-up semantics — the altitude ladder (plugin v0.2.0, ships in v0.12.0)
 **Goal**: Make `explain` conversation-aware: a bare `explain` (or `explain <guidance>`) right
 after an explanation is a follow-up meaning "make that clearer" — climb exactly one rung of
 the altitude ladder (anatomy → clarify → deeper → internals), never repeating the rung below.
@@ -309,7 +309,7 @@ similarity test + explicit ladder over the five literal rules).
 - [x] [P19-T03] Docs page + README row follow-up-aware; plugin.meta.toml 0.1.0 → 0.2.0
 - [x] [P19-TS01] Re-gate: skill-quality layers green; skill-reviewer pass found the two-control-planes issue (modes vs ladder) — reconciled: rungs defined over any mode's first answer, explicit altitude jumps set ladder position, above-internals terminal state, cold-start boundary; description 990 chars
 - [x] [P19-TS02] `skillsmith verify --deep` both tools post-change: static + deep pass
-- [ ] [P19-T04] Release v0.12.0 via skill-harness-release (with P18's pr-merge-flow work; bump harness.toml + pyproject, RELEASE-NOTES, tag, push)
+- [x] [P19-T04] Release v0.12.0 cut via skill-harness-release (with P18's pr-merge-flow work): bump, RELEASE-NOTES, tag, push
 
 ---
 

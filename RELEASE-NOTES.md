@@ -1,5 +1,36 @@
 # Release Notes
 
+## v0.12.0 — 2026-07-18
+
+### Added
+
+- **explain follow-up invocations — the altitude ladder (explain 0.2.0)** —
+  a bare `explain` (or `explain <guidance>`) right after an explanation is
+  now a follow-up meaning "make that clearer": it climbs exactly one rung
+  of an altitude ladder (rung 1 → clarify → deeper → internals), never
+  repeating a rung. One similarity test arbitrates everything: a similar or
+  bare re-invoke climbs; an argument naming an aspect of the current
+  subject steers the climb; an argument outside it restarts at rung 1 on
+  the new target; genuinely unclear cases repeat back the interpretation
+  first. Explicit altitudes (`deeper`, accepting the closing go-deeper
+  offer) jump straight there and set ladder position; above internals the
+  ladder reports itself exhausted; cold starts target the last substantive
+  subject or ask. Ships a follow-up-ladder calibration walkthrough.
+
+- **pr-merge-flow post-merge cleanup + guarded default-branch sync
+  (repo-hygiene 0.3.0)** — after a successful merge, the flow surveys
+  cleanup read-only (local/remote PR branch, worktrees on the merged
+  branch, prunable entries, stale merged branches) and runs only what is
+  multi-select confirmed; plus an ask-first, ff-only sync of the local
+  default branch with guards re-checked at execution time (dirty state,
+  other-worktree checkout, local-ahead, in-progress git ops all block).
+
+### Fixed
+
+- v0.11.0 release notes backfilled with the explain plugin entry (it
+  shipped inside v0.11.0 but was missing from the record).
+- CI scrub: private-tooling references removed from P15/P17 project notes.
+
 ## v0.11.0 — 2026-07-18
 
 ### Added
