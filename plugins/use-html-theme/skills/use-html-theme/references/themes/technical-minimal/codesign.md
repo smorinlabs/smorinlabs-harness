@@ -58,6 +58,37 @@ Every value is a `tokens.md` token — no new hex.
   output" still reads as a separate surface.
 - **IDs, counters, stat lines**: monospace, tabular numerals.
 
+## New components (v0.9.0–v0.10.0 set)
+
+Same sourcing rule: `tokens.md` values only, 1px lines, tight radii.
+
+- **Context block** (`.ctx`): `var(--surface-2)` ground with a
+  `var(--border)` hairline, `var(--r-md)` — reads as a docs "note" panel.
+  `.ctx-toggle` caption in `var(--ink-muted)` uppercase. The `.ctx-what` /
+  `.ctx-why` lead-in `<b>` renders `var(--fw-semibold)` `var(--ink)` —
+  emphasis by weight, never color. `.ctx-free` tables are the docs-table
+  recipe: `var(--surface-3)` header, `var(--border)` rules, `--fs-small`.
+- **Recommendation callout** (`.ctx-rec`): `var(--accent-soft)` fill with
+  a 3px `var(--accent)` left border; ★ and the choice id in
+  `var(--accent)`; ids stay monospace.
+- **Rec badge** (`.badge-rec`): `var(--accent-soft)` pill, `var(--accent)`
+  text and hairline, `--fs-caption`, `--r-sm`. Flat — no shadow.
+- **Summary rows** (`.summary`): question `var(--fw-semibold)`; picks
+  (`.s-sel`) `var(--accent-hover)`. Markers (`.s-mark-*`): followed =
+  `var(--success)`, went-against and open question = `var(--warning)`,
+  skipped = `var(--ink-subtle)` — semantic colors used strictly for
+  status, per the theme's own rule. Note excerpt `var(--ink-muted)`.
+- **Section actions** (`.sec-actions`: `.opt-toggle`, `.skip-toggle`,
+  `.ask-toggle`): flat secondary buttons — `var(--surface)` ground,
+  `var(--border)` 1px line, `var(--ink-muted)` text, `--fs-small`. Active
+  skip fills `var(--surface-3)` with `var(--ink)` text.
+- **Question field** (`.q-wrap`): label in `var(--warning)` uppercase
+  caption; textarea `var(--surface-2)` fill, `var(--border)` line, accent
+  focus ring — identical geometry to the note fields.
+- **Export toggle** (`.seg` / `.seg-btn`): a compact segmented control —
+  `var(--surface)` ground, `var(--border)` frame; the pressed `.seg-btn`
+  is `var(--accent)` with `var(--on-accent)` text.
+
 ## Technical-minimal rules that bind codesign pages
 
 From this theme's `anti-patterns.md`:

@@ -240,11 +240,11 @@ themselves. Scope decided via codesign answers export 2026-07-18: ch-01-a (all t
 pass), ch-02-a (fresh-session test), ch-04-b (no fleet audit for this cycle).
 
 ### Tests & Tasks
-- [ ] [P16-T01] birchline codesign.md overlay: cover the new component classes (token-sourced)
-- [ ] [P16-T02] technical-minimal codesign.md overlay: same coverage
-- [ ] [P16-T03] high-contrast-dark codesign.md overlay: same coverage
-- [ ] [P16-TS01] Plugin validate.py asserts new-component coverage in all three overlays; token purity; gen-check green
-- [ ] [P16-TS02] Fresh-session E2E on both tools: clean session generates a page; embedded spec validates; SKILL.md smoke test passes
+- [x] [P16-T01] birchline codesign.md overlay: new-components section (warm editorial register; weight-500 lead-ins, oat/clay callout, sage/amber markers)
+- [x] [P16-T02] technical-minimal codesign.md overlay: new-components section (flat docs register; accent-soft callout, semantic status colors)
+- [x] [P16-T03] high-contrast-dark codesign.md overlay: new-components section (layered near-black; surface-step inset ctx, brighter-on-hover)
+- [x] [P16-TS01] Plugin validate.py: 10 coverage checks x 3 overlays (RED-first: 30 fails -> green) + var()-vs-tokens.md purity check per overlay; gen-check green
+- [x] [P16-TS02] Fresh-session E2E PASS both tools: codex exec (--skip-git-repo-check) and claude -p produce pages whose written AND embedded specs pass validate_spec.py, question titles, envelope contexts, full component set, clean ID mirror. Finding: headless claude -p outside the harness tree needs --add-dir <clone> to read dev-symlinked skill bodies (Skill tool accepts the name but cannot inline the body); interactive sessions unaffected
 - [ ] [P16-T04] Docs touch-ups; plugin + marketplace bump; release v0.11.0
 
 ---

@@ -54,6 +54,42 @@ documents (the 12–16% tint recipe; slate-tinted shadows). No new hex.
   framed as "machine output".
 - **Stat line / counters**: tabular numerals.
 
+## New components (v0.9.0–v0.10.0 set)
+
+Same sourcing rule: tokens and documented derivations only.
+
+- **Context block** (`.ctx`): `var(--gray-100)` ground, oat hairline,
+  `var(--r-sm)` radius — a nested surface per `tokens.md`. The
+  `.ctx-toggle` caption is gray-500 uppercase; its chevron rotates, no
+  other motion. The `.ctx-what` / `.ctx-why` lead-ins ("What this is:",
+  "Why you're being asked:") render their `<b>` at **weight 500 slate** —
+  never bold (anti-pattern) and never clay (the accent span stays unique
+  to the H1). `.ctx-free` tables: `var(--gray-100)` header row, oat cell
+  hairlines, small sans text.
+- **Recommendation callout** (`.ctx-rec`): `var(--oat)` fill with a 3px
+  clay left border — the theme's callout recipe. The ★ and the choice id
+  render clay; the id keeps Birchline's serif italic register.
+- **Rec badge** (`.badge-rec`): pill on the documented 12% clay tint
+  (`color-mix(in srgb, var(--clay) 12%, #FFFFFF)`), clay text, clay
+  hairline, caption size. Sits quietly next to the label — the ★ carries
+  the meaning, not weight.
+- **Summary rows** (`.summary`): question in weight 500 slate; picks
+  (`.s-sel`) in `var(--accent-deep)` (hover-darkened clay). Markers
+  (`.s-mark-*`): followed = `var(--success)` sage, went-against and open
+  question = `var(--warning)` amber, skipped = `var(--gray-500)` — full
+  color text, no tinted chips (semantic tints stay for surfaces). Note
+  excerpt gray-700.
+- **Section actions** (`.sec-actions`: `.opt-toggle`, `.skip-toggle`,
+  `.ask-toggle`): quiet secondary buttons — white ground, oat border,
+  gray-700 text, sentence case. Active skip (`aria-pressed="true"`) fills
+  `var(--gray-100)` with slate text; no color shout — skipping is calm.
+- **Question field** (`.q-wrap`): label is the amber caption
+  (`var(--warning)`, uppercase, .08em); textarea matches the note fields
+  (ivory fill, oat border, clay focus ring).
+- **Export toggle** (`.seg` / `.seg-btn`): white ground, oat border;
+  the pressed `.seg-btn` fills clay with white text — the same primary
+  treatment as the export buttons it governs.
+
 ## Birchline rules that bind codesign pages
 
 From `anti-patterns.md`, restated because codesign pages are dense with UI:

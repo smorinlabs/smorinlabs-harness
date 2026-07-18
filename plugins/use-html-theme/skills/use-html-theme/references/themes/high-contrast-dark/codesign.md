@@ -63,6 +63,43 @@ inversions: cards sit ABOVE the page (surface-2 over surface), and the accent
 - **Focus states**: keep `:focus-visible` rings bright (`var(--accent-hover)`)
   — focus legibility matters more on dark.
 
+## New components (v0.9.0–v0.10.0 set)
+
+Same sourcing rule: `tokens.md` values only. Layering carries structure:
+the ctx block steps DOWN from the card, controls step UP on interaction.
+
+- **Context block** (`.ctx`): `var(--surface)` ground (the page
+  near-black, inset one step below the `var(--surface-2)` card) with a
+  `var(--border)` hairline — depth without heavy strokes. `.ctx-toggle`
+  caption `var(--ink-muted)` uppercase. The `.ctx-what` / `.ctx-why`
+  lead-in `<b>` renders `var(--fw-semibold)` `var(--ink-strong)` — one of
+  the few sanctioned uses of pure white. `.ctx-free` tables:
+  `var(--surface-3)` header, `var(--border-strong)` rules, `--fs-small`.
+- **Recommendation callout** (`.ctx-rec`): `var(--accent-soft)` deep-blue
+  fill (`#0F1F3D` per `tokens.md`) with a 3px `var(--accent)` left
+  border; ★ and the choice id in `var(--accent-hover)` (the brighter
+  blue — legibility over dark).
+- **Rec badge** (`.badge-rec`): `var(--accent-soft)` pill with a
+  `var(--accent)` hairline and `var(--accent-hover)` text — the border
+  carries the state, the fill stays subtle.
+- **Summary rows** (`.summary`): question `var(--fw-semibold)`
+  `var(--ink)`; picks (`.s-sel`) `var(--accent-hover)`. Markers
+  (`.s-mark-*`): followed = `var(--success)`, went-against and open
+  question = `var(--warning)`, skipped = `var(--ink-subtle)` — saturated
+  semantic colors read well on near-black; never dim them. Note excerpt
+  `var(--ink-muted)`.
+- **Section actions** (`.sec-actions`: `.opt-toggle`, `.skip-toggle`,
+  `.ask-toggle`): `var(--surface-3)` ground, `var(--border-strong)` line,
+  `var(--ink-muted)` text. Active skip lifts to `var(--surface-3)` with
+  `var(--ink-strong)` text. Hover brightens the border
+  (`var(--accent-hover)`), never darkens.
+- **Question field** (`.q-wrap`): label in `var(--warning)` uppercase
+  caption; textarea `var(--surface-3)` fill, `var(--border-strong)` line,
+  `var(--accent-hover)` focus ring (bright focus matters most on dark).
+- **Export toggle** (`.seg` / `.seg-btn`): `var(--surface-3)` ground with
+  a `var(--border-strong)` frame; the pressed `.seg-btn` is
+  `var(--accent)` with `var(--ink-strong)` text.
+
 ## High-contrast-dark rules that bind codesign pages
 
 From this theme's `anti-patterns.md`:

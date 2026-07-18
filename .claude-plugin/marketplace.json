@@ -92,7 +92,7 @@
       "name": "use-html-theme",
       "source": "./plugins/use-html-theme",
       "description": "Themed-HTML toolkit, two pure skills. use-html-theme: on any HTML-generation request, offer a catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project \u2014 natural language and [theme: x] inline-flag control, side-by-side preview on request. html-codesign: interactive 'pick and export' decision pages \u2014 every question opens with a collapsible context-and-recommendation preamble (free-form rich content on a clarity scaffold), the reader answers, skips, or raises a question on each section, folds answered sections to dense summary rows for review, then exports the decision as Markdown/JSON (slim by default, full ADR-style by toggle) with stable IDs for diffable iteration. Portable across Claude Code and Codex.",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "author": "Steve Morin",
       "keywords": [
         "html",

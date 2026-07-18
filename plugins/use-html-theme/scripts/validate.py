@@ -186,6 +186,34 @@ for theme in THEMES:
         file_exists(f"skills/use-html-theme/references/themes/{theme}/codesign.md"),
     )
 
+# Overlays must cover the v0.9.0/v0.10.0 component set (P16): the context
+# scaffold, summary rows + markers, rec badge, section action buttons, the
+# question field, and the Slim/Full export toggle.
+NEW_COMPONENTS = [
+    "ctx-what", "ctx-why", "ctx-free", "ctx-rec",
+    "s-mark", "badge-rec", "skip-toggle", "ask-toggle", "q-wrap", "seg-btn",
+]
+TEMPLATE_SLOTS = {
+    "ink", "muted", "bg", "card", "line", "line-soft", "accent",
+    "accent-deep", "sel-bg", "warn", "radius", "shadow", "font", "mono",
+}
+for theme in THEMES:
+    overlay = ROOT / f"skills/use-html-theme/references/themes/{theme}/codesign.md"
+    tokens = ROOT / f"skills/use-html-theme/references/themes/{theme}/tokens.md"
+    if not overlay.is_file() or not tokens.is_file():
+        continue
+    text = overlay.read_text(encoding="utf-8")
+    for comp in NEW_COMPONENTS:
+        check(f"{theme} codesign overlay covers {comp}", comp in text)
+    token_vars = set(re.findall(r"--([a-z0-9-]+)\s*:", tokens.read_text(encoding="utf-8")))
+    used = set(re.findall(r"var\(--([a-z0-9-]+)\)", text))
+    unknown = used - token_vars - TEMPLATE_SLOTS
+    check(
+        f"{theme} codesign overlay token purity",
+        not unknown,
+        detail=f"unknown vars: {sorted(unknown)}" if unknown else "",
+    )
+
 vs_script = ROOT / cd_base / "scripts/validate_spec.py"
 fx_good = ROOT / cd_base / "scripts/fixtures/valid-spec.json"
 fx_bad = ROOT / cd_base / "scripts/fixtures/invalid-spec.json"
