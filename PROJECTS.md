@@ -308,7 +308,7 @@ similarity test + explicit ladder over the five literal rules).
 - [x] [P19-T02] references/examples.md: follow-up ladder calibration example (clarify → deeper → steering → new target)
 - [x] [P19-T03] Docs page + README row follow-up-aware; plugin.meta.toml 0.1.0 → 0.2.0
 - [x] [P19-TS01] Re-gate: skill-quality layers green; skill-reviewer pass found the two-control-planes issue (modes vs ladder) — reconciled: rungs defined over any mode's first answer, explicit altitude jumps set ladder position, above-internals terminal state, cold-start boundary; description 990 chars
-- [x] [P19-TS02] `skillsmith verify --deep` both tools post-change: static + deep pass
+- [x] [P19-TS02] Deep load verification passed on both tools post-change
 - [x] [P19-T04] Release v0.12.0 cut via skill-harness-release (with P18's pr-merge-flow work): bump, RELEASE-NOTES, tag, push
 
 ---
@@ -330,8 +330,25 @@ anatomy's context section, not just follow-ups.
 - [x] [P20-T02] references/examples.md: diagnosis walkthrough (step back → sharpen → steer → new target → ask)
 - [x] [P20-T03] Docs page + README row + plugin.meta.toml 0.2.0 → 0.3.0
 - [x] [P20-TS01] Re-gate: reviewer third pass (1 major: remedy-1 shape conflict; 3 moderate: anchor placement/boundary, circular go-deeper close; 6 minor) — all 10 fixed: deeper back to explicit-only, follow-ups keep prior mode shape, anchor moved to Rules with discriminator, non-circular close, description slimmed to 895 chars
-- [x] [P20-TS02] `skillsmith verify --deep` both tools: static + deep pass post-fix
+- [x] [P20-TS02] Deep load verification passed on both tools post-fix
 - [x] [P20-T04] Release v0.13.0 cut: bump, RELEASE-NOTES, tag, push
+
+---
+
+## [x] Project P21: project-harness sandbox trigger boundary (plugin v0.1.3)
+**Goal**: Keep the broad project/plan trigger focused on tracked work while
+explicitly routing Lima/VM/sandbox execution-environment setup to the new
+`sandbox-lima`, `sandbox-prepare`, and `sandbox-project` skills.
+
+### Tests & Tasks
+- [x] [P21-T01] Valid frontmatter description distinguishes PROJECTS.md/
+      project-state management from guest execution setup; removed the legacy,
+      unsupported `when_to_use` key while preserving its trigger content
+- [x] [P21-T02] SKILL.md trigger-boundary section, red flag, and deliberate
+      non-responsibility added with a concrete routing example in docs
+- [x] [P21-T03] README row refreshed; project-harness 0.1.2 → 0.1.3
+- [x] [P21-TS01] Generated manifests, public-repo scrub/parity checks,
+      gen-check, quick validation, and static load verification green
 
 ---
 

@@ -1,8 +1,7 @@
 ---
 name: using-project-harness
-description: Bootstraps the project-harness bundle by establishing its five skills, running a four-step idempotent setup (PROJECTS.md trunk, AGENTS.md/CLAUDE.md mentions, planning-system question, references-block convention nudge) on first use per repo, and routing hand-edits through the right sibling skill. Use whenever the user mentions a project, plan, roadmap, milestone, or backlog, or starts a session in a repo with project-management state — even if they do not explicitly ask to "set up" or "init" anything. Meta-skill — never edits projects/ files itself.
-when_to_use: Whenever the user mentions a project, plan, roadmap, milestone, or backlog; when starting a session in a repo with project-management state; before editing PROJECTS.md or projects/ by hand; when the user asks to "set up project-harness" or "init project-harness".
-allowed-tools: Read Write Bash
+description: Bootstraps the project-harness bundle by establishing its five skills, running a four-step idempotent setup (PROJECTS.md trunk, AGENTS.md/CLAUDE.md mentions, planning-system question, references-block convention nudge) on first use per repo, and routing hand-edits through the right sibling skill. Use when the user mentions a project, plan, roadmap, milestone, or backlog as tracked work, starts a repo session with project-management state, or is about to edit PROJECTS.md/projects/. Does not handle VM/Lima/sandbox execution-environment setup or repositories to run inside one; route those to sandbox-lima, sandbox-prepare, or sandbox-project.
+allowed-tools: Read, Write, Bash, AskUserQuestion
 ---
 
 # using-project-harness
@@ -29,6 +28,16 @@ User instructions in `CLAUDE.md`, `AGENTS.md`, or direct chat
 override these conventions. The rule is: **user > skills > default**.
 If the user says *"don't run audit"*, don't run audit. The user is
 in control.
+
+## Trigger boundary
+
+The word “project” is not sufficient by itself. Use this bundle when the user
+means tracked work in `PROJECTS.md` or `projects/`. If they mean creating a
+Lima/VM sandbox, installing agents in that guest, choosing repositories to clone
+into it, or launching a goal there, route to `sandbox-lima`, `sandbox-prepare`,
+or `sandbox-project` instead. Once the sandbox work itself becomes backlog or
+milestone state, project-harness may track that work without taking over VM
+execution.
 
 ## The five skills
 
@@ -91,6 +100,7 @@ These thoughts mean **STOP** — you're rationalizing:
 | "I'll skip `project-next` and ask the user directly" | `project-next` brings the trunk and recent-touch info into context. Asking blind costs a turn. |
 | "This is just a small edit" | Small edits are how drift starts. The cost of running the right skill is one extra round-trip; the cost of drift is hours of audit later. |
 | "AGENTS.md/CLAUDE.md mentions look fine, I'll skip step 2" | The stale rule is mechanical: file missing OR doesn't contain `project-harness`. Don't second-guess it from prose vibes — let the rule fire and either confirm or decline once. |
+| "They said project while setting up a Lima VM, so this must fire" | Execution-environment setup belongs to the `sandbox-*` skills; only tracked project state belongs here. |
 | "I'll write the standard block into AGENTS.md without asking" | Bootstrap writes are gated on `[y/n]`. Silent edits to repo-level docs are exactly the surprise behavior the project's CLAUDE.md warns against. |
 | "User picked 'other' for planning system, I'll guess where their plans live" | Don't guess. Ask one follow-up for the paths and persist the answer. The references-block helper depends on this being correct. |
 
@@ -152,6 +162,9 @@ this pointer block) is at `templates/PROJECTS.md` in the plugin.
   config. To switch systems, the user edits the config file
   manually — see `references/bootstrap.md` for the re-init escape
   hatch.
+- Does not create or control VMs/Lima sandboxes, install guest agents, choose
+  repositories for a guest, or launch goals there. Those are the `sandbox-*`
+  workflow's responsibilities.
 
 ## See also
 

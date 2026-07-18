@@ -8,12 +8,16 @@ subsequent project-state change (capture, orient, refine, audit) to the
 right one of the other four skills. It never edits `PROJECTS.md` or
 `projects/` itself; hand-edits bypass the discipline that keeps the trunk
 reliable, so this skill insists on routing through the sibling skills
-instead.
+instead. Its “project” trigger means tracked work: VM/Lima/sandbox execution
+environment setup and repositories to run inside a guest route to the
+`sandbox-*` workflow rather than this bundle.
 
 **Triggers on:** mentions of a project, plan, roadmap, milestone, or
 backlog; starting a session in a repo with project-management state;
 before editing PROJECTS.md or projects/ by hand; "set up project-harness",
-"init project-harness" · **Arguments:** none
+"init project-harness". **Does not trigger on:** creating or controlling a
+Lima/VM sandbox, installing guest agents, choosing guest repositories, or
+launching a sandbox goal. · **Arguments:** none
 
 ## Install
 
@@ -36,3 +40,9 @@ location) as well.
 > whether the user uses Superpowers / another system / none, and points at
 > the references-block format), then routes: "what's next?" →
 > `project-next`, "add an idea" → `project-add`, and so on.
+
+> "Set up a Lima VM for this application project"
+> → does not bootstrap project-harness. It routes VM lifecycle to
+> `sandbox-lima`, guest agents/auth to `sandbox-prepare`, and the repositories
+> and goal to `sandbox-project`. Project-harness becomes relevant only if the
+> user separately wants that work recorded in PROJECTS.md.

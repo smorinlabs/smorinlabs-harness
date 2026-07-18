@@ -58,7 +58,7 @@
       "name": "project-harness",
       "source": "./plugins/project-harness",
       "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "author": "Steve Morin",
       "keywords": [
         "project-management",
