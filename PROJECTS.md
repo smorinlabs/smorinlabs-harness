@@ -249,7 +249,7 @@ pass), ch-02-a (fresh-session test), ch-04-b (no fleet audit for this cycle).
 
 ---
 
-## [~] Project P17: explain plugin — concrete-anchored explanation shorthand (plugin v0.1.0)
+## [x] Project P17: explain plugin — concrete-anchored explanation shorthand (plugin v0.1.0, shipped in v0.11.0)
 **Goal**: New single-skill plugin `explain`: `/explain <thing>` answers in a fixed anatomy
 (what it is → just-enough context → real before/after example → payoff → go-deeper offer)
 with modes inferred from the target (options / deeper / steps; explicit argument wins; one
@@ -269,7 +269,7 @@ tools: Read, Grep, Glob, AskUserQuestion, Bash scoped to git diff/log/show.
 - [x] [P17-T06] Dev placement on both tools (skillsmith dev, claude-code then codex; static verify pass both)
 - [x] [P17-TS01] skill-quality gate: 4 layers run; skill-reviewer findings applied (anatomy scope, steps-mode triggers, session-recap dangling ref, numbered workflow naming Glob + git subcommands, calibration-example fix); re-verified green both tools
 - [x] [P17-TS02] `skillsmith verify --deep`: session-backed load pass on both tools (static + deep)
-- [ ] [P17-T07] Marketplace version fold-in with the next release cut (P16 in flight — not bumped here)
+- [x] [P17-T07] Marketplace version fold-in: shipped inside v0.11.0 (P16 release cut on top of the explain commit); release-notes entry backfilled
 
 ---
 

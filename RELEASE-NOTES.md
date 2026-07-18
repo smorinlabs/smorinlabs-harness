@@ -4,6 +4,16 @@
 
 ### Added
 
+- **explain plugin (new, v0.1.0)** — concrete-anchored explanation
+  shorthand: `/explain <thing>` answers in a fixed anatomy (what it is →
+  just-enough context → real before/after example pulled from the actual
+  artifact → the payoff → a go-deeper offer), with options / deeper / steps
+  modes inferred from the target (explicit argument wins; one clarifying
+  question only on genuine ambiguity). Ships two worked calibration
+  examples; least-privilege tools (Bash scoped to `git diff`/`log`/`show`);
+  skill-quality gated and `verify --deep` green on both tools. Marketplace
+  grows to six plugins, eighteen skills.
+
 - **Codesign theme overlay coverage + fresh-session E2E** — all three theme
   overlays (Birchline, Technical-minimal, High-contrast-dark `codesign.md`)
   gain a token-sourced "New components" section styling the v0.9.0–v0.10.0
