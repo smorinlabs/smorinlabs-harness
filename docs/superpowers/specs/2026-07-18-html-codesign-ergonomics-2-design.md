@@ -159,7 +159,7 @@ Hard authoring rules added to SKILL.md:
   absent from MD, `skipped: true` in JSON; ask flow (reveal field, Questions
   first prompt, export fields); scaffold renders; envelope-only full export;
   exports still ignore all view state.
-- skill-quality gate; `skillsmith verify` both tools.
+- skill-quality gate; skill load verification on both tools.
 
 ## Sequencing note
 
