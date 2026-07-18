@@ -12,8 +12,8 @@
     {
       "name": "explain",
       "source": "./plugins/explain",
-      "description": "Concrete-anchored explanation shorthand \u2014 /explain answers in a fixed anatomy: what it is, just-enough context, a real before/after example, and the payoff \u2014 with options/deeper/steps modes inferred from the target, and follow-up aware: a bare explain after an explanation climbs an altitude ladder (clarify \u2192 deeper \u2192 internals) instead of repeating itself.",
-      "version": "0.2.0",
+      "description": "Concrete-anchored explanation shorthand \u2014 /explain answers in a fixed anatomy: what it is, just-enough context, a real before/after example, and the payoff \u2014 with options/deeper/steps modes inferred from the target, and follow-up aware: a bare explain after an explanation diagnoses what's blocking action (step back to the bigger picture, clearer language, sharper example) and rewrites rather than repeats.",
+      "version": "0.3.0",
       "author": "Steve Morin",
       "keywords": [
         "explain",

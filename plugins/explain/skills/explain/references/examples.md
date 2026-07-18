@@ -1,7 +1,7 @@
 # Worked examples
 
-Two full outputs to calibrate against. The scenarios are generic; the shape is
-the contract.
+Worked outputs plus a follow-up walkthrough to calibrate against. The
+scenarios are generic; the shape is the contract.
 
 ## Default mode
 
@@ -39,8 +39,8 @@ A 429 that previously produced 3 requests in ~50 ms now spreads them over
 of exhausting all attempts inside the outage; upstream sees ~75% fewer
 hammer-bursts during incidents.
 
-Want to go deeper — why exponential rather than fixed, and how the jitter
-decision was made?
+Want to go deeper — why exponential rather than fixed, and what it does to
+tail latency?
 
 ## Options mode
 
@@ -79,32 +79,44 @@ If this feeds a decision: risk is low either way (both reversible in one
 sitting); confidence in B is high if a third layer is plausible, medium
 otherwise.
 
-## Follow-up ladder
+## Follow-up diagnosis
 
-Continuing the default-mode example above — each follow-up climbs one rung,
-never restating the rung below:
-
-> **User:** explain
-
-**Clarify (rung 2)** — a different angle plus a second concrete example: what
-the change does under a *timeout* (not just a 429) — the sleep also spaces
-out attempts when the server is slow rather than refusing, shown with the
-timeout stack trace before vs. the recovered call after.
+Continuing the default-mode example above — each follow-up diagnoses what's
+blocking the action, names the guess, and usually rewrites:
 
 > **User:** explain
 
-**Deeper (rung 3)** — the bigger picture: why backoff exists at all (retrying
-into an outage amplifies it), the key decision (exponential over fixed
-because outage recovery times are unknown), and what would break without it.
+**Step back (the usual first move)** — the prior answer was scoped tightly
+to the code change; the likely block is the missing frame. **Rewrite**, not
+append: open with what the retry change means for the service (it survives
+rate-limit windows instead of failing through them), the value and the
+rationale, with the original before/after woven into that frame. Half-line:
+"stepped back — the first pass was probably too narrow."
+
+> **User:** explain
+
+**Sharpen the example** — the frame is now present; re-reading shows the
+example never walked a real failing call to recovery. **Append** — the
+delta is small and self-contained: the 429 sequence before, the recovered
+call after, timestamps showing the spread. Half-line: "the example never
+walked a real recovery — adding it."
+
 
 > **User:** explain the sleep timing
 
-**Steering** — still the same subject, so climb one rung (internals, rung 4)
-focused on that aspect: the mechanism of how `2 ** attempt` shapes the
-schedule — why the wait doubles each round and what that does to the total
-retry window.
+**Steering** — an aspect of the current subject: diagnose within it. The
+mechanism of `2 ** attempt` — why the wait doubles each round and what that
+does to the total retry window. Half-line: "focusing on the timing
+mechanism."
+
 
 > **User:** explain the deploy pipeline
 
-**New target** — outside the retry subject entirely: restart at anatomy,
-rung 1, for the deploy pipeline.
+**New target** — outside the retry subject entirely: a fresh first answer
+on the deploy pipeline.
+
+> **User:** explain
+
+**Ask — the rare path** — the gap isn't diagnosable (here, every remedy has
+already been tried); ask which part is unclear, offering candidates: the
+timing math? when it fires? how to tune it?

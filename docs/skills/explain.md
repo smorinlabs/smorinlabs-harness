@@ -23,12 +23,17 @@ explanation, which is a follow-up
 target; bare `/explain <thing>` infers the mode
 
 **Follow-up aware:** a bare `explain` (or `explain <focus>`) issued right
-after an explanation means "make that clearer" — it climbs exactly one rung
-of an altitude ladder (anatomy → clarify → deeper → internals) and never
-repeats the rung below. An argument naming an aspect of the current subject
-steers the climb; an argument outside it restarts at anatomy on the new
-target; when it's genuinely unclear which, the skill repeats back its
-interpretation in one line before answering.
+after an explanation means "that wasn't enough to act on" — the skill
+re-reads its prior answer, diagnoses what's blocking the action (most
+often: too specific, needs a step back to the bigger picture; else unclear
+language, or a missing/vague example), names the guess in half a line, and
+usually **rewrites** the explanation with the expansion woven in (appending
+only small, self-contained deltas). An argument naming an aspect of the
+current subject steers the diagnosis; an argument outside it starts fresh
+on the new target; a genuinely undiagnosable gap gets one question — which
+part is unclear, with candidates. Explanations anchor to the live action in
+front of you (what it changes, the value, the rationale, the fit); with no
+live action, to recognizing when it matters later.
 
 Not for manual testing steps (that is `manual-test-guide`, in this
 marketplace's repo-hygiene plugin) and not for whole-session orientation or

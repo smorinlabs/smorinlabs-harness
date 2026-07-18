@@ -313,4 +313,26 @@ similarity test + explicit ladder over the five literal rules).
 
 ---
 
+## [~] Project P20: explain gap diagnosis — replace the ladder (plugin v0.3.0, v0.13.0)
+**Goal**: Replace the altitude ladder's mechanical climb with gap diagnosis, per user design
+discussion 2026-07-18: a follow-up `explain` means "not enough to act on" — re-read the prior
+answer and diagnose the block, trying remedies in observed-frequency order (too specific →
+step back to bigger picture [most common]; unclear language → plain words; missing/vague
+example → sharpen). Rewrite-over-append default (expansion woven in; append only small
+self-contained deltas; never repeat material unimproved). Undiagnosable gap → ask which part
+is unclear, with candidates (rare path). Action anchor adopted as root principle: "just
+enough context" = enough for the action in front of you (what it changes, value, rationale,
+fit); no live action → enough to recognize when it matters later — reshapes the default
+anatomy's context section, not just follow-ups.
+
+### Tests & Tasks
+- [x] [P20-T01] SKILL.md: diagnosis section replaces ladder; action-anchored anatomy context; workflow/deeper-row/red-flag updates; description re-fit to envelope
+- [x] [P20-T02] references/examples.md: diagnosis walkthrough (step back → sharpen → steer → new target → ask)
+- [x] [P20-T03] Docs page + README row + plugin.meta.toml 0.2.0 → 0.3.0
+- [x] [P20-TS01] Re-gate: reviewer third pass (1 major: remedy-1 shape conflict; 3 moderate: anchor placement/boundary, circular go-deeper close; 6 minor) — all 10 fixed: deeper back to explicit-only, follow-ups keep prior mode shape, anchor moved to Rules with discriminator, non-circular close, description slimmed to 895 chars
+- [x] [P20-TS02] `skillsmith verify --deep` both tools: static + deep pass post-fix
+- [ ] [P20-T04] Release v0.13.0 (bump, RELEASE-NOTES, tag, push)
+
+---
+
 - [ ] Regression Test Status

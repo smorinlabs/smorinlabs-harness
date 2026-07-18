@@ -93,7 +93,7 @@ Concrete-anchored explanation shorthand.
 
 | Skill | Does | Details |
 |---|---|---|
-| `explain` | Answers `/explain <thing>` in a fixed anatomy — what it is, just-enough context, a real before/after example, the payoff — with options/deeper/steps modes inferred from the target (explicit argument wins), and follow-up aware: a bare `explain` after an explanation climbs an altitude ladder (clarify → deeper → internals) instead of repeating itself. | [docs/skills/explain.md](docs/skills/explain.md) |
+| `explain` | Answers `/explain <thing>` in a fixed anatomy — what it is, just-enough context, a real before/after example, the payoff — with options/deeper/steps modes inferred from the target (explicit argument wins), and follow-up aware: a bare `explain` after an explanation diagnoses what's blocking action (step back to the bigger picture, clearer language, sharper example) and rewrites rather than repeats. | [docs/skills/explain.md](docs/skills/explain.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`
