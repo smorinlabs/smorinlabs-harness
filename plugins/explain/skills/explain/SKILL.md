@@ -2,19 +2,19 @@
 name: explain
 description: >
   Explain anything in a concrete-anchored style — succinct, just-enough
-  context, always grounded in a real example, inline in chat. Use when the
-  user invokes /explain, or asks in their own words: "explain X", "help me
-  understand", "give me a before and after", "add more context on
+  context, always grounded in a real example. Use when the
+  user invokes /explain, or asks in their own words: "explain X", "give me a before and after", "add more context on
   <finding/step/option>", "show examples of the options so I can decide",
-  "what does this change get us", "what's the bigger picture here", "walk me
-  through this change", "give me step by step instructions", "which of these
-  can you do and which do I have to do". Modes, inferred from the target (an
-  explicit mode argument always wins): default (context, a real before/after
-  example, the payoff), options (example per option + recommendation + why +
-  runner-up), deeper (bigger picture, why it exists, key decisions), steps
+  "what does this change get us", "what's the bigger picture here", "give me
+  step by step instructions". A bare "explain" right after an explanation is
+  a follow-up meaning "make that clearer": climb one rung of the altitude
+  ladder (anatomy → clarify → deeper → internals); an argument steers the
+  focus; a dissimilar target restarts at anatomy. Modes (inferred from the
+  target; explicit argument wins): default
+  (context, before/after example, payoff), options (example per option +
+  recommendation + runner-up), deeper (bigger picture, key decisions), steps
   (operator instructions split by who runs what). Not for manual testing
-  steps (that is manual-test-guide) and not for whole-session orientation or
-  catch-me-up recaps.
+  steps (manual-test-guide) or whole-session recaps.
 allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git diff:*), Bash(git log:*), Bash(git show:*)
 ---
 
@@ -25,18 +25,21 @@ enough context, always with a real example — never an unanchored abstraction.
 
 ## Workflow
 
-1. **Locate the target** — the code, change, finding, or option set being
-   pointed at: Glob/Grep to find it, Read to load it; for changes, pull the
-   real diff via `git diff`, `git log`, or `git show`.
-2. **Infer the mode** from the target's shape (table below). An explicit
-   argument wins unconditionally; torn between two modes, ask one
-   AskUserQuestion before writing — this should be rare.
+1. **Locate the target** — a bare or re-issued `explain` right after an
+   explanation is a follow-up: the target is what was just explained (see
+   the altitude ladder below). Otherwise it is the code, change, finding, or
+   option set being pointed at: Glob/Grep to find it, Read to load it; for
+   changes, pull the real diff via `git diff`, `git log`, or `git show`.
+2. **Infer the mode** from the target's shape (table below) — or, for a
+   follow-up, the rung (ladder below). An explicit argument wins
+   unconditionally; torn between two readings, ask one AskUserQuestion
+   before writing — this should be rare.
 3. **Pull the evidence** — the actual snippet, config, or command output.
    Never invent an example when the real artifact exists.
 4. **Write in the mode's shape**, inline in chat.
 5. **Close with the go-deeper offer** (one line).
 
-## Rules of the house (all modes)
+## Rules of the house (all modes and rungs)
 
 - **Succinct by default.** Just enough context to make the example land.
   Depth is an escalation, not the default.
@@ -72,8 +75,44 @@ Inferred from the target (workflow step 2); explicit arguments are
 |---|---|---|
 | **default** | a concept, change, finding, or piece of code | the five-part anatomy above |
 | **options** | a set of alternatives (A/B/C, competing designs, open questions) | per option: a worked example plus context; then one recommendation with why; the runner-up named when the call is close; pros/cons/risks/confidence when it feeds a decision |
-| **deeper** | a prior explanation didn't land, or the bigger picture is asked for | why this exists at all, what breaks without it, the key decisions and their whys, the mental model — then back down to one concrete example |
+| **deeper** | the bigger picture is asked for, or the ladder reaches rung 3 | why this exists at all, what breaks without it, the key decisions and their whys, the mental model — then back down to one concrete example |
 | **steps** | "how do I do X" / operator instructions | numbered steps with exact copy-pasteable commands; when both parties act, split into "what I can do" vs "what you must do". Manual *testing* steps are out of scope — hand off to `manual-test-guide` |
+
+## Follow-up invocations — the altitude ladder
+
+A bare `explain` (or `explain <guidance>`) issued right after an
+explanation — from this skill in any mode, or any explanation the assistant
+just gave — is a **follow-up**, not a new request: it means "that wasn't
+enough — make it clearer." "Right after" means the immediately preceding
+answer; anything older is a cold start. The ladder:
+
+1. **rung 1** — the first answer, in whatever mode it was delivered;
+2. **clarify** — the same anatomy with new material: more context, a
+   different angle, a second concrete example;
+3. **deeper** — the deeper mode: bigger picture, why it exists, key
+   decisions;
+4. **internals** — the anatomy with a mechanism walkthrough as the example:
+   how it actually works.
+
+Judge the invocation against the thing just explained:
+
+- **Similar, or bare** — climb exactly **one rung**, never repeating the
+  rung below.
+- **Argument naming an aspect of the current subject** — steering: climb
+  one rung, focused on that aspect.
+- **Argument outside the current subject** — a new target: restart at
+  rung 1.
+- **Explicit altitude** (`deeper`, "internals", or accepting the closing
+  go-deeper offer, which is a jump to rung 3) — go straight there, and
+  ladder position follows. An explicit re-request of the current rung means
+  "again, differently": fresh material at the same altitude, never a
+  restatement.
+- **Above internals** — there is no higher rung: say the ladder is
+  exhausted and ask what is still unclear.
+- **Genuinely unclear which** — repeat back the interpretation in one line
+  and confirm before answering.
+- **Cold start** (nothing just explained): target the last substantive
+  thing discussed; if there is none, ask what to explain.
 
 ## Red flags
 
@@ -84,10 +123,11 @@ Inferred from the target (workflow step 2); explicit arguments are
 | "The example would be long, so I'll describe it" | Trim the example; don't replace it with prose. |
 | "I'll restate the code line by line" | That's narration, not explanation. Say why; show before/after. |
 | "The mode is ambiguous; I'll pick one silently" | Torn between two modes → one question first. |
+| "They asked again — I'll restate it better" | Same altitude twice is the failure. Climb a rung. |
 
 ## See also
 
 - `manual-test-guide` (repo-hygiene plugin, this marketplace) — owns manual
   testing steps (the steps-mode carve-out).
-- `references/examples.md` — two full worked outputs (default and options
-  mode) to calibrate against.
+- `references/examples.md` — worked outputs (default and options mode) plus
+  a follow-up-ladder walkthrough to calibrate against.

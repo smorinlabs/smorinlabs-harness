@@ -17,10 +17,18 @@ writing.
 "give me a before and after", "add more context on <finding/step/option>",
 "show examples of the options so I can decide", "what does this change get
 us", "what's the bigger picture here", "walk me through this change", "give
-me step by step instructions", "which of these can you do and which do I
-have to do"
+me step by step instructions" — and a bare `explain` right after an
+explanation, which is a follow-up
 **Arguments:** optional mode (`options`, `deeper`, `steps`) followed by the
 target; bare `/explain <thing>` infers the mode
+
+**Follow-up aware:** a bare `explain` (or `explain <focus>`) issued right
+after an explanation means "make that clearer" — it climbs exactly one rung
+of an altitude ladder (anatomy → clarify → deeper → internals) and never
+repeats the rung below. An argument naming an aspect of the current subject
+steers the climb; an argument outside it restarts at anatomy on the new
+target; when it's genuinely unclear which, the skill repeats back its
+interpretation in one line before answering.
 
 Not for manual testing steps (that is `manual-test-guide`, in this
 marketplace's repo-hygiene plugin) and not for whole-session orientation or

@@ -293,4 +293,24 @@ else `git pull --ff-only`) — never bare pull, rebase, or force.
 
 ---
 
+## [~] Project P19: explain follow-up semantics — the altitude ladder (plugin v0.2.0, ships in v0.12.0)
+**Goal**: Make `explain` conversation-aware: a bare `explain` (or `explain <guidance>`) right
+after an explanation is a follow-up meaning "make that clearer" — climb exactly one rung of
+the altitude ladder (anatomy → clarify → deeper → internals), never repeating the rung below.
+One similarity test arbitrates everything: similar/bare → climb; argument naming an aspect of
+the current subject → steer the climb; argument outside it → new target, restart at anatomy;
+genuinely unclear → repeat back the interpretation first. Cold start defined (last substantive
+subject, else ask). Design confirmed with user 2026-07-18 (adopt-with-refinements: unified
+similarity test + explicit ladder over the five literal rules).
+
+### Tests & Tasks
+- [x] [P19-T01] SKILL.md: follow-up section + workflow step-1 hook + red-flag row; description reworked inside the envelope
+- [x] [P19-T02] references/examples.md: follow-up ladder calibration example (clarify → deeper → steering → new target)
+- [x] [P19-T03] Docs page + README row follow-up-aware; plugin.meta.toml 0.1.0 → 0.2.0
+- [x] [P19-TS01] Re-gate: skill-quality layers green; skill-reviewer pass found the two-control-planes issue (modes vs ladder) — reconciled: rungs defined over any mode's first answer, explicit altitude jumps set ladder position, above-internals terminal state, cold-start boundary; description 990 chars
+- [x] [P19-TS02] `skillsmith verify --deep` both tools post-change: static + deep pass
+- [ ] [P19-T04] Release v0.12.0 via skill-harness-release (with P18's pr-merge-flow work; bump harness.toml + pyproject, RELEASE-NOTES, tag, push)
+
+---
+
 - [ ] Regression Test Status

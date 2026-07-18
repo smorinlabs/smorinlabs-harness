@@ -78,3 +78,33 @@ engine is more machinery than the problem deserves.
 If this feeds a decision: risk is low either way (both reversible in one
 sitting); confidence in B is high if a third layer is plausible, medium
 otherwise.
+
+## Follow-up ladder
+
+Continuing the default-mode example above — each follow-up climbs one rung,
+never restating the rung below:
+
+> **User:** explain
+
+**Clarify (rung 2)** — a different angle plus a second concrete example: what
+the change does under a *timeout* (not just a 429) — the sleep also spaces
+out attempts when the server is slow rather than refusing, shown with the
+timeout stack trace before vs. the recovered call after.
+
+> **User:** explain
+
+**Deeper (rung 3)** — the bigger picture: why backoff exists at all (retrying
+into an outage amplifies it), the key decision (exponential over fixed
+because outage recovery times are unknown), and what would break without it.
+
+> **User:** explain the sleep timing
+
+**Steering** — still the same subject, so climb one rung (internals, rung 4)
+focused on that aspect: the mechanism of how `2 ** attempt` shapes the
+schedule — why the wait doubles each round and what that does to the total
+retry window.
+
+> **User:** explain the deploy pipeline
+
+**New target** — outside the retry subject entirely: restart at anatomy,
+rung 1, for the deploy pipeline.
