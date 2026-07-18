@@ -223,7 +223,7 @@ overlay work (component set changes here).
 - [x] [P15-T04] SKILL.md: two-part context authoring step, hard writing rules, skip/ask in process + hard rules, 8-step smoke test, clarity gotcha
 - [x] [P15-TS02] Plugin validate.py extended (scaffold/skip/ask/open_question checks) — green; gen-check green
 - [x] [P15-T05] Docs page + README row refreshed; plugin 0.5.0 → 0.6.0
-- [x] [P15-T06] Browser assertions 29/29 pre-rebase + 22/22 re-run post-rebase; skill-quality 4 layers + skillsmith verify green both tools; surgical commit (rebased to c096230); release flow cut v0.9.0 (deferred P14 bookkeeping) then v0.10.0, both tagged + pushed
+- [x] [P15-T06] Browser assertions 29/29 pre-rebase + 22/22 re-run post-rebase; skill-quality 4 layers + load verification green on both tools; surgical commit (rebased to c096230); release flow cut v0.9.0 (deferred P14 bookkeeping) then v0.10.0, both tagged + pushed
 
 ---
 
@@ -266,9 +266,9 @@ tools: Read, Grep, Glob, AskUserQuestion, Bash scoped to git diff/log/show.
 - [x] [P17-T03] Author plugin (plugin.meta.toml, SKILL.md, references/examples.md; description 966 chars after review revision)
 - [x] [P17-T04] Wire: `just gen` + `just gen-check` green; marketplace entry generated
 - [x] [P17-T05] Docs: docs/skills/explain.md + README section + plugin/skill count bump
-- [x] [P17-T06] Dev placement on both tools (skillsmith dev, claude-code then codex; static verify pass both)
+- [x] [P17-T06] Dev placement on both tools (dev symlinks, claude-code then codex; static verify pass both)
 - [x] [P17-TS01] skill-quality gate: 4 layers run; skill-reviewer findings applied (anatomy scope, steps-mode triggers, session-recap dangling ref, numbered workflow naming Glob + git subcommands, calibration-example fix); re-verified green both tools
-- [x] [P17-TS02] `skillsmith verify --deep`: session-backed load pass on both tools (static + deep)
+- [x] [P17-TS02] Deep load verification: session-backed load pass on both tools (static + deep)
 - [x] [P17-T07] Marketplace version fold-in: shipped inside v0.11.0 (P16 release cut on top of the explain commit); release-notes entry backfilled
 
 ---
