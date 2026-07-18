@@ -273,4 +273,24 @@ tools: Read, Grep, Glob, AskUserQuestion, Bash scoped to git diff/log/show.
 
 ---
 
+## [~] Project P18: pr-merge-flow post-merge cleanup + guarded default-branch sync (v0.12.0)
+**Goal**: After a successful merge, pr-merge-flow surveys cleanup read-only and presents
+needs-cleanup vs already-clean lists — every item a named, discrete action with its exact
+command (local/remote PR branch, worktrees on the merged branch, prunable entries, stale
+merged branches; dirty state report-never-touch) — running only what is multi-select
+confirmed (`--auto` report-only). Plus a guarded, ask-first sync of the local default
+branch: blocked on dirty state, default checked out in another worktree, local-ahead
+commits, or in-progress git ops; guards re-run at execution time (state can change between
+survey and click); ff-only (`git fetch origin <default>:<default>` when unchecked-out,
+else `git pull --ff-only`) — never bare pull, rebase, or force.
+
+### Tests & Tasks
+- [x] [P18-T01] Step 9 cleanup survey + multi-select confirm gate + Red Flags row
+- [x] [P18-T02] Step 10 guarded double-checked default-branch sync (joins the step 9 menu) + Red Flags row; repo-hygiene 0.2.0 → 0.3.0
+- [x] [P18-T03] Docs page + README row refreshed; gen-check green; re-gated (verify static both tools)
+- [x] [P18-T04] CI scrub: 3 private-tooling references in P15/P17 notes removed (commit aeff13a; tree scan clean — latest CI run was red on this gate)
+- [~] [P18-T05] Commit + push; bounded CI watch; optional release v0.12.0
+
+---
+
 - [ ] Regression Test Status

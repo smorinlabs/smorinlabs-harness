@@ -99,14 +99,17 @@ Never loop indefinitely.
 ## 7. End per mode
 
 - **auto** — merge now (`gh pr merge --squash` unless prefs/CLAUDE.md say
-  otherwise; `delete-branch` per prefs), then report what was done. If GitHub
-  rejects the merge (branch protection — required approvals, etc.), downgrade
-  to the ready-report; never force.
+  otherwise; `delete-branch` per prefs), then report what was done and run
+  the step 9 survey — report-only in this mode. If GitHub rejects the merge
+  (branch protection — required approvals, etc.), downgrade to the
+  ready-report; never force.
 - **confirm** (default) — one final menu: a summary line (threads
   fixed/refuted, checks, title), then **Merge now** (default) /
-  **Run deep review first** (non-default) / **Don't merge**.
+  **Run deep review first** (non-default) / **Don't merge**. After a
+  completed merge, continue to step 9.
 - **ready** — report the ready-to-merge state plus the exact merge command;
-  mention deep review is available; stop.
+  mention deep review is available; include the step 9 survey as a
+  post-merge preview; stop.
 
 ## 8. Deep review (opt-in, never default)
 
@@ -116,6 +119,61 @@ option (confirm mode only). Engines — offer whichever are installed, singly
 or as a panel: `/code-review` at high effort, a Codex adversarial pass, the
 pr-review-toolkit review agents. Findings land as PR comments and feed
 straight back into step 3's loop; when the pass is clean, return to step 7.
+
+## 9. Post-merge cleanup (survey → confirm; never unasked)
+
+After a successful merge, survey — read-only — then present every finding as
+a named action with its exact command, in two lists: **needs cleanup** and
+**already clean** (state what is done; never silently omit it).
+
+Typical needs-cleanup findings:
+
+- Local PR branch still present → `git branch -d <branch>` (`-d`, never
+  `-D`: a refusal means unmerged commits — surface it, don't force).
+- Remote PR branch not auto-deleted → `git push origin --delete <branch>`.
+- A worktree checked out on the merged branch (also blocks local deletion) →
+  `git worktree remove <path>`; stale entries → `git worktree prune`
+  (inventory: `git worktree list`).
+- Other local branches already merged into the default branch
+  (`git branch --merged <default-branch>`, minus the default itself).
+
+Always report, never touch: dirty uncommitted state anywhere (main checkout
+or any worktree) — list it as needs-attention and leave it to the user.
+
+The gate: one multi-select menu of the needs-cleanup actions (name +
+command). Run only what is selected; a note can adjust any item (a different
+branch name, a different worktree path). `--auto` prints the same two lists
+and runs nothing — cleanup never executes without an explicit selection or
+ask.
+
+## 10. Sync the local default branch (ask; guarded, double-checked)
+
+After the merge, offer — never assume — to bring the local default branch up
+to date with the merged remote; the offer joins the step 9 menu as its own
+named action. Guards run read-only at survey time and are **re-run
+immediately before execution** — state can change between the survey and the
+click; a guard tripping at either moment blocks the action and downgrades it
+to a needs-attention report:
+
+- Dirty state where the sync would act (`git status --porcelain`).
+- The default branch checked out in another worktree (`git worktree list`) —
+  someone may be mid-edit there; name the worktree.
+- Local commits ahead of the remote
+  (`git rev-list --count origin/<default>..<default>` > 0) — fast-forward is
+  impossible and those commits belong to someone; never rebase or merge them
+  on your own.
+- An in-progress git operation (rebase/merge/cherry-pick markers under
+  `.git/`).
+
+When every guard is clear, the sync is fast-forward-only:
+
+- default branch not checked out anywhere →
+  `git fetch origin <default>:<default>` (moves the ref without touching any
+  working tree — the safest form);
+- default branch is the current branch → `git pull --ff-only`.
+
+Never bare `git pull`, never `--rebase`, never force. If fast-forward is
+impossible a guard already blocked it; divergence is a human decision.
 
 ## Red Flags
 
@@ -127,6 +185,8 @@ straight back into step 3's loop; when the pass is clean, return to step 7.
 | "Checks are red — I'll just fix the workflow here" | CI debugging is ci-audit's job. Hand off, resume after. |
 | "The suggestion looks right, implement it" | Verify by running first where possible. Plausible ≠ true. |
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
+| "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
+| "I'll quickly pull main while I'm at it" | The sync is offered, guarded, re-checked at execution, and ff-only — never a side effect. |
 
 ## See also
 

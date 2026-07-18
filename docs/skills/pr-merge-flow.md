@@ -13,7 +13,20 @@ the default — with squash merges the title becomes the commit subject), then
 ends per mode. All GitHub polling is quota-safe: rate-limit preflight, a
 20–30s interval floor, hard-bounded monitors with one manual recheck on
 expiry, and a `gh` → `gh api` REST → `curl` fallback ladder (GraphQL is used
-only to read thread resolution state and post the resolve mutation).
+only to read thread resolution state and post the resolve mutation). After a
+successful merge it runs a read-only cleanup survey — local and remote PR
+branch, worktrees on the merged branch, stale merged branches, prunable
+worktree entries, dirty uncommitted state — and presents two lists:
+*needs cleanup* (each item a named action with its exact command) and
+*already clean*. Nothing runs without explicit multi-select confirmation;
+`--auto` mode reports the lists and touches nothing; dirty state is only
+ever reported, never deleted. The survey also offers — never assumes — a
+guarded sync of the local default branch: blocked if the checkout is dirty,
+the default branch is checked out in another worktree, local commits sit
+ahead of the remote, or a git operation is in progress; guards re-run at
+execution time, and the sync itself is fast-forward-only
+(`git fetch origin main:main` when main is not checked out,
+`git pull --ff-only` when it is).
 
 **Triggers on:** "merge this PR", "get PR #N merged", "resolve the PR
 comments", "address review feedback and merge", "close out this PR", "babysit
@@ -49,4 +62,7 @@ skills location).
 > with concrete reasons, resolves all 7, waits out one re-review cycle,
 > confirms checks are green and the title is `feat(api): add rate limiter`,
 > then presents the final gate: **Merge now (squash)** / Run deep review
-> first / Don't merge.
+> first / Don't merge. After merging, the cleanup survey lists
+> `git branch -d feat/rate-limiter` and one stale worktree as needs-cleanup
+> (the remote branch was auto-deleted — already clean); nothing runs until
+> selected.
