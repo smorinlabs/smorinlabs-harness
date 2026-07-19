@@ -398,6 +398,7 @@ Name chosen for future family grammar (question-*).
 - [x] [P24-T01] SKILL.md (desc 988 chars, pure markdown); plugin.meta.toml; gen/gen-check green
 - [x] [P24-T02] Docs page + README section + counts (eight plugins, twenty skills)
 - [x] [P24-TS01] Gate: placements both tools (skillsmith dev), static verify pass, no placeholders
+- [x] [P24-TS02] `skillsmith verify --deep`: live-load pass both tools (claude 2.1.215, codex 0.144.6), no findings
 
 ---
 
