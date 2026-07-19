@@ -1,7 +1,8 @@
 ---
 name: using-project-harness
-description: Bootstraps the project-harness bundle by establishing its five skills, running a four-step idempotent setup (PROJECTS.md trunk, AGENTS.md/CLAUDE.md mentions, planning-system question, references-block convention nudge) on first use per repo, and routing hand-edits through the right sibling skill. Use when the user mentions a project, plan, roadmap, milestone, or backlog as tracked work, starts a repo session with project-management state, or is about to edit PROJECTS.md/projects/. Does not handle VM/Lima/sandbox execution-environment setup or repositories to run inside one; route those to sandbox-lima, sandbox-prepare, or sandbox-project.
-allowed-tools: Read, Write, Bash, AskUserQuestion
+description: Bootstraps the project-harness bundle by establishing its five skills, running a four-step idempotent setup on first use per repo, and routing project-state edits through the right sibling skill.
+when_to_use: When the user mentions a project, plan, roadmap, milestone, or backlog as tracked work, starts a repo session with project-management state, or is about to edit PROJECTS.md/projects/. Does not handle VM/Lima/sandbox execution setup; route that to a separate sandbox plugin.
+allowed-tools: Read Write Bash AskUserQuestion
 ---
 
 # using-project-harness
@@ -35,9 +36,10 @@ The word “project” is not sufficient by itself. Use this bundle when the use
 means tracked work in `PROJECTS.md` or `projects/`. If they mean creating a
 Lima/VM sandbox, installing agents in that guest, choosing repositories to clone
 into it, or launching a goal there, route to `sandbox-lima`, `sandbox-prepare`,
-or `sandbox-project` instead. Once the sandbox work itself becomes backlog or
-milestone state, project-harness may track that work without taking over VM
-execution.
+or `sandbox-project` from a separately installed sandbox plugin instead; those
+skills are not shipped by project-harness. Once the sandbox work itself becomes
+backlog or milestone state, project-harness may track that work without taking
+over VM execution.
 
 ## The five skills
 

@@ -10,7 +10,8 @@ right one of the other four skills. It never edits `PROJECTS.md` or
 reliable, so this skill insists on routing through the sibling skills
 instead. Its “project” trigger means tracked work: VM/Lima/sandbox execution
 environment setup and repositories to run inside a guest route to the
-`sandbox-*` workflow rather than this bundle.
+`sandbox-*` workflow rather than this bundle. Those skills come from a separate
+sandbox plugin and are not shipped by project-harness.
 
 **Triggers on:** mentions of a project, plan, roadmap, milestone, or
 backlog; starting a session in a repo with project-management state;
@@ -44,5 +45,6 @@ location) as well.
 > "Set up a Lima VM for this application project"
 > → does not bootstrap project-harness. It routes VM lifecycle to
 > `sandbox-lima`, guest agents/auth to `sandbox-prepare`, and the repositories
-> and goal to `sandbox-project`. Project-harness becomes relevant only if the
-> user separately wants that work recorded in PROJECTS.md.
+> and goal to `sandbox-project` when that separate sandbox plugin is installed.
+> Project-harness becomes relevant only if the user separately wants that work
+> recorded in PROJECTS.md.
