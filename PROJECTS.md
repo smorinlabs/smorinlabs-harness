@@ -360,4 +360,23 @@ started): cache tier, primarily for remote facts.
 
 ---
 
+## [ ] Project P22: repo-finder phase 2 — remote-only TTL cache (plugin v0.2.0)
+**Goal**: Cache the one thing v1 still fetches live from the network: gh org repo listings.
+Store per-org as `$XDG_CACHE_HOME/repo-finder/orgs/<org>.json` with a `fetched_at` stamp;
+config gains `[cache] enabled = true` / `ttl_hours = 24`; R5.9 controls `--refresh` (force
+refetch) and `--no-cache`; stale-but-present list served with a stderr note when gh is
+unreachable (graceful offline); corrupt cache self-heals by refetch. CONFORMANCE.md caching
+axis flips to yes. Evaluated 2026-07-19: v1's live local reads already eliminated the
+audited token waste — this is latency/API-budget convenience on the miss path only
+(~1–2s + 1–4 REST calls per remote event, low single digits/week). Explicitly rejected:
+caching the local scan (stale-path risk vs <1s saved; live facts can't be cached anyway).
+
+### Tests & Tasks
+- [ ] [P22-TS01] Tests first: TTL expiry triggers refetch; `--refresh` bypasses fresh cache; offline falls back to stale with stderr note; corrupt cache file self-heals
+- [ ] [P22-T01] Cache read/write + TTL in `gh_org_repos`; `[cache]` config keys; `--refresh`/`--no-cache` flags
+- [ ] [P22-T02] Docs: cli-interface.md (flags, cache path), CONFORMANCE.md caching axis + R5.9, skill page note
+- [ ] [P22-T03] plugin.meta.toml 0.1.0 → 0.2.0; `just gen`/`gen-check`; re-run skill-quality
+
+---
+
 - [ ] Regression Test Status
