@@ -1,0 +1,5 @@
+name = "question-walkthrough"
+version = "0.1.0"
+description = "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos — mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems — confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time with just-enough anchored context per item. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source (document edits, task updates) and summarized in a final outcome table with parked items called out. Pure-markdown skill, portable across Claude Code and Codex."
+author = "Steve Morin"
+keywords = ["questions", "decisions", "walkthrough", "triage", "interactive", "one-by-one", "todos"]

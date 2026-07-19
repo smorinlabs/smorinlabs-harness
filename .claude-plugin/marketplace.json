@@ -70,6 +70,22 @@
       ]
     },
     {
+      "name": "question-walkthrough",
+      "source": "./plugins/question-walkthrough",
+      "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time with just-enough anchored context per item. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source (document edits, task updates) and summarized in a final outcome table with parked items called out. Pure-markdown skill, portable across Claude Code and Codex.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "questions",
+        "decisions",
+        "walkthrough",
+        "triage",
+        "interactive",
+        "one-by-one",
+        "todos"
+      ]
+    },
+    {
       "name": "repo-finder",
       "source": "./plugins/repo-finder",
       "description": "One-command repo resolution for agents: resolve a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling) via a config-bounded multi-root scan \u2014 falling back to the user's configured GitHub orgs over gh REST-first (GraphQL only as configured fallback) for exact clone names. Deterministic ranking (checkouts, then worktrees labeled with their main repo, then nested copies); recency displayed, not ranked, so the consuming LLM decides. Single-file zero-dependency uv Python script inside the skill; conforms to the CLI Design Standard (small-CLI profile, minimal tier). Replaces token-expensive ls/find cascades and repeated gh repo view identity checks.",

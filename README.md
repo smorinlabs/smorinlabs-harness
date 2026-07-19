@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Seven
-plugins, nineteen skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Eight
+plugins, twenty skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -103,6 +103,15 @@ zero-dependency uv Python CLI (CLI Design Standard conformant).
 | Skill | Does | Details |
 |---|---|---|
 | `repo-finder` | Resolves a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind with the worktree's main repo, branch, dirty state, tooling) via a config-bounded multi-root scan, deterministically ranked; falls back to the user's configured GitHub orgs over `gh` REST-first and returns the exact `owner/name` plus a ready `git clone` command. Replaces token-expensive `ls`/`find` cascades and repeated `gh repo view` identity checks. | [docs/skills/repo-finder.md](docs/skills/repo-finder.md) |
+
+### question-walkthrough
+
+Adaptive one-question-at-a-time decision walkthrough — a pure-markdown
+interaction engine, portable across Claude Code and Codex.
+
+| Skill | Does | Details |
+|---|---|---|
+| `question-walkthrough` | Gathers open questions (conversation mining, a pointed-at doc, an inline list, or task systems), confirms the pile, sequences it by leverage, then walks it one AskUserQuestion at a time with just-enough anchored context — re-planning the remaining pile after every answer (mooted questions dropped loudly, follow-ups added with consent) and recording decisions back at their source with a final outcome table. | [docs/skills/question-walkthrough.md](docs/skills/question-walkthrough.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

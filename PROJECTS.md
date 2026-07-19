@@ -383,6 +383,24 @@ bootstrap-repo PATH plumbing explicitly rejected as machine-specific.
 
 ---
 
+## [x] Project P24: question-walkthrough — adaptive one-question-at-a-time decision engine (plugin v0.1.0)
+**Goal**: New single-skill plugin: gather open questions from four sources (conversation
+mining, pointed-at doc, inline list, task systems), confirm the pile, sequence by leverage
+(answers that could moot/reshape others first), walk one AskUserQuestion at a time with
+explain-anatomy context, re-plan the remaining pile after EVERY answer (drop mooted loudly,
+reorder, add follow-ups with consent), record decisions at their source, close with an
+outcome table. Carved vs project-refine (project scoping), html-codesign (async batch page),
+explain (owns context anatomy). Built first in the 2026-07-19 three-skill round because
+session-loose-ends (smorin-harness P16) delegates its confirmation loop to this engine.
+Name chosen for future family grammar (question-*).
+
+### Tests & Tasks
+- [x] [P24-T01] SKILL.md (desc 988 chars, pure markdown); plugin.meta.toml; gen/gen-check green
+- [x] [P24-T02] Docs page + README section + counts (eight plugins, twenty skills)
+- [x] [P24-TS01] Gate: placements both tools (skillsmith dev), static verify pass, no placeholders
+
+---
+
 ## [ ] Project P22: repo-finder phase 2 — remote-only TTL cache (plugin v0.3.0; shrinks after P23 — search-filtered find no longer needs org-list caching)
 **Goal**: Cache the one thing v1 still fetches live from the network: gh org repo listings.
 Store per-org as `$XDG_CACHE_HOME/repo-finder/orgs/<org>.json` with a `fetched_at` stamp;
