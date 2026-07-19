@@ -10,22 +10,36 @@ One command that replaces filesystem hunting: resolve a repo name to every
 local copy (with orientation facts) or, failing that, to its exact remote
 `owner/name` — so agents never `ls`/`find` their way through a code directory.
 
-## Run it
+## Locate and run the CLI (any install mode, either tool)
 
-The CLI ships inside this skill. From this skill's base directory (shown when
-the skill loads):
+The CLI ships inside this skill's own directory, so every install method
+(plugin, dev symlink, direct copy — Claude Code or Codex) delivers it.
+Resolve it in this order and reuse the result for the whole session:
 
 ```bash
-<skill-base>/scripts/repo-finder find <query>      # resolve a name (substring ok)
-<skill-base>/scripts/repo-finder list              # every repo, one line each
-<skill-base>/scripts/repo-finder orgs              # configured GitHub orgs (no network)
-<skill-base>/scripts/repo-finder org <name>        # one org's repos (gh REST-first)
-<skill-base>/scripts/repo-finder init              # write a starter user config
+RF="$(command -v repo-finder || true)"                 # 1. explicit PATH install, if any
+[ -x "$RF" ] || RF="<skill-base>/scripts/repo-finder"  # 2. base dir announced when this skill loaded
+if [ ! -x "$RF" ]; then                                # 3. well-known placements
+  for d in "$HOME/.claude/skills/repo-finder" "$HOME/.agents/skills/repo-finder"; do
+    [ -x "$d/scripts/repo-finder" ] && RF="$d/scripts/repo-finder" && break
+  done
+fi
+"$RF" find <query>
 ```
 
-Runs via `uv` (shebang) or `python3 <path>` directly — zero dependencies,
-Python ≥3.11. Add `--json` for machine output. Full interface:
-`docs/cli-interface.md` in the plugin.
+No `uv` on the machine? `python3 "$RF" ...` works identically — the script is
+stdlib-only (Python ≥3.11). Quote the path; never guess other locations.
+
+```bash
+"$RF" find <query>      # resolve a name (substring ok)
+"$RF" list              # every repo, one line each
+"$RF" orgs              # configured GitHub orgs (no network)
+"$RF" org <name>        # one org's repos (paged REST)
+"$RF" init              # write a starter user config
+```
+
+Add `--json` for machine output. Full interface: `docs/cli-interface.md` in
+the plugin.
 
 ## Reading the output
 
@@ -40,9 +54,13 @@ tells its own story). Don't re-verify with `git remote -v` or `gh repo view`
 ## Exit codes that matter
 
 - `0` — matches printed (local or remote).
-- `3` — genuinely not found; stderr carries close-name suggestions and, for
-  remote-only hits, the exact `git clone` command. Expected negative: don't
-  treat as a tool failure.
+- `3` — definitively not found: local roots AND (unless skipped) the
+  configured GitHub orgs were all actually searched. Expected negative:
+  don't treat as a tool failure.
+- `1` on `find` — degraded search: the local scan missed AND the GitHub
+  lookup failed for the orgs named on stderr, so the result is LOCAL-ONLY
+  and may be incomplete. Do not conclude the repo doesn't exist; fix the
+  gh problem or retry before deciding.
 - `4` — remote tier needed but `gh` is unauthenticated; either run with
   `--no-remote` or ask the user to `gh auth login`.
 

@@ -56,15 +56,18 @@ credential flags at all; GitHub auth is delegated to `gh` (R5.5).
 | Code | Meaning here |
 |---|---|
 | `0` | Success (including empty `list`) |
-| `1` | Runtime error (config unparseable, root unreadable, gh invocation failed unexpectedly) |
+| `1` | Runtime error — including a **degraded `find`** (R6.3 partial failure): local scan missed AND the GitHub lookup failed for one or more orgs, so the result is local-only and may be incomplete (JSON error code `remote_lookup_failed`, failed orgs named) |
 | `2` | Usage error (unknown command/flag) — argparse native |
-| `3` | Not found (`find` with zero local+remote matches; `org` with unknown org) |
+| `3` | **Definitively** not found: every source that should have been searched actually was (`find`); unknown org (`org`) |
 | `4` | Auth required (remote tier needed but `gh` unauthenticated) |
 | `5` | Conflict (`init` onto an existing config without `--force`) |
 | `130` | SIGINT |
 
 `find` miss (`3`) is an expected negative: the clone hint / suggestions go to
-stderr as *diagnostics*, not as an error record (R6.2, R7.6).
+stderr as *diagnostics*, not as an error record (R6.2, R7.6). The miss message
+states what was searched ("locally or in GitHub orgs (…)" vs "in configured
+roots (remote lookup skipped)") so `3` is always a trustworthy full-search
+verdict; a degraded search never masquerades as `3`.
 
 ## Config & env (R5.1–R5.4)
 
@@ -117,10 +120,18 @@ codes include `not_found`, `auth_required`, `rate_limited` (R10.7).
 
 - Auth: delegated entirely to `gh` — no tokens touched (R10.1 N/A beyond the
   exit-`4` mapping when `gh auth status` fails).
-- REST-first: `gh api users/<org>/repos` / `gh api orgs/<org>/repos`
-  (paginated via `--limit`, R10.3); `transport = "graphql"` opts into
-  `gh repo list`. Rate-limit responses are recognized distinctly, reported on
-  stderr, and trigger the transport fallback once (R10.7).
+- `find` remote tier 1: **one Search API call** with server-side name
+  filtering (`search/repositories?q=<query>+in:name+user:<owner>…` — multiple
+  `user:` qualifiers OR together and match both user and org accounts).
+  Tier 2 (search unavailable): per-org enumeration, failures tracked per org
+  and surfaced as the degraded exit `1` — never silently swallowed.
+- Enumeration (`org`, tier 2): REST page loop `per_page=100&page=N` until
+  `--limit` is reached (R10.3: `--limit` caps the total; backend pages
+  fetched as needed); truncation warning on stderr when more exist.
+  `transport = "graphql"` opts into `gh repo list` instead.
+- Rate limits (R10.7): detected **authoritatively** via `gh api rate_limit`
+  (`resources.search/core/graphql.remaining == 0`) — never by matching error
+  prose — reported on stderr, and trigger one cross-transport retry.
 - TLS, retries, idempotency: owned by `gh` (R10.5/R10.6 N/A — no direct HTTP).
 
 ## Not-found ladder (`find`)
@@ -128,7 +139,10 @@ codes include `not_found`, `auth_required`, `rate_limited` (R10.7).
 1. Exact name match across roots (incl. group dirs) → done.
 2. Substring / fuzzy match → ranked candidates.
 3. Widen: `depth+1` under configured roots only — never `$HOME`-wide.
-4. Remote: org membership lookup (unless `--no-remote`).
-5. Miss: exit `3`; stderr prints the exact `git clone` command when the name
-   resolved remotely-only, else 2–3 bounded suggestions (other roots to add to
-   config, `repo-finder init` hint) and invites the user to name a location.
+4. Remote (unless `--no-remote`): one name-filtered Search API call across
+   all configured owners; per-org enumeration only if search is unavailable.
+5. Miss: exit `3` with a message naming what was searched; stderr prints the
+   exact `git clone` command when the name resolved remotely-only, else 2–3
+   bounded suggestions (other roots to add to config, `repo-finder init`
+   hint). A partially-failed remote search exits `1` instead — "couldn't
+   fully check" is never reported as "absent".

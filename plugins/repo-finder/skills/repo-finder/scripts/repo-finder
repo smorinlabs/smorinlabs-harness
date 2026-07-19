@@ -21,6 +21,7 @@ import subprocess
 import sys
 import time
 import tomllib
+import urllib.parse
 from pathlib import Path
 
 VERSION = "0.1.0"
@@ -223,44 +224,101 @@ def gh_authed() -> bool:
         return False
 
 
-def gh_org_repos(org: str, limit: int, transport: str) -> list[dict] | None:
-    """Fetch an org's repos. REST-first (gh api); GraphQL (gh repo list) only
-    as configured transport or one-shot rate-limit fallback (R10.7)."""
-    def rest():
-        for endpoint in (f"orgs/{org}/repos", f"users/{org}/repos"):
-            r = subprocess.run(["gh", "api", f"{endpoint}?per_page={limit}"],
-                               capture_output=True, text=True, timeout=60)
-            if r.returncode == 0:
-                return r
-        return r
+def rate_limited(resource: str) -> bool:
+    """Authoritative check (R10.7): the rate_limit endpoint is never itself
+    rate-limited, so consult it instead of matching error prose."""
+    try:
+        r = subprocess.run(["gh", "api", "rate_limit", "--jq",
+                            f".resources.{resource}.remaining"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return r.returncode == 0 and r.stdout.strip() == "0"
 
-    def graphql():
-        return subprocess.run(
+
+def _repo_item(item: dict) -> dict:
+    return {
+        "name": item.get("name"),
+        "full_name": item.get("full_name") or item.get("nameWithOwner"),
+        "default_branch": item.get("default_branch")
+            or (item.get("defaultBranchRef") or {}).get("name"),
+        "clone_url": (item.get("html_url") or item.get("url") or "") + ".git",
+    }
+
+
+def gh_search_repos(query: str, owners: list[str]) -> list[dict] | None:
+    """Tier 1 for find: ONE Search API call, name-filtered server-side.
+    Multiple `user:` qualifiers OR together and match both user and org
+    accounts (verified live 2026-07-19)."""
+    quals = "+".join(f"user:{o}" for o in owners)
+    q = urllib.parse.quote(query, safe="")
+    r = subprocess.run(
+        ["gh", "api", f"search/repositories?q={q}+in:name+{quals}&per_page=100"],
+        capture_output=True, text=True, timeout=60)
+    if r.returncode != 0:
+        if rate_limited("search"):
+            print("repo-finder: search API rate-limited; falling back to "
+                  "org listing", file=sys.stderr)
+        return None
+    try:
+        return [_repo_item(i) for i in json.loads(r.stdout).get("items", [])]
+    except json.JSONDecodeError:
+        return None
+
+
+def gh_list_repos(org: str, limit: int, transport: str
+                  ) -> tuple[list[dict] | None, bool]:
+    """Enumerate one owner's repos, paging until `limit` (R10.3: --limit caps
+    the total; backend pages are fetched as needed). Returns (items, maybe_more);
+    (None, False) on failure. Cross-transport retry only on an authoritative
+    rate-limit verdict."""
+    def rest() -> tuple[list[dict] | None, bool]:
+        items: list[dict] = []
+        endpoint, page = None, 1
+        per_page = min(100, max(limit, 1))
+        while len(items) < limit:
+            candidates = [endpoint] if endpoint else [f"orgs/{org}/repos",
+                                                      f"users/{org}/repos"]
+            r = None
+            for cand in candidates:
+                r = subprocess.run(
+                    ["gh", "api", f"{cand}?per_page={per_page}&page={page}"],
+                    capture_output=True, text=True, timeout=60)
+                if r.returncode == 0:
+                    endpoint = cand
+                    break
+            if r is None or r.returncode != 0:
+                return None, False
+            try:
+                batch = json.loads(r.stdout)
+            except json.JSONDecodeError:
+                return None, False
+            items.extend(_repo_item(i) for i in batch)
+            if len(batch) < per_page:
+                return items, False
+            page += 1
+        return items[:limit], True
+
+    def graphql() -> tuple[list[dict] | None, bool]:
+        r = subprocess.run(
             ["gh", "repo", "list", org, "--limit", str(limit),
              "--json", "name,nameWithOwner,defaultBranchRef,url"],
             capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            return None, False
+        try:
+            items = [_repo_item(i) for i in json.loads(r.stdout)]
+        except json.JSONDecodeError:
+            return None, False
+        return items, len(items) >= limit
 
-    first, second = (rest, graphql) if transport == "rest" else (graphql, rest)
-    r = first()
-    if r.returncode != 0 and "rate limit" in (r.stderr or "").lower():
-        print(f"repo-finder: {transport} rate-limited; falling back once",
-              file=sys.stderr)
-        r = second()
-    if r.returncode != 0:
-        return None
-    try:
-        data = json.loads(r.stdout)
-    except json.JSONDecodeError:
-        return None
-    out = []
-    for item in data:
-        out.append({
-            "name": item.get("name"),
-            "full_name": item.get("full_name") or item.get("nameWithOwner"),
-            "default_branch": item.get("default_branch")
-                or (item.get("defaultBranchRef") or {}).get("name"),
-            "clone_url": (item.get("html_url") or item.get("url") or "") + ".git",
-        })
+    first, second, res = ((rest, graphql, "core") if transport == "rest"
+                          else (graphql, rest, "graphql"))
+    out = first()
+    if out[0] is None and rate_limited(res):
+        print(f"repo-finder: {transport} rate-limited; retrying via the other "
+              "transport", file=sys.stderr)
+        out = second()
     return out
 
 
@@ -278,6 +336,7 @@ def cmd_find(ns, cfg) -> int:
         emit_matches([enrich(m) for m in matches], as_json)
         return 0
 
+    remote_state, failed_orgs, orgs = "skipped", [], []
     remote_on = (cfg["remote"]["enabled"] and not ns.no_remote
                  and not os.environ.get("REPO_FINDER_NO_REMOTE"))
     if remote_on:
@@ -286,17 +345,36 @@ def cmd_find(ns, cfg) -> int:
             if not gh_authed():
                 die(4, "auth_required",
                     "remote lookup needs gh authentication (gh auth login)", as_json)
-            remote = []
-            for org in orgs:
-                for item in gh_org_repos(org, 100, cfg["remote"]["transport"]) or []:
-                    if item["name"] and q in item["name"].lower():
-                        remote.append({**item, "kind": "remote", "source": "remote"})
+            items = gh_search_repos(ns.query, orgs)
+            if items is not None:
+                remote_state = "searched"
+            else:  # search unavailable -> per-org enumeration, tracked per org
+                items = []
+                for org in orgs:
+                    lst, _ = gh_list_repos(org, 1000, cfg["remote"]["transport"])
+                    if lst is None:
+                        failed_orgs.append(org)
+                    else:
+                        items.extend(lst)
+                remote_state = "degraded" if failed_orgs else "searched"
+            remote = [{**i, "kind": "remote", "source": "remote"}
+                      for i in items if i["name"] and q in i["name"].lower()]
             if remote:
                 emit_matches(remote, as_json)
                 return 0
 
+    if remote_state == "degraded":
+        die(1, "remote_lookup_failed",
+            f"no local match for '{ns.query}'; GitHub lookup FAILED for "
+            f"{', '.join(failed_orgs)} — this result is LOCAL-ONLY and may be "
+            "incomplete", as_json)
     near = difflib.get_close_matches(ns.query, [m["name"] for m in repos], n=3)
-    hints = [f"no repo matching '{ns.query}' in configured roots"]
+    if remote_state == "searched":
+        hints = [f"no repo matching '{ns.query}' locally or in GitHub orgs "
+                 f"({', '.join(orgs)})"]
+    else:
+        hints = [f"no repo matching '{ns.query}' in configured roots "
+                 "(remote lookup skipped)"]
     if near:
         hints.append(f"close names: {', '.join(near)}")
     hints.append("if it lives elsewhere, add that root to repo-finder_config.toml "
@@ -332,7 +410,7 @@ def cmd_org(ns, cfg) -> int:
     if not gh_authed():
         die(4, "auth_required",
             "org listing needs gh authentication (gh auth login)", as_json)
-    repos = gh_org_repos(ns.name, ns.limit, cfg["remote"]["transport"])
+    repos, more = gh_list_repos(ns.name, ns.limit, cfg["remote"]["transport"])
     if repos is None:
         die(3, "not_found", f"org '{ns.name}' not found or not accessible", as_json)
     if as_json:
@@ -340,9 +418,9 @@ def cmd_org(ns, cfg) -> int:
     else:
         for r in repos:
             print(f"{r['name']}  {r['full_name']}  default {r['default_branch'] or '?'}")
-        if len(repos) >= ns.limit:
-            print(f"repo-finder: first {ns.limit} shown; raise --limit for more",
-                  file=sys.stderr)
+    if more:
+        print(f"repo-finder: first {ns.limit} shown (more exist); raise --limit "
+              "for the rest", file=sys.stderr)
     return 0
 
 

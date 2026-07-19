@@ -360,7 +360,30 @@ started): cache tier, primarily for remote facts.
 
 ---
 
-## [ ] Project P22: repo-finder phase 2 — remote-only TTL cache (plugin v0.2.0)
+## [x] Project P23: repo-finder v0.2.0 — remote correctness round (user feedback 2026-07-19)
+**Goal**: Fix four field-tested findings from first real use. F1 (🔴): remote failures
+silently collapse into "not in configured roots" (`gh_org_repos` → None swallowed by
+`or []`) — track remote state, branch the miss message, exit 1 for degraded searches per
+R6.3 partial-failure (not 5; R6.1 reserves 5 for conflict), JSON code `remote_lookup_failed`.
+F2 (🔴 at 500-600 repos): `per_page=100` single page silently truncates → false not-founds;
+`find` switches to server-side name filtering via the Search API (one call, KBs, vs 6+
+paginated calls, MBs), `org` paginates internally with `--limit` as total cap + truncation
+warning. F3 (🟡): rate-limit detection by stderr prose → authoritative `gh api rate_limit`
+check on failure. F4: skill-native script invocation contract (PATH → announced skill base
+dir → well-known placements), cross-platform Claude Code + Codex, any install mode —
+bootstrap-repo PATH plumbing explicitly rejected as machine-specific.
+
+### Tests & Tasks
+- [x] [P23-TS01] Tests first per finding: degraded-state trio (failed org → exit 1 + honest message + JSON schema), search-path stub for find, org pagination + truncation warning, rate-limit authoritative check
+- [x] [P23-T01] F1: remote_state/failed_orgs tracking, branched hints, exit 1 degraded
+- [x] [P23-T02] F2: Search API find (live-verify user:/org: qualifier mechanics first), paginated org + warning
+- [x] [P23-T03] F3: `gh api rate_limit` authoritative detection, prose match demoted to hint
+- [x] [P23-T04] F4: SKILL.md invocation ladder, cross-platform
+- [x] [P23-T05] Docs/spec/CONFORMANCE updates (exit table, R10.3 waiver narrowed), meta 0.2.0, gen, skill-quality re-gate, commit
+
+---
+
+## [ ] Project P22: repo-finder phase 2 — remote-only TTL cache (plugin v0.3.0; shrinks after P23 — search-filtered find no longer needs org-list caching)
 **Goal**: Cache the one thing v1 still fetches live from the network: gh org repo listings.
 Store per-org as `$XDG_CACHE_HOME/repo-finder/orgs/<org>.json` with a `fetched_at` stamp;
 config gains `[cache] enabled = true` / `ttl_hours = 24`; R5.9 controls `--refresh` (force

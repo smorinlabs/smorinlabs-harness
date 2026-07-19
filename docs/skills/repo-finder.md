@@ -6,7 +6,13 @@ repo), current branch, dirty state, last-commit age, and build tooling — via a
 single config-bounded command, so agents stop exploring the filesystem with
 `ls`/`find` cascades. On a local miss it falls back to the user's configured
 GitHub orgs over `gh` REST-first (GraphQL only as configured fallback) and
-returns the exact `owner/name` plus a ready `git clone` command. Ships a
+returns the exact `owner/name` plus a ready `git clone` command. The remote
+tier filters server-side (one Search API call across all configured owners)
+rather than listing whole orgs, pages honestly to `--limit`, detects rate
+limits authoritatively via `gh api rate_limit`, and never reports a broken
+lookup as a clean miss — a degraded search exits `1` ("couldn't fully
+check") while `3` always means "definitively absent everywhere searched".
+Ships a
 single-file, zero-dependency uv Python CLI inside the skill, conforming to the
 CLI Design Standard v1.4.14 (small-CLI profile, minimal tier — see the
 plugin's `docs/cli-interface.md` and `CONFORMANCE.md`).

@@ -222,13 +222,50 @@ def test_orgs_from_config_no_network(tree):
     assert "example-org" in r.stdout and "big-org" in r.stdout
 
 
-# --- remote tier (gh stubbed on PATH) ---
+# --- remote tier (gh stubbed on PATH; stubs branch per endpoint) ---
 
-GH_OK = """#!/bin/sh
-if [ "$1" = "auth" ]; then exit 0; fi
-# expect: gh api users/<org>/repos ... (REST-first)
+SEARCH_HIT = ('{"total_count":1,"items":[{"name":"remote-only",'
+              '"full_name":"example-org/remote-only","default_branch":"main",'
+              '"html_url":"https://github.com/example-org/remote-only"}]}')
+LIST_PAGE = ('[{"name":"remote-only","full_name":"example-org/remote-only",'
+             '"default_branch":"main",'
+             '"html_url":"https://github.com/example-org/remote-only"}]')
+
+GH_OK = f"""#!/bin/sh
 echo "$@" >> "$GH_LOG"
-echo '[{"name":"remote-only","full_name":"example-org/remote-only","default_branch":"main","html_url":"https://github.com/example-org/remote-only"}]'
+case "$*" in
+  *"auth status"*) exit 0 ;;
+  *rate_limit*) echo 9999; exit 0 ;;
+  *search/repositories*) echo '{SEARCH_HIT}'; exit 0 ;;
+  *) echo '{LIST_PAGE}'; exit 0 ;;
+esac
+"""
+
+GH_SEARCH_EMPTY = """#!/bin/sh
+case "$*" in
+  *"auth status"*) exit 0 ;;
+  *rate_limit*) echo 9999; exit 0 ;;
+  *search/repositories*) echo '{"total_count":0,"items":[]}'; exit 0 ;;
+  *) echo '[]'; exit 0 ;;
+esac
+"""
+
+GH_ALL_FAIL = """#!/bin/sh
+case "$*" in
+  *"auth status"*) exit 0 ;;
+  *rate_limit*) echo 9999; exit 0 ;;
+  *) echo "some opaque 403" >&2; exit 1 ;;
+esac
+"""
+
+GH_SEARCH_LIMITED = f"""#!/bin/sh
+echo "$@" >> "$GH_LOG"
+case "$*" in
+  *"auth status"*) exit 0 ;;
+  *rate_limit*) echo 0; exit 0 ;;
+  *search/repositories*) echo "403 secondary throttle" >&2; exit 1 ;;
+  *) echo '{LIST_PAGE}'; exit 0 ;;
+esac
 """
 
 GH_UNAUTH = """#!/bin/sh
@@ -237,18 +274,69 @@ exit 1
 """
 
 
-def test_org_listing_uses_rest(tree):
+def enable_remote(tree):
+    tree["config"].write_text(
+        tree["config"].read_text().replace("enabled = false", "enabled = true"))
+
+
+def test_find_remote_uses_search_api(tree):
+    enable_remote(tree)
     log = tree["tmp"] / "gh.log"
     os.environ["GH_LOG"] = str(log)
-    r = run(["org", "example-org"], tree, gh_stub=GH_OK)
+    log.write_text("")
+    r = run(["find", "remote-only"], tree, gh_stub=GH_OK)
+    assert r.returncode == 0
+    assert "remote-only" in r.stdout and "git clone" in r.stdout
+    logged = log.read_text()
+    assert "search/repositories" in logged
+    assert "in:name" in logged and "user:example-org" in logged
+
+
+def test_find_clean_remote_miss_names_orgs(tree):
+    enable_remote(tree)
+    r = run(["find", "zzz-nope"], tree, gh_stub=GH_SEARCH_EMPTY)
+    assert r.returncode == 3
+    assert "example-org" in r.stderr  # message says remote WAS searched
+
+
+def test_find_remote_failure_degraded_exit_1(tree):
+    enable_remote(tree)
+    r = run(["find", "zzz-nope"], tree, gh_stub=GH_ALL_FAIL)
+    assert r.returncode == 1
+    assert "LOCAL-ONLY" in r.stderr or "incomplete" in r.stderr
+
+
+def test_find_remote_failure_json_schema(tree):
+    enable_remote(tree)
+    r = run(["find", "zzz-nope", "--json"], tree, gh_stub=GH_ALL_FAIL)
+    assert r.returncode == 1
+    assert json.loads(r.stderr)["error"]["code"] == "remote_lookup_failed"
+
+
+def test_find_search_ratelimit_falls_back_to_listing(tree):
+    enable_remote(tree)
+    log = tree["tmp"] / "gh.log"
+    os.environ["GH_LOG"] = str(log)
+    log.write_text("")
+    r = run(["find", "remote-only"], tree, gh_stub=GH_SEARCH_LIMITED)
     assert r.returncode == 0
     assert "remote-only" in r.stdout
-    assert "api" in log.read_text()  # REST via `gh api`, not `gh repo list`
+    assert "repos?per_page=" in log.read_text()  # tier-2 listing ran
+
+
+def test_org_listing_pages_and_warns_on_truncation(tree):
+    log = tree["tmp"] / "gh.log"
+    os.environ["GH_LOG"] = str(log)
+    log.write_text("")
+    r = run(["org", "example-org", "--limit", "1"], tree, gh_stub=GH_OK)
+    assert r.returncode == 0
+    assert "remote-only" in r.stdout
+    assert "per_page=1" in log.read_text()  # page size respects the cap
+    assert "--limit" in r.stderr  # full page => truncation warning
 
 
 def test_remote_unauthenticated_exit_4(tree):
-    cfg = tree["config"].read_text().replace("enabled = false", "enabled = true")
-    tree["config"].write_text(cfg)
+    enable_remote(tree)
     r = run(["find", "remote-only-name"], tree, gh_stub=GH_UNAUTH)
     assert r.returncode == 4
 

@@ -27,10 +27,11 @@
 |---|---|---|---|
 | R4.4 | No `-v/-q/--debug` ladder | minimal tier, single-file tool; diagnostics are already terse and on stderr | Steve Morin / 2026-07-19 |
 | R7.5 | Help has usage + command list but no worked example per subcommand | token-lean help; the skill body carries usage examples for the agent | Steve Morin / 2026-07-19 |
-| R10.3 | `org` supports `--limit` only; no `--paginate`/`--page-size`/`--no-paginate` | bounded single-page default meets the intent; full pagination trio is oversized for a finder | Steve Morin / 2026-07-19 |
+| R10.3 | `org` supports `--limit` (total cap, backend pages fetched as needed, truncation warned) but not the `--paginate`/`--page-size`/`--no-paginate` trio | bounded-by-default with an explicit cap meets the rule's intent; the full trio is oversized for a finder | Steve Morin / 2026-07-19 |
 
 ## Audit history
 
 | Date | Standard version | Mode | Result |
 |---|---|---|---|
 | 2026-07-19 | 1.4.14 | plan | Interface spec seeded (`docs/cli-interface.md`); no code yet |
+| 2026-07-19 | 1.4.14 | review | Field-feedback round (v0.2.0): degraded remote search now exits 1 per R6.3 (was silently reported as clean miss); `find` remote tier moved to server-side Search API filtering; enumeration pages to `--limit` per R10.3 with truncation warning; rate limits detected via `gh api rate_limit` per R10.7 (was stderr prose matching) |
