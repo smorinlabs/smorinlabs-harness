@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Six
-plugins, eighteen skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Seven
+plugins, nineteen skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -94,6 +94,15 @@ Concrete-anchored explanation shorthand.
 | Skill | Does | Details |
 |---|---|---|
 | `explain` | Answers `/explain <thing>` in a fixed anatomy — what it is, just-enough context, a real before/after example, the payoff — with options/deeper/steps modes inferred from the target (explicit argument wins), and follow-up aware: a bare `explain` after an explanation diagnoses what's blocking action (step back to the bigger picture, clearer language, sharper example) and rewrites rather than repeats. | [docs/skills/explain.md](docs/skills/explain.md) |
+
+### repo-finder
+
+One-command repo resolution for agents — a thin skill wrapping a single-file,
+zero-dependency uv Python CLI (CLI Design Standard conformant).
+
+| Skill | Does | Details |
+|---|---|---|
+| `repo-finder` | Resolves a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind with the worktree's main repo, branch, dirty state, tooling) via a config-bounded multi-root scan, deterministically ranked; falls back to the user's configured GitHub orgs over `gh` REST-first and returns the exact `owner/name` plus a ready `git clone` command. Replaces token-expensive `ls`/`find` cascades and repeated `gh repo view` identity checks. | [docs/skills/repo-finder.md](docs/skills/repo-finder.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`

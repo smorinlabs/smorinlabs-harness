@@ -1,0 +1,445 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+"""repo-finder — resolve repo names to local paths + identity facts.
+
+Small-CLI (verb-first) per the CLI Design Standard v1.4.14; see
+docs/cli-interface.md in the repo-finder plugin for the interface spec.
+Zero dependencies: tomllib is stdlib on 3.11+.
+"""
+
+from __future__ import annotations
+
+import argparse
+import difflib
+import fnmatch
+import json
+import os
+import subprocess
+import sys
+import time
+import tomllib
+from pathlib import Path
+
+VERSION = "0.1.0"
+DEFAULT_DEPTH = 3
+PRUNE = {".git", "node_modules", ".venv", "venv", "__pycache__", ".cache",
+         "dist", "build", "target", ".tox", ".next"}
+TOOLING_FILES = ["pyproject.toml", "justfile", "Justfile", "package.json",
+                 "Cargo.toml", "go.mod", "Makefile", "Gemfile"]
+KIND_ORDER = {"checkout": 0, "worktree": 1, "nested": 2}
+
+
+# --- config -----------------------------------------------------------------
+
+def config_path(cli_value: str | None) -> Path | None:
+    if cli_value:
+        return Path(cli_value)
+    if env := os.environ.get("REPO_FINDER_CONFIG"):
+        return Path(env)
+    project = Path(".repo-finder/repo-finder_config.toml")
+    if project.is_file():
+        return project
+    xdg = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    user = xdg / "repo-finder" / "repo-finder_config.toml"
+    return user if user.is_file() else None
+
+
+def load_config(cli_value: str | None) -> dict:
+    path = config_path(cli_value)
+    if path is None:
+        default_root = Path.home() / "c"
+        root = default_root if default_root.is_dir() else Path.home()
+        return {"roots": [{"path": str(root)}], "orgs": {}, "remote": {"enabled": True}}
+    try:
+        with open(path, "rb") as f:
+            cfg = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        die(1, "config_error", f"cannot read config {path}: {e}")
+    cfg.setdefault("roots", [])
+    cfg.setdefault("orgs", {})
+    cfg.setdefault("remote", {})
+    cfg["remote"].setdefault("enabled", True)
+    cfg["remote"].setdefault("transport", "rest")
+    return cfg
+
+
+# --- scanning ---------------------------------------------------------------
+
+def is_repo(d: Path) -> bool:
+    return (d / ".git").exists()
+
+
+def scan(roots: list[dict]) -> list[dict]:
+    """Walk each configured root to its depth, collecting every git repo
+    (including worktrees and repos nested inside other repos)."""
+    found = []
+    for idx, root_cfg in enumerate(roots):
+        root = Path(os.path.expanduser(root_cfg["path"]))
+        depth = int(root_cfg.get("depth", DEFAULT_DEPTH))
+        exclude = root_cfg.get("exclude", [])
+        if not root.is_dir():
+            continue
+        _walk(root, root, idx, depth, exclude, False, found)
+    return found
+
+
+def _walk(d: Path, root: Path, root_idx: int, depth: int,
+          exclude: list[str], ancestor_repo: bool, out: list[dict]):
+    if depth < 0:
+        return
+    try:
+        entries = sorted(os.scandir(d), key=lambda e: e.name)
+    except OSError:
+        return
+    for entry in entries:
+        if not entry.is_dir(follow_symlinks=False):
+            continue
+        name = entry.name
+        if name in PRUNE or any(fnmatch.fnmatch(name, pat) for pat in exclude):
+            continue
+        p = Path(entry.path)
+        repo = is_repo(p)
+        if repo:
+            out.append(_classify(p, root, root_idx, ancestor_repo))
+        _walk(p, root, root_idx, depth - 1, exclude, ancestor_repo or repo, out)
+
+
+def _classify(p: Path, root: Path, root_idx: int, ancestor_repo: bool) -> dict:
+    gitpath = p / ".git"
+    worktree_of = None
+    if gitpath.is_file():
+        kind = "worktree"
+        try:
+            gitdir = gitpath.read_text().split("gitdir:", 1)[1].strip()
+            # …/main/.git/worktrees/<name> -> …/main
+            worktree_of = str(Path(gitdir).parents[2])
+        except (IndexError, OSError):
+            pass
+    elif ancestor_repo:
+        kind = "nested"
+    else:
+        kind = "checkout"
+    return {"name": p.name, "path": str(p), "kind": kind,
+            "worktree_of": worktree_of, "root_index": root_idx,
+            "depth": len(p.relative_to(root).parts)}
+
+
+def rank_key(m: dict):
+    # Deterministic: kind, then config-root order, then shallower, then path.
+    # Recency is displayed, never ranked on — the consuming LLM decides.
+    return (KIND_ORDER[m["kind"]], m["root_index"], m["depth"], m["path"])
+
+
+# --- git facts --------------------------------------------------------------
+
+def _git(path: str, *args: str) -> str | None:
+    try:
+        r = subprocess.run(["git", "-C", path, *args],
+                           capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def enrich(m: dict) -> dict:
+    p = m["path"]
+    m["origin"] = _git(p, "config", "--get", "remote.origin.url")
+    head = _git(p, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+    if head:
+        m["default_branch"] = head.split("/", 1)[-1]
+    else:
+        local = _git(p, "branch", "--list", "main", "master") or ""
+        names = [b.strip("* ").strip() for b in local.splitlines() if b.strip()]
+        m["default_branch"] = names[0] if names else _git(p, "branch", "--show-current")
+    m["branch"] = _git(p, "branch", "--show-current")
+    porcelain = _git(p, "status", "--porcelain")
+    m["dirty"] = bool(porcelain) if porcelain is not None else None
+    ct = _git(p, "log", "-1", "--format=%ct")
+    m["last_commit"] = int(ct) if ct and ct.isdigit() else None
+    tooling, seen = [], set()
+    for f in TOOLING_FILES:
+        if f.lower() not in seen and (Path(p) / f).is_file():
+            seen.add(f.lower())  # case-insensitive FS matches both variants
+            tooling.append(f)
+    m["tooling"] = tooling
+    m["source"] = "local"
+    return m
+
+
+def age(ts: int | None) -> str:
+    if ts is None:
+        return "no commits"
+    s = int(time.time()) - ts
+    for limit, div, unit in ((3600, 60, "m"), (86400, 3600, "h"),
+                             (2592000, 86400, "d"), (31536000, 2592000, "mo")):
+        if s < limit:
+            return f"{max(s // div, 1)}{unit} ago"
+    return f"{s // 31536000}y ago"
+
+
+# --- output -----------------------------------------------------------------
+
+def emit_matches(matches: list[dict], as_json: bool):
+    if as_json:
+        clean = [{k: v for k, v in m.items() if k not in ("root_index", "depth")}
+                 for m in matches]
+        print(json.dumps(clean, indent=None))
+        return
+    for m in matches:
+        if m["source"] == "remote":
+            print(f"{m['name']}  {m['full_name']}  (remote only)")
+            print(f"  clone   git clone {m['clone_url']}")
+            continue
+        print(f"{m['name']}  {m['path']}")
+        kind = m["kind"]
+        if kind == "worktree" and m["worktree_of"]:
+            kind = f"worktree -> {m['worktree_of']}"
+        state = "dirty" if m["dirty"] else "clean" if m["dirty"] is not None else "?"
+        print(f"  kind    {kind}  branch {m['branch'] or '?'}  {state}  {age(m['last_commit'])}")
+        print(f"  origin  {m['origin'] or 'none'}  default {m['default_branch'] or '?'}")
+        if m["tooling"]:
+            print(f"  tooling {', '.join(m['tooling'])}")
+
+
+def die(code: int, err_code: str, message: str, as_json: bool = False):
+    if as_json:
+        print(json.dumps({"error": {"code": err_code, "message": message}}),
+              file=sys.stderr)
+    else:
+        print(f"repo-finder: {message}", file=sys.stderr)
+    sys.exit(code)
+
+
+# --- remote tier (gh, REST-first) -------------------------------------------
+
+def gh_authed() -> bool:
+    try:
+        return subprocess.run(["gh", "auth", "status"], capture_output=True,
+                              timeout=30).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def gh_org_repos(org: str, limit: int, transport: str) -> list[dict] | None:
+    """Fetch an org's repos. REST-first (gh api); GraphQL (gh repo list) only
+    as configured transport or one-shot rate-limit fallback (R10.7)."""
+    def rest():
+        for endpoint in (f"orgs/{org}/repos", f"users/{org}/repos"):
+            r = subprocess.run(["gh", "api", f"{endpoint}?per_page={limit}"],
+                               capture_output=True, text=True, timeout=60)
+            if r.returncode == 0:
+                return r
+        return r
+
+    def graphql():
+        return subprocess.run(
+            ["gh", "repo", "list", org, "--limit", str(limit),
+             "--json", "name,nameWithOwner,defaultBranchRef,url"],
+            capture_output=True, text=True, timeout=60)
+
+    first, second = (rest, graphql) if transport == "rest" else (graphql, rest)
+    r = first()
+    if r.returncode != 0 and "rate limit" in (r.stderr or "").lower():
+        print(f"repo-finder: {transport} rate-limited; falling back once",
+              file=sys.stderr)
+        r = second()
+    if r.returncode != 0:
+        return None
+    try:
+        data = json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return None
+    out = []
+    for item in data:
+        out.append({
+            "name": item.get("name"),
+            "full_name": item.get("full_name") or item.get("nameWithOwner"),
+            "default_branch": item.get("default_branch")
+                or (item.get("defaultBranchRef") or {}).get("name"),
+            "clone_url": (item.get("html_url") or item.get("url") or "") + ".git",
+        })
+    return out
+
+
+# --- commands ---------------------------------------------------------------
+
+def cmd_find(ns, cfg) -> int:
+    as_json = ns.output == "json"
+    roots = list(cfg["roots"])
+    for extra in ns.root or []:
+        roots.append({"path": extra})
+    repos = scan(roots)
+    q = ns.query.lower()
+    matches = sorted((m for m in repos if q in m["name"].lower()), key=rank_key)
+    if matches:
+        emit_matches([enrich(m) for m in matches], as_json)
+        return 0
+
+    remote_on = (cfg["remote"]["enabled"] and not ns.no_remote
+                 and not os.environ.get("REPO_FINDER_NO_REMOTE"))
+    if remote_on:
+        orgs = (cfg["orgs"].get("owned", []) + cfg["orgs"].get("member", []))
+        if orgs:
+            if not gh_authed():
+                die(4, "auth_required",
+                    "remote lookup needs gh authentication (gh auth login)", as_json)
+            remote = []
+            for org in orgs:
+                for item in gh_org_repos(org, 100, cfg["remote"]["transport"]) or []:
+                    if item["name"] and q in item["name"].lower():
+                        remote.append({**item, "kind": "remote", "source": "remote"})
+            if remote:
+                emit_matches(remote, as_json)
+                return 0
+
+    near = difflib.get_close_matches(ns.query, [m["name"] for m in repos], n=3)
+    hints = [f"no repo matching '{ns.query}' in configured roots"]
+    if near:
+        hints.append(f"close names: {', '.join(near)}")
+    hints.append("if it lives elsewhere, add that root to repo-finder_config.toml "
+                 "(repo-finder init) or pass --root <path>")
+    die(3, "not_found", "; ".join(hints), as_json)
+
+
+def cmd_list(ns, cfg) -> int:
+    repos = sorted(scan(cfg["roots"]), key=rank_key)
+    if ns.output == "json":
+        print(json.dumps([{k: m[k] for k in ("name", "path", "kind", "worktree_of")}
+                          for m in repos]))
+    else:
+        for m in repos:
+            print(f"{m['name']}  {m['path']}  {m['kind']}")
+    return 0
+
+
+def cmd_orgs(ns, cfg) -> int:
+    orgs = cfg["orgs"]
+    if ns.output == "json":
+        print(json.dumps({"owned": orgs.get("owned", []),
+                          "member": orgs.get("member", [])}))
+    else:
+        for label in ("owned", "member"):
+            for o in orgs.get(label, []):
+                print(f"{o}  {label}")
+    return 0
+
+
+def cmd_org(ns, cfg) -> int:
+    as_json = ns.output == "json"
+    if not gh_authed():
+        die(4, "auth_required",
+            "org listing needs gh authentication (gh auth login)", as_json)
+    repos = gh_org_repos(ns.name, ns.limit, cfg["remote"]["transport"])
+    if repos is None:
+        die(3, "not_found", f"org '{ns.name}' not found or not accessible", as_json)
+    if as_json:
+        print(json.dumps(repos))
+    else:
+        for r in repos:
+            print(f"{r['name']}  {r['full_name']}  default {r['default_branch'] or '?'}")
+        if len(repos) >= ns.limit:
+            print(f"repo-finder: first {ns.limit} shown; raise --limit for more",
+                  file=sys.stderr)
+    return 0
+
+
+STARTER_CONFIG = """\
+# repo-finder configuration. Roots are scanned to `depth` (default 3), which
+# discovers repos in unknown group subdirectories and nested copies without
+# listing them. `exclude` patterns (fnmatch, any level) are never scanned.
+
+[[roots]]
+path = "~/c"
+# depth = 3
+exclude = ["_archive"]
+
+# [[roots]]
+# path = "~/wt"        # worktree root
+
+[orgs]
+owned = []             # e.g. ["my-org"]
+member = []
+
+[remote]
+enabled = true
+transport = "rest"     # "rest" (default, preserves gh GraphQL budget) | "graphql"
+"""
+
+
+def cmd_init(ns, cfg) -> int:
+    xdg = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    dest = xdg / "repo-finder" / "repo-finder_config.toml"
+    if dest.exists() and not ns.force:
+        die(5, "conflict", f"config already exists at {dest} (use --force to overwrite)",
+            ns.output == "json")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(STARTER_CONFIG)
+    print(dest)
+    return 0
+
+
+# --- entry ------------------------------------------------------------------
+
+def build_parser() -> argparse.ArgumentParser:
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--config", default=argparse.SUPPRESS)
+    common.add_argument("-o", "--output", choices=["text", "json"],
+                        default=argparse.SUPPRESS)
+    common.add_argument("--json", action="store_const", const="json",
+                        dest="output", default=argparse.SUPPRESS)
+
+    p = argparse.ArgumentParser(
+        prog="repo-finder", parents=[common],
+        description="Find local git repos and their identity facts; "
+                    "fall back to configured GitHub orgs.")
+    p.add_argument("-V", "--version", action="version",
+                   version=f"repo-finder {VERSION}")
+    sub = p.add_subparsers(dest="command", metavar="command")
+
+    f = sub.add_parser("find", parents=[common],
+                       help="resolve a repo name to matches with facts")
+    f.add_argument("query")
+    f.add_argument("--no-remote", action="store_true")
+    f.add_argument("--root", action="append")
+    f.set_defaults(fn=cmd_find)
+
+    l = sub.add_parser("list", parents=[common],
+                       help="enumerate all repos in configured roots")
+    l.set_defaults(fn=cmd_list)
+
+    o = sub.add_parser("orgs", parents=[common],
+                       help="show configured GitHub orgs (no network)")
+    o.set_defaults(fn=cmd_orgs)
+
+    g = sub.add_parser("org", parents=[common],
+                       help="list one org's repos (gh, REST-first)")
+    g.add_argument("name")
+    g.add_argument("--limit", type=int, default=100)
+    g.set_defaults(fn=cmd_org)
+
+    i = sub.add_parser("init", parents=[common],
+                       help="write a starter user config")
+    i.add_argument("--force", action="store_true")
+    i.set_defaults(fn=cmd_init)
+    return p
+
+
+def main() -> int:
+    ns = build_parser().parse_args()
+    ns.config = getattr(ns, "config", None)
+    ns.output = getattr(ns, "output", "text")
+    if ns.command is None:
+        build_parser().print_help()
+        return 0
+    cfg = load_config(ns.config)
+    return ns.fn(ns, cfg)
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(130)

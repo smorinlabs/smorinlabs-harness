@@ -335,4 +335,29 @@ anatomy's context section, not just follow-ups.
 
 ---
 
+## [~] Project P21: repo-finder plugin — one-command repo resolution for agents (plugin v0.1.0)
+**Goal**: New single-skill plugin `repo-finder`: thin skill + single-file zero-dependency uv
+Python CLI resolving repo names to local paths + identity facts (origin, default branch,
+checkout/worktree/nested kind with worktree→main linkage, branch, dirty, tooling profile)
+via config-bounded multi-root depth scan; gh REST-first remote org fallback (GraphQL as
+configured fallback); deterministic ranking (kind → root order → depth; recency displayed,
+never ranked — the consuming LLM decides). Evidence-based: dual session-history audit
+(2026-07-19, 164 Claude + 505 Codex sessions) found ~1 in 8 sessions burning tokens on repo
+location/identity (~90K tokens direct, 500–10K per episode, resident for 25–581 turns), plus
+pervasive gh GraphQL rate-limit errors motivating REST-first. Conforms to CLI Design
+Standard v1.4.14 (small-CLI profile, minimal tier; CONFORMANCE.md seeded). Phase 2 (not
+started): cache tier, primarily for remote facts.
+
+### Tests & Tasks
+- [x] [P21-TS01] Test suite first: 20 subprocess tests (fixture tree with checkout, group-dir, worktree, vendored-nested, excluded; exit codes 0/2/3/4/5; JSON contract + error schema; REST-first gh stub; init conflict) — all pass
+- [x] [P21-T01] CLI script `skills/repo-finder/scripts/repo-finder` (uv shebang, stdlib-only, argparse verb-first)
+- [x] [P21-T02] Interface spec `docs/cli-interface.md` + `CONFORMANCE.md` (cli-standards plan mode, v1.4.14 pinned)
+- [x] [P21-T03] SKILL.md (agent-side trigger description, ≤1000 chars) + plugin.meta.toml; `just gen`/`gen-check` clean
+- [x] [P21-T04] Docs: `docs/skills/repo-finder.md` + README section + plugin/skill counts
+- [x] [P21-T05] Dev placements via skillsmith (claude-code + codex) — both static-verified, ledger dev entries recorded
+- [x] [P21-TS02] skill-quality gate: content (desc 830 chars, no collisions, least-privilege Bash, no personal paths) ✓, docs (page + README, zero placeholders) ✓, conventions (meta.toml, marketplace, gen-check) ✓, loads (skillsmith verify static pass both tools, 0 err/0 warn) ✓
+- [ ] [P21-T06] Release: harness version bump + RELEASE-NOTES (via skill-harness-release)
+
+---
+
 - [ ] Regression Test Status
