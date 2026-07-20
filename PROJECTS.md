@@ -423,6 +423,27 @@ reliably self-trigger on what a response turns out to contain.
 
 ---
 
+## [x] Project P26: reader-steps v2 — format spec from five prototyping rounds (plugin v0.2.0)
+**Goal**: Turn the v1 prose rules into a full format spec, designed by rendering one realistic
+handoff in competing formats each round (2026-07-19/20). Landed: bounded frame (blockquote
+rail as container, horizontal rules separating header/steps/footer); header carrying
+`0/N · [tracked-id] · tag XX` with a `Completes:` binding by exact ID and title; steps
+grouped by surface under merged intent-carrying dividers; five surfaces incl. new 🖥️ desktop/
+system UI; outcome-titles rule (titles never echo button labels — dissolves title/body
+redundancy); notation contract (mono = type it, bold = click it, ▸ = one hop); ✓ default with
+`Done when:` escalation; scale ladder (1 step inline / 2–3 light / 4+ full / 8+ adds Map and
+Stop points with divider ranges); breadcrumb → hop-per-line past ~3 hops or on a caveat;
+reactive actions nested inside their triggering step; cross-turn scoreboard re-render;
+count/ID consistency rule. Worked renders split to references/formats.md per house style.
+
+### Tests & Tasks
+- [x] [P26-T01] SKILL.md rewritten (desc 996 chars) + references/formats.md with renders at every scale
+- [x] [P26-T02] Both always-on digests refreshed (dotfiles/claude-CLAUDE.md, dotfiles/codex-AGENTS.md in smorin-bootstrap)
+- [x] [P26-T03] plugin.meta.toml 0.1.0 → 0.2.0; docs page + README row rewritten; gen/gen-check green
+- [x] [P26-TS01] Gate: static verify caught a YAML colon-space in the description (would have loaded with all frontmatter silently dropped) — fixed, re-verified pass
+
+---
+
 ## [ ] Project P22: repo-finder phase 2 — remote-only TTL cache (plugin v0.3.0; shrinks after P23 — search-filtered find no longer needs org-list caching)
 **Goal**: Cache the one thing v1 still fetches live from the network: gh org repo listings.
 Store per-org as `$XDG_CACHE_HOME/repo-finder/orgs/<org>.json` with a `fetched_at` stamp;

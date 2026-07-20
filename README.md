@@ -120,7 +120,7 @@ always-on digest users keep in their global instructions.
 
 | Skill | Does | Details |
 |---|---|---|
-| `reader-steps` | Renders actions only the reader can or will perform (agent-impossible actions, manual verification handoffs, user-claimed work) as a self-contained end-of-response block: done-so-far recap, numbered verb-first bounded steps with exact commands/values, inline mentions restated, ✓ verification per step, closing with the next move — plus cross-turn restating of in-flight manual processes and matter-of-fact error shape. Decisions are never steps (they're asked via question-walkthrough). | [docs/skills/reader-steps.md](docs/skills/reader-steps.md) |
+| `reader-steps` | Renders actions only the reader can or will perform (agent-impossible actions, manual verification handoffs, user-claimed work) as a delineated end-of-response block: a bounded frame binding to the tracked item by ID, tag-numbered steps grouped by surface (⌨️ 🌐 🖥️ 📱 🖐️) under intent-carrying dividers, each titled by its outcome with the literal command or UI path and a ✓ line beneath. Scales from a one-line inline form to a mapped, stop-pointed long sequence; nests reactive prompts inside their triggering step; re-renders across turns as a scoreboard; states errors as cause and fix. Decisions are never steps (they're asked via question-walkthrough). | [docs/skills/reader-steps.md](docs/skills/reader-steps.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`
