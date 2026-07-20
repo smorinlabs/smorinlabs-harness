@@ -1,56 +1,53 @@
-# Browser fallback — reading thread state when GraphQL is exhausted
+# Browser fallback — thread state and resolution when GraphQL is exhausted
 
 The escape hatch for the one failure the tool ladder in `polling.md` cannot
-climb out of. Narrow by design, and narrower than it first looks: the browser
-supplies **one bit per thread — is it resolved — and nothing else.** It never
-resolves, never replies, never merges.
+climb out of. It covers the **two GraphQL thread operations** — read
+`isResolved`, and resolve a thread — and nothing else.
 
-## What is actually missing when GraphQL dies
+## Why a browser is the answer
 
-Split the thread inventory by who can supply each field, and the gap is small:
+Those two operations have no REST equivalent, and they are exactly what the
+Iron Law rests on. When the GraphQL budget is gone the ladder does not help:
+`gh` porcelain, `gh api`, and raw `curl` all bill the same exhausted endpoint.
+The limit is on the endpoint, not the client.
 
-| Field | REST | GraphQL | Browser |
-|---|---|---|---|
-| comment `databaseId` (needed to reply) | ✅ `…/pulls/{n}/comments` | ✅ | ❌ |
-| path, line, author, body | ✅ | ✅ | ✅ (as text) |
-| `in_reply_to_id` (has it been answered?) | ✅ | ✅ | — |
-| **`isResolved`** | ❌ | ✅ | ✅ |
-| resolve a thread | ❌ | ✅ mutation | ❌ **see below** |
-
-REST already carries everything except one boolean. So the browser's job is to
-supply that boolean and hand it back to a REST-built inventory — the
-`databaseId` never has to survive the page. Resolution itself stays on the API
-path: if GraphQL cannot resolve, the run waits or degrades. It does not click.
-
-GitHub's web UI reads that state through session-authenticated internal
+GitHub's web UI performs both through session-authenticated internal
 endpoints, which do **not** draw on the token's `api.github.com` GraphQL
-budget. That is the whole trick: the same fact, billed to a different pool.
+budget. Same effect, different quota pool.
 
-## Why this does not resolve threads
+| Need | API path | Browser path |
+|---|---|---|
+| Which threads are unresolved? | GraphQL `reviewThreads.isResolved` | the thread's own rendered state — **Resolve conversation** vs **Unresolve conversation** |
+| Close a thread | GraphQL `resolveReviewThread` | click **Resolve conversation** |
+| The thread list + `databaseId` | REST `…/pulls/{n}/comments` — **keep using this** | not needed; see below |
+| Post a thread reply | REST `…/comments/{id}/replies` — **keep using this** | never |
 
-Resolving by clicking was tried and does not work on GitHub's PR page. Three
-findings, all reproduced on a live PR:
+## Target one thread at a time — never enumerate
 
-- **`read_page` (`filter: "interactive"`) does not enumerate the Resolve
-  buttons at all** — not at default depth, and byte-identically not at
-  `depth: 40`. GitHub renders thread controls lazily, so they are absent from
-  the accessibility tree. The "deterministic enumeration" this design once
-  rested on does not exist here.
-- **`find` returns the buttons but strips their identity** — N results, all
-  labelled `"Resolve conversation"`, with nothing tying a `ref` to a thread.
-  The 20-match cap is not the binding problem; anonymity is. Two threads would
-  be as unsafe as twenty.
-- **Collapsed and outdated threads render no button at all**, so the visible
-  set is not the set you need. On the live PR this was total: every button
-  `find` returned belonged to a thread that must *not* be resolved, and the two
-  that should have been were invisible.
+The failure mode that makes this dangerous is clicking the *wrong* thread's
+button. The fix is not a better enumeration; it is to stop enumerating.
 
-A click chosen from an anonymous list is a coin flip on a mutating action, and
-losing means resolving a thread that has no reply — the silent resolve the Iron
-Law forbids, reached through the back door. **So there is no click.**
+REST already gives the authoritative thread list, each with its `databaseId` —
+and GitHub renders a permalink `#discussion_r<databaseId>` for every thread.
+The same ID on both sides is the bridge. So drive the browser **per thread, by
+ID**:
 
-If a future harness offers per-thread element identity (a ref carrying the
-thread or comment id), revisit this section with evidence — not before.
+- `navigate` to `…/pull/$N#discussion_r<databaseId>` — GitHub scrolls to and
+  renders that specific thread;
+- `read_page` then contains that thread's controls **and** its permalink,
+  which confirms which thread you are looking at before you touch anything.
+
+This sidesteps every enumeration hazard at once: no ambiguous list, no
+`find` 20-match cap, no document-order assumption, and no dependence on what
+happens to be scrolled into view.
+
+**Why the naive approach fails, so it is not retried:** `read_page` reflects
+what is *rendered*, and GitHub renders threads lazily. Reading the tree with
+the page at the top returns page chrome and no thread controls — at any
+`depth`, because depth is the wrong axis; scroll position is the right one.
+`find` will surface buttons but labels them all `"Resolve conversation"`, so a
+ref cannot be mapped to a thread from the result alone. Both observations are
+about *enumeration*, and both dissolve under per-thread anchoring.
 
 ## Availability — pick the harness's entry point first
 
@@ -66,17 +63,30 @@ other step works everywhere; only this escape hatch is harness-dependent.
 
 Confirm the entry point is installed and enabled before routing to `browser`
 (Codex: `codex plugin list`, `codex mcp list`). Missing tooling is a `stop`, not
-a failed attempt — report honestly and never spend the degrade budget
-rediscovering the absence.
+a failed attempt.
 
 ### Why the Chrome plugin on Codex, and not the other two
 
-- **`browser@openai-bundled`** drives the *in-app* browser. The entire premise
-  is GitHub's session-authenticated endpoints; a browser without the user's
-  logged-in session cannot read the state at all.
-- **`computer-use@openai-bundled`** drives desktop apps generically, with no
-  element references. OpenAI's own bundled guidance says the same: prefer the
-  Chrome plugin over Computer Use unless the user asks otherwise.
+- **`browser@openai-bundled`** drives the *in-app* browser, which carries no
+  logged-in GitHub session — and session-authenticated endpoints are the whole
+  premise.
+- **`computer-use@openai-bundled`** drives desktop apps generically. Prefer the
+  Chrome plugin, as OpenAI's own bundled guidance also says.
+
+## The tools, and what each is for
+
+| Tool | Produces | Role here |
+|---|---|---|
+| `get_page_text` | plain text, **no refs** | read thread state and the unresolved counter |
+| `read_page` (`filter: "interactive"`) | **element refs** + permalinks | the ref producer; confirms thread identity |
+| `find` | **element refs** (≤20) | locate one control in an already-anchored thread |
+| `computer` | clicks, `scroll_to`, screenshot, zoom | the only actuator — clicks by `ref` or `coordinate` |
+
+`computer` is the only thing that clicks, and it needs a `ref` from `read_page`
+or `find` (preferred — stable across reflow) or a `coordinate` from a
+screenshot (last resort). **Granting `computer` without a ref producer leaves
+coordinate-clicking as the only path** — an incoherent configuration. Keep them
+together.
 
 ## When this fires
 
@@ -111,9 +121,9 @@ from the failing call's body, not from this payload.
 ## The reset guard — wait, or open a browser?
 
 GraphQL quota resets hourly, so a 403 is not by itself a reason to drive a
-browser: if the reset is minutes away, a bounded wait is cheaper, safer, and
-keeps the whole run on the API path. Secondary rate limits are the exception —
-they publish no reset time, so there is no clock to wait on.
+browser: if the reset is minutes away, a bounded wait is cheaper and keeps the
+run on the API path. Secondary rate limits are the exception — they publish no
+reset time, so there is no clock to wait on.
 
 ```bash
 # Decide the fallback route from a `gh api rate_limit` payload.
@@ -123,8 +133,10 @@ decide_fallback_route() {
   local wait_max=600     # reset within 10 min → wait; beyond → browser
   local core_floor=100   # below this, the REST inventory and replies are at risk
 
+  # Core first: resolving threads you cannot reply to is a silent resolve from
+  # the other direction. Better to stop honestly than half-satisfy the Iron Law.
   if [ "${CORE_REMAINING:-0}" -lt "$core_floor" ]; then
-    echo "stop core at ${CORE_REMAINING:-0} — REST inventory would fail"; return
+    echo "stop core at ${CORE_REMAINING:-0} — REST inventory and replies would fail"; return
   fi
   # Secondary limits publish no reset, so there is no clock to wait on.
   [ "${SECONDARY:-0}" -eq 1 ] && { echo "browser"; return; }
@@ -142,9 +154,9 @@ The three numbers are policy, not physics — tune them in place:
 
 | Knob | Default | Trade-off |
 |---|---|---|
-| `wait_max` | 600s | Too low opens Chrome for a wait that would have been shorter than the read itself; too high parks the run for most of an hour. |
-| `core_floor` | 100 | The REST budget. Below it, `stop` is more honest than `browser` — a resolution state you cannot act on is not worth fetching. |
-| reset buffer | +5s | Guards against clock skew re-tripping the limit immediately. The caller still enforces `polling.md`'s 20s floor. |
+| `wait_max` | 600s | Too low opens Chrome for a wait that would have been shorter than the browser pass; too high parks the run for most of an hour. |
+| `core_floor` | 100 | The REST budget: the inventory, the IDs, and the replies all ride it. |
+| reset buffer | +5s | Guards against clock skew re-tripping the limit. The caller still enforces `polling.md`'s 20s floor. |
 
 Route contract:
 
@@ -152,13 +164,8 @@ Route contract:
 |---|---|---|
 | `proceed` | GraphQL is fine | normal API path, no fallback |
 | `wait <seconds>` | reset is near | bounded wait per `polling.md` (20s+ floor), then re-check once and re-decide |
-| `browser` | reset is far, or a secondary limit with no clock | gate with the user, then run the procedure below to **read** state |
+| `browser` | reset is far, or a secondary limit with no clock | gate with the user, then run the procedure below |
 | `stop <reason>` | core is dead too, auth is broken, or the harness has no browser tooling | report honestly; downgrade to a ready-report |
-
-Note what `browser` no longer means: it unblocks *seeing* which threads are
-open. Closing them still needs GraphQL, so a run that reaches `browser` with
-threads left to resolve ends as a ready-report either way — better informed,
-not further along.
 
 ## Gate — always, in every mode
 
@@ -166,96 +173,107 @@ Ask before the browser opens. **`--auto` asks too.** `--auto`'s "never ask" is
 a rule about review judgment, not a licence to drive the user's logged-in
 Chrome while they may be using it.
 
-State in the ask: that a new tab will open on the PR, that the browser only
-reads and cannot resolve anything, and that declining means a ready-report.
-Include the unresolved count **when it is known** — at preflight it is not yet,
-because the inventory has not been collected; say so plainly ("count not yet
-known; it is what this read determines") rather than inventing a number.
-Declined → ready-report, no argument.
+State in the ask: that a new tab will open on the PR, and that declining means
+a ready-report. Include the thread count **when it is known** — at preflight it
+is not, because the inventory has not been collected; say so plainly ("count
+not yet known") rather than inventing a number.
 
 ## Procedure
 
 Tool names below are Claude Code's. On Codex, map each **role** onto the Chrome
-plugin's equivalent — the roles and their order are what matter, not the names:
-open a fresh tab, confirm identity, read state as text. A role with no
-equivalent on the harness is a `stop`, not something to approximate.
+plugin's equivalent — the roles and their order are what matter: open a fresh
+tab, confirm identity, anchor to one thread, click its control, verify that
+thread. A role with no equivalent is a `stop`, not something to approximate.
 
-1. **Build the inventory over REST first** — `…/pulls/{n}/comments?per_page=100`
-   gives every comment with its `databaseId`, `path`, `line`, `author`, and
+1. **Build the inventory over REST** — `…/pulls/{n}/comments?per_page=100`
+   gives every comment with `databaseId`, `path`, `line`, `author`, and
    `in_reply_to_id`. Top-level entries (`in_reply_to_id == null`) are the
-   threads. This is the spine; the browser only annotates it.
+   threads. This list is authoritative; the page is not.
 2. **Enter through the harness's entry point** from the availability table. If
-   neither is present the availability check has already routed this to `stop`;
-   do not improvise a way in.
-3. `tabs_context_mcp` — also the connectivity probe. An error here means the
-   tooling is not connected: degrade, do not retry.
+   neither is present, availability has already routed this to `stop`.
+3. `tabs_context_mcp` — also the connectivity probe. An error means the tooling
+   is not connected: degrade, do not retry.
 4. `tabs_create_mcp` — always a **new** tab. Never reuse a tab the user has
    open.
-5. `navigate` to `https://github.com/$OWNER/$REPO/pull/$N`.
-6. **Confirm identity before trusting one word of the page.** A failed
-   navigation, a redirect, a login or SSO wall, or a stale tab can leave you on
-   another page entirely, and a coincidentally similar layout is worse than an
-   obvious error. Require an exact match on owner, repository, and PR number
-   from the page's own canonical URL and title — not from the URL you asked
-   for. Any mismatch is a `stop` before anything is read or acted on.
-7. **Read state with `get_page_text`.** Take the *N unresolved conversations*
-   counter and each thread's rendered header (file path + line range + author).
-8. **Correlate back to the REST inventory** on `path` + `line` + `author`, with
-   the comment body's first line as tiebreak. Every REST thread must match
-   exactly one page thread and vice versa. An ambiguous or partial correlation
-   is a `stop` — report the inventory as unknown rather than guessing which
-   thread a bit belongs to. Guessing here is the same failure as clicking an
-   anonymous button, one step earlier.
-9. **Hand back the annotated inventory** and leave the browser. Resolution,
-   replies, and the merge decision all happen on the API path, under the
-   normal rules in `triage.md`.
+5. **Confirm PR identity once** — `navigate` to the PR, then require an exact
+   match on owner, repository, and PR number from the page's **own** canonical
+   URL and title, not from the URL you requested. A redirect, login wall, SSO
+   prompt, or stale tab lands you elsewhere, and a similar-looking page is
+   worse than an obvious error. Mismatch → `stop` before anything is read or
+   clicked.
 
-## Screenshots — diagnostic only, ephemeral by default
+Then, **for each thread, one at a time**:
 
-`computer`'s `screenshot` and `zoom` actions are available when the text path
-cannot explain what is happening. No extra grant is needed: they are actions of
-`computer`, which is already held.
+6. **Reply over REST first** (skip if already replied — see idempotency in
+   `triage.md`). The reply is the audit trail; a browser leg that then fails
+   leaves a replied-but-open thread, which is honest and recoverable, rather
+   than a resolved-but-unexplained one.
+7. **Anchor to that thread** — `navigate` to
+   `…/pull/$N#discussion_r<databaseId>`. This renders it; without anchoring or
+   scrolling, its controls are not in the tree at all.
+8. **`read_page`** (`filter: "interactive"`) and confirm the thread's permalink
+   `#discussion_r<databaseId>` is present and matches the thread you intend.
+   Not present → `scroll_to` a `find` ref and re-read; still absent after that
+   → treat as a failed interaction and move on. **Never click a Resolve button
+   you have not tied to a specific `databaseId`.**
+9. **Click that thread's Resolve control by `ref`** with `computer`
+   `left_click`. Prefer `ref` over `coordinate`: it names the element and
+   cannot drift when the page reflows. Coordinates from a screenshot are a last
+   resort, and only after step 8 has established identity.
+10. **Verify that thread**, not a count. Re-read and confirm *this* thread now
+    shows **Unresolve conversation** / "marked this conversation as resolved".
+    **Counting remaining Resolve buttons is not a verification signal**: the
+    page renders lazily and reviewers post while you work, so the total can
+    rise mid-run for reasons unrelated to your click (observed 2026-07-20:
+    2 → 5 while a new review landed). Refs also go stale after a re-render —
+    on a missing-element error, re-anchor and re-read rather than retrying the
+    old ref.
 
-Reach for one when the page is not the expected PR view (login wall, SSO or 2FA
-prompt, abuse interstitial, permissions banner), or when `get_page_text` and the
-rendered page clearly disagree. Diagnosing that in one image beats three blind
-retries.
+Bots comment while you work. Re-read the REST inventory at the end of the pass;
+new threads are step 5's re-review cycle, not a failure.
+
+## Screenshots — diagnostic, ephemeral by default
+
+`computer`'s `screenshot` and `zoom` are available when the text path cannot
+explain what is happening — a login wall, SSO or 2FA prompt, abuse
+interstitial, permissions banner, or a click that reported success while step
+10 says otherwise. One image beats three blind retries.
 
 **Do not persist them.** An authenticated PR screenshot can carry private code,
-usernames, and unreleased review context. Keep diagnostics in-session; report
-sanitized metadata (what was on screen, in words) rather than the image. Use
-`save_to_disk: true` **only after asking the user and getting a yes** — the
-degrade report says what blocked the run; it does not need a picture of it
-unless the user wants one.
+usernames, and unreleased review context. Keep diagnostics in-session and
+report sanitized metadata in words; use `save_to_disk: true` **only after
+asking the user and getting a yes**.
 
-Screenshots count toward the degrade budget: they are for understanding a
-failure, not for retrying past one.
+A screenshot informs the decision to continue or degrade. It may supply
+coordinates only as step 9's last resort, and only for a thread whose identity
+step 8 already established — never as a way to skip that step.
 
 ## Degrade path
 
 Stop after **2–3 failed interactions** — page not loading, identity mismatch,
-correlation ambiguity, tooling unresponsive. Do not keep retrying and do not
-explore other pages.
+a thread whose permalink will not render, tooling unresponsive.
 
-On stopping, report the split explicitly: which threads are known-unresolved,
-which are known-resolved, and which could not be determined. Then downgrade the
-run to a ready-report. A partial read is a fine outcome as long as it is stated
-accurately — an unknown reported as unknown costs nothing; an unknown reported
-as resolved breaks the Iron Law.
+On stopping, report the split explicitly: which threads were resolved, which
+were replied-to but left open, which were untouched. Then downgrade to a
+ready-report. A partial pass is fine if stated accurately.
+
+**Negative results need the same rigor as positive ones.** "I could not find
+the control" is not "the control does not exist" — vary the axis that actually
+matters (scroll position, anchoring, a second tool) before concluding anything
+is impossible, and never let a house rule from this file stand as evidence that
+a capability is absent. Report a blocked attempt as blocked, not as proof.
 
 ## What the browser never does
 
-- **Never resolves a thread.** See *Why this does not resolve threads*. There
-  is no safe targeting on this page, so resolution stays on the API path.
-- **Never replies, never merges, never closes a PR**, never edits the title,
-  never pushes.
-- **Never clicks anything at all.** This path is read-only, so the old
-  ref-versus-coordinate question is moot — and a screenshot is certainly not a
-  click target.
-- **Never uses `javascript_tool`.** Reading text does not need arbitrary page
-  script; the grant is deliberately absent, as are `file_upload`,
+- **Never merges.** The merge decision stays on the API path behind the mode
+  gate — a browser click is not a mode gate.
+- **Never closes a PR**, never edits the title, never pushes.
+- **Never replies.** Replies ride REST, which carries the `databaseId` and the
+  audit trail.
+- **Never resolves a thread it has not identified** by `databaseId` at step 8.
+- **Never uses `javascript_tool`.** Clicking a button does not need arbitrary
+  page script; the grant is deliberately absent, as are `file_upload`,
   `gif_creator`, and `read_network_requests`.
 - **Never triggers a dialog.** A dialog blocks every subsequent command and
   ends the session.
-- **Never polls.** This is a one-shot read, not a monitor. Waits stay on the
-  API path under `polling.md`'s bounds.
+- **Never polls.** Waits stay on the API path under `polling.md`'s bounds.

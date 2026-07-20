@@ -20,9 +20,9 @@ query($owner:String!,$repo:String!,$n:Int!){
 Caps: `reviewThreads(first:100)` / `comments(first:10)` truncate on very
 large PRs — paginate via `endCursor` when a PR approaches 100 threads.
 
-Rate-limited? Only `isResolved` has no REST equivalent — take the rest of the
-inventory (including `databaseId`) from REST and get that one bit per
-`references/browser-fallback.md`.
+Rate-limited? Take the inventory and its `databaseId`s from REST
+(`…/pulls/{n}/comments?per_page=100`) and get `isResolved` from the thread's own
+rendered state per `references/browser-fallback.md`.
 
 Also gather PR-level review bodies and issue comments via REST
 (`…/pulls/{n}/reviews`, `…/issues/{n}/comments`) — bots sometimes put
@@ -44,7 +44,7 @@ gh api "repos/$OWNER/$REPO/pulls/$N/comments/$COMMENT_ID/replies" \
 `databaseId`; never infer one from page text or ordering. When GraphQL is
 rate-limited, take the inventory and its IDs from REST
 (`…/pulls/{n}/comments?per_page=100`, top-level = `in_reply_to_id == null`) —
-the browser fallback supplies only `isResolved` and cannot supply an ID. No ID,
+the browser reads state and clicks controls but never supplies an ID. No ID,
 no reply, and therefore no resolve.
 
 **Replies are idempotent.** Before posting, list the thread's comments and skip
@@ -99,7 +99,7 @@ mutation($t:ID!){ resolveReviewThread(input:{threadId:$t}){ thread{ id isResolve
 Batch: resolve after the push that fixes a batch of threads, one pass per
 cycle, keeping GraphQL call count minimal.
 
-Rate-limited? There is no substitute for this mutation — not REST, and not the
-browser (GitHub's Resolve buttons cannot be safely targeted; see
-`references/browser-fallback.md`). Post the reply, leave the thread open, and
-resolve when GraphQL returns.
+Rate-limited? REST has no substitute, but the browser does — click that
+thread's **Resolve conversation** after anchoring to its own
+`#discussion_r<databaseId>`, per `references/browser-fallback.md`. Never pick a
+Resolve button out of an enumerated list; identity comes from the anchor.

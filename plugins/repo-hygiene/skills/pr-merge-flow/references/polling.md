@@ -47,14 +47,13 @@ The ladder cannot climb out of an exhausted **GraphQL** budget: all three rungs
 bill the same endpoint. Those two thread operations have no REST equivalent, so
 GraphQL exhaustion stalls the Iron Law itself.
 
-The browser fallback in `references/browser-fallback.md` recovers **one** of
-them — reading which threads are unresolved — by driving the GitHub web UI,
-whose session-authenticated internal endpoints do not draw on the token's
-GraphQL budget. It is an **escape hatch, not a fourth rung**: never reached for
-a call REST can still make, never used to poll, and never used to resolve
-(GitHub's Resolve buttons cannot be safely targeted — evidence in that file).
-Resolution stays GraphQL-only, so a run that loses GraphQL ends as a
-ready-report regardless; the fallback only makes that report accurate.
+The browser fallback in `references/browser-fallback.md` recovers both by
+driving the GitHub web UI, whose session-authenticated internal endpoints do not
+draw on the token's GraphQL budget. It is an **escape hatch, not a fourth
+rung** — never reached for a call REST can still make, and never used to poll.
+It works one thread at a time, anchored to that thread's own
+`#discussion_r<databaseId>` from the REST inventory, so it never has to
+enumerate controls or guess which button belongs to which thread.
 
 Before reaching for it, check the reset clock: GraphQL quota resets hourly, so
 a near reset makes a bounded wait cheaper and safer than opening a browser.
