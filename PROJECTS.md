@@ -507,7 +507,7 @@ ready-report naming which threads were resolved, replied-to, or untouched.
 - [x] [P28-T01] `references/browser-fallback.md`: trigger conditions, reset guard + route contract, gate, procedure, degrade path, never-does list
 - [x] [P28-T02] `decide_fallback_route` body — core-floor-first ordering, secondary limits straight to browser (no reset clock), reset-window wait; three knobs (`wait_max` 600s, `core_floor` 100, +5s buffer) documented as tunable policy
 - [x] [P28-T03] Wiring: SKILL.md steps 1/3/4 + 4 Red Flags rows + See-also; polling.md escape-hatch section; triage.md pointers at both GraphQL blocks
-- [x] [P28-T04] `allowed-tools` + 6 claude-in-chrome tools (read/click only; `read_page`, `javascript_tool`, `file_upload`, `gif_creator`, `read_network_requests` excluded)
+- [x] [P28-T04] `allowed-tools` + 7 claude-in-chrome tools (read/click only; `javascript_tool`, `file_upload`, `gif_creator`, `read_network_requests` excluded)
 - [x] [P28-T05] plugin.meta.toml 0.3.0 → 0.4.0; gen + gen-check green (all three manifests carry 0.4.0)
 - [x] [P28-T06] Docs page + README row refreshed
 - [x] [P28-TS01] Gate: skill-quality on pr-merge-flow; static verify both tools

@@ -22,6 +22,15 @@ the same effect billed to a different quota pool.
 | Close a thread | GraphQL `resolveReviewThread` | Click **Resolve conversation** |
 | Post a thread reply | REST `…/comments/{id}/replies` — **keep using this** | not used |
 
+The browser tools split three ways, and the split is load-bearing:
+
+| Tool | Job | Why not the others |
+|---|---|---|
+| `get_page_text` | read thread state + the unresolved counter | plain text, no element refs — cannot produce a click target |
+| `read_page` (`filter: "interactive"`) | enumerate every Resolve button with a stable `ref` | the only deterministic enumeration; `find` caps at 20 matches with no pagination |
+| `find` | shortcut to one named element | convenience only — never used to enumerate threads |
+| `computer` `left_click` by `ref` | the click itself | `ref` beats `coordinate`: no screenshot, no pixel arithmetic, no drift on reflow |
+
 Note the third row: replies ride the **core** budget, which is separate and far
 larger (5000/hr) and which this flow barely touches. In the ordinary failure
 only the two GraphQL operations need rescuing.
@@ -119,20 +128,39 @@ argument.
    open.
 4. `navigate` to `https://github.com/$OWNER/$REPO/pull/$N` — the Conversation
    tab carries every thread and its Resolve button on one page.
-5. **Read state with `get_page_text` / `find`, not screenshots.** Text is
-   cheaper and far more reliable for "is this thread resolved". Confirm the
-   *N unresolved conversations* count matches the thread inventory from step 3
-   of SKILL.md; a mismatch means the page is stale — reload once, then treat a
-   second mismatch as a degrade.
-6. **Reply over REST first, then resolve in the browser** — never the reverse.
+5. **Read state with `get_page_text`.** Plain text is cheapest and most
+   reliable for "is this thread resolved" and for the *N unresolved
+   conversations* counter. Confirm that counter matches the thread inventory
+   from step 3 of SKILL.md; a mismatch means the page is stale — reload once,
+   then treat a second mismatch as a degrade.
+6. **Build the click map with `read_page`** (`filter: "interactive"`), which
+   returns the accessibility tree: every **Resolve conversation** button with a
+   stable `ref`, in document order. This is the step that makes clicking
+   deterministic — `get_page_text` returns no refs, and `find` caps at 20
+   matches with no pagination, so on a PR with more than ~20 threads it
+   silently truncates and a fuzzier per-thread query risks matching the *wrong*
+   thread. Resolving a thread that has no reply, while leaving a replied one
+   open, is the silent resolve arriving through the back door. (`triage.md`
+   flags the same scale problem for GraphQL at ~100 threads; the browser path
+   hits it 5× earlier.) Use `find` only as a shortcut for a single named
+   target, never to enumerate. Large trees: narrow with `depth` / `ref_id`
+   rather than falling back to `find`.
+7. **Reply over REST first, then resolve in the browser** — never the reverse.
    The reply is the audit trail; if the browser leg then fails you are left
    with a replied-but-open thread (honest and recoverable) instead of a
    resolved-but-unexplained one, which is the silent resolve the Iron Law
    forbids.
-7. Click **Resolve conversation** for that thread via `computer`.
-8. **Verify the mutation landed** — re-read the thread's state and confirm it
+8. Click that thread's **Resolve conversation** button with `computer`
+   `left_click` **by `ref`, never by coordinate**. The ref comes from step 6's
+   tree and names the element directly, so the flow needs no screenshot and no
+   pixel arithmetic — and cannot drift when the page reflows between reading
+   and clicking. Off-screen button → `computer` `scroll_to` with the same ref.
+9. **Verify the mutation landed** — re-read the thread's state and confirm it
    flipped to resolved and the unresolved count decremented. A click is not a
-   result. Never assume; never batch-click and check once at the end.
+   result. Never assume; never batch-click and check once at the end. Refs can
+   go stale when the page re-renders after a resolve: if a subsequent click
+   reports a missing element, re-run step 6 for a fresh map rather than
+   retrying the old ref.
 
 ## Degrade path
 
@@ -151,9 +179,11 @@ stated accurately.
   gate — a browser click is not a mode gate.
 - **Never closes a PR**, never edits the title, never pushes.
 - **Never uses `javascript_tool`.** Clicking a button does not need arbitrary
-  page script; the grant is deliberately absent. So are `read_page` (state is
-  read as text, not screenshots), `file_upload`, `gif_creator`, and
-  `read_network_requests`.
+  page script; the grant is deliberately absent, as are `file_upload`,
+  `gif_creator`, and `read_network_requests`.
+- **Never takes a screenshot.** State comes from `get_page_text`, click targets
+  from `read_page`'s accessibility tree, and clicks go by `ref` — the pixel
+  path is never needed, so `computer`'s `screenshot` action stays unused.
 - **Never triggers a dialog.** A JS dialog blocks every subsequent extension
   command and ends the session.
 - **Never polls.** This is a fallback for two operations, not a monitor. Waits
