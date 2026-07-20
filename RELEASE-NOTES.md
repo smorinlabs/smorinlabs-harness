@@ -1,5 +1,54 @@
 # Release Notes
 
+## v0.14.0 — 2026-07-20
+
+### Added
+
+- **repo-finder — one-command repo resolution for agents (repo-finder 0.2.0)** —
+  a thin skill wrapping a single-file, zero-dependency `uv` Python CLI that
+  resolves a repo name to every local copy with the facts agents reach for
+  next: path, origin, default branch, checkout-vs-worktree kind (worktrees
+  labeled with their main repo), branch, dirty state, and build tooling. A
+  config-bounded multi-root scan replaces `ls`/`find` cascades; matches are
+  ranked deterministically (kind, then root order, then depth) with recency
+  displayed rather than ranked, so the consuming model decides which copy is
+  meant. On a local miss it filters server-side through one GitHub Search API
+  call across the user's configured orgs and returns the exact `owner/name`
+  plus a ready `git clone`. Designed from a session-history audit of 164
+  Claude and 505 Codex sessions, which found roughly one session in eight
+  spending tokens establishing where or what a repo is. Conforms to the CLI
+  Design Standard v1.4.14 (small-CLI profile, minimal tier) with a committed
+  conformance note; 25 tests.
+- **question-walkthrough — adaptive one-question-at-a-time decisions
+  (question-walkthrough 0.1.0)** — takes a pile of open questions or
+  undecided to-dos (mined from the conversation, read from a document,
+  given inline, or pulled from task systems), confirms the pile, sequences
+  it by leverage so answers that could moot other questions come first, then
+  walks it one question at a time with just-enough anchored context. Its
+  defining move is re-planning after every answer: mooted questions dropped
+  loudly, order revised, implied follow-ups added only with consent.
+  Decisions are recorded back at their source and the walk closes with an
+  outcome table.
+- **reader-steps — the agent-to-human handoff format (reader-steps 0.2.0)** —
+  renders actions only the reader can or will perform as a delineated,
+  self-contained block: a bounded frame binding to the tracked item by exact
+  ID, steps numbered with a stable tag and grouped by surface (terminal,
+  browser, desktop or system UI, phone, physical world) under
+  intent-carrying dividers, each step titled by its outcome with the literal
+  command or UI path and a verification line beneath. `mono` means type it,
+  **bold** means click it. It scales from a one-line inline form for a single
+  step to a mapped, stop-pointed sequence past eight; nests reactive prompts
+  inside the step that triggers them; re-renders across turns as a progress
+  scoreboard; and states errors as cause and fix. Decisions are never steps —
+  they are asked via `question-walkthrough` before anything is instructed.
+
+### Fixed
+
+- **project-harness: sandbox trigger boundary (project-harness 0.1.3)** —
+  keeps the broad project/plan trigger on tracked work and routes Lima, VM,
+  and sandbox execution-environment setup to the sandbox skills instead
+  (via PR #2).
+
 ## v0.13.0 — 2026-07-18
 
 ### Changed

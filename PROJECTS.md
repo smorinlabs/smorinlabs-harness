@@ -352,7 +352,7 @@ explicitly routing Lima/VM/sandbox execution-environment setup to the new
 
 ---
 
-## [~] Project P22: repo-finder plugin — one-command repo resolution for agents (plugin v0.1.0)
+## [x] Project P22: repo-finder plugin — one-command repo resolution for agents (plugin v0.1.0)
 **Goal**: New single-skill plugin `repo-finder`: thin skill + single-file zero-dependency uv
 Python CLI resolving repo names to local paths + identity facts (origin, default branch,
 checkout/worktree/nested kind with worktree→main linkage, branch, dirty, tooling profile)
@@ -373,7 +373,7 @@ started): cache tier, primarily for remote facts.
 - [x] [P22-T04] Docs: `docs/skills/repo-finder.md` + README section + plugin/skill counts
 - [x] [P22-T05] Dev placements via skillsmith (claude-code + codex) — both static-verified, ledger dev entries recorded
 - [x] [P22-TS02] skill-quality gate: content (desc 830 chars, no collisions, least-privilege Bash, no personal paths) ✓, docs (page + README, zero placeholders) ✓, conventions (meta.toml, marketplace, gen-check) ✓, loads (skillsmith verify static pass both tools, 0 err/0 warn) ✓
-- [ ] [P22-T06] Release: harness version bump + RELEASE-NOTES (via skill-harness-release)
+- [x] [P22-T06] Release: harness version bump + RELEASE-NOTES (shipped in marketplace v0.14.0)
 
 ---
 
