@@ -352,4 +352,132 @@ explicitly routing Lima/VM/sandbox execution-environment setup to the new
 
 ---
 
+## [x] Project P22: repo-finder plugin — one-command repo resolution for agents (plugin v0.1.0)
+**Goal**: New single-skill plugin `repo-finder`: thin skill + single-file zero-dependency uv
+Python CLI resolving repo names to local paths + identity facts (origin, default branch,
+checkout/worktree/nested kind with worktree→main linkage, branch, dirty, tooling profile)
+via config-bounded multi-root depth scan; gh REST-first remote org fallback (GraphQL as
+configured fallback); deterministic ranking (kind → root order → depth; recency displayed,
+never ranked — the consuming LLM decides). Evidence-based: dual session-history audit
+(2026-07-19, 164 Claude + 505 Codex sessions) found ~1 in 8 sessions burning tokens on repo
+location/identity (~90K tokens direct, 500–10K per episode, resident for 25–581 turns), plus
+pervasive gh GraphQL rate-limit errors motivating REST-first. Conforms to CLI Design
+Standard v1.4.14 (small-CLI profile, minimal tier; CONFORMANCE.md seeded). Phase 2 (not
+started): cache tier, primarily for remote facts.
+
+### Tests & Tasks
+- [x] [P22-TS01] Test suite first: 20 subprocess tests (fixture tree with checkout, group-dir, worktree, vendored-nested, excluded; exit codes 0/2/3/4/5; JSON contract + error schema; REST-first gh stub; init conflict) — all pass
+- [x] [P22-T01] CLI script `skills/repo-finder/scripts/repo-finder` (uv shebang, stdlib-only, argparse verb-first)
+- [x] [P22-T02] Interface spec `docs/cli-interface.md` + `CONFORMANCE.md` (cli-standards plan mode, v1.4.14 pinned)
+- [x] [P22-T03] SKILL.md (agent-side trigger description, ≤1000 chars) + plugin.meta.toml; `just gen`/`gen-check` clean
+- [x] [P22-T04] Docs: `docs/skills/repo-finder.md` + README section + plugin/skill counts
+- [x] [P22-T05] Dev placements on both tools (dev symlinks, claude-code then codex; static verify pass both)
+- [x] [P22-TS02] skill-quality gate: content (desc 830 chars, no collisions, least-privilege Bash, no personal paths) ✓, docs (page + README, zero placeholders) ✓, conventions (meta.toml, marketplace, gen-check) ✓, loads (static load verification pass both tools, 0 err/0 warn) ✓
+- [x] [P22-T06] Release: harness version bump + RELEASE-NOTES (shipped in marketplace v0.14.0)
+
+---
+
+## [ ] Project P23: repo-finder phase 2 — remote-only TTL cache (plugin v0.3.0; shrinks after P24 — search-filtered find no longer needs org-list caching)
+**Goal**: Cache the one thing v1 still fetches live from the network: gh org repo listings.
+Store per-org as `$XDG_CACHE_HOME/repo-finder/orgs/<org>.json` with a `fetched_at` stamp;
+config gains `[cache] enabled = true` / `ttl_hours = 24`; R5.9 controls `--refresh` (force
+refetch) and `--no-cache`; stale-but-present list served with a stderr note when gh is
+unreachable (graceful offline); corrupt cache self-heals by refetch. CONFORMANCE.md caching
+axis flips to yes. Evaluated 2026-07-19: v1's live local reads already eliminated the
+audited token waste — this is latency/API-budget convenience on the miss path only
+(~1–2s + 1–4 REST calls per remote event, low single digits/week). Explicitly rejected:
+caching the local scan (stale-path risk vs <1s saved; live facts can't be cached anyway).
+
+### Tests & Tasks
+- [ ] [P23-TS01] Tests first: TTL expiry triggers refetch; `--refresh` bypasses fresh cache; offline falls back to stale with stderr note; corrupt cache file self-heals
+- [ ] [P23-T01] Cache read/write + TTL in `gh_org_repos`; `[cache]` config keys; `--refresh`/`--no-cache` flags
+- [ ] [P23-T02] Docs: cli-interface.md (flags, cache path), CONFORMANCE.md caching axis + R5.9, skill page note
+- [ ] [P23-T03] plugin.meta.toml 0.1.0 → 0.2.0; `just gen`/`gen-check`; re-run skill-quality
+
+---
+
+## [x] Project P24: repo-finder v0.2.0 — remote correctness round (user feedback 2026-07-19)
+**Goal**: Fix four field-tested findings from first real use. F1 (🔴): remote failures
+silently collapse into "not in configured roots" (`gh_org_repos` → None swallowed by
+`or []`) — track remote state, branch the miss message, exit 1 for degraded searches per
+R6.3 partial-failure (not 5; R6.1 reserves 5 for conflict), JSON code `remote_lookup_failed`.
+F2 (🔴 at 500-600 repos): `per_page=100` single page silently truncates → false not-founds;
+`find` switches to server-side name filtering via the Search API (one call, KBs, vs 6+
+paginated calls, MBs), `org` paginates internally with `--limit` as total cap + truncation
+warning. F3 (🟡): rate-limit detection by stderr prose → authoritative `gh api rate_limit`
+check on failure. F4: skill-native script invocation contract (PATH → announced skill base
+dir → well-known placements), cross-platform Claude Code + Codex, any install mode —
+bootstrap-repo PATH plumbing explicitly rejected as machine-specific.
+
+### Tests & Tasks
+- [x] [P24-TS01] Tests first per finding: degraded-state trio (failed org → exit 1 + honest message + JSON schema), search-path stub for find, org pagination + truncation warning, rate-limit authoritative check
+- [x] [P24-T01] F1: remote_state/failed_orgs tracking, branched hints, exit 1 degraded
+- [x] [P24-T02] F2: Search API find (live-verify user:/org: qualifier mechanics first), paginated org + warning
+- [x] [P24-T03] F3: `gh api rate_limit` authoritative detection, prose match demoted to hint
+- [x] [P24-T04] F4: SKILL.md invocation ladder, cross-platform
+- [x] [P24-T05] Docs/spec/CONFORMANCE updates (exit table, R10.3 waiver narrowed), meta 0.2.0, gen, skill-quality re-gate, commit
+
+---
+
+## [x] Project P25: question-walkthrough — adaptive one-question-at-a-time decision engine (plugin v0.1.0)
+**Goal**: New single-skill plugin: gather open questions from four sources (conversation
+mining, pointed-at doc, inline list, task systems), confirm the pile, sequence by leverage
+(answers that could moot/reshape others first), walk one AskUserQuestion at a time with
+explain-anatomy context, re-plan the remaining pile after EVERY answer (drop mooted loudly,
+reorder, add follow-ups with consent), record decisions at their source, close with an
+outcome table. Carved vs project-refine (project scoping), html-codesign (async batch page),
+explain (owns context anatomy). Built first in the 2026-07-19 three-skill round because
+session-loose-ends (smorin-harness P16) delegates its confirmation loop to this engine.
+Name chosen for future family grammar (question-*).
+
+### Tests & Tasks
+- [x] [P25-T01] SKILL.md (desc 988 chars, pure markdown); plugin.meta.toml; gen/gen-check green
+- [x] [P25-T02] Docs page + README section + counts (eight plugins, twenty skills)
+- [x] [P25-TS01] Gate: dev placements both tools, static verify pass, no placeholders
+- [x] [P25-TS02] Deep load verification: session-backed load pass both tools (claude 2.1.215, codex 0.144.6), no findings
+
+---
+
+## [x] Project P26: reader-steps — agent→human handoff style spec (plugin v0.1.0)
+**Goal**: New single-skill plugin distilled from a field-submitted "i-have-adhd" skill via a
+question-walkthrough design session (2026-07-19): keep the manual-steps discipline, drop the
+global always-on styling. Three trigger classes (agent-impossible actions, manual
+verification handoffs, user-claimed work; decisions explicitly excluded — asked via
+question-walkthrough, never listed); seven block rules (end placement, done-so-far recap,
+numbered verb-first bounded steps, exact values, inline mentions restated, ✓ verification
+per step, no tangents/closes with next move); cross-turn live-instruction restating with
+position + completion sweep; matter-of-fact error shape incl. failed reader steps.
+Architecture: skill = canonical spec; always-on ~12-line digest deployed to
+~/.claude/CLAUDE.md (via smorin-bootstrap dotfiles) and ~/.codex/AGENTS.md — a skill can't
+reliably self-trigger on what a response turns out to contain.
+
+### Tests & Tasks
+- [x] [P26-T01] SKILL.md (desc 988 chars) + plugin.meta.toml; gen/gen-check green
+- [x] [P26-T02] Docs page + README section + counts (nine plugins, twenty-one skills)
+- [x] [P26-T03] Digests: dotfiles/claude-CLAUDE.md (smorin-bootstrap) + ~/.codex/AGENTS.md
+- [x] [P26-TS01] Gate: placements both tools, static verify pass, no placeholders
+
+---
+
+## [x] Project P27: reader-steps v2 — format spec from five prototyping rounds (plugin v0.2.0)
+**Goal**: Turn the v1 prose rules into a full format spec, designed by rendering one realistic
+handoff in competing formats each round (2026-07-19/20). Landed: bounded frame (blockquote
+rail as container, horizontal rules separating header/steps/footer); header carrying
+`0/N · [tracked-id] · tag XX` with a `Completes:` binding by exact ID and title; steps
+grouped by surface under merged intent-carrying dividers; five surfaces incl. new 🖥️ desktop/
+system UI; outcome-titles rule (titles never echo button labels — dissolves title/body
+redundancy); notation contract (mono = type it, bold = click it, ▸ = one hop); ✓ default with
+`Done when:` escalation; scale ladder (1 step inline / 2–3 light / 4+ full / 8+ adds Map and
+Stop points with divider ranges); breadcrumb → hop-per-line past ~3 hops or on a caveat;
+reactive actions nested inside their triggering step; cross-turn scoreboard re-render;
+count/ID consistency rule. Worked renders split to references/formats.md per house style.
+
+### Tests & Tasks
+- [x] [P27-T01] SKILL.md rewritten (desc 996 chars) + references/formats.md with renders at every scale
+- [x] [P27-T02] Both always-on digests refreshed (dotfiles/claude-CLAUDE.md, dotfiles/codex-AGENTS.md in smorin-bootstrap)
+- [x] [P27-T03] plugin.meta.toml 0.1.0 → 0.2.0; docs page + README row rewritten; gen/gen-check green
+- [x] [P27-TS01] Gate: static verify caught a YAML colon-space in the description (would have loaded with all frontmatter silently dropped) — fixed, re-verified pass
+
+---
+
 - [ ] Regression Test Status

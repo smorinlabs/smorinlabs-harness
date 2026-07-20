@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.13.0"
+    "version": "0.14.0"
   },
   "plugins": [
     {
@@ -67,6 +67,56 @@
         "audit",
         "roadmap",
         "workflow"
+      ]
+    },
+    {
+      "name": "question-walkthrough",
+      "source": "./plugins/question-walkthrough",
+      "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time with just-enough anchored context per item. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source (document edits, task updates) and summarized in a final outcome table with parked items called out. Pure-markdown skill, portable across Claude Code and Codex.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "questions",
+        "decisions",
+        "walkthrough",
+        "triage",
+        "interactive",
+        "one-by-one",
+        "todos"
+      ]
+    },
+    {
+      "name": "reader-steps",
+      "source": "./plugins/reader-steps",
+      "description": "Style spec for rendering actions only the reader can or will perform: a delineated task block toward the response's end \u2014 bounded frame (blockquote rail plus horizontal rules), a Completes line binding it to the tracked item by exact ID and title, steps numbered with a stable tag and grouped by surface (terminal, browser, desktop/system UI, phone, physical world) under merged dividers, each step titled by its outcome with the literal command or UI path below it and a \u2713 verification line, closing with the immediate next move. Scales down to a one-line inline form for a single step and up with a map and stop points past eight; breadcrumb navigation promotes to one hop per line past three hops or on any caveat; reactive actions nest inside the step that triggers them; in-flight processes re-render across turns as a progress scoreboard; errors state cause and fix. Decisions are never steps \u2014 they are asked (question-walkthrough) before instructing. Canonical spec behind an always-on digest users keep in global instructions.",
+      "version": "0.2.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "style",
+        "instructions",
+        "manual-steps",
+        "handoff",
+        "verification",
+        "reader",
+        "output",
+        "scannability"
+      ]
+    },
+    {
+      "name": "repo-finder",
+      "source": "./plugins/repo-finder",
+      "description": "One-command repo resolution for agents: resolve a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling) via a config-bounded multi-root scan \u2014 falling back to the user's configured GitHub orgs over gh REST-first (GraphQL only as configured fallback) for exact clone names. Deterministic ranking (checkouts, then worktrees labeled with their main repo, then nested copies); recency displayed, not ranked, so the consuming LLM decides. Single-file zero-dependency uv Python script inside the skill; conforms to the CLI Design Standard (small-CLI profile, minimal tier). Replaces token-expensive ls/find cascades and repeated gh repo view identity checks.",
+      "version": "0.2.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "repo",
+        "finder",
+        "git",
+        "worktree",
+        "github",
+        "org",
+        "cli",
+        "agent-tools"
       ]
     },
     {
