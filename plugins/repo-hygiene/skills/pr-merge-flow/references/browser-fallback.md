@@ -19,7 +19,7 @@ budget. Same effect, different quota pool.
 |---|---|---|
 | Which threads are unresolved? | GraphQL `reviewThreads.isResolved` | the thread's own rendered state — **Resolve conversation** vs **Unresolve conversation** |
 | Close a thread | GraphQL `resolveReviewThread` | click **Resolve conversation** |
-| The thread list + `databaseId` | REST `…/pulls/{n}/comments` — **keep using this** | not needed; see below |
+| The thread list + comment `id` | REST `…/pulls/{n}/comments` — **keep using this** | not needed; see below |
 | Post a thread reply | REST `…/comments/{id}/replies` — **keep using this** | never |
 
 ## Target one thread at a time — never enumerate
@@ -27,12 +27,47 @@ budget. Same effect, different quota pool.
 The failure mode that makes this dangerous is clicking the *wrong* thread's
 button. The fix is not a better enumeration; it is to stop enumerating.
 
-REST already gives the authoritative thread list, each with its `databaseId` —
-and GitHub renders a permalink `#discussion_r<databaseId>` for every thread.
-The same ID on both sides is the bridge. So drive the browser **per thread, by
+REST already gives the authoritative thread list, each with its integer `id` —
+and GitHub renders a permalink `#discussion_r<id>` for every thread. The same
+integer on both sides is the bridge. So drive the browser **per thread, by
 ID**:
 
-- `navigate` to `…/pull/$N#discussion_r<databaseId>` — GitHub scrolls to and
+### The ID correlation table — how identifiers match across tools
+
+Three surfaces name the same objects differently, and mixing them up is how a
+run resolves the wrong thread. Worked example from a real PR:
+
+| Object | REST (`…/pulls/{n}/comments`) | GraphQL (`reviewThreads`) | Web page |
+|---|---|---|---|
+| **Top comment, integer** | `id` → `3617915140` | `comments.nodes[].databaseId` → `3617915140` | anchor `#discussion_r3617915140` |
+| **Top comment, node** | `node_id` → `PRRC_kwDOTO0m-s7XpQEE` | the comment's GraphQL `id` | — |
+| **Thread** | **no thread object at all** — threads are implied by `in_reply_to_id` chains | `reviewThreads.nodes[].id` → `PRRT_kwDOTO0m-s6SZa7N` | the rendered thread block |
+
+Read that table carefully, because two consequences fall out of it:
+
+- **The comment integer is the REST ↔ web bridge.** REST's `id`, GraphQL's
+  `databaseId`, and the page's `discussion_r…` suffix are all the same number.
+  That is what makes per-thread anchoring possible, and it is the only
+  identifier that appears on all three surfaces.
+- **The thread node id (`PRRT_…`) is GraphQL-only**, and it is what
+  `resolveReviewThread` requires. So when GraphQL is exhausted you cannot even
+  *name* the thread to the mutation — which is why waiting is not the only
+  answer and the browser path exists. The browser resolves by clicking a
+  control it reached through the comment integer, an identifier REST still
+  serves.
+
+Prefixes are a useful sanity check: `PRRC_` is a review **c**omment,
+`PRRT_` is a review **t**hread. If a `PRRT_` value ever shows up where a
+comment id belongs (or a bare integer where a node id belongs), stop — the
+correlation is wrong, and a wrong correlation resolves the wrong thread.
+
+> **Field name matters.** The REST review-comments endpoint returns `id` (and
+> `node_id`); there is no `databaseId` field on it — that is GraphQL's name for
+> the same integer. `id` is what the reply path
+> (`…/comments/{comment_id}/replies`) and the `#discussion_r…` anchor both
+> take.
+
+- `navigate` to `…/pull/$N#discussion_r<id>` — GitHub scrolls to and
   renders that specific thread;
 - `read_page` then contains that thread's controls **and** its permalink,
   which confirms which thread you are looking at before you touch anything.
@@ -186,7 +221,7 @@ tab, confirm identity, anchor to one thread, click its control, verify that
 thread. A role with no equivalent is a `stop`, not something to approximate.
 
 1. **Build the inventory over REST** — `…/pulls/{n}/comments?per_page=100`
-   gives every comment with `databaseId`, `path`, `line`, `author`, and
+   gives every comment with its integer `id`, `path`, `line`, `author`, and
    `in_reply_to_id`. Top-level entries (`in_reply_to_id == null`) are the
    threads. This list is authoritative; the page is not.
 2. **Enter through the harness's entry point** from the availability table. If
@@ -209,13 +244,13 @@ Then, **for each thread, one at a time**:
    leaves a replied-but-open thread, which is honest and recoverable, rather
    than a resolved-but-unexplained one.
 7. **Anchor to that thread** — `navigate` to
-   `…/pull/$N#discussion_r<databaseId>`. This renders it; without anchoring or
+   `…/pull/$N#discussion_r<id>`. This renders it; without anchoring or
    scrolling, its controls are not in the tree at all.
 8. **`read_page`** (`filter: "interactive"`) and confirm the thread's permalink
-   `#discussion_r<databaseId>` is present and matches the thread you intend.
+   `#discussion_r<id>` is present and matches the thread you intend.
    Not present → `scroll_to` a `find` ref and re-read; still absent after that
    → treat as a failed interaction and move on. **Never click a Resolve button
-   you have not tied to a specific `databaseId`.**
+   you have not tied to a specific comment `id`.**
 9. **Click that thread's Resolve control by `ref`** with `computer`
    `left_click`. Prefer `ref` over `coordinate`: it names the element and
    cannot drift when the page reflows. Coordinates from a screenshot are a last
@@ -268,9 +303,9 @@ a capability is absent. Report a blocked attempt as blocked, not as proof.
 - **Never merges.** The merge decision stays on the API path behind the mode
   gate — a browser click is not a mode gate.
 - **Never closes a PR**, never edits the title, never pushes.
-- **Never replies.** Replies ride REST, which carries the `databaseId` and the
+- **Never replies.** Replies ride REST, which carries the comment `id` and the
   audit trail.
-- **Never resolves a thread it has not identified** by `databaseId` at step 8.
+- **Never resolves a thread it has not identified** by comment `id` at step 8.
 - **Never uses `javascript_tool`.** Clicking a button does not need arbitrary
   page script; the grant is deliberately absent, as are `file_upload`,
   `gif_creator`, and `read_network_requests`.

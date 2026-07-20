@@ -52,7 +52,7 @@ driving the GitHub web UI, whose session-authenticated internal endpoints do not
 draw on the token's GraphQL budget. It is an **escape hatch, not a fourth
 rung** — never reached for a call REST can still make, and never used to poll.
 It works one thread at a time, anchored to that thread's own
-`#discussion_r<databaseId>` from the REST inventory, so it never has to
+`#discussion_r<id>` from the REST inventory, so it never has to
 enumerate controls or guess which button belongs to which thread.
 
 Before reaching for it, check the reset clock: GraphQL quota resets hourly, so

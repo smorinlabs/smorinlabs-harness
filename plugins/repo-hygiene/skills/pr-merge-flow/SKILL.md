@@ -65,24 +65,28 @@ only other GraphQL use — GraphQL is never polled. Inventory every unresolved
 thread: id, author, file/line, the concrete claim.
 
 If that GraphQL read is rate-limited, build the inventory from REST instead —
-it carries every field except `isResolved`, including the `databaseId` replies
-and anchors need — and get that one bit from the PR's web UI per
+it carries every field except `isResolved`, including the integer comment `id`
+that replies and anchors both need (GraphQL calls the same number `databaseId`;
+REST has no such field) — and get that one bit from the PR's web UI per
 `references/browser-fallback.md`, gated and reset-guarded.
 
 ### Keep a thread ledger — the set is live, not a snapshot
 
 Threads keep arriving. Every push can trigger fresh reviews, bots finish at
 different times, and a reviewer can post while you are mid-triage. Maintain a
-**ledger keyed by `databaseId`** and treat it — never a single fetch, and never
+**ledger keyed by comment `id`** and treat it — never a single fetch, and never
 a count — as the source of truth.
 
 Each entry carries: author, file/line, the concrete claim, and its state
 through `discovered → verdict → fixed → replied → resolved`.
 
 Re-fetch the REST inventory at the start of every cycle and after every push,
-then **merge**: ids already in the ledger keep their state; ids you have not
-seen enter at `discovered` and go through the identical loop — verify,
-validate, then either refute-and-resolve or fix-comment-resolve. A rising
+then **merge by id**. The id is what distinguishes a genuinely new finding from
+one already investigated: ids already in the ledger keep their state and are
+never re-triaged, re-replied, or re-argued; ids you have not seen enter at
+`discovered` and go through the identical loop — verify, validate, then either
+refute-and-resolve or fix-comment-resolve. Never diff by body text, position,
+or count — reviewers reword and re-post, and only the id is stable. A rising
 thread count is the normal lifecycle, not a failed read and not a reason to
 re-plan.
 
@@ -112,7 +116,7 @@ When the resolve mutation is rate-limited, the verdicts and fixes are
 unchanged and only the closing move relocates: reply over REST first (it rides
 the healthy core budget), then resolve that thread in the browser per
 `references/browser-fallback.md` — anchored to its own
-`#discussion_r<databaseId>`, never picked out of an enumerated list — and
+`#discussion_r<id>`, never picked out of an enumerated list — and
 verify that thread flipped. Reply-first is the invariant: a failed browser leg
 must leave a replied-but-open thread, never a silent resolve. If the browser is
 unavailable too, replied-but-open is the correct resting state and the Iron Law
@@ -240,7 +244,8 @@ impossible a guard already blocked it; divergence is a human decision.
 | "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
 | "`--auto` means don't ask before opening the browser" | `--auto` suppresses review-judgment questions, not consent to drive the user's logged-in Chrome. The browser gate fires in every mode. |
 | "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose; they never target. The browser path is read-only, so a click is never the answer. |
-| "`read_page` shows no Resolve button, so it cannot be clicked" | It shows what is *rendered*. Anchor to `#discussion_r<databaseId>` first — depth is the wrong axis, scroll position is the right one. |
+| "`read_page` shows no Resolve button, so it cannot be clicked" | It shows what is *rendered*. Anchor to `#discussion_r<id>` first — depth is the wrong axis, scroll position is the right one. |
+| "An id is an id — I'll reuse it on the other surface" | REST `id`, GraphQL `databaseId`, and `#discussion_r<id>` are one integer; the thread node id (`PRRT_…`) is GraphQL-only. Check the correlation table in `browser-fallback.md` before crossing surfaces. |
 | "The button list shrank, so the click worked" | Counting is not verification: the page renders lazily and bots post mid-run, so totals move on their own. Re-read *that* thread's own state. |
 | "I tried twice and it failed, so it is impossible" | Negative results need the same rigor as positive ones. Vary the axis that matters before concluding anything is impossible — and never cite a rule from this skill as proof a capability is absent. |
 | "Every finding is valid, but there are a lot — let me ask how to proceed" | Valid is not unclear. The rubric already names the action: fix, commit, reply, resolve. Ask only when a verdict is genuinely undecidable, never about strategy. |

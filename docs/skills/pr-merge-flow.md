@@ -19,15 +19,15 @@ skill on Claude Code, the `chrome@openai-bundled` plugin on Codex, a clean
 degrade to a ready-report on any harness with neither) that drives the PR's web
 UI, whose session-authenticated endpoints draw on a different quota pool. It
 works **one thread at a time**: REST supplies the authoritative thread list with
-each `databaseId`, the browser anchors to that thread's own
-`#discussion_r<databaseId>` so identity is never guessed, replies still post
+each comment `id`, the browser anchors to that thread's own
+`#discussion_r<id>` so identity is never guessed, replies still post
 over REST first, and each resolve is verified by re-reading *that* thread rather
 than counting buttons. It confirms the page's owner/repo/PR identity before
 trusting a word of it, is gated in *every* mode including `--auto` because
 driving a logged-in browser is not something automation should assume, keeps
 screenshots ephemeral unless you consent to saving one, and degrades after 2–3
 failures to an honest report of which threads were resolved, replied-to, or
-untouched. Throughout, threads are tracked in a **ledger keyed by `databaseId`**
+untouched. Throughout, threads are tracked in a **ledger keyed by comment `id`**
 and re-merged every cycle — new reviewer comments arriving mid-run are the
 normal lifecycle, and the run is complete only when every ledger entry is
 resolved. After a successful merge it runs a read-only cleanup survey — local and remote PR
