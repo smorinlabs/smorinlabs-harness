@@ -511,6 +511,7 @@ ready-report naming which threads were resolved, replied-to, or untouched.
 - [x] [P28-T05] plugin.meta.toml 0.3.0 → 0.4.0; gen + gen-check green (all three manifests carry 0.4.0)
 - [x] [P28-T06] Docs page + README row refreshed
 - [x] [P28-T08] Post-review fixes: `read_page` restored (find caps at 20 matches — wrong-thread click risk); screenshots allowed as diagnostic-only, clicks stay `ref`-based (no grant change — `screenshot`/`zoom` are `computer` actions)
+- [x] [P28-T09] Cross-tool browser entry points: availability table (Claude Code `claude-in-chrome` / Codex `chrome@openai-bundled` / neither → `stop`); ruled out `browser@openai-bundled` (in-app browser has no logged-in GitHub session) and `computer-use@openai-bundled` (no element refs → would force forbidden coordinate clicking); ref rule holds on every harness
 - [x] [P28-TS01] Gate: skill-quality on pr-merge-flow; static verify both tools
 - [x] [P28-T07] Commits 8e3f848 / 13d8e52 / 502e5a6 on `feat/pr-merge-flow-browser-fallback` (rebased onto origin/main — release/v0.14.0 was squash-merged as 998ce09)
 

@@ -17,7 +17,9 @@ only to read thread resolution state and post the resolve mutation). Those two
 GraphQL operations have no REST equivalent, so an exhausted GraphQL budget
 would otherwise stall the whole flow — the ladder cannot help, since all three
 rungs bill the same endpoint. For that one case there is an escape hatch: a
-**Chrome browser fallback** that drives the PR's web UI, whose
+**Chrome browser fallback** — the `claude-in-chrome` skill on Claude Code, the
+`chrome@openai-bundled` plugin on Codex, and a clean degrade to a ready-report
+on any harness with neither — that drives the PR's web UI, whose
 session-authenticated internal endpoints draw on a different quota pool
 entirely. It is deliberately narrow — those two operations only, never a poll,
 never a merge — and guarded on both ends: the reset clock decides between

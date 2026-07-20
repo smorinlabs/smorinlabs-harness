@@ -36,22 +36,41 @@ Note the third row: replies ride the **core** budget, which is separate and far
 larger (5000/hr) and which this flow barely touches. In the ordinary failure
 only the two GraphQL operations need rescuing.
 
-## Availability — check before anything else
+## Availability — pick the harness's entry point first
 
-This fallback needs browser-automation tooling in the running harness: the
-`mcp__claude-in-chrome__*` tools, whose documented entry point is the
-`claude-in-chrome` skill. That tooling ships with Claude Code and is **not**
-part of this plugin or this repo.
+This fallback needs browser-automation tooling, which ships with the harness,
+**not** with this plugin or this repo. `pr-merge-flow` is cross-tool and every
+other step works everywhere; only this escape hatch is harness-dependent.
 
-Where it is absent — Codex and any other harness without a browser-automation
-MCP server, or Claude Code with the extension not installed — the fallback
-simply does not exist. That is a `stop`, not a `browser`: report the threads
-honestly and downgrade to a ready-report. Never treat missing tooling as a
-failed attempt, and never spend the degrade budget rediscovering it.
+| Harness | Entry point | Drive |
+|---|---|---|
+| **Claude Code** | the `claude-in-chrome` skill — invoke it before any `mcp__claude-in-chrome__*` call | `read_page` for refs, `computer` to click |
+| **Codex** | the **`chrome@openai-bundled`** plugin, driven through the `node_repl` MCP server (`BROWSER_USE_AVAILABLE_BACKENDS` includes `chrome`) | whatever element-reference and click surface that plugin exposes |
+| neither present | — | `stop` → ready-report |
 
-`pr-merge-flow` itself is cross-tool and every other step works everywhere;
-only this escape hatch is harness-dependent. On a harness without it, an
-exhausted GraphQL budget leaves waiting out the reset as the only route.
+Confirm the entry point is actually installed and enabled before routing to
+`browser` (Codex: `codex plugin list`, `codex mcp list`). Missing tooling is a
+`stop`, not a failed attempt — report honestly and never spend the degrade
+budget rediscovering the absence.
+
+### Why the Chrome plugin on Codex, and not the other two
+
+Codex ships two neighbours that look like candidates and are not:
+
+- **`browser@openai-bundled`** drives the *in-app* browser. The entire premise
+  here is GitHub's session-authenticated endpoints — a browser that is not the
+  user's logged-in Chrome has no such session, so it cannot resolve anything.
+- **`computer-use@openai-bundled`** drives desktop apps generically. It offers
+  no accessibility refs, so every click would be coordinate-targeted — exactly
+  what *What the browser never does* forbids, and for good reason on a mutating
+  action like resolving a thread. OpenAI's own bundled guidance points the same
+  way: prefer the Chrome plugin over Computer Use unless the user asks
+  otherwise.
+
+**The ref rule holds on every harness.** If a harness's browser tooling exposes
+only coordinates and no element references, that is a `stop`, not a licence to
+pixel-click a mutating control — degrade to the ready-report and let the reset
+clock or the user decide.
 
 ## When this fires
 
@@ -138,11 +157,16 @@ argument.
 
 ## Procedure
 
-1. **Enter through the harness's browser-automation entry point** — on Claude
-   Code that is the `claude-in-chrome` skill, which must be invoked before any
-   `mcp__claude-in-chrome__*` call. If no such entry point exists, the
-   availability check above has already routed this to `stop`; do not improvise
-   a way in.
+Tool names below are Claude Code's. On Codex, map each **role** onto the Chrome
+plugin's equivalent — the roles and their order are what matter, not the names:
+open a fresh tab, read state as text, enumerate controls as references, click a
+reference, re-read to verify. A role with no equivalent on the harness is a
+`stop`, not something to approximate.
+
+1. **Enter through the harness's entry point** from the availability table —
+   the `claude-in-chrome` skill on Claude Code, the `chrome@openai-bundled`
+   plugin on Codex. If neither is present the availability check has already
+   routed this to `stop`; do not improvise a way in.
 2. `tabs_context_mcp` — also the connectivity probe. An error here means the
    extension is not connected: degrade, do not retry.
 3. `tabs_create_mcp` — always a **new** tab. Never reuse a tab the user has
