@@ -204,6 +204,7 @@ impossible a guard already blocked it; divergence is a human decision.
 | "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
 | "`--auto` means don't ask before opening the browser" | `--auto` suppresses review-judgment questions, not consent to drive the user's logged-in Chrome. The browser gate fires in every mode. |
 | "Clicked Resolve — thread's closed" | A click is not a result. Re-read the state and confirm it flipped, every thread, every time. |
+| "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose; they never target. A real control is in `read_page`'s tree with a `ref`; one that isn't is a finding to report. |
 
 ## See also
 

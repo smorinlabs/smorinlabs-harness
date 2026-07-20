@@ -29,7 +29,8 @@ The browser tools split three ways, and the split is load-bearing:
 | `get_page_text` | read thread state + the unresolved counter | plain text, no element refs — cannot produce a click target |
 | `read_page` (`filter: "interactive"`) | enumerate every Resolve button with a stable `ref` | the only deterministic enumeration; `find` caps at 20 matches with no pagination |
 | `find` | shortcut to one named element | convenience only — never used to enumerate threads |
-| `computer` `left_click` by `ref` | the click itself | `ref` beats `coordinate`: no screenshot, no pixel arithmetic, no drift on reflow |
+| `computer` `left_click` by `ref` | the click itself | `ref` beats `coordinate`: no pixel arithmetic, no drift on reflow |
+| `computer` `screenshot` / `zoom` | diagnose when the text path cannot explain the page | seeing only — never a click target; see *Screenshots* below |
 
 Note the third row: replies ride the **core** budget, which is separate and far
 larger (5000/hr) and which this flow barely touches. In the ordinary failure
@@ -152,15 +153,44 @@ argument.
    forbids.
 8. Click that thread's **Resolve conversation** button with `computer`
    `left_click` **by `ref`, never by coordinate**. The ref comes from step 6's
-   tree and names the element directly, so the flow needs no screenshot and no
-   pixel arithmetic — and cannot drift when the page reflows between reading
-   and clicking. Off-screen button → `computer` `scroll_to` with the same ref.
+   tree and names the element directly, so the ordinary path needs no
+   screenshot and no pixel arithmetic — and cannot drift when the page reflows
+   between reading and clicking. Off-screen button → `computer` `scroll_to`
+   with the same ref. (When the click does *not* take, a screenshot is the
+   right next move — see *Screenshots* below.)
 9. **Verify the mutation landed** — re-read the thread's state and confirm it
    flipped to resolved and the unresolved count decremented. A click is not a
    result. Never assume; never batch-click and check once at the end. Refs can
    go stale when the page re-renders after a resolve: if a subsequent click
    reports a missing element, re-run step 6 for a fresh map rather than
    retrying the old ref.
+
+## Screenshots — diagnostic only
+
+`computer`'s `screenshot` and `zoom` actions are available and should be used
+when the text path cannot explain what is happening. No extra grant is needed:
+they are actions of `computer`, which is already held.
+
+Reach for one when:
+
+- a click reported success but step 9's re-read shows the thread did not flip —
+  see what the page actually did;
+- the accessibility tree and `get_page_text` disagree, or neither describes
+  what is clearly a rendered control;
+- the page is not the expected PR view at all — a login wall, an SSO or 2FA
+  prompt, an abuse/rate-limit interstitial, a conflict or permissions banner.
+  Diagnosing this in one image beats three blind retries;
+- the run is about to degrade and the user deserves to see why — take it with
+  `save_to_disk: true` and attach it to the report.
+
+The boundary: a screenshot informs the **decision to continue or degrade**. It
+never becomes a click target. Reading a button's position off an image and
+clicking those coordinates is the brittle path this fallback exists to avoid —
+if a control is real, it is in `read_page`'s tree with a `ref`; if it is not in
+the tree, that is a finding to report, not a pixel to aim at.
+
+Screenshots count toward the degrade budget below: they are for understanding a
+failure, not for retrying past one.
 
 ## Degrade path
 
@@ -171,7 +201,10 @@ and do not explore other pages.
 On stopping, report the split explicitly: which threads were resolved, which
 were replied-to but left open, which were untouched. Then downgrade the run to
 a ready-report. A partial browser pass is a fine outcome as long as it is
-stated accurately.
+stated accurately. When the cause is visual rather than describable — an
+interstitial, an unexpected banner, a control that is not in the tree — attach
+a `save_to_disk` screenshot so the user sees the blocker rather than a
+paraphrase of it.
 
 ## What the browser never does
 
@@ -181,9 +214,9 @@ stated accurately.
 - **Never uses `javascript_tool`.** Clicking a button does not need arbitrary
   page script; the grant is deliberately absent, as are `file_upload`,
   `gif_creator`, and `read_network_requests`.
-- **Never takes a screenshot.** State comes from `get_page_text`, click targets
-  from `read_page`'s accessibility tree, and clicks go by `ref` — the pixel
-  path is never needed, so `computer`'s `screenshot` action stays unused.
+- **Never clicks by coordinate.** Screenshots are allowed for *seeing* (below);
+  they are never an on-ramp to pixel-targeted clicking. Every click goes by
+  `ref`, which is what survives a page reflow between reading and clicking.
 - **Never triggers a dialog.** A JS dialog blocks every subsequent extension
   command and ends the session.
 - **Never polls.** This is a fallback for two operations, not a monitor. Waits
