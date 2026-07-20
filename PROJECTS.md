@@ -402,6 +402,27 @@ Name chosen for future family grammar (question-*).
 
 ---
 
+## [x] Project P25: reader-steps — agent→human handoff style spec (plugin v0.1.0)
+**Goal**: New single-skill plugin distilled from a field-submitted "i-have-adhd" skill via a
+question-walkthrough design session (2026-07-19): keep the manual-steps discipline, drop the
+global always-on styling. Three trigger classes (agent-impossible actions, manual
+verification handoffs, user-claimed work; decisions explicitly excluded — asked via
+question-walkthrough, never listed); seven block rules (end placement, done-so-far recap,
+numbered verb-first bounded steps, exact values, inline mentions restated, ✓ verification
+per step, no tangents/closes with next move); cross-turn live-instruction restating with
+position + completion sweep; matter-of-fact error shape incl. failed reader steps.
+Architecture: skill = canonical spec; always-on ~12-line digest deployed to
+~/.claude/CLAUDE.md (via smorin-bootstrap dotfiles) and ~/.codex/AGENTS.md — a skill can't
+reliably self-trigger on what a response turns out to contain.
+
+### Tests & Tasks
+- [x] [P25-T01] SKILL.md (desc 988 chars) + plugin.meta.toml; gen/gen-check green
+- [x] [P25-T02] Docs page + README section + counts (nine plugins, twenty-one skills)
+- [x] [P25-T03] Digests: dotfiles/claude-CLAUDE.md (smorin-bootstrap) + ~/.codex/AGENTS.md
+- [x] [P25-TS01] Gate: placements both tools, static verify pass, no placeholders
+
+---
+
 ## [ ] Project P22: repo-finder phase 2 — remote-only TTL cache (plugin v0.3.0; shrinks after P23 — search-filtered find no longer needs org-list caching)
 **Goal**: Cache the one thing v1 still fetches live from the network: gh org repo listings.
 Store per-org as `$XDG_CACHE_HOME/repo-finder/orgs/<org>.json` with a `fetched_at` stamp;

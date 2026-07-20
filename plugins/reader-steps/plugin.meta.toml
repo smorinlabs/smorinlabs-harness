@@ -1,0 +1,5 @@
+name = "reader-steps"
+version = "0.1.0"
+description = "Style spec for rendering actions only the reader can or will perform: a self-contained task block toward the response's end — done-so-far recap, numbered verb-first bounded steps with exact commands/paths/values, inline mentions restated in full, a verification clause per step, no tangents, closing with the immediate next move — plus cross-turn restating of in-flight manual processes with position and a visible completion, and matter-of-fact error shape (cause + fix, corrected step restated). Triggers: agent-impossible actions, manual verification handoffs, and user-claimed work; decisions are explicitly not steps (they get asked, via question-walkthrough). Ships as the canonical spec behind an always-on digest users keep in their global instructions. Distilled from a field-submitted ADHD-output skill, keeping the manual-steps discipline and dropping the global always-on styling."
+author = "Steve Morin"
+keywords = ["style", "instructions", "manual-steps", "handoff", "verification", "reader", "output"]

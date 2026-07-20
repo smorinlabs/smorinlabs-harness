@@ -86,6 +86,22 @@
       ]
     },
     {
+      "name": "reader-steps",
+      "source": "./plugins/reader-steps",
+      "description": "Style spec for rendering actions only the reader can or will perform: a self-contained task block toward the response's end \u2014 done-so-far recap, numbered verb-first bounded steps with exact commands/paths/values, inline mentions restated in full, a verification clause per step, no tangents, closing with the immediate next move \u2014 plus cross-turn restating of in-flight manual processes with position and a visible completion, and matter-of-fact error shape (cause + fix, corrected step restated). Triggers: agent-impossible actions, manual verification handoffs, and user-claimed work; decisions are explicitly not steps (they get asked, via question-walkthrough). Ships as the canonical spec behind an always-on digest users keep in their global instructions. Distilled from a field-submitted ADHD-output skill, keeping the manual-steps discipline and dropping the global always-on styling.",
+      "version": "0.1.0",
+      "author": "Steve Morin",
+      "keywords": [
+        "style",
+        "instructions",
+        "manual-steps",
+        "handoff",
+        "verification",
+        "reader",
+        "output"
+      ]
+    },
+    {
       "name": "repo-finder",
       "source": "./plugins/repo-finder",
       "description": "One-command repo resolution for agents: resolve a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling) via a config-bounded multi-root scan \u2014 falling back to the user's configured GitHub orgs over gh REST-first (GraphQL only as configured fallback) for exact clone names. Deterministic ranking (checkouts, then worktrees labeled with their main repo, then nested copies); recency displayed, not ranked, so the consuming LLM decides. Single-file zero-dependency uv Python script inside the skill; conforms to the CLI Design Standard (small-CLI profile, minimal tier). Replaces token-expensive ls/find cascades and repeated gh repo view identity checks.",

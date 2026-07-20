@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Eight
-plugins, twenty skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Nine
+plugins, twenty-one skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -112,6 +112,15 @@ interaction engine, portable across Claude Code and Codex.
 | Skill | Does | Details |
 |---|---|---|
 | `question-walkthrough` | Gathers open questions (conversation mining, a pointed-at doc, an inline list, or task systems), confirms the pile, sequences it by leverage, then walks it one AskUserQuestion at a time with just-enough anchored context — re-planning the remaining pile after every answer (mooted questions dropped loudly, follow-ups added with consent) and recording decisions back at their source with a final outcome table. | [docs/skills/question-walkthrough.md](docs/skills/question-walkthrough.md) |
+
+### reader-steps
+
+Style spec for the agent→human handoff moment — the canonical rules behind an
+always-on digest users keep in their global instructions.
+
+| Skill | Does | Details |
+|---|---|---|
+| `reader-steps` | Renders actions only the reader can or will perform (agent-impossible actions, manual verification handoffs, user-claimed work) as a self-contained end-of-response block: done-so-far recap, numbered verb-first bounded steps with exact commands/values, inline mentions restated, ✓ verification per step, closing with the next move — plus cross-turn restating of in-flight manual processes and matter-of-fact error shape. Decisions are never steps (they're asked via question-walkthrough). | [docs/skills/reader-steps.md](docs/skills/reader-steps.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`
