@@ -11,7 +11,7 @@ Iron Law rests on. When the GraphQL budget is gone, the ladder does not help —
 `gh` porcelain, `gh api`, and raw `curl` all bill the same exhausted endpoint
 budget. The limit is on the endpoint, not the client.
 
-github.com's web UI performs both operations through session-authenticated
+GitHub's web UI performs both operations through session-authenticated
 internal endpoints, which do **not** draw on the token's `api.github.com`
 GraphQL budget. The browser is not a slower version of the same call — it is
 the same effect billed to a different quota pool.
@@ -36,10 +36,27 @@ Note the third row: replies ride the **core** budget, which is separate and far
 larger (5000/hr) and which this flow barely touches. In the ordinary failure
 only the two GraphQL operations need rescuing.
 
+## Availability — check before anything else
+
+This fallback needs browser-automation tooling in the running harness: the
+`mcp__claude-in-chrome__*` tools, whose documented entry point is the
+`claude-in-chrome` skill. That tooling ships with Claude Code and is **not**
+part of this plugin or this repo.
+
+Where it is absent — Codex and any other harness without a browser-automation
+MCP server, or Claude Code with the extension not installed — the fallback
+simply does not exist. That is a `stop`, not a `browser`: report the threads
+honestly and downgrade to a ready-report. Never treat missing tooling as a
+failed attempt, and never spend the degrade budget rediscovering it.
+
+`pr-merge-flow` itself is cross-tool and every other step works everywhere;
+only this escape hatch is harness-dependent. On a harness without it, an
+exhausted GraphQL budget leaves waiting out the reset as the only route.
+
 ## When this fires
 
 All three conditions, checked at the step 1 preflight and again on any
-mid-run GraphQL failure:
+mid-run GraphQL failure (availability above is a precondition to all three):
 
 1. **GraphQL is exhausted** — `resources.graphql.remaining` at/near 0, or a
    GraphQL call returned 403 with `RATE_LIMITED` or a secondary-rate-limit
@@ -107,7 +124,7 @@ Route contract:
 | `proceed` | GraphQL is fine | normal API path, no fallback |
 | `wait <seconds>` | reset is near | bounded wait per `polling.md` (20s+ floor), then re-check once and re-decide |
 | `browser` | reset is far, or a secondary limit with no clock | gate with the user, then run the procedure below |
-| `stop <reason>` | core is dead too, or auth is broken | report honestly; downgrade to a ready-report |
+| `stop <reason>` | core is dead too, auth is broken, or the harness has no browser tooling | report honestly; downgrade to a ready-report |
 
 ## Gate — always, in every mode
 
@@ -121,8 +138,11 @@ argument.
 
 ## Procedure
 
-1. **Invoke the `claude-in-chrome` skill first** — its documented entry point,
-   before any `mcp__claude-in-chrome__*` call.
+1. **Enter through the harness's browser-automation entry point** — on Claude
+   Code that is the `claude-in-chrome` skill, which must be invoked before any
+   `mcp__claude-in-chrome__*` call. If no such entry point exists, the
+   availability check above has already routed this to `stop`; do not improvise
+   a way in.
 2. `tabs_context_mcp` — also the connectivity probe. An error here means the
    extension is not connected: degrade, do not retry.
 3. `tabs_create_mcp` — always a **new** tab. Never reuse a tab the user has

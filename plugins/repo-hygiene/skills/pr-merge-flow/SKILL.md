@@ -214,8 +214,10 @@ impossible a guard already blocked it; divergence is a human decision.
   bot roster.
 - `references/browser-fallback.md` — the GraphQL-exhaustion escape hatch:
   trigger conditions, reset guard, browser procedure, degrade path.
-- `claude-in-chrome` — invoked first by the fallback; the browser tools'
-  documented entry point.
+- `claude-in-chrome` — the browser tools' entry point on Claude Code, invoked
+  first by the fallback. Ships with the harness, not with this plugin; where it
+  is absent (Codex, or no extension) the fallback is unavailable and the run
+  degrades to a ready-report.
 - `ci-audit` — failing checks and workflow debugging belong there.
 - superpowers `receiving-code-review` — the discipline step 4 applies.
 - `/code-review` · pr-review-toolkit · Codex — deep-mode engines
