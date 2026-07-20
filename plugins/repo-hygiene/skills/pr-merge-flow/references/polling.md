@@ -41,6 +41,23 @@ GraphQL is reserved for the two thread operations in `references/triage.md`
 (resolution-state read, resolve mutation) and is never called inside a poll
 loop.
 
+## The escape hatch — not a rung
+
+The ladder cannot climb out of an exhausted **GraphQL** budget: all three rungs
+bill the same endpoint. Those two thread operations have no REST equivalent, so
+GraphQL exhaustion stalls the Iron Law itself.
+
+The browser fallback in `references/browser-fallback.md` covers exactly those
+two operations by driving the GitHub web UI, whose session-authenticated
+internal endpoints do not draw on the token's GraphQL budget. It is an **escape
+hatch, not a fourth rung** — never reached for a call REST can still make, and
+never used to poll.
+
+Before reaching for it, check the reset clock: GraphQL quota resets hourly, so
+a near reset makes a bounded wait cheaper and safer than opening a browser.
+`browser-fallback.md`'s `decide_fallback_route` owns that call and returns one
+of `proceed` / `wait <seconds>` / `browser` / `stop <reason>`.
+
 ## Cheap change detection
 
 Poll the cheapest signal, not the full state:

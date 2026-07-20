@@ -480,4 +480,39 @@ count/ID consistency rule. Worked renders split to references/formats.md per hou
 
 ---
 
+## [~] Project P28: pr-merge-flow Chrome fallback for GraphQL-blocked thread resolution (plugin v0.4.0)
+**Goal**: Close the one failure the quota ladder cannot climb out of. pr-merge-flow reserves
+GraphQL for exactly two operations — reading `isResolved` per review thread and the
+`resolveReviewThread` mutation — and neither has a REST equivalent, so an exhausted GraphQL
+budget stalls the Iron Law itself (`gh` porcelain, `gh api`, and `curl` all bill the same
+endpoint). Add a narrow escape hatch: drive the PR's web UI via the claude-in-chrome tools,
+whose session-authenticated internal endpoints draw on a different quota pool. Scope is those
+two operations only — never a poll, never a merge, never `javascript_tool`. Guarded on both
+ends: `decide_fallback_route` weighs the hourly GraphQL reset clock (near reset → bounded
+wait beats opening a browser; secondary limits publish no reset → straight to browser) and a
+confirmation gate fires in **every** mode including `--auto`, because suppressing
+review-judgment questions is not consent to drive the user's logged-in Chrome. Reply-over-REST
+precedes the browser resolve so a failed leg leaves a replied-but-open thread, never a silent
+resolve; every click is verified by re-reading state; 2–3 failed interactions degrade to a
+ready-report naming which threads were resolved, replied-to, or untouched.
+
+**Out of Scope**
+- Browser as a general fallback rung for any rate-limited call (thread replies, check status)
+  — core budget is separate and ample; revisit only if the field shows it is needed.
+- `--browser` / `--no-browser` flags and a `browser-fallback:` prefs key (deferred with the above).
+- Description edit: left unchanged at 978/~1000 chars — the fallback adds no firing moments,
+  so trigger budget is better spent elsewhere; keeps this a pure capability change (no overlap re-scan).
+
+### Tests & Tasks
+- [x] [P28-T01] `references/browser-fallback.md`: trigger conditions, reset guard + route contract, gate, procedure, degrade path, never-does list
+- [x] [P28-T02] `decide_fallback_route` body — core-floor-first ordering, secondary limits straight to browser (no reset clock), reset-window wait; three knobs (`wait_max` 600s, `core_floor` 100, +5s buffer) documented as tunable policy
+- [x] [P28-T03] Wiring: SKILL.md steps 1/3/4 + 4 Red Flags rows + See-also; polling.md escape-hatch section; triage.md pointers at both GraphQL blocks
+- [x] [P28-T04] `allowed-tools` + 6 claude-in-chrome tools (read/click only; `read_page`, `javascript_tool`, `file_upload`, `gif_creator`, `read_network_requests` excluded)
+- [x] [P28-T05] plugin.meta.toml 0.3.0 → 0.4.0; gen + gen-check green (all three manifests carry 0.4.0)
+- [x] [P28-T06] Docs page + README row refreshed
+- [ ] [P28-TS01] Gate: skill-quality on pr-merge-flow; static verify both tools
+- [ ] [P28-T07] Commit on `feat/pr-merge-flow-browser-fallback`
+
+---
+
 - [ ] Regression Test Status

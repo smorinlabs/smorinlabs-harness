@@ -13,8 +13,22 @@ the default — with squash merges the title becomes the commit subject), then
 ends per mode. All GitHub polling is quota-safe: rate-limit preflight, a
 20–30s interval floor, hard-bounded monitors with one manual recheck on
 expiry, and a `gh` → `gh api` REST → `curl` fallback ladder (GraphQL is used
-only to read thread resolution state and post the resolve mutation). After a
-successful merge it runs a read-only cleanup survey — local and remote PR
+only to read thread resolution state and post the resolve mutation). Those two
+GraphQL operations have no REST equivalent, so an exhausted GraphQL budget
+would otherwise stall the whole flow — the ladder cannot help, since all three
+rungs bill the same endpoint. For that one case there is an escape hatch: a
+**Chrome browser fallback** that drives the PR's web UI, whose
+session-authenticated internal endpoints draw on a different quota pool
+entirely. It is deliberately narrow — those two operations only, never a poll,
+never a merge — and guarded on both ends: the reset clock decides between
+simply waiting out the hourly GraphQL reset and opening a browser at all, and a
+confirmation gate fires in *every* mode including `--auto`, since driving your
+logged-in Chrome is not something automation should assume. Replies still post
+over REST *before* the browser resolves the thread, so a failed browser leg
+leaves a replied-but-open thread rather than a silent resolve; every click is
+verified by re-reading the thread state, and 2–3 failed interactions degrade to
+an honest ready-report naming exactly which threads were resolved, replied-to,
+or untouched. After a successful merge it runs a read-only cleanup survey — local and remote PR
 branch, worktrees on the merged branch, stale merged branches, prunable
 worktree entries, dirty uncommitted state — and presents two lists:
 *needs cleanup* (each item a named action with its exact command) and

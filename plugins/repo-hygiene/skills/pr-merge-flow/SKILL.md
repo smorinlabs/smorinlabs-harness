@@ -1,7 +1,7 @@
 ---
 name: pr-merge-flow
 description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — validate the claim, verify by running code where possible, fix valid findings and push, refute invalid ones with a reasoned reply — every thread resolved either way. Cycles as fixes trigger new reviews, checks the PR title against repo conventions (CLAUDE.md, else Conventional Commits), then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout (rate-limit preflight, 20s+ floor, bounded monitors). Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
-allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task
+allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
 ---
 
 # PR merge flow
@@ -44,7 +44,10 @@ default (`confirm`, no deep review). Natural language counts as the flag
 - Conventions: read the repo's CLAUDE.md — commit/PR-title format and
   merge-method conventions there override the defaults below.
 - Preflight: `gh auth status`, then the quota check in
-  `references/polling.md`. Never assume quota; measure it.
+  `references/polling.md`. Never assume quota; measure it. GraphQL exhausted
+  (its budget is separate from core, and the two thread operations below have
+  no REST equivalent) → route via `references/browser-fallback.md`, which
+  decides between waiting out the reset and the gated browser escape hatch.
 
 ## 2. Bot-wait (bounded)
 
@@ -60,6 +63,10 @@ Follow `references/triage.md`: reads go through REST (`gh pr view`,
 (REST cannot see `isResolved`), and the `resolveReviewThread` mutation is the
 only other GraphQL use — GraphQL is never polled. Inventory every unresolved
 thread: id, author, file/line, the concrete claim.
+
+If that GraphQL read is rate-limited, the inventory comes from the PR's web UI
+instead — `references/browser-fallback.md`, gated and reset-guarded. The
+inventory is the same either way; only its source changes.
 
 ## 4. Triage every thread
 
@@ -78,6 +85,12 @@ technical rigor, no performative agreement:
      time. `--auto` never asks: make the call if verification can settle it;
      if genuinely undecidable, leave the thread open and downgrade the run to
      a ready-report — the Iron Law forbids merging over it.
+
+When the resolve mutation is rate-limited, the verdicts are unchanged and only
+the closing click moves: reply over REST first (it rides the healthy core
+budget), then resolve in the browser per `references/browser-fallback.md`,
+verifying each thread actually flipped. Reply-first is the invariant — a failed
+browser leg must leave a replied-but-open thread, never a silent resolve.
 
 ## 5. Re-review cycle
 
@@ -187,6 +200,10 @@ impossible a guard already blocked it; divergence is a human decision.
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
 | "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
 | "I'll quickly pull main while I'm at it" | The sync is offered, guarded, re-checked at execution, and ff-only — never a side effect. |
+| "GraphQL is rate-limited — nothing to do but report" | The two thread ops have no REST equivalent, but the web UI is a different quota pool. Check the reset clock, then wait or use the gated browser fallback. |
+| "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
+| "`--auto` means don't ask before opening the browser" | `--auto` suppresses review-judgment questions, not consent to drive the user's logged-in Chrome. The browser gate fires in every mode. |
+| "Clicked Resolve — thread's closed" | A click is not a result. Re-read the state and confirm it flipped, every thread, every time. |
 
 ## See also
 
@@ -194,6 +211,10 @@ impossible a guard already blocked it; divergence is a human decision.
   monitor-script pattern, REST/GraphQL split.
 - `references/triage.md` — thread queries, verdict rubric, reply etiquette,
   bot roster.
+- `references/browser-fallback.md` — the GraphQL-exhaustion escape hatch:
+  trigger conditions, reset guard, browser procedure, degrade path.
+- `claude-in-chrome` — invoked first by the fallback; the browser tools'
+  documented entry point.
 - `ci-audit` — failing checks and workflow debugging belong there.
 - superpowers `receiving-code-review` — the discipline step 4 applies.
 - `/code-review` · pr-review-toolkit · Codex — deep-mode engines

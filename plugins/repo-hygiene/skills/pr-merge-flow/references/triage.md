@@ -20,6 +20,10 @@ query($owner:String!,$repo:String!,$n:Int!){
 Caps: `reviewThreads(first:100)` / `comments(first:10)` truncate on very
 large PRs — paginate via `endCursor` when a PR approaches 100 threads.
 
+Rate-limited? This read has no REST equivalent — see
+`references/browser-fallback.md` for the browser escape hatch and its reset
+guard.
+
 Also gather PR-level review bodies and issue comments via REST
 (`…/pulls/{n}/reviews`, `…/issues/{n}/comments`) — bots sometimes put
 findings there. Those have no thread to resolve, so they are answered with a
@@ -83,3 +87,7 @@ mutation($t:ID!){ resolveReviewThread(input:{threadId:$t}){ thread{ id isResolve
 
 Batch: resolve after the push that fixes a batch of threads, one pass per
 cycle, keeping GraphQL call count minimal.
+
+Rate-limited? No REST equivalent exists — `references/browser-fallback.md`
+clicks **Resolve conversation** in the web UI instead, reply-over-REST first
+and verify-after-click always.
