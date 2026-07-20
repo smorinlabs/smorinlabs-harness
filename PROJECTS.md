@@ -480,7 +480,7 @@ count/ID consistency rule. Worked renders split to references/formats.md per hou
 
 ---
 
-## [~] Project P28: pr-merge-flow Chrome fallback for GraphQL-blocked thread resolution (plugin v0.4.0)
+## [x] Project P28: pr-merge-flow Chrome fallback for GraphQL-blocked thread resolution (plugin v0.4.0)
 **Goal**: Close the one failure the quota ladder cannot climb out of. pr-merge-flow reserves
 GraphQL for exactly two operations — reading `isResolved` per review thread and the
 `resolveReviewThread` mutation — and neither has a REST equivalent, so an exhausted GraphQL
@@ -510,8 +510,8 @@ ready-report naming which threads were resolved, replied-to, or untouched.
 - [x] [P28-T04] `allowed-tools` + 6 claude-in-chrome tools (read/click only; `read_page`, `javascript_tool`, `file_upload`, `gif_creator`, `read_network_requests` excluded)
 - [x] [P28-T05] plugin.meta.toml 0.3.0 → 0.4.0; gen + gen-check green (all three manifests carry 0.4.0)
 - [x] [P28-T06] Docs page + README row refreshed
-- [ ] [P28-TS01] Gate: skill-quality on pr-merge-flow; static verify both tools
-- [ ] [P28-T07] Commit on `feat/pr-merge-flow-browser-fallback`
+- [x] [P28-TS01] Gate: skill-quality on pr-merge-flow; static verify both tools
+- [x] [P28-T07] Commit 4ace94e on `feat/pr-merge-flow-browser-fallback`
 
 ---
 
