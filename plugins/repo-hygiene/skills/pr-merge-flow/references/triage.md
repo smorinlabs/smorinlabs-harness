@@ -20,9 +20,9 @@ query($owner:String!,$repo:String!,$n:Int!){
 Caps: `reviewThreads(first:100)` / `comments(first:10)` truncate on very
 large PRs — paginate via `endCursor` when a PR approaches 100 threads.
 
-Rate-limited? This read has no REST equivalent — see
-`references/browser-fallback.md` for the browser escape hatch and its reset
-guard.
+Rate-limited? Only `isResolved` has no REST equivalent — take the rest of the
+inventory (including `databaseId`) from REST and get that one bit per
+`references/browser-fallback.md`.
 
 Also gather PR-level review bodies and issue comments via REST
 (`…/pulls/{n}/reviews`, `…/issues/{n}/comments`) — bots sometimes put
@@ -39,6 +39,17 @@ above) — `gh pr comment` posts an issue comment, NOT a thread reply:
 gh api "repos/$OWNER/$REPO/pulls/$N/comments/$COMMENT_ID/replies" \
   -f body='Fixed in <sha> — <one line>'
 ```
+
+**The ID bridge is mandatory.** A reply is impossible without a real
+`databaseId`; never infer one from page text or ordering. When GraphQL is
+rate-limited, take the inventory and its IDs from REST
+(`…/pulls/{n}/comments?per_page=100`, top-level = `in_reply_to_id == null`) —
+the browser fallback supplies only `isResolved` and cannot supply an ID. No ID,
+no reply, and therefore no resolve.
+
+**Replies are idempotent.** Before posting, list the thread's comments and skip
+if one is already authored by us against that top comment. A retry after a
+failed resolve re-attempts only the resolve.
 
 ## Bot roster
 
@@ -88,6 +99,7 @@ mutation($t:ID!){ resolveReviewThread(input:{threadId:$t}){ thread{ id isResolve
 Batch: resolve after the push that fixes a batch of threads, one pass per
 cycle, keeping GraphQL call count minimal.
 
-Rate-limited? No REST equivalent exists — `references/browser-fallback.md`
-clicks **Resolve conversation** in the web UI instead, reply-over-REST first
-and verify-after-click always.
+Rate-limited? There is no substitute for this mutation — not REST, and not the
+browser (GitHub's Resolve buttons cannot be safely targeted; see
+`references/browser-fallback.md`). Post the reply, leave the thread open, and
+resolve when GraphQL returns.

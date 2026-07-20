@@ -13,24 +13,25 @@ the default — with squash merges the title becomes the commit subject), then
 ends per mode. All GitHub polling is quota-safe: rate-limit preflight, a
 20–30s interval floor, hard-bounded monitors with one manual recheck on
 expiry, and a `gh` → `gh api` REST → `curl` fallback ladder (GraphQL is used
-only to read thread resolution state and post the resolve mutation). Those two
-GraphQL operations have no REST equivalent, so an exhausted GraphQL budget
-would otherwise stall the whole flow — the ladder cannot help, since all three
-rungs bill the same endpoint. For that one case there is an escape hatch: a
-**Chrome browser fallback** — the `claude-in-chrome` skill on Claude Code, the
-`chrome@openai-bundled` plugin on Codex, and a clean degrade to a ready-report
-on any harness with neither — that drives the PR's web UI, whose
-session-authenticated internal endpoints draw on a different quota pool
-entirely. It is deliberately narrow — those two operations only, never a poll,
-never a merge — and guarded on both ends: the reset clock decides between
-simply waiting out the hourly GraphQL reset and opening a browser at all, and a
-confirmation gate fires in *every* mode including `--auto`, since driving your
-logged-in Chrome is not something automation should assume. Replies still post
-over REST *before* the browser resolves the thread, so a failed browser leg
-leaves a replied-but-open thread rather than a silent resolve; every click is
-verified by re-reading the thread state, and 2–3 failed interactions degrade to
-an honest ready-report naming exactly which threads were resolved, replied-to,
-or untouched. After a successful merge it runs a read-only cleanup survey — local and remote PR
+only to read thread resolution state and post the resolve mutation). Of those two
+GraphQL operations only the `isResolved` read has any substitute: REST already
+carries the rest of the inventory — path, line, author, and the `databaseId`
+replies need — so the gap is a single boolean per thread. For that one bit
+there is an escape hatch: a **read-only Chrome fallback** (the
+`claude-in-chrome` skill on Claude Code, the `chrome@openai-bundled` plugin on
+Codex, a clean degrade to a ready-report on any harness with neither) that
+reads the PR's web UI, whose session-authenticated endpoints draw on a
+different quota pool, confirms the page's owner/repo/PR identity before
+trusting a word of it, and correlates what it reads back onto the REST
+inventory. It is gated in *every* mode including `--auto`, because driving a
+logged-in browser is not something automation should assume, and it is bounded:
+2–3 failures degrade to an honest report naming which threads are
+known-unresolved, known-resolved, and undetermined. It deliberately does **not**
+resolve threads — GitHub renders Resolve buttons lazily (absent from the
+accessibility tree) and anonymously (`find` returns identical labels carrying no
+thread identity), so a click cannot be safely targeted and resolution stays
+API-only. With GraphQL exhausted, threads are replied-to and left open until
+quota returns: honest and recoverable, never a silent resolve. After a successful merge it runs a read-only cleanup survey — local and remote PR
 branch, worktrees on the merged branch, stale merged branches, prunable
 worktree entries, dirty uncommitted state — and presents two lists:
 *needs cleanup* (each item a named action with its exact command) and

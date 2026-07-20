@@ -1,7 +1,7 @@
 ---
 name: pr-merge-flow
 description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — validate the claim, verify by running code where possible, fix valid findings and push, refute invalid ones with a reasoned reply — every thread resolved either way. Cycles as fixes trigger new reviews, checks the PR title against repo conventions (CLAUDE.md, else Conventional Commits), then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout (rate-limit preflight, 20s+ floor, bounded monitors). Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
-allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
+allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__get_page_text
 ---
 
 # PR merge flow
@@ -64,9 +64,11 @@ Follow `references/triage.md`: reads go through REST (`gh pr view`,
 only other GraphQL use — GraphQL is never polled. Inventory every unresolved
 thread: id, author, file/line, the concrete claim.
 
-If that GraphQL read is rate-limited, the inventory comes from the PR's web UI
-instead — `references/browser-fallback.md`, gated and reset-guarded. The
-inventory is the same either way; only its source changes.
+If that GraphQL read is rate-limited, build the inventory from REST instead —
+it carries every field except `isResolved`, including the `databaseId` replies
+need — and get that one bit from the PR's web UI per
+`references/browser-fallback.md`, gated and reset-guarded. The browser
+annotates a REST inventory; it never produces one, and it never resolves.
 
 ## 4. Triage every thread
 
@@ -86,11 +88,18 @@ technical rigor, no performative agreement:
      if genuinely undecidable, leave the thread open and downgrade the run to
      a ready-report — the Iron Law forbids merging over it.
 
-When the resolve mutation is rate-limited, the verdicts are unchanged and only
-the closing click moves: reply over REST first (it rides the healthy core
-budget), then resolve in the browser per `references/browser-fallback.md`,
-verifying each thread actually flipped. Reply-first is the invariant — a failed
-browser leg must leave a replied-but-open thread, never a silent resolve.
+When the resolve mutation is rate-limited, the verdicts and the fixes are
+unchanged — only the closing move waits. Post the reply over REST (it rides the
+healthy core budget), leave the thread open, and resolve it when GraphQL
+returns. There is no browser substitute for the mutation; see
+`references/browser-fallback.md`. A replied-but-open thread is the correct
+resting state: honest, recoverable, and never a silent resolve. The Iron Law
+still forbids merging over it.
+
+**Replies are idempotent.** Before posting, check the thread's existing
+comments for one already authored by us (`in_reply_to_id` matching the thread's
+top comment). A retry after a failed resolve must not post the reply twice —
+re-attempt only the step that failed.
 
 ## 5. Re-review cycle
 
@@ -203,8 +212,10 @@ impossible a guard already blocked it; divergence is a human decision.
 | "GraphQL is rate-limited — nothing to do but report" | The two thread ops have no REST equivalent, but the web UI is a different quota pool. Check the reset clock, then wait or use the gated browser fallback. |
 | "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
 | "`--auto` means don't ask before opening the browser" | `--auto` suppresses review-judgment questions, not consent to drive the user's logged-in Chrome. The browser gate fires in every mode. |
-| "Clicked Resolve — thread's closed" | A click is not a result. Re-read the state and confirm it flipped, every thread, every time. |
-| "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose; they never target. A real control is in `read_page`'s tree with a `ref`; one that isn't is a finding to report. |
+| "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose; they never target. The browser path is read-only, so a click is never the answer. |
+| "The browser can just click Resolve" | It cannot, on GitHub: the buttons are absent from the accessibility tree and anonymous via `find`. Resolution is API-only — read `browser-fallback.md` before re-proposing it. |
+| "Every finding is valid, but there are a lot — let me ask how to proceed" | Valid is not unclear. The rubric already names the action: fix, commit, reply, resolve. Ask only when a verdict is genuinely undecidable, never about strategy. |
+| "New bot comments arrived — time to re-plan" | That is step 5, the ordinary re-review cycle. Triage them the same way; the bound is 3 cycles, not a fresh design discussion. |
 
 ## See also
 
@@ -213,7 +224,8 @@ impossible a guard already blocked it; divergence is a human decision.
 - `references/triage.md` — thread queries, verdict rubric, reply etiquette,
   bot roster.
 - `references/browser-fallback.md` — the GraphQL-exhaustion escape hatch:
-  trigger conditions, reset guard, browser procedure, degrade path.
+  trigger conditions, reset guard, the read-only browser procedure, and the
+  evidence for why it reads state but never resolves.
 - `claude-in-chrome` (Claude Code) · `chrome@openai-bundled` (Codex) — the
   fallback's browser entry points, one per harness. Both ship with the harness,
   not with this plugin; the availability table in `browser-fallback.md` picks
