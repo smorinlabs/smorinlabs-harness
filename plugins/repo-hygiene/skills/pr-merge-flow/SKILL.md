@@ -80,8 +80,10 @@ a count — as the source of truth.
 Each entry carries: author, file/line, the concrete claim, and its state
 through `discovered → verdict → fixed → replied → resolved`.
 
-Re-fetch the REST inventory at the start of every cycle and after every push,
-then **merge by id**. The id is what distinguishes a genuinely new finding from
+Re-fetch the REST inventory at the start of every cycle and after every push —
+**fully paginated** (`gh api --paginate`, or follow the `Link` header); a PR
+past 100 review comments returns a partial first page, and a thread missing
+from the ledger is a thread merged over — then **merge by id**. The id is what distinguishes a genuinely new finding from
 one already investigated: ids already in the ledger keep their state and are
 never re-triaged, re-replied, or re-argued; ids you have not seen enter at
 `discovered` and go through the identical loop — verify, validate, then either
@@ -243,7 +245,7 @@ impossible a guard already blocked it; divergence is a human decision.
 | "GraphQL is rate-limited — nothing to do but report" | The two thread ops have no REST equivalent, but the web UI is a different quota pool. Check the reset clock, then wait or use the gated browser fallback. |
 | "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
 | "`--auto` means don't ask before opening the browser" | `--auto` suppresses review-judgment questions, not consent to drive the user's logged-in Chrome. The browser gate fires in every mode. |
-| "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose; they never target. The browser path is read-only, so a click is never the answer. |
+| "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose. Clicking is done by `ref` after step 8 has tied the control to a comment `id`; coordinates are a last resort, never a way to skip identity. |
 | "`read_page` shows no Resolve button, so it cannot be clicked" | It shows what is *rendered*. Anchor to `#discussion_r<id>` first — depth is the wrong axis, scroll position is the right one. |
 | "An id is an id — I'll reuse it on the other surface" | REST `id`, GraphQL `databaseId`, and `#discussion_r<id>` are one integer; the thread node id (`PRRT_…`) is GraphQL-only. Check the correlation table in `browser-fallback.md` before crossing surfaces. |
 | "The button list shrank, so the click worked" | Counting is not verification: the page renders lazily and bots post mid-run, so totals move on their own. Re-read *that* thread's own state. |
@@ -259,8 +261,8 @@ impossible a guard already blocked it; divergence is a human decision.
 - `references/triage.md` — thread queries, verdict rubric, reply etiquette,
   bot roster.
 - `references/browser-fallback.md` — the GraphQL-exhaustion escape hatch:
-  trigger conditions, reset guard, the read-only browser procedure, and the
-  per-thread anchoring that keeps identity exact, and the degrade path.
+  trigger conditions, reset guard, the ID correlation table, the per-thread
+  anchoring that keeps identity exact, and the degrade path.
 - `claude-in-chrome` (Claude Code) · `chrome@openai-bundled` (Codex) — the
   fallback's browser entry points, one per harness. Both ship with the harness,
   not with this plugin; the availability table in `browser-fallback.md` picks

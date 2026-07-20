@@ -220,10 +220,14 @@ plugin's equivalent — the roles and their order are what matter: open a fresh
 tab, confirm identity, anchor to one thread, click its control, verify that
 thread. A role with no equivalent is a `stop`, not something to approximate.
 
-1. **Build the inventory over REST** — `…/pulls/{n}/comments?per_page=100`
-   gives every comment with its integer `id`, `path`, `line`, `author`, and
-   `in_reply_to_id`. Top-level entries (`in_reply_to_id == null`) are the
-   threads. This list is authoritative; the page is not.
+1. **Build the inventory over REST, fully paginated** —
+   `gh api --paginate "…/pulls/{n}/comments?per_page=100"` gives every comment
+   with its integer `id`, `path`, `line`, `author`, and `in_reply_to_id`.
+   Top-level entries (`in_reply_to_id == null`) are the threads. **One page is
+   not the inventory**: past 100 review comments GitHub paginates, and a thread
+   that never enters the ledger is a thread merged over without reply or
+   resolution. Follow `Link` to the last page before declaring the set
+   complete. This list is authoritative; the page is not.
 2. **Enter through the harness's entry point** from the availability table. If
    neither is present, availability has already routed this to `stop`.
 3. `tabs_context_mcp` — also the connectivity probe. An error means the tooling

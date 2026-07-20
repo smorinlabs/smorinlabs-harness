@@ -41,6 +41,12 @@ gh api "repos/$OWNER/$REPO/pulls/$N/comments/$COMMENT_ID/replies" \
   -f body='Fixed in <sha> — <one line>'
 ```
 
+**Mind the endpoint asymmetry.** Posting a reply includes the PR number
+(`…/pulls/{n}/comments/{id}/replies`), but reading one single comment does
+**not** (`…/pulls/comments/{id}`). Appending an id to the list route returns
+404, which reads exactly like a deleted comment — it is not. Confirm a
+disappearance against a fresh paginated list before treating a thread as gone.
+
 **Identifiers differ per surface** — REST `id` / GraphQL `databaseId` /
 page `#discussion_r<id>` are the same integer, while the thread node id
 (`PRRT_…`) that `resolveReviewThread` needs exists only in GraphQL. The full
@@ -53,7 +59,8 @@ id; never infer one from page text or ordering. GraphQL calls it `databaseId`
 and REST calls it `id` — same integer, and `id` is what
 `…/comments/{comment_id}/replies` takes. When GraphQL is rate-limited, take the
 inventory and its ids from REST
-(`…/pulls/{n}/comments?per_page=100`, top-level = `in_reply_to_id == null`) —
+(`gh api --paginate "…/pulls/{n}/comments?per_page=100"`, top-level =
+`in_reply_to_id == null`; one page is not the inventory) —
 the browser reads state and clicks controls but never supplies an ID. No ID,
 no reply, and therefore no resolve.
 
