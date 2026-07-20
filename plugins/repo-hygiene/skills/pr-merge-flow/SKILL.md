@@ -1,7 +1,7 @@
 ---
 name: pr-merge-flow
 description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — validate the claim, verify by running code where possible, fix valid findings and push, refute invalid ones with a reasoned reply — every thread resolved either way. Cycles as fixes trigger new reviews, checks the PR title against repo conventions (CLAUDE.md, else Conventional Commits), then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout (rate-limit preflight, 20s+ floor, bounded monitors). Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
-allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task
+allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
 ---
 
 # PR merge flow
@@ -35,7 +35,8 @@ default (`confirm`, no deep review). Natural language counts as the flag
   so. Draft → report and stop unless told to mark it ready (`gh pr ready`);
   bots rarely review drafts.
 - Preferences: read `.claude/pr-merge-flow.local.md` if present (keys: `mode`,
-  `deep-review`, `merge-method`, `delete-branch`) and apply silently — its
+  `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
+  `continue-until-clean`) and apply silently — its
   whole point is not being asked every time. No file and no flag → `confirm`
   mode; after the first completed run, offer to save the choices there and
   ensure the file is ignored via `.git/info/exclude` — never edit
@@ -44,7 +45,10 @@ default (`confirm`, no deep review). Natural language counts as the flag
 - Conventions: read the repo's CLAUDE.md — commit/PR-title format and
   merge-method conventions there override the defaults below.
 - Preflight: `gh auth status`, then the quota check in
-  `references/polling.md`. Never assume quota; measure it.
+  `references/polling.md`. Never assume quota; measure it. GraphQL exhausted
+  (its budget is separate from core, and the two thread operations below have
+  no REST equivalent) → route via `references/browser-fallback.md`, which
+  decides between waiting out the reset and the gated browser escape hatch.
 
 ## 2. Bot-wait (bounded)
 
@@ -60,6 +64,38 @@ Follow `references/triage.md`: reads go through REST (`gh pr view`,
 (REST cannot see `isResolved`), and the `resolveReviewThread` mutation is the
 only other GraphQL use — GraphQL is never polled. Inventory every unresolved
 thread: id, author, file/line, the concrete claim.
+
+If that GraphQL read is rate-limited, build the inventory from REST instead —
+it carries every field except `isResolved`, including the integer comment `id`
+that replies and anchors both need (GraphQL calls the same number `databaseId`;
+REST has no such field) — and get that one bit from the PR's web UI per
+`references/browser-fallback.md`, gated and reset-guarded.
+
+### Keep a thread ledger — the set is live, not a snapshot
+
+Threads keep arriving. Every push can trigger fresh reviews, bots finish at
+different times, and a reviewer can post while you are mid-triage. Maintain a
+**ledger keyed by comment `id`** and treat it — never a single fetch, and never
+a count — as the source of truth.
+
+Each entry carries: author, file/line, the concrete claim, and its state
+through `discovered → verdict → fixed → replied → resolved`.
+
+Re-fetch the REST inventory at the start of every cycle and after every push —
+**fully paginated** (`gh api --paginate`, or follow the `Link` header); a PR
+past 100 review comments returns a partial first page, and a thread missing
+from the ledger is a thread merged over — then **merge by id**. The id is what distinguishes a genuinely new finding from
+one already investigated: ids already in the ledger keep their state and are
+never re-triaged, re-replied, or re-argued; ids you have not seen enter at
+`discovered` and go through the identical loop — verify, validate, then either
+refute-and-resolve or fix-comment-resolve. Never diff by body text, position,
+or count — reviewers reword and re-post, and only the id is stable. A rising
+thread count is the normal lifecycle, not a failed read and not a reason to
+re-plan.
+
+The run is complete only when **every** ledger entry reaches `resolved`,
+including entries that arrived after you started. Counting open buttons or
+trusting a stale inventory is how a thread gets merged over.
 
 ## 4. Triage every thread
 
@@ -79,11 +115,50 @@ technical rigor, no performative agreement:
      if genuinely undecidable, leave the thread open and downgrade the run to
      a ready-report — the Iron Law forbids merging over it.
 
+When the resolve mutation is rate-limited, the verdicts and fixes are
+unchanged and only the closing move relocates: reply over REST first (it rides
+the healthy core budget), then resolve that thread in the browser per
+`references/browser-fallback.md` — anchored to its own `#discussion_r<id>`,
+never picked out of an enumerated list — and verify that thread flipped. In
+that path the browser **reads the thread's state before anything is written**:
+REST carries no `isResolved`, so a reply-first order would post to threads a
+reviewer already auto-resolved. Reply-first is the invariant: a failed browser leg
+must leave a replied-but-open thread, never a silent resolve. If the browser is
+unavailable too, replied-but-open is the correct resting state and the Iron Law
+still forbids merging over it.
+
+**Replies are idempotent.** Before posting, check the thread's existing
+comments for one already authored by us (`in_reply_to_id` matching the thread's
+top comment). A retry after a failed resolve must not post the reply twice —
+re-attempt only the step that failed.
+
 ## 5. Re-review cycle
 
-Pushed fixes can trigger fresh bot reviews. Return to step 2. Bound: 3 cycles
-by default; still dirty after that → stop with a report of what remains.
-Never loop indefinitely.
+Pushed fixes can trigger fresh bot reviews. Return to step 2, then re-fetch and
+**merge into the ledger** (step 3) before triaging — new entries are expected
+output of your own fixes, not an anomaly.
+
+**Bound: 4 cycles, then check in — never stop silently and never loop
+silently.** At the bound, report the ledger (resolved / replied-but-open /
+untriaged, each by id) and ask the user, one question, how to proceed:
+
+- **Continue until clean** — keep cycling with no cycle limit, bounded instead
+  by a **10-minute wall clock** from the moment they say so. Cycles still
+  obey every polling rule inside that window; on expiry, stop and report
+  wherever the ledger stands. This is the escape hatch for a PR that is
+  genuinely converging, just slowly.
+- **Merge / gate now** — proceed to step 6 with whatever is clean, provided
+  the Iron Law holds (every ledger entry resolved).
+- **Stop** — ready-report and hand back.
+
+`cycle-bound` and `continue-until-clean` may be set in
+`.claude/pr-merge-flow.local.md` to skip the check-in for a repo that always
+wants one answer.
+
+A cycle that produces only new threads and no new fixes still counts against
+the bound; the bound is on cycles, not on progress. Convergence is not a reason
+to skip the check-in — findings shrinking is exactly when a run is most tempted
+to keep going on its own judgment.
 
 ## 6. Merge preflight
 
@@ -187,6 +262,17 @@ impossible a guard already blocked it; divergence is a human decision.
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
 | "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
 | "I'll quickly pull main while I'm at it" | The sync is offered, guarded, re-checked at execution, and ff-only — never a side effect. |
+| "GraphQL is rate-limited — nothing to do but report" | The two thread ops have no REST equivalent, but the web UI is a different quota pool. Check the reset clock, then wait or use the gated browser fallback. |
+| "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
+| "`--auto` means don't ask before opening the browser" | `--auto` suppresses review-judgment questions, not consent to drive the user's logged-in Chrome. The browser gate fires in every mode. |
+| "I can see the button in the screenshot — click those coordinates" | Screenshots diagnose. Clicking is done by `ref` after step 8 has tied the control to a comment `id`; coordinates are a last resort, never a way to skip identity. |
+| "`read_page` shows no Resolve button, so it cannot be clicked" | It shows what is *rendered*. Anchor to `#discussion_r<id>` first — depth is the wrong axis, scroll position is the right one. |
+| "An id is an id — I'll reuse it on the other surface" | REST `id`, GraphQL `databaseId`, and `#discussion_r<id>` are one integer; the thread node id (`PRRT_…`) is GraphQL-only. Check the correlation table in `browser-fallback.md` before crossing surfaces. |
+| "The button list shrank, so the click worked" | Counting is not verification: the page renders lazily and bots post mid-run, so totals move on their own. Re-read *that* thread's own state. |
+| "I tried twice and it failed, so it is impossible" | Negative results need the same rigor as positive ones. Vary the axis that matters before concluding anything is impossible — and never cite a rule from this skill as proof a capability is absent. |
+| "Every finding is valid, but there are a lot — let me ask how to proceed" | Valid is not unclear. The rubric already names the action: fix, commit, reply, resolve. Ask only when a verdict is genuinely undecidable, never about strategy. |
+| "New bot comments arrived — time to re-plan" | That is step 5, the ordinary re-review cycle. Merge them into the ledger and triage them the same way; the bound is 4 cycles then a check-in, not a fresh design discussion. |
+| "I collected the threads at the start, so I know the set" | The set is live. Re-fetch and merge every cycle and after every push — a thread that arrived while you worked still blocks the merge. |
 
 ## See also
 
@@ -194,6 +280,13 @@ impossible a guard already blocked it; divergence is a human decision.
   monitor-script pattern, REST/GraphQL split.
 - `references/triage.md` — thread queries, verdict rubric, reply etiquette,
   bot roster.
+- `references/browser-fallback.md` — the GraphQL-exhaustion escape hatch:
+  trigger conditions, reset guard, the ID correlation table, the per-thread
+  anchoring that keeps identity exact, and the degrade path.
+- `claude-in-chrome` (Claude Code) · `chrome@openai-bundled` (Codex) — the
+  fallback's browser entry points, one per harness. Both ship with the harness,
+  not with this plugin; the availability table in `browser-fallback.md` picks
+  between them, and where neither exists the run degrades to a ready-report.
 - `ci-audit` — failing checks and workflow debugging belong there.
 - superpowers `receiving-code-review` — the discipline step 4 applies.
 - `/code-review` · pr-review-toolkit · Codex — deep-mode engines

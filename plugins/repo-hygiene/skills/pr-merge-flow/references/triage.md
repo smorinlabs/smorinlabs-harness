@@ -20,6 +20,11 @@ query($owner:String!,$repo:String!,$n:Int!){
 Caps: `reviewThreads(first:100)` / `comments(first:10)` truncate on very
 large PRs — paginate via `endCursor` when a PR approaches 100 threads.
 
+Rate-limited? Take the inventory and its ids from REST
+(`…/pulls/{n}/comments?per_page=100` — the field is `id`, not `databaseId`;
+same integer, different name) and get `isResolved` from the thread's own
+rendered state per `references/browser-fallback.md`.
+
 Also gather PR-level review bodies and issue comments via REST
 (`…/pulls/{n}/reviews`, `…/issues/{n}/comments`) — bots sometimes put
 findings there. Those have no thread to resolve, so they are answered with a
@@ -35,6 +40,33 @@ above) — `gh pr comment` posts an issue comment, NOT a thread reply:
 gh api "repos/$OWNER/$REPO/pulls/$N/comments/$COMMENT_ID/replies" \
   -f body='Fixed in <sha> — <one line>'
 ```
+
+**Mind the endpoint asymmetry.** Posting a reply includes the PR number
+(`…/pulls/{n}/comments/{id}/replies`), but reading one single comment does
+**not** (`…/pulls/comments/{id}`). Appending an id to the list route returns
+404, which reads exactly like a deleted comment — it is not. Confirm a
+disappearance against a fresh paginated list before treating a thread as gone.
+
+**Identifiers differ per surface** — REST `id` / GraphQL `databaseId` /
+page `#discussion_r<id>` are the same integer, while the thread node id
+(`PRRT_…`) that `resolveReviewThread` needs exists only in GraphQL. The full
+correlation table, with prefixes and the consequences, is in
+`references/browser-fallback.md`. Never carry an identifier across surfaces
+without checking it against that table.
+
+**The ID bridge is mandatory.** A reply is impossible without a real comment
+id; never infer one from page text or ordering. GraphQL calls it `databaseId`
+and REST calls it `id` — same integer, and `id` is what
+`…/comments/{comment_id}/replies` takes. When GraphQL is rate-limited, take the
+inventory and its ids from REST
+(`gh api --paginate "…/pulls/{n}/comments?per_page=100"`, top-level =
+`in_reply_to_id == null`; one page is not the inventory) —
+the browser reads state and clicks controls but never supplies an ID. No ID,
+no reply, and therefore no resolve.
+
+**Replies are idempotent.** Before posting, list the thread's comments and skip
+if one is already authored by us against that top comment. A retry after a
+failed resolve re-attempts only the resolve.
 
 ## Bot roster
 
@@ -83,3 +115,8 @@ mutation($t:ID!){ resolveReviewThread(input:{threadId:$t}){ thread{ id isResolve
 
 Batch: resolve after the push that fixes a batch of threads, one pass per
 cycle, keeping GraphQL call count minimal.
+
+Rate-limited? REST has no substitute, but the browser does — click that
+thread's **Resolve conversation** after anchoring to its own
+`#discussion_r<id>`, per `references/browser-fallback.md`. Never pick a
+Resolve button out of an enumerated list; identity comes from the anchor.

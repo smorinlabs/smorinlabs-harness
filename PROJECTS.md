@@ -480,4 +480,59 @@ count/ID consistency rule. Worked renders split to references/formats.md per hou
 
 ---
 
+## [x] Project P28: pr-merge-flow Chrome fallback for GraphQL-blocked thread resolution (plugin v0.4.0)
+**Goal**: Close the one failure the quota ladder cannot climb out of. pr-merge-flow reserves
+GraphQL for exactly two operations — reading `isResolved` per review thread and the
+`resolveReviewThread` mutation — and neither has a REST equivalent, so an exhausted GraphQL
+budget stalls the Iron Law itself (`gh` porcelain, `gh api`, and `curl` all bill the same
+endpoint). Add a narrow escape hatch: drive the PR's web UI via the claude-in-chrome tools,
+whose session-authenticated internal endpoints draw on a different quota pool. Scope is those
+two operations only — never a poll, never a merge, never `javascript_tool`. Guarded on both
+ends: `decide_fallback_route` weighs the hourly GraphQL reset clock (near reset → bounded
+wait beats opening a browser; secondary limits publish no reset → straight to browser) and a
+confirmation gate fires in **every** mode including `--auto`, because suppressing
+review-judgment questions is not consent to drive the user's logged-in Chrome. Reply-over-REST
+precedes the browser resolve so a failed leg leaves a replied-but-open thread, never a silent
+resolve; every click is verified by re-reading state; 2–3 failed interactions degrade to a
+ready-report naming which threads were resolved, replied-to, or untouched.
+
+**Out of Scope**
+- Browser as a general fallback rung for any rate-limited call (thread replies, check status)
+  — core budget is separate and ample; revisit only if the field shows it is needed.
+- `--browser` / `--no-browser` flags and a `browser-fallback:` prefs key (deferred with the above).
+- Description edit: left unchanged at 978/~1000 chars — the fallback adds no firing moments,
+  so trigger budget is better spent elsewhere; keeps this a pure capability change (no overlap re-scan).
+
+### Tests & Tasks
+- [x] [P28-T01] `references/browser-fallback.md`: trigger conditions, reset guard + route contract, gate, procedure, degrade path, never-does list
+- [x] [P28-T02] `decide_fallback_route` body — core-floor-first ordering, secondary limits straight to browser (no reset clock), reset-window wait; three knobs (`wait_max` 600s, `core_floor` 100, +5s buffer) documented as tunable policy
+- [x] [P28-T03] Wiring: SKILL.md steps 1/3/4 + 4 Red Flags rows + See-also; polling.md escape-hatch section; triage.md pointers at both GraphQL blocks
+- [x] [P28-T04] `allowed-tools` + 7 claude-in-chrome tools (read/click only; `javascript_tool`, `file_upload`, `gif_creator`, `read_network_requests` excluded)
+- [x] [P28-T05] plugin.meta.toml 0.3.0 → 0.4.0; gen + gen-check green (all three manifests carry 0.4.0)
+- [x] [P28-T06] Docs page + README row refreshed
+- [x] [P28-T08] Post-review fixes: `read_page` restored (find caps at 20 matches — wrong-thread click risk); screenshots allowed as diagnostic-only, clicks stay `ref`-based (no grant change — `screenshot`/`zoom` are `computer` actions)
+- [x] [P28-T09] Cross-tool browser entry points: availability table (Claude Code `claude-in-chrome` / Codex `chrome@openai-bundled` / neither → `stop`); ruled out `browser@openai-bundled` (in-app browser has no logged-in GitHub session) and `computer-use@openai-bundled` (no element refs → would force forbidden coordinate clicking); ref rule holds on every harness
+- [x] [P28-T10] Live dogfood on PR #4 disproved the click path: `read_page` `filter:interactive` does not enumerate GitHub's Resolve buttons (identical output at depth 15 and 40 — rendered lazily, absent from the a11y tree); `find` returns them but anonymous (N identical labels, no thread identity); collapsed/outdated threads render no button at all. On the live PR every returned ref belonged to a thread that must NOT be resolved. Degraded without clicking — the bounded degrade path prevented a silent resolve
+- [x] [P28-T11] Redesign to read-only: browser supplies `isResolved` only and annotates a REST-built inventory (REST carries `databaseId`, path, line, author, `in_reply_to_id`), so the ID bridge never has to survive the page. Resolution stays GraphQL-only; threads are replied-to and left open until quota returns. Resolves CodeRabbit CR-3 and dissolves CR-4
+- [x] [P28-T12] CodeRabbit CR-1/2/4/5: gate states count only when known ("not yet known" at preflight); mandatory owner/repo/PR identity check from the page's own canonical URL before trusting content; idempotent replies (skip if one already exists via `in_reply_to_id`) in SKILL.md + triage.md; screenshots ephemeral by default, `save_to_disk` only with explicit consent
+- [x] [P28-T13] `allowed-tools` 7 → 5 browser tools: `read_page` and `find` dropped (read-only procedure calls neither; they survive only as the documented evidence for why clicking fails). Distinct from the earlier bad drop — verified against the procedure, not a grep
+- [x] [P28-T14] Red Flags: browser-cannot-click, valid-is-not-unclear (do not ask about strategy when the rubric names the action), new-bot-comments-are-step-5-not-a-re-plan
+- [>] [P28-T10..T13] SUPERSEDED by T15-T17 — the read-only retreat was based on a wrong negative result; see below
+- [x] [P28-T15] Retraction: the browser CAN resolve. Verified live on PR #4 — clicked a Resolve control by `ref`, thread flipped. The earlier "provably cannot" rested on three errors: (a) never scrolled — `read_page` reflects what is RENDERED and GitHub renders threads lazily, so depth 15 vs 40 tested the wrong axis entirely; (b) proposed the `#discussion_r<id>` anchor test and never ran it; (c) circular reasoning — treated this skill's own "never click by coordinate" style rule as evidence that clicking was impossible
+- [x] [P28-T16] Correct architecture — per-thread anchoring, never enumeration: REST supplies the authoritative thread list with `databaseId`; navigate to `…#discussion_r<databaseId>` renders that one thread; `read_page` then carries its controls AND its permalink, so identity is confirmed before any click. Dissolves the enumeration hazards at once (no anonymous refs, no `find` 20-cap, no document-order assumption, no lazy-render dependence) and supplies CodeRabbit CR-3's ID bridge — the permalink carries the same `databaseId` REST uses
+- [x] [P28-T17] Thread ledger keyed by `databaseId`: the thread set is live, not a snapshot. Re-fetch and merge every cycle and after every push; new entries run the identical verify → validate → (refute+resolve | fix+comment+resolve) loop; completion requires every ledger entry resolved. Counting open buttons is NOT a verification signal — observed 2→5 mid-run as Greptile posted a new thread while lazy content rendered. Verify per-thread by re-reading that thread's own state
+- [x] [P28-T18] `allowed-tools` restored to 7 browser tools: `computer` is the only actuator and needs a `ref` from `read_page`/`find`; granting the actuator without a ref producer leaves coordinate-clicking as the only path — an incoherent config, and the direct cause of the earlier bad drop
+- [x] [P28-T19] Retained from the CodeRabbit pass regardless of the retraction: mandatory PR-identity check (CR-2), idempotent replies (CR-4), ephemeral screenshots (CR-5), gate states count only when known (CR-1). Plus a standing rule: negative results need the same rigor as positive ones — vary the axis that matters before declaring impossibility, and never cite a house rule as proof a capability is absent
+- [x] [P28-T20] Greptile P1: REST review-comments returns `id`/`node_id` — no `databaseId` (that is GraphQL's name for the same integer). Verified against the live API; corrected across all five files. Procedure had named a field absent from the endpoint it told you to call
+- [x] [P28-T21] ID correlation table from real values: comment integer (REST `id` = GraphQL `databaseId` = page `#discussion_r<id>`) is the ONLY identifier on all three surfaces — which is what makes per-thread anchoring possible. Thread node id (`PRRT_…`) is GraphQL-only and is exactly what `resolveReviewThread` needs, so an exhausted GraphQL budget cannot even name the thread to the mutation — the structural reason the browser path must exist. `PRRC_` vs `PRRT_` prefix sanity check
+- [x] [P28-T22] Greptile: a Red Flags row still asserted "the browser path is read-only" after the retraction, telling users to reject the documented fallback exactly when GraphQL is blocked. Fixed, plus a stale See-also line
+- [x] [P28-T23] Greptile: REST inventory used `per_page=100` and treated one page as authoritative — past 100 review comments GitHub paginates and omitted threads get merged over. Now `gh api --paginate` / follow `Link` before declaring the set complete
+- [x] [P28-T24] Endpoint asymmetry recorded: reply is `…/pulls/{n}/comments/{id}/replies` (PR number) but single-comment GET is `…/pulls/comments/{id}` (no PR number). Appending an id to the list route 404s and reads exactly like a deletion — it is not. Confirm disappearance against a fresh paginated list. (Hit live this session; a transient `unexpected EOF` on the retry nearly compounded it — errors are "no data", never a state change)
+- [x] [P28-T25] Greptile: procedure replied (step 6) before reading thread state (steps 7-8), but the REST inventory carries no `isResolved` and lists resolved/unresolved identically — so a literal run posts replies to threads a reviewer already auto-resolved. Observed live this session: Copilot auto-resolved its own thread 3617915140 once the fix landed. Reordered to anchor → confirm identity → read state → (already resolved: record and skip) → reply → click → verify
+- [x] [P28-T26] Re-review cycle policy: bound raised 3 → 4, and the bound now ends in a CHECK-IN rather than a silent stop — report the ledger by id, then ask. Options: continue-until-clean (no cycle limit, bounded instead by a 10-minute wall clock, polling rules still apply inside it), gate/merge now, or stop. New prefs keys `cycle-bound` and `continue-until-clean` for repos that always want one answer. Rationale from this run: five cycles happened and convergence made continuing feel obviously right — which is exactly when a run is most tempted to keep going on its own judgment
+- [x] [P28-TS01] Gate: skill-quality on pr-merge-flow; static verify both tools
+- [x] [P28-T07] Commits 8e3f848 / 13d8e52 / 502e5a6 on `feat/pr-merge-flow-browser-fallback` (rebased onto origin/main — release/v0.14.0 was squash-merged as 998ce09)
+
+---
+
 - [ ] Regression Test Status
