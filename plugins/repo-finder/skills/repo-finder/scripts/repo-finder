@@ -26,6 +26,7 @@ from pathlib import Path
 
 VERSION = "0.2.0"
 DEFAULT_DEPTH = 3
+SEARCH_RESULT_CAP = 1000  # GitHub's hard ceiling on search results
 PRUNE = {".git", "node_modules", ".venv", "venv", "__pycache__", ".cache",
          "dist", "build", "target", ".tox", ".next"}
 TOOLING_FILES = ["pyproject.toml", "justfile", "Justfile", "package.json",
@@ -247,23 +248,39 @@ def _repo_item(item: dict) -> dict:
 
 
 def gh_search_repos(query: str, owners: list[str]) -> list[dict] | None:
-    """Tier 1 for find: ONE Search API call, name-filtered server-side.
-    Multiple `user:` qualifiers OR together and match both user and org
-    accounts (verified live 2026-07-19)."""
+    """Tier 1 for find: name-filtered server-side via the Search API. Multiple
+    `user:` qualifiers OR together and match both user and org accounts
+    (verified live 2026-07-19). Pages until every match is collected — a
+    truncated first page would let a repo that exists be reported as a clean
+    miss (GitHub caps search at SEARCH_RESULT_CAP results)."""
     quals = "+".join(f"user:{o}" for o in owners)
     q = urllib.parse.quote(query, safe="")
-    r = subprocess.run(
-        ["gh", "api", f"search/repositories?q={q}+in:name+{quals}&per_page=100"],
-        capture_output=True, text=True, timeout=60)
-    if r.returncode != 0:
-        if rate_limited("search"):
-            print("repo-finder: search API rate-limited; falling back to "
-                  "org listing", file=sys.stderr)
-        return None
-    try:
-        return [_repo_item(i) for i in json.loads(r.stdout).get("items", [])]
-    except json.JSONDecodeError:
-        return None
+    items: list[dict] = []
+    page = 1
+    while True:
+        r = subprocess.run(
+            ["gh", "api",
+             f"search/repositories?q={q}+in:name+{quals}&per_page=100&page={page}"],
+            capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            if rate_limited("search"):
+                print("repo-finder: search API rate-limited; falling back to "
+                      "org listing", file=sys.stderr)
+            return None
+        try:
+            data = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            return None
+        batch = data.get("items", [])
+        items.extend(_repo_item(i) for i in batch)
+        reachable = min(data.get("total_count", len(items)), SEARCH_RESULT_CAP)
+        if not batch or len(items) >= reachable:
+            if len(items) < data.get("total_count", 0):
+                print(f"repo-finder: search returned the first {len(items)} of "
+                      f"{data['total_count']} matches (API cap); narrow the "
+                      "query if the repo is missing", file=sys.stderr)
+            return items
+        page += 1
 
 
 def gh_list_repos(org: str, limit: int, transport: str

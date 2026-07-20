@@ -302,6 +302,36 @@ def test_find_remote_uses_search_api(tree):
     assert "in:name" in logged and "user:example-org" in logged
 
 
+GH_SEARCH_PAGED = """#!/bin/sh
+echo "$@" >> "$GH_LOG"
+case "$*" in
+  *"auth status"*) exit 0 ;;
+  *rate_limit*) echo 9999; exit 0 ;;
+  *search/repositories*page=2*)
+    echo '{"total_count":150,"items":[{"name":"deep-page-repo",'\\
+'"full_name":"example-org/deep-page-repo","default_branch":"main",'\\
+'"html_url":"https://github.com/example-org/deep-page-repo"}]}'; exit 0 ;;
+  *search/repositories*)
+    echo '{"total_count":150,"items":[{"name":"decoy","full_name":"example-org/decoy",'\\
+'"default_branch":"main","html_url":"https://github.com/example-org/decoy"}]}'; exit 0 ;;
+  *) echo '[]'; exit 0 ;;
+esac
+"""
+
+
+def test_find_pages_search_results(tree):
+    """A match beyond the first search page must not be reported as a clean
+    miss — truncating page 1 produced false not-founds (caught in PR #3)."""
+    enable_remote(tree)
+    log = tree["tmp"] / "gh.log"
+    os.environ["GH_LOG"] = str(log)
+    log.write_text("")
+    r = run(["find", "deep-page-repo"], tree, gh_stub=GH_SEARCH_PAGED)
+    assert r.returncode == 0, f"page-2 match reported as miss: {r.stderr}"
+    assert "deep-page-repo" in r.stdout
+    assert "page=2" in log.read_text()
+
+
 def test_find_clean_remote_miss_names_orgs(tree):
     enable_remote(tree)
     r = run(["find", "zzz-nope"], tree, gh_stub=GH_SEARCH_EMPTY)

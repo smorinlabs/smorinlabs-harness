@@ -124,9 +124,13 @@ deviation, waived in `CONFORMANCE.md`).
 
 - Auth: delegated entirely to `gh` — no tokens touched (R10.1 N/A beyond the
   exit-`4` mapping when `gh auth status` fails).
-- `find` remote tier 1: **one Search API call** with server-side name
-  filtering (`search/repositories?q=<query>+in:name+user:<owner>…` — multiple
-  `user:` qualifiers OR together and match both user and org accounts).
+- `find` remote tier 1: **Search API with server-side name filtering**
+  (`search/repositories?q=<query>+in:name+user:<owner>…` — multiple `user:`
+  qualifiers OR together and match both user and org accounts). Pages until
+  every match is collected, since a truncated first page would let a repo
+  that exists be reported as a clean miss; GitHub caps search at 1000
+  results, and hitting that cap warns on stderr rather than silently
+  truncating.
   Tier 2 (search unavailable): per-org enumeration, failures tracked per org
   and surfaced as the degraded exit `1` — never silently swallowed.
 - Enumeration (`org`, tier 2): REST page loop `per_page=100&page=N` until
