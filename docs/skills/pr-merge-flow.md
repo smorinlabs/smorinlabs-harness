@@ -7,7 +7,7 @@ thread with review-receiving rigor: restate the claim, verify it by running the
 code or a test where possible, fix valid findings (commit, push, reply naming
 the fix, resolve) and refute invalid ones with a reasoned reply before
 resolving — never a silent resolve. Because pushed fixes can trigger fresh bot
-reviews, it cycles (bounded, 3 by default) until a pass is clean, checks the PR
+reviews, it cycles (bounded, 4 by default, then a check-in offering to continue under a 10-minute wall clock) until a pass is clean, checks the PR
 title against repo conventions (repo `CLAUDE.md` first, Conventional Commits as
 the default — with squash merges the title becomes the commit subject), then
 ends per mode. All GitHub polling is quota-safe: rate-limit preflight, a

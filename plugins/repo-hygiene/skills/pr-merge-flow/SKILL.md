@@ -35,7 +35,8 @@ default (`confirm`, no deep review). Natural language counts as the flag
   so. Draft → report and stop unless told to mark it ready (`gh pr ready`);
   bots rarely review drafts.
 - Preferences: read `.claude/pr-merge-flow.local.md` if present (keys: `mode`,
-  `deep-review`, `merge-method`, `delete-branch`) and apply silently — its
+  `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
+  `continue-until-clean`) and apply silently — its
   whole point is not being asked every time. No file and no flag → `confirm`
   mode; after the first completed run, offer to save the choices there and
   ensure the file is ignored via `.git/info/exclude` — never edit
@@ -135,12 +136,29 @@ re-attempt only the step that failed.
 
 Pushed fixes can trigger fresh bot reviews. Return to step 2, then re-fetch and
 **merge into the ledger** (step 3) before triaging — new entries are expected
-output of your own fixes, not an anomaly. Bound: 3 cycles by default; still
-dirty after that → stop with a report naming every unresolved ledger entry.
-Never loop indefinitely.
+output of your own fixes, not an anomaly.
+
+**Bound: 4 cycles, then check in — never stop silently and never loop
+silently.** At the bound, report the ledger (resolved / replied-but-open /
+untriaged, each by id) and ask the user, one question, how to proceed:
+
+- **Continue until clean** — keep cycling with no cycle limit, bounded instead
+  by a **10-minute wall clock** from the moment they say so. Cycles still
+  obey every polling rule inside that window; on expiry, stop and report
+  wherever the ledger stands. This is the escape hatch for a PR that is
+  genuinely converging, just slowly.
+- **Merge / gate now** — proceed to step 6 with whatever is clean, provided
+  the Iron Law holds (every ledger entry resolved).
+- **Stop** — ready-report and hand back.
+
+`cycle-bound` and `continue-until-clean` may be set in
+`.claude/pr-merge-flow.local.md` to skip the check-in for a repo that always
+wants one answer.
 
 A cycle that produces only new threads and no new fixes still counts against
-the bound; the bound is on cycles, not on progress.
+the bound; the bound is on cycles, not on progress. Convergence is not a reason
+to skip the check-in — findings shrinking is exactly when a run is most tempted
+to keep going on its own judgment.
 
 ## 6. Merge preflight
 
@@ -253,7 +271,7 @@ impossible a guard already blocked it; divergence is a human decision.
 | "The button list shrank, so the click worked" | Counting is not verification: the page renders lazily and bots post mid-run, so totals move on their own. Re-read *that* thread's own state. |
 | "I tried twice and it failed, so it is impossible" | Negative results need the same rigor as positive ones. Vary the axis that matters before concluding anything is impossible — and never cite a rule from this skill as proof a capability is absent. |
 | "Every finding is valid, but there are a lot — let me ask how to proceed" | Valid is not unclear. The rubric already names the action: fix, commit, reply, resolve. Ask only when a verdict is genuinely undecidable, never about strategy. |
-| "New bot comments arrived — time to re-plan" | That is step 5, the ordinary re-review cycle. Merge them into the ledger and triage them the same way; the bound is 3 cycles, not a fresh design discussion. |
+| "New bot comments arrived — time to re-plan" | That is step 5, the ordinary re-review cycle. Merge them into the ledger and triage them the same way; the bound is 4 cycles then a check-in, not a fresh design discussion. |
 | "I collected the threads at the start, so I know the set" | The set is live. Re-fetch and merge every cycle and after every push — a thread that arrived while you worked still blocks the merge. |
 
 ## See also
