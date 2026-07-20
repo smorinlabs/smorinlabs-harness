@@ -117,9 +117,11 @@ technical rigor, no performative agreement:
 When the resolve mutation is rate-limited, the verdicts and fixes are
 unchanged and only the closing move relocates: reply over REST first (it rides
 the healthy core budget), then resolve that thread in the browser per
-`references/browser-fallback.md` — anchored to its own
-`#discussion_r<id>`, never picked out of an enumerated list — and
-verify that thread flipped. Reply-first is the invariant: a failed browser leg
+`references/browser-fallback.md` — anchored to its own `#discussion_r<id>`,
+never picked out of an enumerated list — and verify that thread flipped. In
+that path the browser **reads the thread's state before anything is written**:
+REST carries no `isResolved`, so a reply-first order would post to threads a
+reviewer already auto-resolved. Reply-first is the invariant: a failed browser leg
 must leave a replied-but-open thread, never a silent resolve. If the browser is
 unavailable too, replied-but-open is the correct resting state and the Iron Law
 still forbids merging over it.

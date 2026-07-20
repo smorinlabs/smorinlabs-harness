@@ -243,23 +243,30 @@ thread. A role with no equivalent is a `stop`, not something to approximate.
 
 Then, **for each thread, one at a time**:
 
-6. **Reply over REST first** (skip if already replied — see idempotency in
-   `triage.md`). The reply is the audit trail; a browser leg that then fails
-   leaves a replied-but-open thread, which is honest and recoverable, rather
-   than a resolved-but-unexplained one.
-7. **Anchor to that thread** — `navigate` to
+6. **Anchor to that thread** — `navigate` to
    `…/pull/$N#discussion_r<id>`. This renders it; without anchoring or
    scrolling, its controls are not in the tree at all.
-8. **`read_page`** (`filter: "interactive"`) and confirm the thread's permalink
-   `#discussion_r<id>` is present and matches the thread you intend.
-   Not present → `scroll_to` a `find` ref and re-read; still absent after that
-   → treat as a failed interaction and move on. **Never click a Resolve button
-   you have not tied to a specific comment `id`.**
-9. **Click that thread's Resolve control by `ref`** with `computer`
-   `left_click`. Prefer `ref` over `coordinate`: it names the element and
-   cannot drift when the page reflows. Coordinates from a screenshot are a last
-   resort, and only after step 8 has established identity.
-10. **Verify that thread**, not a count. Re-read and confirm *this* thread now
+7. **`read_page`** (`filter: "interactive"`) and confirm the thread's permalink
+   `#discussion_r<id>` is present and matches the thread you intend. Not
+   present → `scroll_to` a `find` ref and re-read; still absent after that →
+   treat as a failed interaction and move on. **Never touch a thread you have
+   not tied to a specific comment `id`.**
+8. **Read that thread's state before writing anything.** A thread already
+   showing **Unresolve conversation** (or "marked this conversation as
+   resolved") is done: record it resolved in the ledger and move on — no reply,
+   no click. This read *must* precede the reply, because the REST inventory
+   carries no `isResolved` and therefore lists resolved and unresolved threads
+   identically. Replying first would post to threads someone else already
+   closed — reviewers do auto-resolve their own findings once a fix lands.
+9. **Unresolved → reply over REST first**, then resolve (skip the reply if we
+   already posted one — see idempotency in `triage.md`). The reply is the audit
+   trail; a browser leg that then fails leaves a replied-but-open thread, which
+   is honest and recoverable, rather than a resolved-but-unexplained one.
+10. **Click that thread's Resolve control by `ref`** with `computer`
+    `left_click`. Prefer `ref` over `coordinate`: it names the element and
+    cannot drift when the page reflows. Coordinates from a screenshot are a
+    last resort, and only after step 7 has established identity.
+11. **Verify that thread**, not a count. Re-read and confirm *this* thread now
     shows **Unresolve conversation** / "marked this conversation as resolved".
     **Counting remaining Resolve buttons is not a verification signal**: the
     page renders lazily and reviewers post while you work, so the total can
