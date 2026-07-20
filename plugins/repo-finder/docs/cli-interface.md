@@ -73,7 +73,7 @@ verdict; a degraded search never masquerades as `3`.
 
 Precedence: flags > `REPO_FINDER_*` env > project `./.repo-finder/repo-finder_config.toml`
 > user `$XDG_CONFIG_HOME/repo-finder/repo-finder_config.toml` > built-in defaults
-(default root: `~/c` if it exists, else `~`,  depth 1).
+(default root: `~/c` if it exists, else `~`, depth 3).
 
 Curated env (R5.4): `REPO_FINDER_CONFIG` (config path), `REPO_FINDER_NO_REMOTE=1`.
 
@@ -114,7 +114,11 @@ py-launch-blueprint  ~/wt/py-launch-blueprint-fix
 `{name, path, kind, worktree_of, origin, default_branch, branch, dirty,
 last_commit, tooling[], source: "local"|"remote"}`. Errors under `--json` are a
 single object `{"error": {"code": "...", "message": "..."}}` on stderr (R7.8);
-codes include `not_found`, `auth_required`, `rate_limited` (R10.7).
+codes are `not_found`, `auth_required`, `remote_lookup_failed`,
+`config_error`, and `conflict`. A rate limit is reported as a stderr
+diagnostic and, if it ultimately defeats the lookup, surfaces as
+`remote_lookup_failed` — there is no distinct `rate_limited` code (R10.7
+deviation, waived in `CONFORMANCE.md`).
 
 ## Networked tier (§10, applicable subset)
 
@@ -138,7 +142,9 @@ codes include `not_found`, `auth_required`, `rate_limited` (R10.7).
 
 1. Exact name match across roots (incl. group dirs) → done.
 2. Substring / fuzzy match → ranked candidates.
-3. Widen: `depth+1` under configured roots only — never `$HOME`-wide.
+3. No second widening pass — the configured depth (3 by default) already
+   reaches group subdirectories and nested copies in the first scan, and the
+   search never leaves the configured roots.
 4. Remote (unless `--no-remote`): one name-filtered Search API call across
    all configured owners; per-org enumeration only if search is unavailable.
 5. Miss: exit `3` with a message naming what was searched; stderr prints the

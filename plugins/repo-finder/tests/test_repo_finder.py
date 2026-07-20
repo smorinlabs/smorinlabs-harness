@@ -10,6 +10,7 @@ split R7.1, JSON contract R7.2/R7.8).
 
 import json
 import os
+import re
 import subprocess
 import textwrap
 from pathlib import Path
@@ -100,6 +101,15 @@ def test_version_exits_zero(tree):
     r = run(["--version"], tree)
     assert r.returncode == 0
     assert r.stdout.strip()
+
+
+def test_version_matches_plugin_metadata(tree):
+    """The CLI's reported version is the installed-contract signal; it must not
+    drift from the plugin version consumers install (caught in PR #3)."""
+    meta = (Path(__file__).parent.parent / "plugin.meta.toml").read_text()
+    declared = re.search(r'^version = "([^"]+)"', meta, re.M).group(1)
+    r = run(["--version"], tree)
+    assert declared in r.stdout, f"CLI reports {r.stdout.strip()!r}, meta says {declared}"
 
 
 def test_unknown_command_usage_error(tree):

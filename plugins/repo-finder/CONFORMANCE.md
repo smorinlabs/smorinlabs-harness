@@ -28,6 +28,7 @@
 | R4.4 | No `-v/-q/--debug` ladder | minimal tier, single-file tool; diagnostics are already terse and on stderr | Steve Morin / 2026-07-19 |
 | R7.5 | Help has usage + command list but no worked example per subcommand | token-lean help; the skill body carries usage examples for the agent | Steve Morin / 2026-07-19 |
 | R10.3 | `org` supports `--limit` (total cap, backend pages fetched as needed, truncation warned) but not the `--paginate`/`--page-size`/`--no-paginate` trio | bounded-by-default with an explicit cap meets the rule's intent; the full trio is oversized for a finder | Steve Morin / 2026-07-19 |
+| R10.7 | Rate limits are detected authoritatively and reported on stderr, but no distinct `rate_limited` machine error code is emitted — a rate limit that ultimately defeats the lookup surfaces as `remote_lookup_failed` | the actionable distinction for a consumer is "the remote lookup did not complete", which `remote_lookup_failed` already carries; the cause is on stderr | Steve Morin / 2026-07-20 |
 
 ## Audit history
 

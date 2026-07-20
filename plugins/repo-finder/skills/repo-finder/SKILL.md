@@ -66,7 +66,10 @@ tells its own story). Don't re-verify with `git remote -v` or `gh repo view`
 
 ## On a miss
 
-The tool already widened within configured roots before reporting `3`. Do not
+A `3` means the configured roots were scanned to their depth (3 by default,
+which reaches group subdirectories and nested copies) and nothing matched —
+it does not mean the repo is absent from the machine, only from the
+configured roots. Do not
 fall back to `find ~ -type d` or home-wide globs — instead ask the user where
 the repo lives and offer to add that root to their config
 (`repo-finder_config.toml`, created by `init`), or pass `--root <path>` for a

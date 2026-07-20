@@ -24,7 +24,7 @@ import tomllib
 import urllib.parse
 from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 DEFAULT_DEPTH = 3
 PRUNE = {".git", "node_modules", ".venv", "venv", "__pycache__", ".cache",
          "dist", "build", "target", ".tox", ".next"}

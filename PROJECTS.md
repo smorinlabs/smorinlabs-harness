@@ -371,8 +371,8 @@ started): cache tier, primarily for remote facts.
 - [x] [P22-T02] Interface spec `docs/cli-interface.md` + `CONFORMANCE.md` (cli-standards plan mode, v1.4.14 pinned)
 - [x] [P22-T03] SKILL.md (agent-side trigger description, ≤1000 chars) + plugin.meta.toml; `just gen`/`gen-check` clean
 - [x] [P22-T04] Docs: `docs/skills/repo-finder.md` + README section + plugin/skill counts
-- [x] [P22-T05] Dev placements via skillsmith (claude-code + codex) — both static-verified, ledger dev entries recorded
-- [x] [P22-TS02] skill-quality gate: content (desc 830 chars, no collisions, least-privilege Bash, no personal paths) ✓, docs (page + README, zero placeholders) ✓, conventions (meta.toml, marketplace, gen-check) ✓, loads (skillsmith verify static pass both tools, 0 err/0 warn) ✓
+- [x] [P22-T05] Dev placements on both tools (dev symlinks, claude-code then codex; static verify pass both)
+- [x] [P22-TS02] skill-quality gate: content (desc 830 chars, no collisions, least-privilege Bash, no personal paths) ✓, docs (page + README, zero placeholders) ✓, conventions (meta.toml, marketplace, gen-check) ✓, loads (static load verification pass both tools, 0 err/0 warn) ✓
 - [x] [P22-T06] Release: harness version bump + RELEASE-NOTES (shipped in marketplace v0.14.0)
 
 ---
@@ -433,8 +433,8 @@ Name chosen for future family grammar (question-*).
 ### Tests & Tasks
 - [x] [P25-T01] SKILL.md (desc 988 chars, pure markdown); plugin.meta.toml; gen/gen-check green
 - [x] [P25-T02] Docs page + README section + counts (eight plugins, twenty skills)
-- [x] [P25-TS01] Gate: placements both tools (skillsmith dev), static verify pass, no placeholders
-- [x] [P25-TS02] `skillsmith verify --deep`: live-load pass both tools (claude 2.1.215, codex 0.144.6), no findings
+- [x] [P25-TS01] Gate: dev placements both tools, static verify pass, no placeholders
+- [x] [P25-TS02] Deep load verification: session-backed load pass both tools (claude 2.1.215, codex 0.144.6), no findings
 
 ---
 
