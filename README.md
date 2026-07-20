@@ -64,7 +64,7 @@ Lightweight `PROJECTS.md` project management.
 
 | Skill | Does | Details |
 |---|---|---|
-| `using-project-harness` | Bootstraps the bundle in a repo and routes project-state changes to the right skill. | [docs/skills/using-project-harness.md](docs/skills/using-project-harness.md) |
+| `using-project-harness` | Bootstraps tracked project state and routes its changes; excludes VM/Lima/sandbox execution setup. | [docs/skills/using-project-harness.md](docs/skills/using-project-harness.md) |
 | `project-add` | Captures a new project idea in at most 4 questions and reserves the next `P##` with an atomic commit. | [docs/skills/project-add.md](docs/skills/project-add.md) |
 | `project-audit` | Runs 11 drift checks against `PROJECTS.md`/`projects/` and fixes per-finding on confirmation. | [docs/skills/project-audit.md](docs/skills/project-audit.md) |
 | `project-next` | Surfaces a menu of in-progress, next-up, and recently touched projects. | [docs/skills/project-next.md](docs/skills/project-next.md) |
