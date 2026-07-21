@@ -105,7 +105,7 @@ Each surface has one form of address, and it is not optional:
 - **What** — the executable. A bare `gh` is a *claim* that `gh` is on the
   reader's PATH. Write the bare name only when you **confirmed it this
   session** (`command -v gh`); otherwise give the full path
-  (`~/.local/bin/skillsmith`) or a PATH-independent invocation (`uv run …`,
+  (`~/.local/bin/demo-cli`) or a PATH-independent invocation (`uv run …`,
   `npx …`). Assumption is not confirmation.
 
 **Substitutions are addresses too.** Any placeholder the reader must fill —

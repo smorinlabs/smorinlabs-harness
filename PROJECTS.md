@@ -535,7 +535,7 @@ ready-report naming which threads were resolved, replied-to, or untouched.
 
 ---
 
-## [~] Project P29: reader-steps — every step carries its address (plugin v0.3.0)
+## [x] Project P29: reader-steps — every step carries its address (plugin v0.3.0)
 **Goal**: Close the gap between "the step names an action" and "the reader can start it".
 A browser step reading "your app's settings page" and a terminal step reading `just update`
 are both incomplete — the first withholds the URL, the second withholds both the working
@@ -579,10 +579,22 @@ comes from the digest.
       path reads the digest, never SKILL.md
 - [x] [P29-TS01] Gate: skill-quality PASS on all four layers — description byte-identical at
       996 chars (no collision re-scan owed), zero placeholders, gen-check green,
-      `skillsmith verify` claude-code + codex pass with 0 blocking findings
-- [~] [P29-T08] Branch `feat/reader-steps-step-addresses` → smorinlabs/smorinlabs-harness#7 (open).
-      Merge-commit, then ff main so the two live placements (`~/.claude/skills/reader-steps`,
-      `~/.agents/skills/reader-steps`) pick it up — both symlink the main clone
+      cross-tool load verification green on claude-code + codex, 0 blocking findings
+- [x] [P29-T08] Merged: smorinlabs/smorinlabs-harness#7 as `c03ace1` and the digest as
+      smorin/smorin-bootstrap#8 → `1233b39`; both mains fast-forwarded after the four checks.
+      Live on both tools — `~/.claude/skills/reader-steps` and `~/.agents/skills/reader-steps`
+      both serve the address section, `~/.claude/CLAUDE.md` carries the digest rule, and
+      cross-tool load verification passes on claude-code + codex, 0 blocking findings.
+      Note for future verifies: pass the realpath, not the placement symlink — the
+      cross-tool verifier copies the dir to wrap it and ENOENTs on a symlink
+- [x] [P29-T09] Scrub regression fixed (plugin 0.3.0 → 0.3.1). The v0.3.0 merge turned `main`
+      RED: CI `static-checks` "No private-tooling references" flags any mention of the private
+      cross-tool verifier, and five references shipped — two of them the address rule's own
+      not-on-PATH examples, which reached for the most familiar such binary on this machine.
+      Examples now use `~/.local/bin/demo-cli`, matching the `demo-repo`/`mylib`/`myapp`
+      convention already in these files, so no real private tool name can re-leak. Gap worth
+      noting: skill-quality's scrub is generic (secrets, PII, absolute personal paths) and does
+      not run the target repo's own CI rules — it reported PASS while CI was failing
 
 ---
 
