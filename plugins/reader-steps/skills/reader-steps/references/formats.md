@@ -159,7 +159,7 @@ correct; the difference is whether you checked:
 | Write | When |
 |---|---|
 | `gh secret set …` | You ran `command -v gh` this session and it resolved |
-| `~/.local/bin/skillsmith list` | You didn't check, or the tool ships outside the usual PATH |
+| `~/.local/bin/demo-cli list` | You didn't check, or the tool ships outside the usual PATH |
 | `uv run ruff check .` | A runner makes PATH irrelevant — prefer this when one exists |
 
 **Placeholders say where their value comes from**, in the step that uses them:
