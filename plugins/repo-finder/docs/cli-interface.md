@@ -17,7 +17,7 @@ LLM agent; output is token-optimized compact text by default, JSON on request.
 
 | Command | Purpose | Exit on "nothing" |
 |---|---|---|
-| `find <query>` | Resolve a repo name (substring/fuzzy) to all local matches with orientation facts; on local miss, remote org lookup; on total miss print clone hint + search suggestions to stderr | `3` not found (R6.2 view-of-missing default) |
+| `find <query>` | Resolve a repo name (case-insensitive substring) to all local matches with orientation facts; on local miss, remote org lookup; on total miss print clone hint + close-name suggestions to stderr | `3` not found (R6.2 view-of-missing default) |
 | `list` | Enumerate all repos across configured roots, one line each | `0` — empty set is success (R6.2) |
 | `orgs` | Show configured GitHub orgs (owned/member) from config; no network | `0` |
 | `org <name>` | List repos in one remote org (REST-first), bounded page | `3` if org unknown/empty answer from API distinguishes: unknown org `3`, empty list `0` |
@@ -144,17 +144,21 @@ deviation, waived in `CONFORMANCE.md`).
 
 ## Not-found ladder (`find`)
 
-1. Exact name match across roots (incl. group dirs) → done. A worktree also
-   matches its **main repo's** name, since worktree directories are usually
-   named for their topic or branch (`~/wt/<repo>/<topic>`) and would otherwise
-   be invisible to a search for the repo itself.
-2. Substring / fuzzy match → ranked candidates.
-3. No second widening pass — the configured depth (3 by default) already
+1. **One case-insensitive substring pass** over every repo in the configured
+   roots (incl. group dirs and nested copies). A repo matches when its
+   directory name contains the query; a worktree matches on that *or* on its
+   **main repo's** name, since worktree directories are usually named for
+   their topic or branch (`~/wt/<repo>/<topic>`) and would otherwise be
+   invisible to a search for the repo itself. There is no separate exact-match
+   tier: an exact name does not short-circuit, so `find difftree` returns
+   `difftree`, `difftree-action`, and `difftree-action-test` together,
+   deterministically ranked (kind → root order → depth).
+2. No second widening pass — the configured depth (3 by default) already
    reaches group subdirectories and nested copies in the first scan, and the
    search never leaves the configured roots.
-4. Remote (unless `--no-remote`): one name-filtered Search API call across
+3. Remote (unless `--no-remote`): one name-filtered Search API call across
    all configured owners; per-org enumeration only if search is unavailable.
-5. Miss: exit `3` with a message naming what was searched; stderr prints the
+4. Miss: exit `3` with a message naming what was searched; stderr prints the
    exact `git clone` command when the name resolved remotely-only, else 2–3
    bounded suggestions (other roots to add to config, `repo-finder init`
    hint). A partially-failed remote search exits `1` instead — "couldn't
