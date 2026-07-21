@@ -572,10 +572,17 @@ comes from the digest.
       per-step form, the three correct executable forms, placeholder sourcing, honest-gap render
 - [x] [P29-T05] plugin.meta.toml 0.2.0 → 0.3.0; gen + gen-check green
 - [x] [P29-T06] Docs page refreshed (README row unchanged — description unchanged)
-- [ ] [P29-T07] Digest sync: `~/.claude/CLAUDE.md` reader-task block gains the address rule
-      (outside the repo — the unprompted path does not read SKILL.md)
-- [ ] [P29-TS01] Gate: skill-quality on reader-steps
-- [ ] [P29-T08] Branch `feat/reader-steps-step-addresses`, PR, merge-commit, ff main
+- [x] [P29-T07] Digest sync: the reader-task block in global instructions gains the address rule.
+      Lives outside this repo — `~/.claude/CLAUDE.md` is a dotbot symlink into
+      `smorin-bootstrap/dotfiles/claude-CLAUDE.md`, so it ships as smorin/smorin-bootstrap#8
+      on branch `docs/reader-steps-address-digest`. Required, not optional: the unprompted
+      path reads the digest, never SKILL.md
+- [x] [P29-TS01] Gate: skill-quality PASS on all four layers — description byte-identical at
+      996 chars (no collision re-scan owed), zero placeholders, gen-check green,
+      `skillsmith verify` claude-code + codex pass with 0 blocking findings
+- [~] [P29-T08] Branch `feat/reader-steps-step-addresses` → smorinlabs/smorinlabs-harness#7 (open).
+      Merge-commit, then ff main so the two live placements (`~/.claude/skills/reader-steps`,
+      `~/.agents/skills/reader-steps`) pick it up — both symlink the main clone
 
 ---
 
