@@ -1,5 +1,5 @@
 name = "repo-finder"
-version = "0.2.0"
+version = "0.2.1"
 description = "One-command repo resolution for agents: resolve a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling) via a config-bounded multi-root scan — falling back to the user's configured GitHub orgs over gh REST-first (GraphQL only as configured fallback) for exact clone names. Deterministic ranking (checkouts, then worktrees labeled with their main repo, then nested copies); recency displayed, not ranked, so the consuming LLM decides. Single-file zero-dependency uv Python script inside the skill; conforms to the CLI Design Standard (small-CLI profile, minimal tier). Replaces token-expensive ls/find cascades and repeated gh repo view identity checks."
 author = "Steve Morin"
 keywords = ["repo", "finder", "git", "worktree", "github", "org", "cli", "agent-tools"]

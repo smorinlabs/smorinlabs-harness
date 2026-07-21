@@ -54,6 +54,10 @@ def tree(tmp_path):
     beta = make_repo(root / "beta")
     make_repo(beta / "vendor" / "alpha")  # nested inside beta's tree
     git("worktree", "add", "-q", str(wt / "alpha-fix"), "-b", "fix", cwd=alpha)
+    # real-world layout: worktrees grouped under the repo name but each
+    # directory named for its TOPIC, so the repo name appears nowhere in it
+    git("worktree", "add", "-q", str(wt / "alpha" / "xdg-config-rework"),
+        "-b", "xdg-config-rework", cwd=alpha)
 
     config = tmp_path / "repo-finder_config.toml"
     config.write_text(textwrap.dedent(f"""\
@@ -151,6 +155,25 @@ def test_find_ranking_checkout_then_worktree_then_nested(tree):
     wt_pos = text.index(str(tree["wt"] / "alpha-fix"))
     nested_pos = text.index(str(tree["root"] / "beta" / "vendor" / "alpha"))
     assert canon < wt_pos < nested_pos
+
+
+def test_find_repo_returns_topic_named_worktrees(tree):
+    """Searching a repo's name must return its worktrees even when their
+    directories are named for the topic, not the repo — otherwise every
+    worktree is invisible to the search the tool exists to answer."""
+    r = run(["find", "alpha", "--no-remote"], tree)
+    assert r.returncode == 0
+    topic_wt = str(tree["wt"] / "alpha" / "xdg-config-rework")
+    assert topic_wt in r.stdout, "topic-named worktree missing from a repo-name search"
+
+
+def test_topic_worktree_json_links_main(tree):
+    r = run(["find", "alpha", "--no-remote", "--json"], tree)
+    matches = json.loads(r.stdout)
+    topic = next(m for m in matches
+                 if m["path"] == str(tree["wt"] / "alpha" / "xdg-config-rework"))
+    assert topic["kind"] == "worktree"
+    assert topic["worktree_of"] == str(tree["root"] / "alpha")
 
 
 def test_find_worktree_links_main_and_shows_branch(tree):
