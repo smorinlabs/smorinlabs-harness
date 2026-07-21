@@ -167,14 +167,17 @@ to keep going on its own judgment.
 - Mergeability/conflicts: REST `mergeable` state (`null` means GitHub is
   still computing — retry once after ~30s; it is not a verdict).
 - Title: must match the repo convention (CLAUDE.md), else Conventional
-  Commits `type(scope): subject` — with squash merges the title becomes the
-  commit subject. Fix via `gh pr edit --title`; `--auto` fixes silently,
-  `confirm` shows old → new at the gate.
+  Commits `type(scope): subject` — under the default merge-commit strategy
+  the branch's own commits are what release tooling parses, and the title
+  lands as the merge subject where the repo sets `merge_commit_title=PR_TITLE`.
+  Fix via `gh pr edit --title`; `--auto` fixes silently, `confirm` shows
+  old → new at the gate.
 
 ## 7. End per mode
 
-- **auto** — merge now (`gh pr merge --squash` unless prefs/CLAUDE.md say
-  otherwise; `delete-branch` per prefs), then report what was done and run
+- **auto** — merge now (`gh pr merge` with the merge strategy chosen via the CLAUDE.md
+  merge-strategy precedence — user > repo CLAUDE.md/AGENTS.md > repo GitHub settings >
+  global default (defaults to `--merge`); `delete-branch` per prefs), then report what was done and run
   the step 9 survey — report-only in this mode. If GitHub rejects the merge
   (branch protection — required approvals, etc.), downgrade to the
   ready-report; never force.
@@ -248,7 +251,9 @@ When every guard is clear, the sync is fast-forward-only:
 - default branch is the current branch → `git pull --ff-only`.
 
 Never bare `git pull`, never `--rebase`, never force. If fast-forward is
-impossible a guard already blocked it; divergence is a human decision.
+impossible a guard already blocked it; divergence is a human decision — the
+`--rebase` fallback that CLAUDE.md documents is the user's call to make, not
+this skill's.
 
 ## Red Flags
 
