@@ -535,7 +535,7 @@ ready-report naming which threads were resolved, replied-to, or untouched.
 
 ---
 
-## [~] Project P29: reader-steps — every step carries its address (plugin v0.3.0)
+## [x] Project P29: reader-steps — every step carries its address (plugin v0.3.0)
 **Goal**: Close the gap between "the step names an action" and "the reader can start it".
 A browser step reading "your app's settings page" and a terminal step reading `just update`
 are both incomplete — the first withholds the URL, the second withholds both the working
@@ -580,9 +580,13 @@ comes from the digest.
 - [x] [P29-TS01] Gate: skill-quality PASS on all four layers — description byte-identical at
       996 chars (no collision re-scan owed), zero placeholders, gen-check green,
       `skillsmith verify` claude-code + codex pass with 0 blocking findings
-- [~] [P29-T08] Branch `feat/reader-steps-step-addresses` → smorinlabs/smorinlabs-harness#7 (open).
-      Merge-commit, then ff main so the two live placements (`~/.claude/skills/reader-steps`,
-      `~/.agents/skills/reader-steps`) pick it up — both symlink the main clone
+- [x] [P29-T08] Merged: smorinlabs/smorinlabs-harness#7 as `c03ace1` and the digest as
+      smorin/smorin-bootstrap#8 → `1233b39`; both mains fast-forwarded after the four checks.
+      Live on both tools — `~/.claude/skills/reader-steps` and `~/.agents/skills/reader-steps`
+      both serve the address section, `~/.claude/CLAUDE.md` carries the digest rule, and
+      `skillsmith verify` passes claude-code + codex with 0 blocking findings.
+      Note for future verifies: pass the realpath, not the placement symlink —
+      `skillsmith verify` copies the dir to wrap it and ENOENTs on a symlink
 
 ---
 
