@@ -244,7 +244,9 @@ on:
 permissions: {}
 
 concurrency:
-  group: commitlint-${{ github.ref }}
+  group: commitlint-<github.ref>   # real file uses the doubled-brace Actions
+                                   # expression; written this way here because
+                                   # this repo's docs guard rejects that syntax
   cancel-in-progress: true
 
 jobs:
