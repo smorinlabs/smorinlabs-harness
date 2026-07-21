@@ -8,9 +8,9 @@ description: Render actions only the READER can or will perform as a delineated,
 When work crosses to the human, render it so it can be executed from the
 block alone: bounded, ordered, concrete, verifiable, nothing held in memory.
 
-Worked renders at every scale, divider forms, and navigation examples live in
-`references/formats.md` — read it when composing a block bigger than three
-steps or spanning surfaces.
+Worked renders at every scale, divider forms, address forms, and navigation
+examples live in `references/formats.md` — read it when composing a block
+bigger than three steps or spanning surfaces.
 
 ## When it applies
 
@@ -84,6 +84,39 @@ No tangents inside the block. No time estimates.
 and the number of steps are the same N; every ID in the footer or in prose is
 quoted exactly as declared.
 
+## Every step says where it starts
+
+A step the reader can't begin without asking "where?" is not self-contained.
+Each surface has one form of address, and it is not optional:
+
+| Surface | The address |
+|---|---|
+| 🌐 browser | The **literal URL**, deep-linked to the exact page — `github.com/settings/apps/example-bot/installations`, never "your app's settings" |
+| ⌨️ terminal | The **working directory** the command runs in, and a command that resolves |
+| 🖥️ desktop / system UI | The **app**, and how it opens — **System Settings** (Apple menu ▸ **System Settings…**) |
+| 📱 phone | The **app** the prompt appears in |
+
+**The terminal address has two halves.**
+
+- **Where** — the directory. Carry it on the group divider when the whole
+  group shares one (`— ⌨️ in ~/c/demo-repo · store the key, then trigger —`),
+  on the step when it doesn't. Only genuinely path-independent commands omit
+  it.
+- **What** — the executable. A bare `gh` is a *claim* that `gh` is on the
+  reader's PATH. Write the bare name only when you **confirmed it this
+  session** (`command -v gh`); otherwise give the full path
+  (`~/.local/bin/skillsmith`) or a PATH-independent invocation (`uv run …`,
+  `npx …`). Assumption is not confirmation.
+
+**Substitutions are addresses too.** Any placeholder the reader must fill —
+`<repo>`, `$TOKEN`, `<app-id>` — says **where its value comes from**, in the
+step that uses it. A command carrying an unexplained placeholder cannot be
+run from the block alone.
+
+**Unknown beats invented.** A URL or path you can't source is not guessed:
+name what is known and the one hop that finds the rest. A fabricated address
+costs the reader more than an honest gap.
+
 ## Navigation and reactive steps
 
 - **Breadcrumb by default**: **System Settings** ▸ **General** ▸ **Sharing**.
@@ -123,6 +156,10 @@ corrected form restated; the whole block is not rerun.
 | "This choice can be step 2" | Decisions are asked, never listed as steps. |
 | "One step still deserves the full frame" | At one step the frame is ceremony. Collapse to the inline form. |
 | "I added a step; the count is close enough" | Header, footer, and step count are one number. A wrong count kills the closure signal. |
+| "They're obviously in the repo directory" | Every terminal step names its directory, or its group divider does. |
+| "`gh` is definitely installed" | A bare command name asserts PATH. Assert it only if you ran `command -v` this session; else full path. |
+| "They'll find the settings page" | Browser steps carry the literal deep-link URL, not a description of where it lives. |
+| "I'll write a plausible-looking URL" | An address you can't source is a guess. Say what's known and the hop that finds the rest. |
 
 ## See also
 

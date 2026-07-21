@@ -17,6 +17,16 @@ its **outcome** (never echoing a button label), with the literal command or
 UI path below it and a `✓` verification line under that; `mono` means type
 it, **bold** means click it, `▸` is one navigation hop.
 
+Every step also carries its **address** — where the reader starts. Browser
+steps give the literal deep-link URL rather than a description of where the
+page lives; terminal steps give the working directory (on the group divider
+when a whole group shares one) and an executable that resolves, meaning a
+bare command name only when PATH was actually confirmed and otherwise a full
+path or a runner invocation; desktop and phone steps name the app and how it
+opens. Placeholders the reader must substitute say where their value comes
+from, and an address that can't be sourced is stated as a known gap rather
+than guessed.
+
 It scales: a single step collapses to one inline line with no frame at all;
 two or three steps on one surface drop the rules and dividers; eight or more
 gain a `Map:` line and `Stop points:` so a long sequence reads as finite and

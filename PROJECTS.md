@@ -535,4 +535,55 @@ ready-report naming which threads were resolved, replied-to, or untouched.
 
 ---
 
+## [~] Project P29: reader-steps — every step carries its address (plugin v0.3.0)
+**Goal**: Close the gap between "the step names an action" and "the reader can start it".
+A browser step reading "your app's settings page" and a terminal step reading `just update`
+are both incomplete — the first withholds the URL, the second withholds both the working
+directory and any evidence that `just` resolves on the reader's PATH. Add one authoring
+rule covering all five surfaces: every step states where it starts. Browser gives the
+literal deep-link URL; terminal gives the working directory (carried once on the group
+divider when the group shares one, per-step when it doesn't) plus an executable that
+resolves — a bare command name only when `command -v` was actually run this session,
+otherwise a full path or a runner invocation (`uv run`, `npx`). Desktop and phone steps
+name the app and how it opens. Two corollaries: placeholders the reader must substitute
+say where their value comes from, and an address that cannot be sourced is stated as a
+known gap rather than guessed. The rule ships to both delivery paths — the canonical
+SKILL.md and the always-on digest in global instructions, since the unprompted behavior
+comes from the digest.
+
+**Out of Scope**
+- Per-step prerequisite/install checks ("if `gh` is missing, `brew install gh`") — roughly
+  doubles step length and turns the handoff block into a setup guide; the executable-address
+  rule already covers the failure it targets.
+- Description edit: frontmatter and meta descriptions left unchanged (996/~1000 chars). The
+  rule changes what a rendered step contains, not when the skill fires — a pure capability
+  change, so no overlap re-scan and no README row churn.
+
+### Tests & Tasks
+- [x] [P29-T01] SKILL.md `## Every step says where it starts` — per-surface address table,
+      terminal's two halves (directory + resolvable executable), substitution sourcing,
+      "unknown beats invented"; placed before `## Navigation and reactive steps`
+- [x] [P29-T02] Red Flags: 4 rows — obviously-in-the-repo-directory, `gh`-is-definitely-installed,
+      they'll-find-the-settings-page, plausible-looking-URL
+- [x] [P29-T03] `references/formats.md` — existing worked renders corrected (they violated the
+      new rule: RB.2–RB.4 ran `op`/`gh`/`git` with no directory, NM.12 ran a bare `just update`
+      on a machine whose PATH the bootstrap had just rewritten)
+- [x] [P29-T04] `references/formats.md` `## Addresses` — shared-directory-on-divider vs
+      per-step form, the three correct executable forms, placeholder sourcing, honest-gap render
+- [x] [P29-T05] plugin.meta.toml 0.2.0 → 0.3.0; gen + gen-check green
+- [x] [P29-T06] Docs page refreshed (README row unchanged — description unchanged)
+- [x] [P29-T07] Digest sync: the reader-task block in global instructions gains the address rule.
+      Lives outside this repo — `~/.claude/CLAUDE.md` is a dotbot symlink into
+      `smorin-bootstrap/dotfiles/claude-CLAUDE.md`, so it ships as smorin/smorin-bootstrap#8
+      on branch `docs/reader-steps-address-digest`. Required, not optional: the unprompted
+      path reads the digest, never SKILL.md
+- [x] [P29-TS01] Gate: skill-quality PASS on all four layers — description byte-identical at
+      996 chars (no collision re-scan owed), zero placeholders, gen-check green,
+      `skillsmith verify` claude-code + codex pass with 0 blocking findings
+- [~] [P29-T08] Branch `feat/reader-steps-step-addresses` → smorinlabs/smorinlabs-harness#7 (open).
+      Merge-commit, then ff main so the two live placements (`~/.claude/skills/reader-steps`,
+      `~/.agents/skills/reader-steps`) pick it up — both symlink the main clone
+
+---
+
 - [ ] Regression Test Status

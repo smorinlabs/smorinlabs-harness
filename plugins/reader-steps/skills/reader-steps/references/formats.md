@@ -47,7 +47,7 @@ move onto the step lines.
 > `example-org/demo-repo`
 >   ✓ repo settings list the app
 >
-> — ⌨️ in the terminal · add the secrets, then trigger —
+> — ⌨️ in `~/c/demo-repo` · add the secrets, then trigger —
 >
 > **RB.2 · Store the key in 1Password**
 >   `op item create --category "API Credential" --title release-bot-key --file key.pem`
@@ -67,6 +67,11 @@ move onto the step lines.
 
 Note RB.3: the phone approval is a reactive line *inside* the step that
 triggers it, not a fifth sequential step.
+
+Note the addresses: RB.1 carries the literal URL rather than "your app's
+settings page", and the terminal divider carries `~/c/demo-repo` once for all
+three steps that share it — which is what lets RB.2's relative `key.pem` and
+RB.4's repo context (commit + push from the right checkout) mean something.
 
 ## Eight or more steps — map and stop points
 
@@ -94,10 +99,10 @@ now"), and step ranges on the dividers so the map's references land.
 >
 > *(… groups continue: 🖥️ system settings, ⌨️ toolchain, 🌐 auth, 📱 approve …)*
 >
-> — ⌨️ in the terminal · NM.12 · verify —
+> — ⌨️ in `~/c/dotfiles` · NM.12 · verify —
 >
 > **NM.12 · Prove the machine is converged**
->   `just update`
+>   `/opt/homebrew/bin/just update`
 >   ✓ ends with "All tools and configurations updated"
 > ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 > **▲ That's all 12 — start with ▶ NM.1.** Tell me when NM.12 is green.
@@ -128,6 +133,50 @@ expensive to get wrong:
 Titles echoing the button label (`Install the App` above a line reading
 `→ **Install App**`) are the redundancy this rule exists to prevent.
 
+## Addresses
+
+**Shared directory → the divider carries it once.** Four steps in one repo do
+not repeat `cd` four times:
+
+> — ⌨️ in `~/c/demo-repo` · add the secrets, then trigger —
+
+**Mixed directories → the step carries its own**, and the divider stays
+generic:
+
+> — ⌨️ in the terminal · publish from two repos —
+>
+> **▶ PB.1 · Cut the library release**
+>   in `~/c/mylib`: `uv build && uv publish`
+>   ✓ the new version appears on PyPI
+>
+> **PB.2 · Point the app at it**
+>   in `~/c/myapp`: `uv add mylib@latest`
+>   ✓ `uv.lock` shows the version from PB.1
+
+**Executable not confirmed on PATH → give the full path.** Both forms are
+correct; the difference is whether you checked:
+
+| Write | When |
+|---|---|
+| `gh secret set …` | You ran `command -v gh` this session and it resolved |
+| `~/.local/bin/skillsmith list` | You didn't check, or the tool ships outside the usual PATH |
+| `uv run ruff check .` | A runner makes PATH irrelevant — prefer this when one exists |
+
+**Placeholders say where their value comes from**, in the step that uses them:
+
+> **▶ TK.1 · Give the workflow a token to push with**
+>   `gh secret set RELEASE_TOKEN --repo <owner>/<repo> --body '<token>'`
+>   `<owner>/<repo>` is the repo from TK.0; `<token>` is the value printed by
+> `claude setup-token` — it is shown once and not recoverable.
+>   ✓ `gh secret list` shows `RELEASE_TOKEN`
+
+**When you can't source the address, say so** rather than inventing one:
+
+> **▶ AP.1 · Install the App on the repo**
+>   Your App's install page — from `github.com/settings/apps`, open the App,
+> then **Install App**. (I don't have its numeric ID, so I can't deep-link it.)
+>   ✓ the repo's settings list it under **Installed GitHub Apps**
+
 ## Navigation depth
 
 **Breadcrumb** (default, up to ~3 hops):
@@ -155,7 +204,7 @@ breadcrumb.
 > ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 > ✅ **RB.1 · Give the App access** — done (app listed in repo settings)
 >
-> — ⌨️ in the terminal · add the secrets, then trigger —
+> — ⌨️ in `~/c/demo-repo` · add the secrets, then trigger —
 >
 > **▶ RB.2 · Store the key in 1Password**
 >   `op item create --category "API Credential" --title release-bot-key --file key.pem`
