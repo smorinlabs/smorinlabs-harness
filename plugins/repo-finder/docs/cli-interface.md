@@ -144,7 +144,10 @@ deviation, waived in `CONFORMANCE.md`).
 
 ## Not-found ladder (`find`)
 
-1. Exact name match across roots (incl. group dirs) → done.
+1. Exact name match across roots (incl. group dirs) → done. A worktree also
+   matches its **main repo's** name, since worktree directories are usually
+   named for their topic or branch (`~/wt/<repo>/<topic>`) and would otherwise
+   be invisible to a search for the repo itself.
 2. Substring / fuzzy match → ranked candidates.
 3. No second widening pass — the configured depth (3 by default) already
    reaches group subdirectories and nested copies in the first scan, and the

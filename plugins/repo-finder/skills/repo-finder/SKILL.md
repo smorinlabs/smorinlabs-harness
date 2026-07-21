@@ -43,6 +43,10 @@ the plugin.
 
 ## Reading the output
 
+Searching a repo's name returns its worktrees too, even when their directories
+are named for a topic or branch rather than the repo (`~/wt/<repo>/<topic>`) —
+so one search shows every local copy.
+
 Matches are ordered deterministically — canonical checkouts first (config-root
 order), then worktrees (each labeled `worktree -> <main repo>`), then
 nested/vendored copies. Recency, branch, and dirty state are *displayed, not

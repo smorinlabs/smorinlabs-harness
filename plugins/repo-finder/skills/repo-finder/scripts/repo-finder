@@ -24,7 +24,7 @@ import tomllib
 import urllib.parse
 from pathlib import Path
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 DEFAULT_DEPTH = 3
 SEARCH_RESULT_CAP = 1000  # GitHub's hard ceiling on search results
 PRUNE = {".git", "node_modules", ".venv", "venv", "__pycache__", ".cache",
@@ -341,6 +341,17 @@ def gh_list_repos(org: str, limit: int, transport: str
 
 # --- commands ---------------------------------------------------------------
 
+def _matches(m: dict, q: str) -> bool:
+    """A worktree is a local copy of its main repo, so it matches that repo's
+    name too — worktree directories are commonly named for their topic/branch
+    (`~/wt/<repo>/<topic>`), which would otherwise hide every worktree from a
+    search for the repo itself."""
+    if q in m["name"].lower():
+        return True
+    main = m.get("worktree_of")
+    return bool(main) and q in Path(main).name.lower()
+
+
 def cmd_find(ns, cfg) -> int:
     as_json = ns.output == "json"
     roots = list(cfg["roots"])
@@ -348,7 +359,7 @@ def cmd_find(ns, cfg) -> int:
         roots.append({"path": extra})
     repos = scan(roots)
     q = ns.query.lower()
-    matches = sorted((m for m in repos if q in m["name"].lower()), key=rank_key)
+    matches = sorted((m for m in repos if _matches(m, q)), key=rank_key)
     if matches:
         emit_matches([enrich(m) for m in matches], as_json)
         return 0
