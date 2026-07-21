@@ -5,6 +5,18 @@
 > `private-cli-repo` throughout this plan is a placeholder for a private
 > repository whose name cannot appear in this public repo.
 
+> ## ⚠️ DO NOT EXECUTE THIS PLAN AS WRITTEN
+>
+> This is a **historical record of what was planned**, kept unedited so the
+> Deviations section at the end remains meaningful. Several steps below were
+> found to be wrong during execution and would break a repo if applied:
+> the `PR_TITLE` prerequisite double-counts release entries, Task 3's second
+> commitlint config splits local and CI enforcement, and Task 3's workflow
+> is missing `pull-requests: read` (403s on private repos).
+>
+> **Read [Deviations from this plan, as executed](#deviations-from-this-plan-as-executed-2026-07-21) before acting on any step.**
+> Superseded steps are marked inline with ⛔.
+
 
 **Goal:** Make merge commits the default PR integration strategy across the fleet (overridable per-repo), and make `git pull --ff-only` the primary sync method with `--rebase` demoted to a documented fallback.
 
@@ -23,6 +35,11 @@
 - Verification is by `rg` assertion (old string absent, new string present), not a test runner — these are documentation changes.
 
 ## Prerequisite already completed
+
+> ⛔ **SUPERSEDED — this setting was wrong and was reverted.** Setting
+> `merge_commit_title=PR_TITLE` on a release-please repo makes the merge
+> commit *itself* parseable, so every change is counted twice in the
+> changelog. The correct value is `MERGE_MESSAGE`. See Deviation 2.
 
 `smorinlabs/private-cli-repo` repo settings were patched on 2026-07-20 and verified with a cache-busted read:
 `merge_commit_title: MERGE_MESSAGE → PR_TITLE`, `merge_commit_message: PR_TITLE → PR_BODY`.
@@ -186,6 +203,16 @@ Expected: one commit touching exactly `plugins/repo-hygiene/skills/pr-merge-flow
 
 ### Task 3: private-cli-repo commitlint CI (prerequisite for Task 4)
 
+> ⛔ **SUPERSEDED IN THREE WAYS — do not follow this task as written.**
+> (a) Do **not** create `commitlint.config.mjs`; the repo already had a
+> `commitlint.config.js`, and two configs split local vs CI enforcement
+> because cosmiconfig resolves `.js` first. Rename the existing file to
+> `.mjs` instead. (b) `configFile:` must point at a `.mjs` — the wagoid
+> action hard-rejects a `.js` extension and fails every PR. (c) The job
+> needs `pull-requests: read`; the action reads PR commits from the REST
+> API, so `contents: read` alone 403s on a private repo. `fetch-depth: 0`
+> and the `merge_group` trigger are both unnecessary. See Deviations 3-5.
+
 **Files:**
 - Create: `private-cli-repo/.github/workflows/commitlint.yml`
 - Create: `private-cli-repo/commitlint.config.mjs`
@@ -303,6 +330,10 @@ Expected: `commitlint (humans)` concludes `success`.
 ---
 
 ### Task 4: private-cli-repo stops asserting squash-merge
+
+> ⛔ **SUPERSEDED — the replacement text below cites `PR_TITLE`.** The merge
+> subject is deliberately left non-conventional (`MERGE_MESSAGE`) so
+> release-please counts each change exactly once. See Deviation 6.
 
 **Files:**
 - Modify: `private-cli-repo/CLAUDE.md:71`
