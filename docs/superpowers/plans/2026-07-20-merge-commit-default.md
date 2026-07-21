@@ -2,6 +2,10 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> `private-cli-repo` throughout this plan is a placeholder for a private
+> repository whose name cannot appear in this public repo.
+
+
 **Goal:** Make merge commits the default PR integration strategy across the fleet (overridable per-repo), and make `git pull --ff-only` the primary sync method with `--rebase` demoted to a documented fallback.
 
 **Architecture:** A single source of truth in `~/.claude/CLAUDE.md` declares the default and the precedence chain. `pr-merge-flow/SKILL.md` defers to that chain instead of hardcoding `--squash`. Per-repo files are edited only to stop asserting squash, not to restate the global rule. `--ff-only` replaces `--rebase` only where the working tree genuinely has no local commits; where it cannot work, `--rebase` stays and is relabeled as the fallback.
@@ -12,7 +16,7 @@
 
 - **Never commit to a local `main`.** Every task creates its own git worktree in a scratch dir; agents never switch branches in the user's live checkouts.
 - **Conventional Commits** for every commit message.
-- `skillsmith-publish-workflow` is a **worktree of `skillsmith`** — never edited as a separate repo.
+- `private-cli-repo-worktree` is a **worktree of `private-cli-repo`** — never edited as a separate repo.
 - `shelf-press-tb` is a **second clone of `smorinlabs/py-launch-blueprint`** — never edited as a separate repo; it currently sits on branch `chore/remove-dead-cog-recipes`, so do not use it as a base.
 - **Do not touch** `forge`, `forge_tui`, `floxcode`, `forge-service` — rebase-merge-only by upstream repo config; they are the intended override case.
 - **Do not touch** `doxa-research/CLAUDE.md` lines 64 and 212, or `docs/superpowers/plans/CLAUDE.md:98` — those concern squashing *local WIP commits*, not merge strategy.
@@ -20,7 +24,7 @@
 
 ## Prerequisite already completed
 
-`smorinlabs/skillsmith` repo settings were patched on 2026-07-20 and verified with a cache-busted read:
+`smorinlabs/private-cli-repo` repo settings were patched on 2026-07-20 and verified with a cache-busted read:
 `merge_commit_title: MERGE_MESSAGE → PR_TITLE`, `merge_commit_message: PR_TITLE → PR_BODY`.
 No task below repeats this.
 
@@ -32,9 +36,9 @@ No task below repeats this.
 |---|---|---|
 | `~/.claude/CLAUDE.md` | Declares the default + precedence chain (source of truth) | 1 |
 | `smorinlabs-harness/.../pr-merge-flow/SKILL.md` | Defers to the chain; stops hardcoding `--squash` | 2 |
-| `skillsmith/.github/workflows/commitlint.yml` | CI-enforces conventional commits (new) | 3 |
-| `skillsmith/commitlint.config.mjs` | commitlint rules (new) | 3 |
-| `skillsmith/CLAUDE.md` | Stops asserting squash-merge | 4 |
+| `private-cli-repo/.github/workflows/commitlint.yml` | CI-enforces conventional commits (new) | 3 |
+| `private-cli-repo/commitlint.config.mjs` | commitlint rules (new) | 3 |
+| `private-cli-repo/CLAUDE.md` | Stops asserting squash-merge | 4 |
 | `py-launch-blueprint/AGENTS.md` | Stops asserting squash-merge | 5 |
 | `doxa-research/CLAUDE.md` | `--ff-only` primary, `--rebase` as fallback | 6 |
 | `~/.claude/projects/.../memory/git-main-branch-discipline.md` | Squash divergence becomes legacy note | 7 |
@@ -180,30 +184,30 @@ Expected: one commit touching exactly `plugins/repo-hygiene/skills/pr-merge-flow
 
 ---
 
-### Task 3: skillsmith commitlint CI (prerequisite for Task 4)
+### Task 3: private-cli-repo commitlint CI (prerequisite for Task 4)
 
 **Files:**
-- Create: `skillsmith/.github/workflows/commitlint.yml`
-- Create: `skillsmith/commitlint.config.mjs`
+- Create: `private-cli-repo/.github/workflows/commitlint.yml`
+- Create: `private-cli-repo/commitlint.config.mjs`
 
 **Interfaces:**
 - Produces: a CI check named `commitlint` that Task 4's doc text refers to by that exact name.
 
-**Adaptation note:** skillsmith has **no** `dependabot.yml` and **no** `RUNNER_UBUNTU` repo var, and uses `actions/checkout@v4`. Port a single-job, simplified version — do NOT copy py-launch-blueprint's dependabot split (YAGNI).
+**Adaptation note:** private-cli-repo has **no** `dependabot.yml` and **no** `RUNNER_UBUNTU` repo var, and uses `actions/checkout@v4`. Port a single-job, simplified version — do NOT copy py-launch-blueprint's dependabot split (YAGNI).
 
 - [ ] **Step 1: Create the worktree**
 
 ```bash
-cd ~/c/skillsmith
+cd ~/c/private-cli-repo
 git worktree add -b ci/commitlint \
-  /private/tmp/claude-501/wt/skillsmith-commitlint origin/main
-cd /private/tmp/claude-501/wt/skillsmith-commitlint
+  /private/tmp/claude-501/wt/private-cli-repo-commitlint origin/main
+cd /private/tmp/claude-501/wt/private-cli-repo-commitlint
 ```
 
 - [ ] **Step 2: Create `commitlint.config.mjs`**
 
 ```javascript
-// commitlint config for skillsmith.
+// commitlint config for private-cli-repo.
 //
 // Extends @commitlint/config-conventional with body/footer caps raised from
 // 100 to 200. The 100-char default routinely fails on commits whose bodies
@@ -285,21 +289,21 @@ Expected: one commit, exactly two files added.
 
 ```bash
 gh pr create --title "ci: enforce conventional commits on every PR commit" \
-  --body "Prerequisite for switching \`main\` to merge commits: release-please will parse individual branch commits, so they must be CI-enforced conventional. Adapted from py-launch-blueprint (single job; skillsmith has no dependabot)."
+  --body "Prerequisite for switching \`main\` to merge commits: release-please will parse individual branch commits, so they must be CI-enforced conventional. Adapted from py-launch-blueprint (single job; private-cli-repo has no dependabot)."
 ```
 
 Then poll no more than once every 20 seconds, bounded to 10 checks:
-`gh pr checks --watch` is acceptable, or `gh api repos/smorinlabs/skillsmith/actions/runs --jq '.workflow_runs[0].conclusion'`.
+`gh pr checks --watch` is acceptable, or `gh api repos/smorinlabs/private-cli-repo/actions/runs --jq '.workflow_runs[0].conclusion'`.
 Expected: `commitlint (humans)` concludes `success`.
 
 **GATE:** Do not start Task 4 until this PR is merged.
 
 ---
 
-### Task 4: skillsmith stops asserting squash-merge
+### Task 4: private-cli-repo stops asserting squash-merge
 
 **Files:**
-- Modify: `skillsmith/CLAUDE.md:71`
+- Modify: `private-cli-repo/CLAUDE.md:71`
 
 **Interfaces:**
 - Consumes: the CI check name `commitlint (humans)` produced by Task 3.
@@ -307,11 +311,11 @@ Expected: `commitlint (humans)` concludes `success`.
 - [ ] **Step 1: Create the worktree (from post-Task-3 main)**
 
 ```bash
-cd ~/c/skillsmith
+cd ~/c/private-cli-repo
 git fetch origin
 git worktree add -b docs/merge-commit-default \
-  /private/tmp/claude-501/wt/skillsmith-merge-doc origin/main
-cd /private/tmp/claude-501/wt/skillsmith-merge-doc
+  /private/tmp/claude-501/wt/private-cli-repo-merge-doc origin/main
+cd /private/tmp/claude-501/wt/private-cli-repo-merge-doc
 ```
 
 - [ ] **Step 2: Replace line 71**
@@ -556,7 +560,7 @@ Expected: `1`
 ## Execution order
 
 ```
-Task 3 (skillsmith commitlint CI) ──merge──> Task 4 (skillsmith CLAUDE.md)
+Task 3 (private-cli-repo commitlint CI) ──merge──> Task 4 (private-cli-repo CLAUDE.md)
 
 Task 1 ─┐
 Task 2 ─┼── independent, run in parallel
@@ -594,7 +598,7 @@ design doc reflects the corrected decisions.
    subject *also* conventional double-counts every change. Correct value is
    `MERGE_MESSAGE`, which is what 10 of 12 release-please repos already used.
 
-3. **Task 3 must not create `commitlint.config.mjs`.** skillsmith already had a
+3. **Task 3 must not create `commitlint.config.mjs`.** private-cli-repo already had a
    `commitlint.config.js`. Two configs split-brain: cosmiconfig resolves `.js`
    first, so the local hook and CI would enforce different rules. Resolution was
    to **rename** `.js` → `.mjs` and point CI at it — not to add a second file.

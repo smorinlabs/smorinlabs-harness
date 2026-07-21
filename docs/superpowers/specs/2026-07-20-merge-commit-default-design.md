@@ -3,6 +3,10 @@
 **Date:** 2026-07-20
 **Status:** Implemented 2026-07-21
 
+> `private-cli-repo` throughout this document and its companion plan is a
+> placeholder for a private repository whose name cannot appear in this public
+> repo. It is a single real repo — a TypeScript CLI using release-please.
+
 ## Problem
 
 Two independent audit findings converged:
@@ -78,7 +82,7 @@ locally.
 
 ## Scope
 
-**In:** global `CLAUDE.md`, `pr-merge-flow/SKILL.md`, `skillsmith`,
+**In:** global `CLAUDE.md`, `pr-merge-flow/SKILL.md`, `private-cli-repo`,
 `py-launch-blueprint`, `doxa-research`, and the `git-main-branch-discipline`
 memory.
 
