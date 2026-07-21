@@ -555,7 +555,7 @@ comes from the digest.
 - Per-step prerequisite/install checks ("if `gh` is missing, `brew install gh`") — roughly
   doubles step length and turns the handoff block into a setup guide; the executable-address
   rule already covers the failure it targets.
-- Description edit: frontmatter and meta descriptions left unchanged (978/~1000 chars). The
+- Description edit: frontmatter and meta descriptions left unchanged (996/~1000 chars). The
   rule changes what a rendered step contains, not when the skill fires — a pure capability
   change, so no overlap re-scan and no README row churn.
 
