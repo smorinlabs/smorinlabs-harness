@@ -1,5 +1,5 @@
 name = "repo-hygiene"
-version = "0.4.0"
+version = "0.5.0"
 description = "Repo & release-readiness checks — CI/pre-commit audit, version drift, README sync, manual test guides, and a PR merge flow that resolves every review thread before merging."
 author = "Steve Morin"
 keywords = ["ci", "release", "readme", "version", "testing", "hygiene", "audit", "pr", "merge", "review"]

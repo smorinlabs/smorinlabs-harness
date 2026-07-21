@@ -162,8 +162,23 @@ to keep going on its own judgment.
 
 ## 6. Merge preflight
 
-- Checks: `gh pr checks` (or REST check-runs). Red checks → hand to
-  **ci-audit**; this skill never debugs CI. Resume here after.
+- Checks: `gh pr checks` (or REST check-runs). Red → **classify before
+  routing**, because not every red mark is a build:
+  - **A build or test failed** → hand to **ci-audit**; this skill never debugs
+    CI. Resume here after.
+  - **A reviewer could not review** — e.g. a commit status like
+    `CodeRabbit: failure — "Review rate limited"` — is the reviewer's own
+    quota, not your code. `ci-audit` has nothing to fix. Treat it as a
+    *reviewer-unavailable* signal: say so plainly, note that the PR is
+    correspondingly less reviewed, and let the mode gate decide. Never route
+    it to ci-audit, and never call it a passing check either.
+  - **Distinguishing them**: read the status `description`, and note that
+    check-runs and commit statuses are separate APIs — `…/check-runs` versus
+    `…/commits/{sha}/status`. A red that appears only in the latter, with no
+    failing check-run, is usually a bot reporting about itself.
+  - **Does it actually block?** `mergeable_state: unstable` with an
+    unprotected base branch blocks nothing. Check
+    `…/branches/{branch}/protection` before treating red as a merge blocker.
 - Mergeability/conflicts: REST `mergeable` state (`null` means GitHub is
   still computing — retry once after ~30s; it is not a verdict).
 - Title: must match the repo convention (CLAUDE.md), else Conventional
@@ -263,6 +278,7 @@ this skill's.
 | "I'll poll every 5 seconds, it's just a few minutes" | Quota is shared. 20–30s floor, rate-limit preflight, bounded total — always. |
 | "The monitor script will exit eventually" | Untested monitors hang. Fixed 5–10 min lifetime, then one manual recheck. Pre-validate the check once before arming. |
 | "Checks are red — I'll just fix the workflow here" | CI debugging is ci-audit's job. Hand off, resume after. |
+| "A red check means CI failed — route it to ci-audit" | Classify first. A reviewer bot reporting its own rate limit posts a red *commit status* with no failing check-run; ci-audit has nothing to fix there. |
 | "The suggestion looks right, implement it" | Verify by running first where possible. Plausible ≠ true. |
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
 | "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
