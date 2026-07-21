@@ -71,7 +71,7 @@ triggers it, not a fifth sequential step.
 Note the addresses: RB.1 carries the literal URL rather than "your app's
 settings page", and the terminal divider carries `~/c/demo-repo` once for all
 three steps that share it — which is what lets RB.2's relative `key.pem` and
-RB.4's bare `git push` mean something.
+RB.4's repo context (commit + push from the right checkout) mean something.
 
 ## Eight or more steps — map and stop points
 
