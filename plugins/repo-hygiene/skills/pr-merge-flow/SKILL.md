@@ -175,9 +175,9 @@ to keep going on its own judgment.
 
 ## 7. End per mode
 
-- **auto** — merge now (`gh pr merge --merge` per the CLAUDE.md merge-strategy
-  precedence — user > repo CLAUDE.md/AGENTS.md > repo GitHub settings >
-  global default; `delete-branch` per prefs), then report what was done and run
+- **auto** — merge now (`gh pr merge` with the merge strategy chosen via the CLAUDE.md
+  merge-strategy precedence — user > repo CLAUDE.md/AGENTS.md > repo GitHub settings >
+  global default (defaults to `--merge`); `delete-branch` per prefs), then report what was done and run
   the step 9 survey — report-only in this mode. If GitHub rejects the merge
   (branch protection — required approvals, etc.), downgrade to the
   ready-report; never force.
