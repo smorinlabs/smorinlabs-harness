@@ -1,5 +1,5 @@
 name = "reader-steps"
-version = "0.2.0"
+version = "0.3.0"
 description = "Style spec for rendering actions only the reader can or will perform: a delineated task block toward the response's end — bounded frame (blockquote rail plus horizontal rules), a Completes line binding it to the tracked item by exact ID and title, steps numbered with a stable tag and grouped by surface (terminal, browser, desktop/system UI, phone, physical world) under merged dividers, each step titled by its outcome with the literal command or UI path below it and a ✓ verification line, closing with the immediate next move. Scales down to a one-line inline form for a single step and up with a map and stop points past eight; breadcrumb navigation promotes to one hop per line past three hops or on any caveat; reactive actions nest inside the step that triggers them; in-flight processes re-render across turns as a progress scoreboard; errors state cause and fix. Decisions are never steps — they are asked (question-walkthrough) before instructing. Canonical spec behind an always-on digest users keep in global instructions."
 author = "Steve Morin"
 keywords = ["style", "instructions", "manual-steps", "handoff", "verification", "reader", "output", "scannability"]
