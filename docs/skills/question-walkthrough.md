@@ -7,9 +7,12 @@ pulled from task systems — confirms the pile with you, sequences it by
 leverage (questions whose answers could moot or reshape others go first), then
 walks it one AskUserQuestion at a time. Every non-obvious question is fronted
 by a **pre-read** — why it exists, impact, trade-offs, pros and cons, terms
-you may not know — delivered as a chat turn that ends *before* the dialog is
-raised, because same-turn context is invisible once the dialog takes over
-(sufficiency standard, the explain skill's anatomy). Answer notes are
+you may not know — delivered as a turn-ending message (the prose is the
+turn's final content, no tool call after it; the dialog opens the *next*
+turn), because same-turn prose may never render once the dialog takes over.
+The rule is universal: a turn that raises a dialog carries no prose you
+need — anything you must read either ended a previous turn or lives inside
+the dialog itself (sufficiency standard, the explain skill's anatomy). Answer notes are
 classified and honored, never dropped: option modifiers apply immediately;
 directives ("…and also do X", "instead of answering, check Y first") get a
 one-line repeat-back and confirm, then run in an end-of-walk batch by
