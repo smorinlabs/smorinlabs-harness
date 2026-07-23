@@ -598,4 +598,36 @@ comes from the digest.
 
 ---
 
+## [x] Project P30: question-walkthrough v0.2.0 — pre-read turns + note directives (user feedback 2026-07-23)
+**Goal**: Fix two field-reported failures at the contract level. (1) Context never seen: the
+walk put context "in the question text" / same-turn chat, but text bundled in the same turn
+as an AskUserQuestion call does not function as context — the dialog takes over before it is
+read. New Iron Law: every non-obvious question gets a pre-read (why it exists, impact,
+trade-offs, pros/cons, terms — sufficiency standard, explain anatomy) delivered as a chat
+turn that ENDS before the dialog fires; the user's reply opens the question turn. Steady
+state rides the next pre-read on the turn that processed the previous answer (one round-trip
+per question). Reproduced live during the fix itself: the draft-approval gate bundled the
+draft with its dialog and the draft went unread — root cause is the turn boundary, not
+"context in chat". (2) Note directives dropped: the old rule covered only
+notes-as-option-modifiers. Notes now classify three ways — modifier (apply immediately) /
+directive-extra / directive-redirect — directives get a one-line repeat-back + quick confirm
+(short enough to live in the confirm question's own body) and run in an end-of-walk batch by
+default; immediate only when the note says so. Redirected questions park and return after
+the batch unless mooted. Tally gains `queued`; the closing table gains directive outcomes.
+Frontmatter description byte-identical — capability change, minor bump, no overlap re-scan.
+
+### Tests & Tasks
+- [x] [P30-T01] SKILL.md: Iron Law callout; step 4 rebuilt as pre-read turn → question turn;
+      new step 5 (note classification); steps 6–8 renumbered (queued tally, end-of-walk
+      batch before the parked pass); Red Flags +4 rows, 2 retargeted
+- [x] [P30-T02] plugin.meta.toml 0.1.0 → 0.2.0 + meta description refresh; gen + gen-check green
+- [x] [P30-T03] Docs page + README row refreshed to the new contract; zero placeholders
+- [x] [P30-TS01] Gate on the WORKTREE path (placement still serves pre-edit text):
+      skill-quality layers 1–4 pass; skillsmith verify static both tools — verdict pass,
+      0 errors / 0 warnings / 3 info; headless E2E skipped loudly (the changed contract is
+      interactive AskUserQuestion turn cadence — headless -p cannot answer dialogs;
+      smoke-test live post-merge)
+
+---
+
 - [ ] Regression Test Status

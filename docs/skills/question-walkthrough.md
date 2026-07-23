@@ -5,12 +5,19 @@ decisions. It gathers open questions from one of four sources — mined from the
 current conversation, read from a document you point at, given inline, or
 pulled from task systems — confirms the pile with you, sequences it by
 leverage (questions whose answers could moot or reshape others go first), then
-walks it one AskUserQuestion at a time with just-enough anchored context per
-item (the explain skill's anatomy). Its defining move: after **every** answer
-the remaining pile is re-planned — mooted questions dropped loudly, order
-revised, implied follow-ups added only with consent. Decisions are recorded
-back at their source (document edits beside the question, task updates) and
-the walk ends in an outcome table with parked items called out.
+walks it one AskUserQuestion at a time. Every non-obvious question is fronted
+by a **pre-read** — why it exists, impact, trade-offs, pros and cons, terms
+you may not know — delivered as a chat turn that ends *before* the dialog is
+raised, because same-turn context is invisible once the dialog takes over
+(sufficiency standard, the explain skill's anatomy). Answer notes are
+classified and honored, never dropped: option modifiers apply immediately;
+directives ("…and also do X", "instead of answering, check Y first") get a
+one-line repeat-back and confirm, then run in an end-of-walk batch by
+default. Its defining move: after **every** answer the remaining pile is
+re-planned — mooted questions dropped loudly, order revised, implied
+follow-ups added only with consent. Decisions are recorded back at their
+source (document edits beside the question, task updates) and the walk ends
+in an outcome table with parked items and directive outcomes called out.
 
 **Triggers on:** "go through these one by one", "walk me through the open
 questions", "there's a bunch of to-dos, help me decide", "triage these

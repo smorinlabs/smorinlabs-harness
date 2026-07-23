@@ -111,7 +111,7 @@ interaction engine, portable across Claude Code and Codex.
 
 | Skill | Does | Details |
 |---|---|---|
-| `question-walkthrough` | Gathers open questions (conversation mining, a pointed-at doc, an inline list, or task systems), confirms the pile, sequences it by leverage, then walks it one AskUserQuestion at a time with just-enough anchored context — re-planning the remaining pile after every answer (mooted questions dropped loudly, follow-ups added with consent) and recording decisions back at their source with a final outcome table. | [docs/skills/question-walkthrough.md](docs/skills/question-walkthrough.md) |
+| `question-walkthrough` | Gathers open questions (conversation mining, a pointed-at doc, an inline list, or task systems), confirms the pile, sequences it by leverage, then walks it one AskUserQuestion at a time — every non-obvious question fronted by a pre-read turn (why, impact, trade-offs, terms) that ends before the dialog is raised, answer notes classified and honored (modifiers apply now; directives repeat back, confirm, and run in an end-of-walk batch), the remaining pile re-planned after every answer, and decisions recorded back at their source with a final outcome table covering directive outcomes. | [docs/skills/question-walkthrough.md](docs/skills/question-walkthrough.md) |
 
 ### reader-steps
 
