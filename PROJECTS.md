@@ -623,7 +623,7 @@ Frontmatter description byte-identical — capability change, minor bump, no ove
 - [x] [P30-T02] plugin.meta.toml 0.1.0 → 0.2.0 + meta description refresh; gen + gen-check green
 - [x] [P30-T03] Docs page + README row refreshed to the new contract; zero placeholders
 - [x] [P30-TS01] Gate on the WORKTREE path (placement still serves pre-edit text):
-      skill-quality layers 1–4 pass; skillsmith verify static both tools — verdict pass,
+      skill-quality layers 1–4 pass; cross-tool static verify both tools — verdict pass,
       0 errors / 0 warnings / 3 info; headless E2E skipped loudly (the changed contract is
       interactive AskUserQuestion turn cadence — headless -p cannot answer dialogs;
       smoke-test live post-merge)
