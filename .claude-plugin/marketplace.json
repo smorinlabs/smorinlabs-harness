@@ -73,7 +73,7 @@
       "name": "question-walkthrough",
       "source": "./plugins/question-walkthrough",
       "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time. Every non-obvious question is fronted by a pre-read \u2014 why it exists, impact, trade-offs, terms \u2014 delivered in a chat turn that ends BEFORE the dialog is raised (same-turn context is invisible context). Answer notes are classified and honored: option modifiers apply immediately; directives \u2014 extra work or a redirect that replaces the answer \u2014 get a one-line repeat-back and confirm, then run in an end-of-walk batch by default. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source and summarized in a final outcome table with parked items and directive outcomes called out. Pure-markdown skill, portable across Claude Code and Codex.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": "Steve Morin",
       "keywords": [
         "questions",

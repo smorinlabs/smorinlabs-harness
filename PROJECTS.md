@@ -627,6 +627,19 @@ Frontmatter description byte-identical — capability change, minor bump, no ove
       0 errors / 0 warnings / 3 info; headless E2E skipped loudly (the changed contract is
       interactive AskUserQuestion turn cadence — headless -p cannot answer dialogs;
       smoke-test live post-merge)
+- [x] [P30-T04] v0.2.1 loophole-closing round (field report from a second session, same day:
+      same-turn prose may NEVER RENDER AT ALL — user receives only the question UI). Iron Law
+      rebuilt as two per-turn rules — delivering turn: the pre-read is the turn's final
+      content, no tool call of any kind after it (the tool call opens the NEXT turn); asking
+      turn: no prose the user needs, dialog-internal content only. Five same-turn-prose
+      loopholes patched: pile-confirmation list ends its turn; sequencing rationale rides a
+      turn-ending message; re-evaluation narration ends the turn even before simple questions
+      (only a nothing-changed continuation goes straight to dialog); intake-source listing
+      moved inside the dialog options; batch reports end their turn before parked re-asks.
+      Red Flags +2 (tool-call-after-pre-read, status-line-above-dialog); docs page phrasing
+      universalized; meta 0.2.0 → 0.2.1
+- [x] [P30-TS02] Gate: guard grep clean, zero placeholders, gen + gen-check green,
+      cross-tool static verify both tools pass
 
 ---
 
