@@ -1,5 +1,39 @@
 # Release Notes
 
+## v0.15.0 — 2026-07-23
+
+### Added
+
+- **question-walkthrough 0.2.0 — pre-read turns + note directives** — new Iron
+  Law: every non-obvious question gets a pre-read (why it exists, impact,
+  trade-offs, pros/cons, terms) delivered as a chat turn that ends BEFORE the
+  AskUserQuestion dialog fires — same-turn context is invisible context, so
+  the turn boundary is the delivery guarantee. Answer notes are classified
+  (modifier / directive-extra / directive-redirect); directives get a one-line
+  repeat-back + confirm, then run in an end-of-walk batch by default; the
+  running tally gains `queued` and the closing table gains directive outcomes.
+- **reader-steps 0.3.0 — every step carries its address** — browser steps give
+  the literal deep-link URL; terminal steps give the working directory plus an
+  executable that resolves on the reader's PATH; desktop and phone steps name
+  the app and how it opens; placeholders say where their values come from; an
+  address that cannot be sourced is stated as a gap, never guessed.
+- **pr-merge-flow 0.4.0 (repo-hygiene) — Chrome fallback for GraphQL-blocked
+  thread resolution** — a bounded browser-automation path (reset guard, route
+  contract, degrade path) keeps thread triage moving when GraphQL quota blocks
+  it; re-review cycle bound raised to 4 and now ends in a check-in; merge
+  strategy defaults to merge commit per CLAUDE.md precedence.
+
+### Fixed
+
+- **repo-hygiene 0.5.0 (pr-merge-flow)** — red checks are classified before
+  routing to ci-audit, so rate-limit statuses no longer misroute.
+- **repo-finder 0.2.1** — searching a repo's name now returns that repo's
+  worktrees; docs describe the actual local match instead of an
+  exact-then-fuzzy ladder.
+- **reader-steps 0.3.1** — private-tooling references removed from the address
+  rule's examples (`~/.local/bin/demo-cli` convention), returning the CI
+  no-private-tooling scrub to green.
+
 ## v0.14.0 — 2026-07-20
 
 ### Added
