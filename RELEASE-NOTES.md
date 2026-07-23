@@ -1,5 +1,20 @@
 # Release Notes
 
+## v0.15.1 — 2026-07-23
+
+### Fixed
+
+- **question-walkthrough 0.2.1 — no tool call after the pre-read; same-turn
+  prose loopholes closed** — a second field report confirmed same-turn prose
+  may never render at all (the user receives only the question UI). The Iron
+  Law is now two per-turn rules: the delivering turn ends with the pre-read
+  as its final content, no tool call of any kind after it (the tool call
+  opens the NEXT turn); the asking turn carries no prose the user needs —
+  dialog-internal content only. Five loopholes patched (pile-confirmation
+  list, sequencing rationale, re-evaluation narration before simple
+  questions, intake-source listing moved into the dialog options, batch
+  reports before parked re-asks) and two Red Flags added.
+
 ## v0.15.0 — 2026-07-23
 
 ### Added
