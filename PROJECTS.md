@@ -696,6 +696,15 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
 - [x] [P31-TS02] Cross-tool static verify both tools — html-explain and html-codesign each
       pass on claude-code and codex, 0 errors / 0 warnings (info only: codex static covers
       the manifest, and a codex 0.145.0 vs verified 0.142.5 version-drift note)
+- [x] [P31-TS04] Deep (session-backed) cross-tool verify — closes the codex static-coverage
+      gap that static verify flags on itself ("manifest only"). html-explain: deep PASS on
+      BOTH tools, skills coverage true, zero deep findings. html-codesign: deep PASS on
+      claude-code; codex deep errors with skipReason=timeout. **Not introduced here** —
+      reproduced identically against the pre-edit html-codesign in the main checkout, so it
+      is pre-existing and almost certainly size-related (that skill carries ~300 SKILL.md
+      lines, 6 references, a page template, a validator and fixtures, vs html-explain's
+      lighter tree). Tool-level codex verdict stays `pass`; not a blocker for this PR, worth
+      its own look later
 - [x] [P31-T12] Neighbor carve: `explain` gains a See-also pointing its "inline in chat,
       always" rule at html-explain as the page destination; body-only change, description
       byte-identical, so no overlap re-scan. explain plugin 0.3.0 → 0.3.1
