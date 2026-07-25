@@ -722,6 +722,13 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
       the conversational route is now a named option in BOTH gates. 3× (Copilot): step-number
       drift left by the difficulty-map insertion — difficulty-map.md 4 refs and SKILL.md 2
       refs realigned to the 11-step loop
+- [x] [P31-T14] Merged as PR #15 (merge commit b8466ca, verified via REST `merged_at`);
+      main fast-forwarded c3392ff → b8466ca — the fast-forward, not the merge, is what put
+      the html-codesign gate live on both tools. Worktree + local/remote branch removed after
+      `merge-base --is-ancestor` confirmed against origin/main (`branch -d` warns
+      "not merged to HEAD" on a repo parked on a stale main — HEAD-relative, not the question
+      asked). html-explain dev-placed on claude-code and codex, static verify pass each.
+      Released as marketplace v0.16.0 (new skill = minor)
 - [ ] [P31-TS03] Headless E2E ⚠ SKIPPED LOUDLY — the changed contract on both page skills is
       an interactive AskUserQuestion gate, and headless `-p` cannot answer dialogs. Needs a
       live smoke test: trigger each skill and confirm the gate fires before any generation,

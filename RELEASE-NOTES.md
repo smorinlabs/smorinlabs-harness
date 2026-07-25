@@ -1,5 +1,57 @@
 # Release Notes
 
+## v0.16.0 — 2026-07-25
+
+### Added
+
+- **use-html-theme 0.8.0 — `html-explain`, and a shared confirm-first triage
+  for both page skills** — a new read-only explainer skill for settled
+  material, where diagrams, annotated figures, charts, build-up sequences and
+  small manipulable widgets do work prose cannot. Its distinguishing move is
+  budgeting the page by difficulty *before* drafting: rate each outline
+  section by intrinsic difficulty, name what *kind* of hard it is (that column
+  selects both the principles and the remedy), and spend the majority of the
+  page on the hardest one or two — preventing uniform depth, the default
+  failure. Because the map is pre-registered, enrichment cannot be justified
+  after the fact; every figure must trace to a rated row or a critique defect,
+  and interactive controls face a stricter bar (does *manipulating* it change
+  understanding?). Clarity canon ships advisory and symptom-indexed, never as
+  rules — cognitive load (Mayer, Sweller, Shneiderman), structure (Minto,
+  Heath, Pinker, Feynman, McCloud, Rosling), encoding (Bertin, Cleveland &
+  McGill, Tufte, Neurath, Ware, Corum), interactive form as calibration
+  targets (Victor, Ciechanowski, Case, Red Blob, Distill, Bostock, Lupi).
+  Charts defer to the bundled `dataviz` skill where it exists; because that
+  skill is compiled into the Claude Code binary and does not exist on Codex at
+  all, the standalone encoding fallback (including the Okabe–Ito CVD-safe
+  palette, which needs no validator) is a correctness requirement for a plugin
+  shipping portable across both tools. Birchline gains an explainer overlay;
+  other themes derive from tokens.
+- **Shared context-triage preflight** (`plugins/use-html-theme/references/context-triage.md`)
+  — both page skills now classify recent context by density (many unanswered
+  questions → codesign; settled design, implementation, or results → explain),
+  state their confidence, and **always confirm before generating**. The gate
+  fires on explicit invocation and with an argument supplied, because an
+  argument settles the page type, not its contents. Each offers the other when
+  triage disagrees, and both name the one genuine overlap: a recently-asked
+  question can be *posed* (codesign) or *deep-dived* (explain). Codesign is
+  scoped to UNANSWERED questions only.
+
+### Fixed
+
+- **html-codesign — the gate's pre-read owns its turn** — the confirmation
+  question list was specified as prose in the same turn as the dialog, which
+  this repo established in v0.15.0/v0.15.1 may never render. For a gate whose
+  whole value is showing the real material before committing, that would
+  collect approval for a page nobody reviewed. Now a two-turn Iron Law (the
+  pre-read is the delivering turn's final content, no tool call after it),
+  plus self-sufficient option labels so a lost pre-read still leaves a
+  survivable dialog.
+- **Both gates offer the conversational route** — `question-walkthrough` is a
+  named option whenever any open question is in play, rather than something
+  the user had to reach the generic escape hatch to ask for.
+- **explain 0.3.1** — a See-also pointing its "inline in chat, always" rule at
+  `html-explain` as the page destination. Body-only; description unchanged.
+
 ## v0.15.1 — 2026-07-23
 
 ### Fixed
