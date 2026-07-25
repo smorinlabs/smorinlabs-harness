@@ -708,6 +708,20 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
 - [x] [P31-T12] Neighbor carve: `explain` gains a See-also pointing its "inline in chat,
       always" rule at html-explain as the page destination; body-only change, description
       byte-identical, so no overlap re-scan. explain plugin 0.3.0 → 0.3.1
+- [x] [P31-T13] PR #15 review round — 5 findings, all valid, all fixed. **P1 (Greptile),
+      the serious one**: the gate presented its question list / candidate targets as prose
+      in the SAME turn as AskUserQuestion, and this repo's own P30 established that
+      same-turn prose may never render — so the gate could collect approval for a page the
+      user never saw, which is worse than no gate. Same bug class P30 fixed in
+      question-walkthrough, reproduced in a new skill. Fix: the Iron Law — pre-read ends its
+      own turn with NO tool call after it, dialog opens the next; plus belt-and-suspenders
+      self-sufficient option labels ("Generate the page for these 4 (sec-01…sec-04)", each
+      explainer option naming its own target) so the dialog survives the pre-read being
+      lost. Propagated into both SKILL.mds, both gate shapes, smoke tests, and a gotcha each.
+      P2 (Greptile): `question-walkthrough` was missing from the explainer gate's options —
+      the conversational route is now a named option in BOTH gates. 3× (Copilot): step-number
+      drift left by the difficulty-map insertion — difficulty-map.md 4 refs and SKILL.md 2
+      refs realigned to the 11-step loop
 - [ ] [P31-TS03] Headless E2E ⚠ SKIPPED LOUDLY — the changed contract on both page skills is
       an interactive AskUserQuestion gate, and headless `-p` cannot answer dialogs. Needs a
       live smoke test: trigger each skill and confirm the gate fires before any generation,

@@ -12,13 +12,13 @@ critiquing a draft:
 | **Intrinsic** | Which parts of the *subject* are hard? | from the outline, before writing | where you spend words and figures |
 | **Extraneous** | Which parts did *my writing* make hard? | only after drafting | rewriting |
 
-The clarity critique (step 6) catches extraneous difficulty. It cannot
+The clarity critique (step 5) catches extraneous difficulty. It cannot
 catch intrinsic difficulty, because a beautifully-written paragraph about a
 genuinely hard idea reads fine to its author and still loses the reader.
 
 Deciding emphasis before drafting also closes the obvious loophole in
 "enrich only where comprehension breaks": a **pre-registered** difficulty
-list means a figure cannot be justified after the fact. Step 8's removal
+list means a figure cannot be justified after the fact. Step 7's removal
 test checks each enrichment against this map. No entry here, no figure
 there.
 
@@ -88,10 +88,10 @@ in the abstract.
 
 ## What carries forward
 
-- **To the draft (step 5)** — the budget, as a target shape.
-- **To the critique (step 6)** — the ratings: re-read the ●●● sections
+- **To the draft (step 4)** — the budget, as a target shape.
+- **To the critique (step 5)** — the ratings: re-read the ●●● sections
   hardest, since that is where a reader will actually fall out.
-- **To enrichment (steps 7–8)** — the pre-registered list. Every figure and
+- **To enrichment (steps 6–7)** — the pre-registered list. Every figure and
   widget must trace to a row rated ●● or higher.
 
 ## Gotchas

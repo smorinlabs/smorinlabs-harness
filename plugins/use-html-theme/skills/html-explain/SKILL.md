@@ -54,8 +54,17 @@ and including when an argument named the topic. An argument shortens the
 question; it never removes it. Rendering a whole page about the wrong
 artifact is the expensive mistake this one question prevents.
 
+**The gate is TWO turns, never one.** Same-turn prose may never render —
+when a turn ends in a tool call the user can receive only the dialog. So:
+turn 1 delivers the candidate targets as the turn's **final content, with no
+tool call after it**; turn 2 opens with AskUserQuestion. Write each option to
+name its own target ("Deep dive on the backoff design") rather than "the
+first one", so the dialog still makes sense if the pre-read is lost.
+
 If triage finds mostly unanswered questions, say so and offer
-`html-codesign`. If it finds a mix, offer both.
+`html-codesign` — and offer `question-walkthrough` alongside it, since
+resolving them in chat is a first-class answer. If it finds a mix, offer
+both page types.
 
 ## 2. Outline — inventory what is actually there
 
@@ -235,32 +244,35 @@ restyle under a different theme.
 
 1. Did the gate fire and get a real answer — even though the skill was
    invoked explicitly?
-2. Does every example, number, and snippet trace to an artifact you actually
+2. Did the pre-read land on **its own turn**, with no tool call after it,
+   and does every dialog option name its own target so the dialog survives
+   the pre-read being lost?
+3. Does every example, number, and snippet trace to an artifact you actually
    read?
-3. Was there a difficulty map before the draft, and is it **spiky** — not
+4. Was there a difficulty map before the draft, and is it **spiky** — not
    every section rated the same?
-4. Budget check: do the hardest one or two sections actually hold the
+5. Budget check: do the hardest one or two sections actually hold the
    majority of the page? (Uniform depth is the default failure.)
-5. Stranger pass: hand the first screen to someone with no context. Do they
+6. Stranger pass: hand the first screen to someone with no context. Do they
    know what this is about and why it matters before any argument starts?
-6. Curse-of-knowledge pass: is every term of art defined at first use? Any
+7. Curse-of-knowledge pass: is every term of art defined at first use? Any
    "the new approach" left dangling?
-7. Removal test on **every** figure and widget: does taking it out make the
+8. Removal test on **every** figure and widget: does taking it out make the
    passage harder? Any that survive removal are cut.
-8. Does each surviving enrichment trace to a difficulty row rated ●● or
+9. Does each surviving enrichment trace to a difficulty row rated ●● or
    higher, or to a defect the critique found? (Pre-registered — no
    after-the-fact justification.)
-9. Widget test: does manipulating each control change understanding, or does
+10. Widget test: does manipulating each control change understanding, or does
    the default state already carry it?
-10. Density check: is the page much more than a third figures?
-11. Does it open from `file://` with the network off, with nothing missing?
-12. Narrow-width pass: does anything overflow horizontally?
-13. Is the right `color-scheme` meta present, and does it match the theme?
+11. Density check: is the page much more than a third figures?
+12. Does it open from `file://` with the network off, with nothing missing?
+13. Narrow-width pass: does anything overflow horizontally?
+14. Is the right `color-scheme` meta present, and does it match the theme?
 
 # Gotchas
 
 - **A wall of prose with pictures is not an explainer.** The enrichment pass
-  is step 5 of a loop that begins with an outline and a critique. Skipping to
+  is step 6 of a loop that begins with an outline and a difficulty map. Skipping to
   "add diagrams" produces decorated text.
 - **Don't reimplement theming.** Tokens and component looks come from
   use-html-theme (or the neutral fallback). This skill owns structure,
@@ -278,7 +290,7 @@ restyle under a different theme.
   resolve it, you're in the right place.
 - **Interactivity is not free clarity.** It is the most expensive thing on
   the page — to build, to review, and for the reader to operate. The bar in
-  step 6 is deliberately higher for controls than for figures.
+  step 7 is deliberately higher for controls than for figures.
 - **Length is not depth.** More sections is the usual way an explainer gets
   worse. Coherence — cutting what doesn't serve the explanation — is the
   first principle in the canon for a reason.
@@ -290,6 +302,10 @@ restyle under a different theme.
 - **Don't publish the difficulty map.** It's scaffolding. Saying "this next
   part is the tricky one" is good; printing your own ●●● ratings is the page
   talking about itself instead of its subject.
+- **"The candidate list is right there above the dialog."** It may not be.
+  A turn that ends in a tool call can reach the user as the dialog alone —
+  so a same-turn pre-read is a pre-read that might not exist. Two turns, and
+  options that stand on their own.
 
 # See also
 

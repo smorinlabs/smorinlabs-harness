@@ -85,11 +85,42 @@ the ones you found are the ones meant. So an argument changes the gate's
 job from *"what are we doing?"* to *"confirming this reading"*, and it
 shortens the question. It never removes it.
 
-Present the gate as ONE AskUserQuestion, with the triage verdict as the
-recommended option. Always include:
+### The Iron Law — the material and the dialog are TWO TURNS
+
+> **Same-turn prose may never render at all.** When a turn ends in a tool
+> call, the user can receive *only* the dialog — the text above it is not
+> guaranteed to reach them.
+
+That failure mode is fatal here specifically, because this gate's entire
+value is that the user sees the real material before committing. A gate
+whose question list silently vanishes is worse than no gate: it collects a
+confirmation for a page the user never actually reviewed.
+
+So the gate is always two turns:
+
+**Turn 1 — the pre-read (delivering turn).** Present the classified
+material: the question list with IDs and recommendations, or the candidate
+explainer targets. This is the turn's **final content — no tool call of any
+kind after it.** The tool call opens the next turn. End the turn here.
+
+**Turn 2 — the dialog (asking turn).** Now call AskUserQuestion. Put nothing
+the user *needs* in prose on this turn — dialog-internal content only.
+
+**Belt and suspenders: the options must stand alone.** Even with the
+pre-read delivered, write each option label and description so a user who
+sees only the dialog is not approving blind — "Generate the page for these 4
+questions (sec-01…sec-04)" beats "Yes, generate". Assume the prose might be
+lost and make the dialog survivable on its own.
+
+Present ONE AskUserQuestion, with the triage verdict as the recommended
+option. Always include:
 
 - the **escape hatch** — a different topic entirely
 - the **sibling** — the other page type, when triage leaves any doubt
+- the **conversational route** — `question-walkthrough`, whenever open
+  questions are in play at all. Wanting them resolved in chat rather than on
+  a page is a first-class answer, and it must be a named option in **both**
+  gates, not something the user has to reach the escape hatch to say.
 
 ## The overlap, stated plainly
 
@@ -106,12 +137,14 @@ Guessing here is the one place triage most often gets it wrong.
 ## Gate shapes
 
 Adapt the wording; keep the structure. The point of both is that the user
-sees **the actual material** before committing to a page.
+sees **the actual material** before committing to a page — which is why each
+shape below is split across the two turns of the Iron Law.
 
 ### codesign
 
-List every question you would put on the page, each with the ID it will
-carry and the recommendation you would argue. Unanswered only.
+**Turn 1 — pre-read.** List every question you would put on the page, each
+with the ID it will carry and the recommendation you would argue. Unanswered
+only. This text ENDS the turn — no tool call after it.
 
 ```
 Recent context has 4 open questions. Here's how I'd shape the page:
@@ -127,19 +160,22 @@ Recent context has 4 open questions. Here's how I'd shape the page:
 
 A codesign page poses each of these with a reasoned recommendation and
 lets you pick, skip, or ask back. It doesn't decide for you.
-
-Generate it for these four?
 ```
 
-Options: **generate** (recommended) · **just answer them here in chat**
-(`question-walkthrough`) · **wrong set — these are settled, I want an
-explainer** · **different topic entirely**.
+**Turn 2 — dialog.** Options, each self-sufficient enough to survive the
+pre-read being lost:
+
+- **Generate the page for these 4 (sec-01…sec-04)** — recommended
+- **Answer them here in chat instead, one at a time** (`question-walkthrough`)
+- **Wrong set — these are settled; I want an explainer** (`html-explain`)
+- **A different topic entirely**
 
 ### html-explain
 
-Propose targets mined from context. Include at least one **adjacent** area
-— something the material implies but never covered — since the gap the user
-feels is often not the thing they named.
+**Turn 1 — pre-read.** Propose targets mined from context. Include at least
+one **adjacent** area — something the material implies but never covered —
+since the gap the user feels is often not the thing they named. This text
+ENDS the turn — no tool call after it.
 
 ```
 Recent context looks settled rather than open — the retry work landed and
@@ -151,13 +187,21 @@ the tests are green. Candidates for the explainer:
   · What the load-test results showed, read against what we expected
   · Adjacent — how this interacts with the circuit breaker. Not discussed,
     but the design implies a question there.
-
-What should the page explain?
 ```
 
-Options: the strongest candidate (recommended) · a second candidate ·
-**these are still open — I want a codesign page instead** · **something
-else entirely**.
+**Turn 2 — dialog.** Options name their target rather than saying "the first
+one", so the dialog survives the pre-read being lost:
+
+- **Explain the retry refactor — what changed and why** — recommended
+- **Deep dive on the backoff design decided Tuesday**
+- **Read the load-test results against what we expected**
+- **These are still open — I want a codesign page** (`html-codesign`)
+- **Walk the open questions with me in chat** (`question-walkthrough`)
+- **Something else entirely**
+
+Trim to the four strongest for the dialog if the list runs long — but the
+codesign route and the conversational route both stay whenever any open
+question is in play.
 
 ## Handoff
 

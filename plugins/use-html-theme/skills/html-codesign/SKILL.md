@@ -97,6 +97,15 @@ Frame the value honestly: **codesign poses questions with recommendations —
 it does not decide.** A user who thinks they're delegating the decision has
 misunderstood what they'll get back.
 
+**The gate is TWO turns, never one.** Same-turn prose may never render — when
+a turn ends in a tool call the user can receive only the dialog, which here
+would mean approving a page whose questions they never saw. That is worse
+than no gate at all. So the question list above **ends its turn — no tool
+call of any kind after it** — and AskUserQuestion opens the next one.
+
+Belt and suspenders: write every option to stand alone, in case the pre-read
+is lost anyway. "Generate the page for these 4 (sec-01…sec-04)" beats "Yes".
+
 One AskUserQuestion, triage verdict recommended first, always including:
 
 - **just answer them here in chat** → `question-walkthrough`
@@ -258,6 +267,11 @@ offer `html-explain` as the recommended option instead.
 - **"They invoked it explicitly, so they know what they want."** They know
   the page *type*. They have not seen which questions you found. That is the
   whole content of the page and the entire point of the gate.
+- **"The question list is right there above the dialog."** It may not be. A
+  turn that ends in a tool call can reach the user as the dialog alone, so a
+  same-turn question list is one that might never exist — and then the gate
+  collects approval for a page nobody reviewed. Two turns, and options that
+  stand on their own.
 - **A recently-asked question is ambiguous, not obvious.** Codesign *poses*
   it for decision; `html-explain` *deep-dives* it without asking for a pick.
   When the request could mean either, offer both rather than guessing —
