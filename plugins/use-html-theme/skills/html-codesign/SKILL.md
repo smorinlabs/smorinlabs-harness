@@ -1,19 +1,20 @@
 ---
 name: html-codesign
 description: |
-  Build an interactive "codesign" decision page as a single self-contained
-  HTML file: the reader toggles choices (pick-one or pick-any sections), adds
-  notes, and exports the decision as Markdown and JSON with stable IDs
-  (sec-01, ch-01-a) so picks can be quoted in chat and iterated — "keep
-  ch-01-a, swap ch-02-b" yields a diffable v2. Use whenever the user wants to
-  choose between options and capture the decision: design directions, plan A
-  vs plan B, prioritization passes, "pick from these" reviews, option pages a
-  stakeholder reviews async and sends back. Trigger phrases: codesign,
-  co-design, decision page, pick from these, which should we, compare the
-  options, choose and export, design directions, prioritize these. Pairs with
-  use-html-theme — the active theme styles the page; without one it falls
-  back to a built-in neutral style. NOT for signing macOS/iOS apps or
-  binaries (Apple's codesign tool).
+  Build an interactive "codesign" decision page as one self-contained HTML
+  file: the reader toggles choices (pick-one or pick-any), adds notes, and
+  exports the decision as Markdown and JSON with stable IDs (sec-01, ch-01-a)
+  so picks can be quoted in chat — "keep ch-01-a, swap ch-02-b" yields a
+  diffable v2. Use when the user wants to choose between options and capture
+  the decision: design directions, plan A vs B, prioritization, async option
+  pages for a stakeholder. Triggers: codesign, co-design, decision
+  page, pick from these, which should we, compare the options, prioritize
+  these. ALWAYS confirms before generating — lists the UNANSWERED questions
+  found in recent context, each with its ID and a recommendation, then waits
+  for a yes; the gate fires even on explicit invocation with an argument.
+  Answered questions are out of scope; if context is mostly settled material
+  it offers html-explain instead. Styled by use-html-theme. NOT for signing
+  macOS/iOS binaries (Apple's codesign).
 allowed-tools: Read Write Edit Glob Bash AskUserQuestion
 ---
 
@@ -47,6 +48,77 @@ because the page never needs a live connection to an agent.
 ✗ A read-only page, report, or writeup (that is plain themed HTML — use-html-theme alone)
 ✗ A quick either/or the user can answer in chat (just ask; AskUserQuestion exists)
 ✗ Anything about signing apps or binaries — Apple's `codesign` is unrelated
+
+# Preflight — triage and confirm, before anything else
+
+Run `../../references/context-triage.md` in full, then **gate**.
+
+**Never open codesign without human confirmation.** Building a decision page
+is expensive, and a page of the wrong questions is worse than no page — it
+re-litigates settled work and asks the user to spend attention on choices
+they already made or never had.
+
+The gate fires **every time**:
+
+- when the skill was inferred from a natural-language request
+- **when the user invoked it explicitly** (`/html-codesign`)
+- **when the user supplied an argument** naming a topic
+
+An explicit invocation settles *which page type*, not *which questions*. An
+argument narrows the target but rarely pins the exact set — "codesign the
+caching questions" still leaves which ones, and whether the ones you found
+are the ones meant. An argument shortens the gate to a confirmation. It
+never removes it.
+
+**Show the actual questions before asking.** List every section you would
+put on the page, each with the `sec-NN` ID it will carry and the
+recommendation you would argue — that is what makes the confirmation
+meaningful rather than ceremonial:
+
+```
+Recent context has 4 open questions. Here's how I'd shape the page:
+
+  sec-01  Should the fallback ship as its own module, or fold into core?
+          → I'd argue fold in — one less package to version.
+  sec-02  Do we keep the v1 endpoint alive through the migration?
+          → I'd argue yes, behind a deprecation header.
+  sec-03  Who owns the rotation runbook — platform or on-call?
+          → Genuinely neutral; I'd lay out both and not recommend.
+  sec-04  Ship behind a flag, or straight to default-on?
+          → I'd argue flag — the blast radius is the whole write path.
+
+A codesign page poses each of these with a reasoned recommendation and
+lets you pick, skip, or ask back. It doesn't decide for you.
+
+Generate it for these four?
+```
+
+Frame the value honestly: **codesign poses questions with recommendations —
+it does not decide.** A user who thinks they're delegating the decision has
+misunderstood what they'll get back.
+
+**The gate is TWO turns, never one.** Same-turn prose may never render — when
+a turn ends in a tool call the user can receive only the dialog, which here
+would mean approving a page whose questions they never saw. That is worse
+than no gate at all. So the question list above **ends its turn — no tool
+call of any kind after it** — and AskUserQuestion opens the next one.
+
+Belt and suspenders: write every option to stand alone, in case the pre-read
+is lost anyway. "Generate the page for these 4 (sec-01…sec-04)" beats "Yes".
+
+One AskUserQuestion, triage verdict recommended first, always including:
+
+- **just answer them here in chat** → `question-walkthrough`
+- **wrong set — these are settled** → `html-explain`
+- **a different topic entirely**
+
+**Unanswered questions only.** A question already asked *and answered* is
+settled material — it belongs to `html-explain` as a deep dive on how it was
+resolved. Never re-pose it. The user may explicitly ask to revisit one; that
+is their call to make, never an offer to pad the page with.
+
+If triage finds little that is open and a lot that is settled, say so and
+offer `html-explain` as the recommended option instead.
 
 # Process
 
@@ -116,6 +188,11 @@ because the page never needs a live connection to an agent.
 
 # Hard rules
 
+- **Never generate without the preflight gate.** Triage, show the questions
+  with their IDs and recommendations, get a human yes. Explicit invocation
+  and a supplied argument shorten the gate; neither skips it.
+- **Only unanswered questions.** Already-decided ones are `html-explain`'s
+  material, not this skill's.
 - **Self-contained.** One `.html`, embedded CSS/JS, no external requests, no
   build step. The file must work from `file://`, an artifact host, or an
   email attachment.
@@ -185,7 +262,20 @@ because the page never needs a live connection to an agent.
 - **Don't bloat sections.** More than ~5 choices per section means the
   decision is under-shaped — split the section or pre-filter with the user.
 - **A "report" request is not codesign.** If nothing is chosen or exported,
-  it's a plain themed page; hand it to use-html-theme conventions instead.
+  it's an explainer — hand it to `html-explain`, which owns read-only pages
+  and their figures.
+- **"They invoked it explicitly, so they know what they want."** They know
+  the page *type*. They have not seen which questions you found. That is the
+  whole content of the page and the entire point of the gate.
+- **"The question list is right there above the dialog."** It may not be. A
+  turn that ends in a tool call can reach the user as the dialog alone, so a
+  same-turn question list is one that might never exist — and then the gate
+  collects approval for a page nobody reviewed. Two turns, and options that
+  stand on their own.
+- **A recently-asked question is ambiguous, not obvious.** Codesign *poses*
+  it for decision; `html-explain` *deep-dives* it without asking for a pick.
+  When the request could mean either, offer both rather than guessing —
+  this is where triage most often goes wrong.
 - **Slim is the default paste-back.** The agent already holds the contexts
   it authored — a full export pasted into chat re-sends them for nothing.
   Full is for human decision records (PRs, `docs/decisions/`); either way
@@ -197,3 +287,14 @@ because the page never needs a live connection to an agent.
 - **Editing this skill?** Read `references/design-notes.md` first — it
   records the AskUserQuestion lineage of the sections core, the
   input/output schema split, and the invariants edits must preserve.
+
+# See also
+
+- `../../references/context-triage.md` — the shared preflight this skill
+  runs before anything else; the routing authority between the two page
+  skills.
+- `html-explain` (this plugin) — the sibling: read-only explainer pages for
+  settled material, including a deep dive on a question already resolved.
+- `use-html-theme` (this plugin) — owns the page's look.
+- `question-walkthrough` (this marketplace) — the synchronous alternative:
+  the same open questions worked through one at a time in chat.

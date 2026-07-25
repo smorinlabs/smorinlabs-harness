@@ -643,4 +643,101 @@ Frontmatter description byte-identical — capability change, minor bump, no ove
 
 ---
 
+## [~] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
+**Goal**: Add `html-explain` — read-only explainer pages for settled material — and stop
+the two HTML page skills from being decided by accident. Both now run one shared
+context-triage preflight, classify recent context by density (many unanswered questions →
+codesign; settled design/implementation/results → explain), state their confidence, and
+**always confirm before generating** — including on explicit invocation with an argument,
+because an argument settles the page type, not its contents. Each offers the other when
+triage disagrees with the request, and both name the one genuine overlap: a recently-asked
+question can be *posed* (codesign) or *deep-dived* (explain). Codesign is scoped to
+UNANSWERED questions only; answered ones are explainer material.
+
+The explainer's distinguishing move is **budgeting by difficulty before drafting**: rate each
+outline section by intrinsic difficulty, name what *kind* of hard it is (that column selects
+the principles and the remedy), and spend the page accordingly — preventing uniform depth,
+the default failure. Because the map is pre-registered, enrichment cannot be justified after
+the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
+
+**Out of Scope**
+- Explainer overlays for technical-minimal and high-contrast-dark (cascade derives from
+  tokens; an explainer's components vary with its subject, so no fixed vocabulary yet)
+- Any decision round-trip on the explainer page — read-only is the contract
+
+### Tests & Tasks
+- [x] [P31-T01] `plugins/use-html-theme/references/context-triage.md` — the shared preflight:
+      two-bucket classification, density→confidence table, the always-fires gate, both gate
+      shapes with worked examples, answered-questions rule, the stated overlap, handoff
+- [x] [P31-T02] `html-explain` SKILL.md — 11-step loop (triage → outline → difficulty map →
+      draft → critique → enrich → judge → whole-page review → theme → render → deliver);
+      hard rules incl. read-only contract, pre-registered enrichment, dataviz carve
+- [x] [P31-T03] `references/difficulty-map.md` — intrinsic vs extraneous, the kind-of-hard
+      → remedy table, budget allocation, anti-gaming property
+- [x] [P31-T04] `references/explanatory-canon.md` — layers 1 & 3 advisory, symptom-indexed
+- [x] [P31-T05] `references/visual-encoding.md` — delegation rule by mark-meaning, the
+      portability finding (dataviz is binary-bundled, absent on Codex), standalone rules
+      E1–E8 incl. Okabe–Ito
+- [x] [P31-T06] `references/enrichment-ladder.md` — rungs 0–7 with costs, difficulty→rung
+      table, widget bar, calibration targets
+- [x] [P31-T07] `assets/explainer-scaffold.html` — self-contained, neutral tokens, components
+      keyed to the canon
+- [x] [P31-T08] Birchline explainer overlay (`themes/birchline/explain.md`)
+- [x] [P31-T09] html-codesign: preflight gate section, 2 hard rules, 3 gotchas, See also;
+      description rewritten for the gate + sibling carve
+- [x] [P31-T10] plugin.meta.toml 0.7.0 → 0.8.0 + description/keywords; gen + gen-check green
+- [x] [P31-T11] Docs page + README row + section blurb; zero placeholders
+- [x] [P31-TS01] Gate on the WORKTREE path (placement still serves pre-edit text):
+      quality layers 1–3 pass. L1 frontmatter valid both skills, name unique fleet-wide,
+      descriptions 988/994 chars (under the ~1000 envelope), allowed-tools fully used on
+      both (no granted-but-unused). L2 docs page + README row + section blurb, zero
+      placeholders. L3 meta well-formed, marketplace listed, gen-check green. All four repo
+      CI guards clean (personal paths, private-tooling needle, README/docs placeholders)
+- [x] [P31-TS02] Cross-tool static verify both tools — html-explain and html-codesign each
+      pass on claude-code and codex, 0 errors / 0 warnings (info only: codex static covers
+      the manifest, and a codex 0.145.0 vs verified 0.142.5 version-drift note)
+- [x] [P31-TS04] Deep (session-backed) cross-tool verify — closes the codex static-coverage
+      gap that static verify flags on itself ("manifest only"). html-explain: deep PASS on
+      BOTH tools, skills coverage true, zero deep findings. html-codesign: deep PASS on
+      claude-code; codex deep errors with skipReason=timeout. **Not introduced here** —
+      reproduced identically against the pre-edit html-codesign in the main checkout, so it
+      is pre-existing and almost certainly size-related (that skill carries ~300 SKILL.md
+      lines, 6 references, a page template, a validator and fixtures, vs html-explain's
+      lighter tree). Tool-level codex verdict stays `pass`; not a blocker for this PR, worth
+      its own look later
+- [x] [P31-T12] Neighbor carve: `explain` gains a See-also pointing its "inline in chat,
+      always" rule at html-explain as the page destination; body-only change, description
+      byte-identical, so no overlap re-scan. explain plugin 0.3.0 → 0.3.1
+- [x] [P31-T13] PR #15 review round — 5 findings, all valid, all fixed. **P1 (Greptile),
+      the serious one**: the gate presented its question list / candidate targets as prose
+      in the SAME turn as AskUserQuestion, and this repo's own P30 established that
+      same-turn prose may never render — so the gate could collect approval for a page the
+      user never saw, which is worse than no gate. Same bug class P30 fixed in
+      question-walkthrough, reproduced in a new skill. Fix: the Iron Law — pre-read ends its
+      own turn with NO tool call after it, dialog opens the next; plus belt-and-suspenders
+      self-sufficient option labels ("Generate the page for these 4 (sec-01…sec-04)", each
+      explainer option naming its own target) so the dialog survives the pre-read being
+      lost. Propagated into both SKILL.mds, both gate shapes, smoke tests, and a gotcha each.
+      P2 (Greptile): `question-walkthrough` was missing from the explainer gate's options —
+      the conversational route is now a named option in BOTH gates. 3× (Copilot): step-number
+      drift left by the difficulty-map insertion — difficulty-map.md 4 refs and SKILL.md 2
+      refs realigned to the 11-step loop
+- [ ] [P31-TS03] Headless E2E ⚠ SKIPPED LOUDLY — the changed contract on both page skills is
+      an interactive AskUserQuestion gate, and headless `-p` cannot answer dialogs. Needs a
+      live smoke test: trigger each skill and confirm the gate fires before any generation,
+      including on explicit invocation WITH an argument (the loophole most likely to regress)
+
+### Automated Verification
+- `just gen-check` exits 0
+- Both SKILL.md descriptions ≤ ~1000 chars
+- No unfilled placeholders in `docs/skills/html-explain.md`
+
+### Manual Verification
+- Invoke `/html-codesign` explicitly with an argument — the gate still fires and lists
+  questions with IDs before generating anything
+- Invoke `html-explain` when context is mostly open questions — it offers codesign instead
+- A generated explainer opens from `file://` with the network off
+
+---
+
 - [ ] Regression Test Status

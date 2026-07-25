@@ -1,0 +1,197 @@
+<!doctype html>
+<!--
+  html-explain scaffold — a read-only explainer page.
+
+  HOW TO USE
+  - Replace every {{PLACEHOLDER}}. Ship zero placeholders.
+  - Set <meta name="color-scheme"> to match the resolved theme (light|dark).
+  - Theme layer: override the :root token block below with the active theme's
+    tokens.md values. Leave structure and class names alone.
+  - Delete every component block you don't use. An unused block is chartjunk
+    in the source.
+  - Self-contained ONLY: no CDN, no webfont <link>, no fetch. Images are
+    data: URIs; diagrams are inline SVG; interactivity is vanilla JS.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{PAGE_TITLE}}</title>
+<style>
+/* ── Neutral built-in tokens — REPLACE with the active theme's tokens ──── */
+:root {
+  color-scheme: light;
+  --surface:      #ffffff;
+  --surface-sunk: #f6f7f8;
+  --rule:         #e3e5e8;
+  --ink:          #16191d;
+  --ink-2:        #4a5058;
+  --ink-muted:    #7c838d;
+  --accent:       #0072b2;   /* Okabe–Ito blue — CVD-safe default */
+  --accent-soft:  #e8f1f7;
+  --warn-soft:    #fdf6e3;
+  --font-body:    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --measure:      68ch;
+  --step:         1.5rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; padding: clamp(1.25rem, 4vw, 3.5rem) 1.25rem 6rem;
+  background: var(--surface); color: var(--ink);
+  font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+}
+main { max-width: var(--measure); margin-inline: auto; }
+/* Wide elements break the measure without making the page scroll sideways. */
+.wide { max-width: min(100%, 1100px); margin-inline: auto; }
+
+h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); line-height: 1.15; margin: 0 0 .5rem; letter-spacing: -.015em; }
+h2 { font-size: 1.5rem; line-height: 1.25; margin: calc(var(--step) * 2.2) 0 .6rem; letter-spacing: -.01em; }
+h3 { font-size: 1.15rem; margin: calc(var(--step) * 1.2) 0 .4rem; }
+p, ul, ol { margin: 0 0 var(--step); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.lede { font-size: 1.2rem; line-height: 1.55; color: var(--ink-2); margin-bottom: calc(var(--step) * 1.6); }
+.meta { font-size: .875rem; color: var(--ink-muted); margin: 0 0 calc(var(--step) * 2); }
+
+/* ── Signaling (canon L1.2) — mark the part to look at ────────────────── */
+mark { background: var(--warn-soft); color: inherit; padding: .05em .2em; border-radius: 2px; }
+.pivot { font-weight: 600; color: var(--ink); }
+
+/* ── Code / real artifact (ladder rung 2) ─────────────────────────────── */
+pre {
+  margin: 0 0 var(--step); padding: 1rem 1.1rem; overflow-x: auto;
+  background: var(--surface-sunk); border: 1px solid var(--rule); border-radius: 6px;
+  font-family: var(--font-mono); font-size: .875rem; line-height: 1.55;
+}
+code { font-family: var(--font-mono); font-size: .9em; }
+p code, li code { background: var(--surface-sunk); padding: .1em .35em; border-radius: 3px; }
+pre .add { display: block; background: color-mix(in srgb, #009e73 12%, transparent); }
+pre .del { display: block; background: color-mix(in srgb, #d55e00 12%, transparent); }
+
+/* ── Figure (ladder rung 4) — annotation belongs ON the figure (E6) ────── */
+figure { margin: calc(var(--step) * 1.5) 0; }
+figure svg, figure img { max-width: 100%; height: auto; display: block; }
+figcaption {
+  margin-top: .6rem; font-size: .9rem; line-height: 1.5; color: var(--ink-2);
+  border-left: 2px solid var(--rule); padding-left: .75rem;
+}
+/* Caption what the figure shows that the text does NOT (canon L1.3). */
+
+/* ── Callout ──────────────────────────────────────────────────────────── */
+.note {
+  margin: var(--step) 0; padding: .9rem 1.1rem;
+  background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0;
+}
+.note > :last-child { margin-bottom: 0; }
+
+/* ── Table (rung 3) ───────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 0 0 var(--step); }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); }
+
+/* ── Build-up sequence (rung 5) ───────────────────────────────────────── */
+.seq { display: grid; gap: 1.25rem; margin: calc(var(--step) * 1.5) 0; }
+@media (min-width: 40rem) { .seq.cols-2 { grid-template-columns: 1fr 1fr; } }
+.seq-step { border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; background: var(--surface); }
+.seq-step h4 { margin: 0 0 .5rem; font-size: .95rem; color: var(--ink-2); }
+
+/* ── Details on demand (canon L1.8) ───────────────────────────────────── */
+details { margin: 0 0 var(--step); border: 1px solid var(--rule); border-radius: 6px; padding: .7rem 1rem; }
+details[open] { padding-bottom: 1rem; }
+summary { cursor: pointer; font-weight: 600; }
+
+/* ── Widget shell (rung 7) — only when manipulation IS the explanation ─── */
+.widget { margin: calc(var(--step) * 1.5) 0; border: 1px solid var(--rule); border-radius: 8px; padding: 1.1rem; background: var(--surface-sunk); }
+.widget-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1rem; font-size: .9rem; }
+.widget-controls label { display: flex; flex-direction: column; gap: .25rem; }
+.widget-out { font-family: var(--font-mono); font-size: .9rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+@media print {
+  body { padding: 0; }
+  .widget-controls { display: none; }
+  details { border: 0; padding: 0; }
+  details > summary { list-style: none; }
+}
+</style>
+</head>
+<body>
+<main>
+
+  <h1>{{PAGE_TITLE}}</h1>
+  <!-- Answer first (canon L3.1): the lede states the conclusion, not the agenda. -->
+  <p class="lede">{{ONE_SENTENCE_CONCLUSION}}</p>
+  <p class="meta">{{WHAT_THIS_COVERS}} · {{DATE_OR_SOURCE_REF}}</p>
+
+  <!-- Overview before parts (canon L1.8). -->
+  <section>
+    <h2>{{SECTION_TITLE}}</h2>
+    <p>{{SECTION_CONCLUSION_FIRST}}</p>
+    <p>{{SUPPORT}}</p>
+  </section>
+
+  <!-- ═══ COMPONENTS — delete what you don't use ═══════════════════════ -->
+
+  <!-- rung 2 · the real artifact -->
+  <pre><code>{{REAL_SNIPPET_FROM_THE_ACTUAL_SOURCE}}</code></pre>
+
+  <!-- rung 4 · figure. Labels touch the thing they label (canon L1.4). -->
+  <figure class="wide">
+    <svg viewBox="0 0 640 240" role="img" aria-labelledby="fig1-title fig1-desc">
+      <title id="fig1-title">{{FIGURE_TITLE}}</title>
+      <desc id="fig1-desc">{{TEXT_EQUIVALENT_FOR_SCREEN_READERS}}</desc>
+      <!-- inline SVG here; annotate ON the figure, not underneath it -->
+    </svg>
+    <figcaption>{{WHAT_THE_FIGURE_SHOWS_THAT_THE_TEXT_DOES_NOT}}</figcaption>
+  </figure>
+
+  <div class="note"><p>{{CALLOUT}}</p></div>
+
+  <!-- rung 3 · table -->
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>{{COL_1}}</th><th>{{COL_2}}</th></tr></thead>
+      <tbody><tr><td>{{CELL}}</td><td>{{CELL}}</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- rung 5 · build-up: each step adds exactly ONE element (canon L1.6) -->
+  <div class="seq cols-2">
+    <div class="seq-step"><h4>1 · {{STEP_NAME}}</h4>{{STEP_FIGURE_OR_TEXT}}</div>
+    <div class="seq-step"><h4>2 · {{STEP_NAME}}</h4>{{STEP_FIGURE_OR_TEXT}}</div>
+  </div>
+
+  <details><summary>{{DETAIL_ON_DEMAND_LABEL}}</summary><p>{{DETAIL}}</p></details>
+
+  <!-- rung 7 · widget. Ships ONLY if manipulating it changes understanding.
+       Must explain itself in its default state — many readers never touch it. -->
+  <div class="widget">
+    <div class="widget-controls">
+      <label>{{PARAM_LABEL}}
+        <input type="range" id="p1" min="0" max="100" value="50">
+      </label>
+    </div>
+    <div class="widget-out" id="out">{{DEFAULT_STATE_RESULT}}</div>
+  </div>
+
+</main>
+<script>
+// Vanilla only. Keyboard-operable by construction (range inputs are).
+(function () {
+  var p1 = document.getElementById('p1'), out = document.getElementById('out');
+  if (!p1 || !out) return;
+  function render() { out.textContent = String(p1.value); /* {{COMPUTE}} */ }
+  p1.addEventListener('input', render);
+  render(); // meaningful default state
+})();
+</script>
+</body>
+</html>
