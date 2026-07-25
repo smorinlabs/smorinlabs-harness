@@ -146,5 +146,9 @@ The rest of the reading rules:
 
 - `manual-test-guide` (repo-hygiene plugin, this marketplace) — owns manual
   testing steps (the steps-mode carve-out).
+- `html-explain` (use-html-theme plugin, this marketplace) — where the
+  "inline in chat, always" rule sends you when the user explicitly wants the
+  explanation as a shareable *page*: a self-contained HTML explainer with
+  diagrams and figures. Same concrete-anchored spirit, different medium.
 - `references/examples.md` — worked outputs (default and options mode) plus
   a follow-up diagnosis walkthrough to calibrate against.
