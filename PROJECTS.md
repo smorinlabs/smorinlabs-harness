@@ -1033,7 +1033,7 @@ portable; scope a separate fallback/project before testing that broader promise.
       in harness-kit, including unit regressions equivalent to its existing orphan-prune and
       `_write_if_changed` coverage; do not migrate consumer citations against an unreleased
       local checkout
-      done — harness-kit PR #3 merged, 26 unit tests
+      done — harness-kit PR #3 merged (merge commit 24a3b9c), 42 tests collected in test_shared_references.py
 - [x] [P33-T13] **2 — release the generator:** release the harness-kit change and record its
       immutable Git revision plus exact release tag; downstream work must consume that release
       rather than an ambient source checkout
