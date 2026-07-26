@@ -58,15 +58,30 @@ succeed and nothing would open, on a machine the user isn't looking at.
 
 | Platform | Command |
 |---|---|
-| macOS | `open "<abs-path>"` |
-| Linux | `xdg-open "<abs-path>"` |
-| Windows | `explorer "<abs-path>"` |
+| macOS | `open '<abs-path>'` |
+| Linux | `xdg-open '<abs-path>'` |
+| Windows (PowerShell) | `explorer '<abs-path>'` |
+| Windows (cmd.exe) | `explorer "<abs-path>"` |
 
-**Always quote the path.** Generated pages land under directory names
-containing spaces often enough — `My Documents`, `Application Support`,
-`Google Drive` — that an unquoted template is a latent break: the shell
-splits the path into several arguments and the open either fails or targets
-something else entirely.
+**Quote the path so the shell cannot touch it — single quotes on POSIX
+shells and PowerShell.** Two separate failures are being prevented:
+
+- **Spaces split it.** Pages land under `My Documents`, `Application
+  Support`, `Google Drive` often enough that an unquoted template is a
+  latent break — the shell hands the command several arguments and the open
+  fails or targets something else.
+- **Double quotes are not literal.** Inside `"…"` a POSIX shell still
+  expands `$name`, runs `` `backticks` ``, and ends the string at an
+  embedded `"`. A path containing any of those is interpolated rather than
+  passed through. PowerShell expands `$` in double quotes too. Single quotes
+  suppress all of it.
+
+cmd.exe is the exception — it has no `$` or backtick expansion, so double
+quotes are correct and single quotes are not special there.
+
+**Escaping the quote character itself:** a literal `'` inside a POSIX
+single-quoted string is written `'\''`; in PowerShell it doubles to `''`.
+Rare, but the alternative is a silently truncated path.
 
 **On Windows use `explorer`, not `start`.** `start` treats its first quoted
 argument as the window *title*, so `start "C:\...\page.html"` opens an empty
@@ -86,14 +101,15 @@ the path into a browser bar, a file dialog, a chat message, or another tool.
 
 | Platform | Command |
 |---|---|
-| macOS | `printf '%s' "<abs-path>" \| pbcopy` |
-| Linux (Wayland) | `printf '%s' "<abs-path>" \| wl-copy` |
-| Linux (X11) | `printf '%s' "<abs-path>" \| xclip -selection clipboard` |
-| Windows | `Set-Clipboard -Value "<abs-path>"` (PowerShell) |
+| macOS | `printf '%s' '<abs-path>' \| pbcopy` |
+| Linux (Wayland) | `printf '%s' '<abs-path>' \| wl-copy` |
+| Linux (X11) | `printf '%s' '<abs-path>' \| xclip -selection clipboard` |
+| Windows | `Set-Clipboard -Value '<abs-path>'` (PowerShell) |
 
 `printf '%s'` rather than `echo`, so no trailing newline rides along into the
-clipboard and breaks the paste. Quote the path here too, for the same reason
-as above.
+clipboard and breaks the paste. Single-quote the path here for the same
+reason as above — a `$` or backtick in a directory name would otherwise be
+expanded into the clipboard instead of copied.
 
 **The remote case is worse here than for opening.** A browser-open on the
 wrong machine visibly does nothing; a clipboard write on the wrong machine

@@ -823,6 +823,13 @@ ephemeral; that is a real answer, not a non-answer.
       shipped with the same exposure since v0.16.0); fixed in the docs by directing
       direct-copy installs to take the whole plugin directory. Dev-symlink and plugin
       installs were always fine — the symlink resolves to the plugin root
+- [x] [P32-T12] Second Greptile round on the same line, also with a repro, also valid:
+      double-quoting fixed word-splitting but NOT expansion — inside `"..."` a POSIX shell
+      still resolves `$name`, executes backticks, and terminates at an embedded `"`, and
+      PowerShell expands `$` in double quotes too, so a path containing any of those is
+      interpolated rather than passed through. Switched to single quotes on POSIX and
+      PowerShell (cmd.exe keeps double quotes — no `$`/backtick expansion there), for both
+      the open and clipboard tables, with the `'\''` / `''` escape for a literal quote noted
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
 

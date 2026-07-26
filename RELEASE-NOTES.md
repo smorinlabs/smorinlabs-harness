@@ -33,9 +33,13 @@
     opening — a clipboard write reports success into a clipboard the user
     cannot reach, where a browser-open visibly does nothing. `printf '%s'`
     rather than `echo`, so no trailing newline rides into the clipboard.
-  - Browser-open commands quote the path and use `explorer` on Windows —
-    `start` takes its first quoted argument as the window title, and
-    PowerShell aliases `start` to `Start-Process`.
+  - Browser-open and clipboard commands **single-quote** the path on POSIX
+    shells and PowerShell. Double quotes stop spaces but not expansion — a
+    POSIX shell still resolves `$name`, runs backticks, and ends the string
+    at an embedded `"` inside `"…"`, and PowerShell expands `$` there too.
+    cmd.exe is the exception and uses double quotes. Windows opens with
+    `explorer`, not `start`, which takes its first quoted argument as the
+    window title and is aliased to `Start-Process` under PowerShell.
   - Each skill's own next moves still lead: codesign's paste-back loop,
     html-explain's go-deeper / add-a-figure / restyle.
 
