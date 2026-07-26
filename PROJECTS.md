@@ -734,8 +734,8 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
       closed by live smoke test instead. Operator confirmed both skills fire their gate in a
       fresh session (2026-07-25): *"Both were tried and they both work."* **Scope of this row
       is exactly that: the general case.** The explicit-invocation-with-an-argument case is
-      tracked separately as TS04 and is NOT covered here
-- [ ] [P31-TS04] Targeted regression check: invoke each page skill EXPLICITLY WITH AN ARGUMENT
+      tracked separately as TS05 and is NOT covered here
+- [ ] [P31-TS05] Targeted regression check: invoke each page skill EXPLICITLY WITH AN ARGUMENT
       (e.g. `/html-codesign the caching questions`) and confirm the pre-read still lands on its
       own turn before any dialog, and that no file is written until the answer. This is the
       loophole most likely to erode, because an argument makes skipping the gate feel most
@@ -857,7 +857,7 @@ ephemeral; that is a real answer, not a non-answer.
       not. Fixed, with an explicit note on why the example stops where it does.
       (2) **PR #18**: TS03 read `[x]` while its own body admitted the with-an-argument case was
       unconfirmed — the tracker claimed full verification with a named regression case open.
-      Split into TS03 (general case, confirmed) + TS04 (argument case, open); P31 back to `[~]`
+      Split into TS03 (general case, confirmed) + TS05 (argument case, open); P31 back to `[~]`
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
 
