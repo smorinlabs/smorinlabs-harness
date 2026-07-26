@@ -1024,7 +1024,9 @@ portable; scope a separate fallback/project before testing that broader promise.
       framework, so introduce one (pre-commit framework preferred, matching the uv/ruff
       toolchain) rather than an untracked `.git/hooks` script. A stale or hand-edited
       `_shared` copy must fail the commit that would ship it; document the hook install
-      step alongside the existing `just` recipes
+      step alongside the existing `just` recipes. Order-independent: the hook runs
+      the pinned gen-check as-is, so it may land before the T12–T19 chain completes — but
+      P33 does not close without it (see Automated Verification)
 
 ### Ordered Delivery (hard dependency chain)
 - [ ] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
@@ -1104,6 +1106,8 @@ portable; scope a separate fallback/project before testing that broader promise.
   repairs or prunes them
 - The T21 fixture-repo proof passed against the released revision before any live-repo
   citation changed
+- The T22 pre-commit hook is wired and fails a commit that would ship a stale or missing
+  generated reference
 - The broader sibling-skill theming citations remain explicitly deferred, not silently
   downgraded into this acceptance criterion
 
