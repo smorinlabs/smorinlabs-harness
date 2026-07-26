@@ -1,5 +1,64 @@
 # Release Notes
 
+## v0.17.0 — 2026-07-25
+
+### Added
+
+- **use-html-theme 0.9.0 — a shared delivery close-out for both page skills**
+  (`plugins/use-html-theme/references/delivery-close.md`). Purely additive:
+  nothing in either skill's existing delivery step was changed or removed.
+  - **The full absolute path, on its own line, every time** — now a hard rule
+    in both skills. A relative path is only meaningful from a working
+    directory the reader cannot see, and the person opening the file is
+    routinely not in the shell that made it. When the file landed somewhere
+    temporary, the close-out says so plainly, because a scratch path can be
+    reaped.
+  - **Then ask what they'd like to do next**, as a prose list rather than a
+    dialog — the path has to stay visible, and prose sharing a turn with
+    AskUserQuestion may never render.
+  - Every offer is **strictly conditional**. *Open it in the browser* only
+    when the session can actually reach one — never on web-hosted, remote,
+    headless, or display-less sandbox sessions, where the command reports
+    success while nothing opens; when in doubt, don't offer. *Add it to
+    `shelf`* only when that skill is installed — if it isn't, it is not
+    mentioned at all, not even as a suggestion to install it. *Where to save
+    it* whenever the file sits somewhere temporary or anywhere the agent chose
+    rather than the user — **read from context, never a fixed ranking**: the
+    place this session already saves to, the home the repo already has for
+    this kind of document, a new repo location flagged as new, `shelf` for
+    standalone work with no clean home (only when that skill is installed),
+    or **not saving at all** when the page is ephemeral. Never moved silently.
+  - *Copy the path to the clipboard*, gated identically to the browser-open:
+    only on the user's own machine. The remote case is worse here than for
+    opening — a clipboard write reports success into a clipboard the user
+    cannot reach, where a browser-open visibly does nothing. `printf '%s'`
+    rather than `echo`, so no trailing newline rides into the clipboard.
+  - Browser-open and clipboard commands **single-quote** the path on POSIX
+    shells and PowerShell. Double quotes stop spaces but not expansion — a
+    POSIX shell still resolves `$name`, runs backticks, and ends the string
+    at an embedded `"` inside `"…"`, and PowerShell expands `$` there too.
+    Windows opens with `explorer` **from PowerShell**, not `start` (which
+    takes its first quoted argument as the window title, and is aliased to
+    `Start-Process` under PowerShell) and not from cmd.exe, which expands
+    `%VAR%` inside double quotes with no reliable escape at an interactive
+    prompt.
+  - Each skill's own next moves still lead: codesign's paste-back loop,
+    html-explain's go-deeper / add-a-figure / restyle.
+
+### Fixed
+
+- **Direct-copy install docs for both page skills** — the instructions copied
+  `plugins/use-html-theme/skills/<name>/` alone, which leaves the shared
+  plugin-root references (`../../references/`) dangling. They now direct the
+  reader to take the whole `plugins/use-html-theme/` directory. Pre-existing:
+  `context-triage.md` has shipped with the same exposure since v0.16.0. The
+  plugin install and the dev-symlink placement were never affected — a symlink
+  resolves through to the plugin root.
+- **html-codesign step 7 no longer contradicts the browser gate** — it opened
+  with "open/preview it when the platform can", which is looser than the
+  close-out's rule and would have let a remote or headless session receive a
+  no-op offer.
+
 ## v0.16.0 — 2026-07-25
 
 ### Added

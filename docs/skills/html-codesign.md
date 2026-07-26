@@ -61,13 +61,57 @@ anyone: paste it back into any chat → questions answered by q-NN, skips
 The back-channel is plain text, so the loop works identically from Claude
 Code, Codex, or a stakeholder who only ever saw the HTML file.
 
+## Closing the delivery
+
+Both page skills in this plugin end the same way, via the shared
+`references/delivery-close.md` **at the plugin root** (read by each skill as
+`../../references/delivery-close.md`) — added on top of each skill's own
+delivery step, not in place of it.
+
+**The full absolute path, on its own line, every time.** A relative path is
+only meaningful from a working directory the reader cannot see, and the
+person opening the file is routinely not in the shell that made it. If the
+file landed somewhere temporary, the close-out says so plainly — scratch
+paths get reaped, which is what makes the save offer below matter.
+
+**Then it asks what you'd like to do next**, as a prose list rather than a
+dialog (the path has to stay visible, and prose sharing a turn with
+AskUserQuestion may never render). Every offer is strictly conditional:
+
+| Offer | Only when |
+|---|---|
+| Open it in the browser | the session can actually reach one — never web-hosted, remote, headless, or a display-less sandbox, where the command reports success while nothing opens. In doubt → don't offer |
+| Copy the path to the clipboard | same gate — the session runs on your own machine | on a remote session a clipboard write **reports success** into a clipboard you can't reach, a sharper failure than a browser-open that visibly does nothing |
+| Add it to `shelf` | that skill is installed. If it isn't, `shelf` is not mentioned at all — not even as a suggestion to install it |
+| Where to save it | the file sits somewhere temporary, **or anywhere the agent chose rather than you**. Read from context, never a fixed ranking — see below. Never moved silently |
+
+### The save recommendation is read, not ranked
+
+A fixed order gets this wrong in both directions: it files a design doc that
+obviously belongs beside its spec into a general library, and it proposes a
+permanent home for a page nobody will open again. So the question is *what is
+this page, and where do things like it already live?* — answered with one
+recommendation and its reason, plus the runner-up named in a clause.
+
+| The page looks like… | Recommendation |
+|---|---|
+| something this session has already been saving somewhere | that same place — repeating an established destination beats introducing one |
+| a document this repo already has a home for | that home — `docs/`, `docs/decisions/` or `adr/` for a decision record, beside the spec it explains. Convention beats invention |
+| durable and repo-bound, but with no existing home | the location fitting the repo's shape, flagged as a *new* home so it's cheap to redirect |
+| standalone — research, a comparison, a briefing, or anything with no clean place to live | `shelf`, **if that skill is installed**; if not, say plainly there's no obvious home and ask |
+| ephemeral — a throwaway, or a page settling a decision being settled right now | **not saving it.** "This doesn't look like a keeper" is a real recommendation and spares a filing decision |
+
+Those are examples, not a taxonomy — other clear homes exist (a notes vault, a
+docs-site content tree, a path the project's own CLAUDE.md names) and the
+context in front of you decides.
+
 ## Install
 
 | Mode | When | How |
 |---|---|---|
 | Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-harness` (ships both skills) |
 | Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/use-html-theme/skills/html-codesign" ~/.claude/skills/html-codesign` |
-| Direct copy | No marketplace access | copy `plugins/use-html-theme/skills/html-codesign/` into `~/.claude/skills/` |
+| Direct copy | No marketplace access | copy the whole `plugins/use-html-theme/` directory and place the skill from inside it. Both page skills read shared references at the **plugin root** (`../../references/`), so copying `skills/html-codesign/` on its own leaves those dangling |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`. Pure skill —
 behavior is identical on Codex and Claude Code.

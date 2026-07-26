@@ -747,4 +747,100 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
 
 ---
 
+## [~] Project P32: shared delivery close-out for both HTML page skills (plugin v0.9.0)
+**Goal**: Both page skills end by telling the user where the file is and what they might
+want to do with it — additively, changing nothing that already exists in either delivery
+step. Two parts. (1) **The full absolute path, on its own line, every time**, promoted to a
+hard rule in both skills: a relative path is only meaningful from a working directory the
+reader cannot see, and whoever opens the file is routinely not in the shell that made it;
+when the file landed somewhere temporary the close-out says so, since scratch paths get
+reaped. (2) **Then ask what's next** — as a prose list, not a dialog, because the path must
+stay visible and prose sharing a turn with AskUserQuestion may never render (the same Iron
+Law that governs the triage gate).
+
+Every offer is strictly conditional, because an offer the session can't fulfil or the user
+can't take costs them a reply to decline: browser-open only when the session can actually
+reach a browser (never web-hosted / remote / headless / display-less sandbox, where the
+command reports success while nothing opens — in doubt, don't offer); `shelf` only when
+that skill is installed, and otherwise not mentioned at all, not even as a suggestion to
+install it; save-location whenever the file sits somewhere temporary or anywhere the agent
+chose rather than the user — **read from context, never a fixed ranking**, since a ladder
+errs both ways (filing a repo-bound design doc into a general library, and proposing a
+permanent home for a page nobody reopens). Recommend not saving at all when the page is
+ephemeral; that is a real answer, not a non-answer.
+
+**Out of Scope**
+- Any change to existing delivery text — additive only
+- A `reader-steps` handoff block (considered and set aside: the operator's always-on digest
+  already covers it, and a read-only page's single "open the file" action is the one-line
+  form, not a block)
+
+### Tests & Tasks
+- [x] [P32-T01] `plugins/use-html-theme/references/delivery-close.md` — the shared close-out:
+      absolute-path rule with rationale, prose-not-dialog rule, three conditional offers with
+      their negative cases, per-platform open commands, gotchas table
+- [x] [P32-T02] html-codesign step 7 + html-explain step 11 — append the close-out pointer;
+      existing text untouched
+- [x] [P32-T03] "Deliver the absolute path" added to both skills' Hard rules
+- [x] [P32-T04] Smoke-test item added to both (path on its own line; offers conditional)
+- [x] [P32-T05] See-also entry in both skills
+- [x] [P32-T06] plugin.meta.toml 0.8.0 → 0.9.0 + description; marketplace 0.16.0 → 0.17.0;
+      gen + gen-check green
+- [x] [P32-T07] Docs: close-out section on both per-skill pages; README section blurb;
+      RELEASE-NOTES v0.17.0 entry
+- [x] [P32-TS01] Gate on the WORKTREE path: cross-tool verify both skills — claude-code and
+      codex each PASS, 0 errors / 0 warnings (the pre-existing `_generated` advisory is gone
+      this round). Descriptions unchanged at 988 / 994 chars, under the ~1000 envelope.
+      gen-check + just all green; all four CI guards clean
+- [x] [P32-T08] Save-location rewritten from a ranking to a context read (user feedback):
+      signals are what this session already does, what the repo already does, a new
+      repo-fitting home flagged as new, `shelf` for standalone work with no clean home, and
+      "don't save this" for ephemera — stated as examples, not a taxonomy
+- [x] [P32-T09] PR #17 review round — 5 findings, all valid, all fixed. **P1 (Greptile,
+      verified with a runnable repro)**: browser-open templates were unquoted, so any path
+      containing a space (`My Documents`, `Application Support`) splits into multiple args
+      and opens the wrong target or nothing; the Windows form was also wrong — `start` takes
+      its first quoted argument as the window TITLE, so `start "C:\...\page.html"` opens an
+      empty console. Fixed: quote every path, and use `explorer` on Windows, which parses
+      identically from cmd.exe and PowerShell (Copilot independently flagged the same line).
+      P2 (Greptile): both skills' inline summaries narrowed the save trigger to "temporary",
+      suppressing the offer for a durable location the AGENT picked — trigger broadened in
+      both. 2x (Copilot): `references/delivery-close.md` read as relative to `docs/skills/`
+      on the docs pages — now qualified as being at the plugin root
+- [x] [P32-T10] Clipboard offer added (user request), gated identically to browser-open:
+      only on the user's own machine. Flagged as the SHARPER remote failure — a clipboard
+      write reports success into a clipboard the user cannot reach, where a browser-open
+      visibly does nothing. Uses `printf '%s'` not `echo` so no trailing newline rides into
+      the clipboard; per-platform (pbcopy / wl-copy / xclip / Set-Clipboard), path quoted
+- [x] [P32-T11] CodeRabbit round (5 more, landed after the first poll window; all valid):
+      MD040 bare fence tagged `text`; **a pre-existing contradiction surfaced** — codesign
+      step 7 opened with "open/preview it when the platform can", looser than the new gate,
+      so a remote session could still get a no-op offer (the only place this PR touched
+      existing text, and it had to); "temporary or unchosen" propagated to README and
+      plugin.meta.toml, which still said temporary-only; and **direct-copy install was
+      broken for plugin-root references** — copying `skills/<name>/` alone leaves
+      `../../references/` dangling. That last is NOT introduced here (context-triage.md has
+      shipped with the same exposure since v0.16.0); fixed in the docs by directing
+      direct-copy installs to take the whole plugin directory. Dev-symlink and plugin
+      installs were always fine — the symlink resolves to the plugin root
+- [x] [P32-T12] Second Greptile round on the same line, also with a repro, also valid:
+      double-quoting fixed word-splitting but NOT expansion — inside `"..."` a POSIX shell
+      still resolves `$name`, executes backticks, and terminates at an embedded `"`, and
+      PowerShell expands `$` in double quotes too, so a path containing any of those is
+      interpolated rather than passed through. Switched to single quotes on POSIX and
+      PowerShell (cmd.exe keeps double quotes — no `$`/backtick expansion there), for both
+      the open and clipboard tables, with the `'\''` / `''` escape for a literal quote noted
+- [x] [P32-T13] Fourth Greptile round, again with a repro, again valid — and it landed on my
+      own claim: T12 asserted "cmd.exe is the exception, it has no expansion", which is true
+      for `$` and backticks and WRONG in general. cmd.exe expands `%VAR%` inside double
+      quotes, so a path containing a literal `%USERNAME%`/`%TEMP%` segment (legal on NTFS) is
+      rewritten before Explorer sees it, and `%%` escapes only in batch files, not at an
+      interactive prompt. Fix: drop the cmd.exe row entirely and direct Windows opens through
+      PowerShell; if cmd is genuinely the only shell and the path contains `%`, don't offer
+      the open — print the path for the user to paste into Explorer's address bar
+- [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
+      an absolute path and offers only what this session can actually do
+
+---
+
 - [ ] Regression Test Status

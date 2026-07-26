@@ -80,7 +80,7 @@ Orchestration layer over the built-in `/deep-research`.
 
 ### use-html-theme
 
-Themed-HTML toolkit, three pure skills — controlled entirely in natural language, portable across Claude Code and Codex. The two page skills share one context-triage preflight and always confirm before generating: `html-codesign` for unanswered questions, `html-explain` for settled work, each offering the other when triage disagrees with the request.
+Themed-HTML toolkit, three pure skills — controlled entirely in natural language, portable across Claude Code and Codex. The two page skills share one context-triage preflight and always confirm before generating: `html-codesign` for unanswered questions, `html-explain` for settled work, each offering the other when triage disagrees with the request. Both close delivery the same way — the full absolute path on its own line, then conditional convenience offers (open in the browser only when the session can reach one, add to `shelf` only when that skill is installed, and where to save it whenever the file sits somewhere temporary or anywhere the agent chose rather than you — read from context, never a fixed ranking).
 
 | Skill | Does | Details |
 |---|---|---|
