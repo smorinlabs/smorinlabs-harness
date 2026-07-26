@@ -14,7 +14,7 @@ Read from either skill's directory as `../../references/delivery-close.md`.
 Print the **full absolute path** to the generated file. Never a relative
 path, never "written to the current directory", never just the filename.
 
-```
+```text
 /Users/<user>/projects/acme/docs/retry-explainer.html
 ```
 

@@ -171,7 +171,8 @@ offer `html-explain` as the recommended option instead.
    script intact. Apply the theme layer per step 5.
 
 7. **Deliver and explain the loop.** Give the file path (and open/preview it
-   when the platform can). Tell the user the reader can review then collapse
+   only when the shared gate in the close-out below permits — never merely
+   because the platform has a command for it). Tell the user the reader can review then collapse
    each context, **skip questions they're not deciding**, **raise a
    question when they can't answer** ("Questions first" bundles them into
    a paste-back), fold answered sections to scan their decisions, and

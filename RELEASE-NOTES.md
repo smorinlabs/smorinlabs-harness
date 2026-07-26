@@ -39,6 +39,20 @@
   - Each skill's own next moves still lead: codesign's paste-back loop,
     html-explain's go-deeper / add-a-figure / restyle.
 
+### Fixed
+
+- **Direct-copy install docs for both page skills** — the instructions copied
+  `plugins/use-html-theme/skills/<name>/` alone, which leaves the shared
+  plugin-root references (`../../references/`) dangling. They now direct the
+  reader to take the whole `plugins/use-html-theme/` directory. Pre-existing:
+  `context-triage.md` has shipped with the same exposure since v0.16.0. The
+  plugin install and the dev-symlink placement were never affected — a symlink
+  resolves through to the plugin root.
+- **html-codesign step 7 no longer contradicts the browser gate** — it opened
+  with "open/preview it when the platform can", which is looser than the
+  close-out's rule and would have let a remote or headless session receive a
+  no-op offer.
+
 ## v0.16.0 — 2026-07-25
 
 ### Added

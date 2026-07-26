@@ -111,7 +111,7 @@ context in front of you decides.
 |---|---|---|
 | Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-harness` (ships both skills) |
 | Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/use-html-theme/skills/html-codesign" ~/.claude/skills/html-codesign` |
-| Direct copy | No marketplace access | copy `plugins/use-html-theme/skills/html-codesign/` into `~/.claude/skills/` |
+| Direct copy | No marketplace access | copy the whole `plugins/use-html-theme/` directory and place the skill from inside it. Both page skills read shared references at the **plugin root** (`../../references/`), so copying `skills/html-codesign/` on its own leaves those dangling |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`. Pure skill —
 behavior is identical on Codex and Claude Code.

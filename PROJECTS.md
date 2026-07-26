@@ -812,6 +812,17 @@ ephemeral; that is a real answer, not a non-answer.
       write reports success into a clipboard the user cannot reach, where a browser-open
       visibly does nothing. Uses `printf '%s'` not `echo` so no trailing newline rides into
       the clipboard; per-platform (pbcopy / wl-copy / xclip / Set-Clipboard), path quoted
+- [x] [P32-T11] CodeRabbit round (5 more, landed after the first poll window; all valid):
+      MD040 bare fence tagged `text`; **a pre-existing contradiction surfaced** — codesign
+      step 7 opened with "open/preview it when the platform can", looser than the new gate,
+      so a remote session could still get a no-op offer (the only place this PR touched
+      existing text, and it had to); "temporary or unchosen" propagated to README and
+      plugin.meta.toml, which still said temporary-only; and **direct-copy install was
+      broken for plugin-root references** — copying `skills/<name>/` alone leaves
+      `../../references/` dangling. That last is NOT introduced here (context-triage.md has
+      shipped with the same exposure since v0.16.0); fixed in the docs by directing
+      direct-copy installs to take the whole plugin directory. Dev-symlink and plugin
+      installs were always fine — the symlink resolves to the plugin root
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
 
