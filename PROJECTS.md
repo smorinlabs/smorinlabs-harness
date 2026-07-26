@@ -940,7 +940,7 @@ portable; scope a separate fallback/project before testing that broader promise.
 | Codex marketplace install | Real install; all four `_shared` destination paths pass at v0.9.1 | Repeat with generated content and resolution checks |
 | Dev symlink | Real placement verified | Repeat resolution checks |
 | Direct copy of one skill | Real copy verified; plugin-root citations escape the copy | Must resolve every declared plugin-root shared reference |
-| Claude plugin install | **Simulated only**; isolated real attempt failed: "This plugin uses a source type your Claude Code version does not support." | Obtain a supported real install and verify resolution; simulation alone cannot close TS04 |
+| Claude plugin install | **Mechanism proven, this plugin's install pending.** A real marketplace install materializes nested skill subdirectories at exactly the `_shared` shape — `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/<sub>/<file>.md`, a real directory, 315 such files across the cache — and a skill reads that shape relatively today (`use-html-theme/SKILL.md:59` cites `references/themes/<name>/tokens.md`). Not yet proven: an end-to-end install of THIS plugin post-P33. The earlier "source type not supported" failure was a local-path marketplace attempt, which tests the source type, not the installer's directory handling | End-to-end install of this plugin after P33, reading both page skills through the installed tree |
 
 **Out of Scope**
 - Changing how any skill's own (non-shared) references work
@@ -1040,10 +1040,20 @@ portable; scope a separate fallback/project before testing that broader promise.
       install, dev symlink, and **direct copy of a lone skill folder** (the regression)
 - [ ] [P33-TS02] Drift test: hand-edit a vendored copy, confirm `gen-check` fails
 - [ ] [P33-TS03] Fleet regression: `gen-check` green across all 9 plugins after the change
-- [ ] [P33-TS04] Real-Claude gate: install with a Claude Code version/source type that supports
-      this plugin, then read both page skills through the installed tree and verify every
-      declared `_shared` destination. Record the supported version and install evidence;
-      simulated layout checks do not close this row
+- [ ] [P33-TS04] Real-Claude gate — **narrowed 2026-07-26; the mechanism half is already
+      proven.** A real marketplace install DOES materialize nested skill subdirectories at the
+      `_shared` shape: `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/`
+      `<sub>/<file>.md` is a real directory from a real install (315 such files across
+      `~/.claude/plugins/cache`), and a skill reads that shape relatively today —
+      `use-html-theme/SKILL.md:59` cites `references/themes/<name>/tokens.md`, one level
+      deeper than `_shared` needs. So the installer's directory handling is NOT in question.
+      What remains: an end-to-end install of THIS plugin after P33 ships, reading both page
+      skills through the installed tree and resolving every declared `_shared` destination.
+      That needs `/plugin marketplace add` + `/plugin install` — in-session slash commands with
+      no CLI equivalent (`claude plugin` exposes only details/enable/disable/eval), so it is an
+      operator step, not automatable. Note for whoever runs it: the earlier "source type your
+      Claude Code version does not support" failure came from a LOCAL-PATH marketplace attempt
+      and tests the source type, not directory handling — install from the GitHub marketplace
 - [ ] [P33-TS05] Linux case gate: on case-sensitive `ubuntu-latest`, exercise an intentionally
       mis-cased source, declaration, and destination; each must fail with an exact-case
       diagnostic, while the correctly cased generated tree passes
