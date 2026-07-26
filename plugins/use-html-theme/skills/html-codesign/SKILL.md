@@ -89,9 +89,12 @@ Recent context has 4 open questions. Here's how I'd shape the page:
 
 A codesign page poses each of these with a reasoned recommendation and
 lets you pick, skip, or ask back. It doesn't decide for you.
-
-Generate it for these four?
 ```
+
+**The example ends there on purpose.** No "Generate it for these four?"
+tacked on the end — that question belongs in the dialog on the next turn,
+and appending it here is exactly the same-turn violation the rule below
+forbids. The ask lives in the option labels, never in the pre-read.
 
 Frame the value honestly: **codesign poses questions with recommendations —
 it does not decide.** A user who thinks they're delegating the decision has

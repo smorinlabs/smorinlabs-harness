@@ -643,7 +643,7 @@ Frontmatter description byte-identical — capability change, minor bump, no ove
 
 ---
 
-## [x] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
+## [~] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
 **Goal**: Add `html-explain` — read-only explainer pages for settled material — and stop
 the two HTML page skills from being decided by accident. Both now run one shared
 context-triage preflight, classify recent context by density (many unanswered questions →
@@ -731,10 +731,18 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
       Released as marketplace v0.16.0 (new skill = minor)
 - [x] [P31-TS03] Headless E2E was skipped loudly — the changed contract on both page skills is
       an interactive AskUserQuestion gate, and headless `-p` cannot answer dialogs — so it was
-      closed by live smoke test instead. Operator confirmed both skills in a fresh session
-      (2026-07-25): *"Both were tried and they both work."* Note the with-an-argument case was
-      not separately called out in that report; it remains the loophole most likely to regress
-      and is worth a targeted re-check if the gate ever misfires
+      closed by live smoke test instead. Operator confirmed both skills fire their gate in a
+      fresh session (2026-07-25): *"Both were tried and they both work."* **Scope of this row
+      is exactly that: the general case.** The explicit-invocation-with-an-argument case is
+      tracked separately as TS04 and is NOT covered here
+- [ ] [P31-TS04] Targeted regression check: invoke each page skill EXPLICITLY WITH AN ARGUMENT
+      (e.g. `/html-codesign the caching questions`) and confirm the pre-read still lands on its
+      own turn before any dialog, and that no file is written until the answer. This is the
+      loophole most likely to erode, because an argument makes skipping the gate feel most
+      defensible — which is precisely why the skill hard-rules that an argument shortens the
+      gate but never removes it. Split out of TS03 after PR #18 review (Greptile P1): the
+      original row carried its own caveat that this case was unconfirmed while still reporting
+      `[x]`, so the tracker claimed full verification with a named regression case unverified
 
 ### Automated Verification
 - `just gen-check` exits 0
@@ -840,6 +848,16 @@ ephemeral; that is a real answer, not a non-answer.
       interactive prompt. Fix: drop the cmd.exe row entirely and direct Windows opens through
       PowerShell; if cmd is genuinely the only shell and the path contains `%`, don't offer
       the open — print the path for the user to paste into Explorer's address bar
+- [x] [P32-T14] Post-merge review sweep found two unresolved P1s on merged PRs — read before
+      resolving, and both were real. (1) **PR #15, shipped in v0.17.0**: the html-codesign
+      worked example ended with "Generate it for these four?" INSIDE the pre-read block, while
+      the rule eleven lines below forbids exactly that — an agent follows the example over the
+      prose, so the shipped text demonstrated the same-turn bug v0.16.0 existed to fix. The
+      shared context-triage.md had been corrected during v0.17.0; the skill's inline copy had
+      not. Fixed, with an explicit note on why the example stops where it does.
+      (2) **PR #18**: TS03 read `[x]` while its own body admitted the with-an-argument case was
+      unconfirmed — the tracker claimed full verification with a named regression case open.
+      Split into TS03 (general case, confirmed) + TS04 (argument case, open); P31 back to `[~]`
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
 
