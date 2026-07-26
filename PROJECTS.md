@@ -1029,22 +1029,27 @@ portable; scope a separate fallback/project before testing that broader promise.
       P33 does not close without it (see Automated Verification)
 
 ### Ordered Delivery (hard dependency chain)
-- [ ] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
+- [x] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
       in harness-kit, including unit regressions equivalent to its existing orphan-prune and
       `_write_if_changed` coverage; do not migrate consumer citations against an unreleased
       local checkout
-- [ ] [P33-T13] **2 — release the generator:** release the harness-kit change and record its
+      done — harness-kit PR #3 merged, 26 unit tests
+- [x] [P33-T13] **2 — release the generator:** release the harness-kit change and record its
       immutable Git revision plus exact release tag; downstream work must consume that release
       rather than an ambient source checkout
-- [ ] [P33-T14] **3 — pin the exact release:** add
+      done — released as v0.3.0 = d25979ed
+- [x] [P33-T14] **3 — pin the exact release:** add
       `tag = "vX.Y.Z"` to harness-kit's `[tool.uv.sources]` Git entry in this repo's
       `pyproject.toml`; the tag must identify the immutable revision recorded by T13
-- [ ] [P33-T15] **4 — bump the lock deliberately:** update this repo's `uv.lock` away from
+      done — this PR
+- [x] [P33-T15] **4 — bump the lock deliberately:** update this repo's `uv.lock` away from
       `72cf4e1` to the exact T13/T14 revision. CI uses `uv sync --locked`, so neither citation
       migration nor generated copies may land first
-- [ ] [P33-T16] **5 — prove the pin in a fresh environment:** perform a clean
+      done — this PR, lock moved 72cf4e1 → d25979ed
+- [x] [P33-T16] **5 — prove the pin in a fresh environment:** perform a clean
       `uv sync --locked`, record the installed harness-kit version and Git revision, and run
       its focused unit suite before changing any citation
+      done — fresh `uv sync --locked` proof in this PR's body
 - [ ] [P33-T21] **6 — fixture-repo end-to-end proof:** before any consumer migration, run the
       released generator against a disposable fixture repo, never the live checkout — either a
       scratch copy of `smorinlabs-harness` or a synthetic minimal repo with
