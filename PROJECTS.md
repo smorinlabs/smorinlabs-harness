@@ -893,9 +893,9 @@ reference the skill cites": sibling-skill theming paths are a known separate pro
   `gen-check` failure catches the edit that ships anyway. They catch different people at
   different moments.
 - `ch-05-a` **automatic** for any skill declaring and citing a plugin-root reference, **plus**
-  a per-plugin freshness opt-out (per note-05). The escape hatch can suppress source-equality
-  checking only; it can never waive target existence, and it cannot coexist with a live
-  `_shared` citation.
+  a per-plugin freshness opt-out (per note-05). The escape hatch suppresses only the
+  `gen --check` staleness comparison; `gen` still regenerates copies on every run, and target
+  existence can never be waived.
 
 **Two open questions from the codesign, both resolved before scoping:**
 - `q-03` surfaced that `references/_shared/` alone is insufficient: the skill still *cites*
@@ -919,6 +919,15 @@ entry names a plugin-root reference basename; operational citations still use
 `references/_shared/<name>.md`. Generation scans SKILL.md only, pairs declarations with
 citations, and resolves the source by convention to
 `plugins/<plugin>/references/<name>.md`.
+
+**Opt-out note (PR #20 review, Greptile P1):** the first constraint set also hard-errored
+whenever `check_freshness = false` coexisted with an operational `_shared` citation — which
+made the opt-out illegal for exactly the participating plugins it was meant to govern, and
+legal only where it was vacuous. **Final resolution:** the flag suppresses only the staleness
+comparison in `gen --check`; `gen` still regenerates copies on every run, and
+destination-existence checking is unconditional in every mode. The original defect (a citation
+whose destination exists nowhere) stays structurally impossible because existence checking
+never depended on this flag.
 
 **Adversarial-review note (2026-07-25):** two independent reviews from different model
 families converged on findings 1–7: unsafe opt-out semantics, self-locating source text,
@@ -969,11 +978,11 @@ portable; scope a separate fallback/project before testing that broader promise.
       a failure on case-sensitive `ubuntu-latest`
 - [ ] [P33-T04] Add the explicit per-plugin schema
       `[generated_shared_references] check_freshness = false`; automatic freshness checking is
-      the default. This setting may suppress source-equality/freshness checking only, never
-      destination-existence checking. `harness-kit gen` and `gen --check` must hard-error if
-      any SKILL.md in that plugin contains an operational `references/_shared/` citation while
-      `check_freshness = false`; an `_shared` citation with no readable destination is always
-      an error
+      the default. The setting suppresses only the staleness/source-equality comparison in
+      `gen --check` for that plugin's generated `_shared` destinations; `harness-kit gen`
+      still regenerates copies on every run, and destination-existence checking is
+      unconditional — an `_shared` citation with no readable destination is always a hard
+      error in both `gen` and `gen --check`, regardless of the setting
 - [ ] [P33-T05] Keep `skill-system-doctor` at its documented 12 checks: use Check 1's
       fleet-wide `gen-check` for canonical source freshness, and extend Check 9 to resolve
       installed targets. A missing generated reference is a NON-baselineable error, never an
@@ -985,7 +994,8 @@ portable; scope a separate fallback/project before testing that broader promise.
       refuse any declared source whose bytes contain the literal `../../references/`
 - [ ] [P33-T08] Add `_shared` orphan pruning modeled on `_prune_orphan_vendors`, but scoped to
       banner-owned generated references rather than `scripts/_vendor`. Cover citation removal,
-      skill rename/removal, source rename/removal, and opt-out transitions. Normal `gen` removes
+      skill rename/removal, and source rename/removal; toggling `check_freshness` must never
+      change the generated set or trigger pruning. Normal `gen` removes
       proven generated orphans; `gen --check` reports them and exits nonzero without deleting
       them
 - [ ] [P33-T09] Replace literal-text auto-declaration with one fenced
@@ -1002,7 +1012,7 @@ portable; scope a separate fallback/project before testing that broader promise.
       the Claude manifest: resolve declared references for BOTH `html-codesign` and
       `html-explain`, cover `_shared` and `.codex-plugin/plugin.json`, and add negative tests
       for typoed declarations, missing sources, missing destinations, stale contents, orphaned
-      copies, and opt-out transitions
+      copies, and `check_freshness = false` masking staleness but never a missing destination
 
 ### Ordered Delivery (hard dependency chain)
 - [ ] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
