@@ -1035,13 +1035,24 @@ portable; scope a separate fallback/project before testing that broader promise.
 - [ ] [P33-T16] **5 — prove the pin in a fresh environment:** perform a clean
       `uv sync --locked`, record the installed harness-kit version and Git revision, and run
       its focused unit suite before changing any citation
-- [ ] [P33-T17] **6 — migrate declarations/citations:** execute T02 only after T16 proves the
-      released generator is active; include the T07 source-text rewrite and T06 attributes in
+- [ ] [P33-T21] **6 — fixture-repo end-to-end proof:** before any consumer migration, run the
+      released generator against a disposable fixture repo, never the live checkout — either a
+      scratch copy of `smorinlabs-harness` or a synthetic minimal repo with
+      `plugins/<plugin>/references/<name>.md` plus one citing SKILL.md (runnable any time
+      after T13's release). Cover two end-to-end scenarios: (1) happy path — declare + cite,
+      run `gen`, confirm banner + copy land at `references/_shared/<name>.md`, `gen --check`
+      exits 0, and the skill folder copied alone to a scratch directory still resolves the
+      reference; (2) failure path — delete the destination and confirm `gen --check` exits
+      nonzero naming it, then set `check_freshness = false` and confirm staleness is masked
+      while the missing destination still hard-errors
+- [ ] [P33-T17] **7 — migrate declarations/citations:** execute T02 only after T16 proves the
+      released generator is active and the T21 fixture proof has passed; include the T07
+      source-text rewrite and T06 attributes in
       the same consumer migration
-- [ ] [P33-T18] **7 — generate committed outputs:** run the pinned `harness-kit gen`, inspect
+- [ ] [P33-T18] **8 — generate committed outputs:** run the pinned `harness-kit gen`, inspect
       every repo-relative banner and `_shared` destination, and commit only the outputs derived
       from the declarations migrated in T17
-- [ ] [P33-T19] **8 — prove the pinned failure gate:** from the migrated state, remove or make
+- [ ] [P33-T19] **9 — prove the pinned failure gate:** from the migrated state, remove or make
       unreadable a declared destination without changing its source, confirm the pinned
       `harness-kit gen --check` exits nonzero and names that destination, then restore it with
       `gen`. Repeat with T04 enabled to prove the freshness escape hatch cannot hide absence
@@ -1083,6 +1094,8 @@ portable; scope a separate fallback/project before testing that broader promise.
 - `gen --check` reports rather than deletes stale (freshness-checked plugins only), missing,
   exact-case-mismatched, and orphaned generated references; write-mode `gen` deterministically
   repairs or prunes them
+- The T21 fixture-repo proof passed against the released revision before any live-repo
+  citation changed
 - The broader sibling-skill theming citations remain explicitly deferred, not silently
   downgraded into this acceptance criterion
 
