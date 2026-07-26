@@ -858,8 +858,78 @@ ephemeral; that is a real answer, not a non-answer.
       (2) **PR #18**: TS03 read `[x]` while its own body admitted the with-an-argument case was
       unconfirmed — the tracker claimed full verification with a named regression case open.
       Split into TS03 (general case, confirmed) + TS05 (argument case, open); P31 back to `[~]`
+- [x] [P32-T15] S1 CLOSED — the html-codesign codex deep-verify timeout does not reproduce.
+      Five consecutive runs after the fleet quieted: `--tool codex` alone 21s pass, both-tools
+      27s / 22s / 27s pass, against a 19s html-explain baseline. My earlier "almost certainly
+      size-related" call was WRONG on cause — the payload gap is real (99 KB / 11 files vs
+      55 KB / 6) but costs ~2s, nowhere near a timeout. Environmental: load average 14 with a
+      Lima VM plus two Codex hosts running when the failure was seen. html-codesign has now had
+      session-backed validation on BOTH tools, so the coverage gap that motivated S1 never
+      existed. Lesson recorded rather than the conclusion alone: one deep-verify failure on a
+      loaded box is not evidence about the artifact — re-run quiet before diagnosing
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
+
+---
+
+## [ ] Project P33: vendor plugin-root references into citing skills (harness-kit)
+**Goal**: A skill directory copied on its own must still find its shared references. Two
+skills (`html-codesign`, `html-explain`) read plugin-root files via `../../references/`,
+across 8 call sites. That path resolves in three of four install modes and breaks in the
+fourth — **direct copy of a single skill folder**, where `../..` escapes the copied tree by
+definition. Plugin install, Codex marketplace install, and dev-symlink placement are all
+unaffected (a symlink's `..` walks the real path); only "take this one folder" breaks, which
+is exactly what a public marketplace invites. The failure is silent: the skill loads, can't
+read its shared instructions, and improvises from the SKILL.md alone.
+
+**Shape decided by codesign 2026-07-26** (`vendored-refs-codesign.html`, 5/5 answered):
+- `ch-01-a` **copy, not symlink** — symlinks are the one thing that reliably does not survive
+  a zip, a drag-and-drop, or Windows without developer mode, which is the exact failure being
+  fixed. Cost is ~14 KB per skill.
+- `ch-02-a` **commit the copies** — gitignoring keeps diffs clean but leaves "clone the repo,
+  copy one skill folder" broken, which is the most likely real path.
+- `ch-03-a` **land at `references/_shared/<name>.md`** — cannot collide with a skill's own
+  references, and the underscore reads as generated.
+- `ch-04-a` **both drift guards** — a header banner catches whoever opens the file, a
+  `gen-check` failure catches the edit that ships anyway. They catch different people at
+  different moments.
+- `ch-05-a` **automatic** for any skill citing a plugin-root reference, **plus** a per-plugin
+  opt-OUT (per note-05). Opt-*in* is what silently reintroduces the bug; opt-*out* keeps the
+  escape hatch without the trap.
+
+**Two open questions from the codesign, both resolved before scoping:**
+- `q-03` surfaced that `references/_shared/` alone is insufficient: the skill still *cites*
+  `../../references/…`, which escapes the copied tree, so the file would be present at the new
+  location while the citation pointed outside it. Mirroring the source path does not rescue
+  this either. **Resolution: stop citing `../../` entirely** — skills cite
+  `references/_shared/<name>.md`, a path inside themselves, and the generator guarantees it
+  exists. One citation, four install modes, no dual-path fallback, no citation rewriting.
+- `q-02` asked how copies stay fresh. **Resolution:** `harness-kit gen` copies on every run;
+  `gen-check` byte-compares and fails on drift — the same mechanism already keeping manifests
+  fresh, and the same check that satisfies `ch-04-a`.
+
+**Out of Scope**
+- Changing how any skill's own (non-shared) references work
+- Any runtime/install-time resolution — this is a build-time copy only
+
+### Tests & Tasks
+- [ ] [P33-T01] harness-kit: detect skills citing plugin-root references; copy each into
+      `<skill>/references/_shared/` with a generated-file banner
+- [ ] [P33-T02] Rewrite the 8 call sites in `html-codesign` + `html-explain` to cite
+      `references/_shared/<name>.md`; delete the `../../` form
+- [ ] [P33-T03] `gen-check`: fail on stale or hand-edited vendored copies (byte-compare)
+- [ ] [P33-T04] Per-plugin opt-out key in `plugin.meta.toml`; automatic otherwise
+- [ ] [P33-T05] `skill-system-doctor` check: every citing skill has a fresh vendored copy
+      (per note-05 — a fleet-wide audit, not just a per-repo gate)
+- [ ] [P33-T06] `.gitattributes linguist-generated` on the vendored paths so reviews fold them
+- [ ] [P33-TS01] Install-mode matrix: prove all four modes resolve — plugin install, Codex
+      marketplace, dev symlink, and **direct copy of a lone skill folder** (the regression)
+- [ ] [P33-TS02] Drift test: hand-edit a vendored copy, confirm `gen-check` fails
+- [ ] [P33-TS03] Fleet regression: `gen-check` green across all 9 plugins after the change
+
+### Automated Verification
+- `just gen-check` exits 0 with vendored copies present and fresh
+- A skill folder copied alone to a scratch dir resolves every reference it cites
 
 ---
 
