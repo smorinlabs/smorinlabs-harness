@@ -908,19 +908,40 @@ read its shared instructions, and improvises from the SKILL.md alone.
   `gen-check` byte-compares and fails on drift — the same mechanism already keeping manifests
   fresh, and the same check that satisfies `ch-04-a`.
 
+**Bootstrap note (PR #20 review, Greptile):** the first draft of T01 detected skills by their
+`../../references/` citations while T02 deleted exactly those citations — so after a single
+run the generator could never find the skills again, and the new path named only a destination
+with no source. Resolved by making the **new** citation the durable declaration:
+`references/_shared/<name>.md` in a SKILL.md both cites the file and declares it, and the
+source resolves by convention to `plugins/<plugin>/references/<name>.md`. No manifest key, no
+config to forget, and the mapping survives every regeneration because it is the thing the
+skill reads.
+
 **Out of Scope**
 - Changing how any skill's own (non-shared) references work
 - Any runtime/install-time resolution — this is a build-time copy only
 
 ### Tests & Tasks
-- [ ] [P33-T01] harness-kit: detect skills citing plugin-root references; copy each into
-      `<skill>/references/_shared/` with a generated-file banner
+- [ ] [P33-T01] harness-kit: **the citation IS the declaration, and it is durable.** A skill
+      declares a shared reference by citing `references/_shared/<name>.md`; the generator
+      scans SKILL.md for that form and resolves the source by convention to
+      `plugins/<plugin>/references/<name>.md`, then copies it to
+      `plugins/<plugin>/skills/<skill>/references/_shared/<name>.md` with a generated-file
+      banner naming its source path. Detection therefore keys off the POST-migration citation,
+      not the pre-migration `../../` form — see the bootstrap note below
 - [ ] [P33-T02] Rewrite the 8 call sites in `html-codesign` + `html-explain` to cite
-      `references/_shared/<name>.md`; delete the `../../` form
-- [ ] [P33-T03] `gen-check`: fail on stale or hand-edited vendored copies (byte-compare)
+      `references/_shared/<name>.md`; delete the `../../` form. This is a one-time migration:
+      once done, T01's scan finds these skills by their new citations, so every later
+      `harness-kit gen` refreshes them normally
+- [ ] [P33-T03] `gen-check`: fail on stale or hand-edited vendored copies (byte-compare
+      against the source resolved per T01), and on a cited `_shared/<name>.md` whose source
+      is missing from the plugin root — a dangling declaration must fail loudly, not silently
+      ship a skill with no shared instructions
 - [ ] [P33-T04] Per-plugin opt-out key in `plugin.meta.toml`; automatic otherwise
-- [ ] [P33-T05] `skill-system-doctor` check: every citing skill has a fresh vendored copy
-      (per note-05 — a fleet-wide audit, not just a per-repo gate)
+- [ ] [P33-T05] `skill-system-doctor` check: every citing skill has a fresh vendored copy —
+      **honoring T04's opt-out**, so an intentionally opted-out plugin reports as healthy
+      rather than as a finding. A check that flags deliberate configuration is a check people
+      learn to ignore (per note-05 — a fleet-wide audit, not just a per-repo gate)
 - [ ] [P33-T06] `.gitattributes linguist-generated` on the vendored paths so reviews fold them
 - [ ] [P33-TS01] Install-mode matrix: prove all four modes resolve — plugin install, Codex
       marketplace, dev symlink, and **direct copy of a lone skill folder** (the regression)
