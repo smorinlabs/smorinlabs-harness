@@ -1,5 +1,21 @@
 # Release Notes
 
+## v0.17.1 — 2026-07-26
+
+### Fixed
+
+- **html-codesign 0.9.1 — the gate's worked example no longer demonstrates the
+  violation it forbids.** The example in the preflight ended with
+  *"Generate it for these four?"* appended to the question list — inside the
+  pre-read block. Eleven lines below, the same file rules that the pre-read
+  **ends its turn, with no tool call of any kind after it**, and that the ask
+  belongs in the dialog's option labels. An agent follows the concrete example
+  over the prose rule, which is the entire reason the example exists, so the
+  contradiction would have reproduced the same-turn bug v0.16.0 fixed. The
+  shared `context-triage.md` had already been corrected during v0.17.0; this
+  propagates it to the skill's own inline copy and states explicitly why the
+  example stops where it does.
+
 ## v0.17.0 — 2026-07-25
 
 ### Added
