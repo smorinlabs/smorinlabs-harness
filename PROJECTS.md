@@ -860,12 +860,12 @@ ephemeral; that is a real answer, not a non-answer.
       Split into TS03 (general case, confirmed) + TS05 (argument case, open); P31 back to `[~]`
 - [x] [P32-T15] S1 CLOSED — the html-codesign codex deep-verify timeout does not reproduce.
       Five consecutive runs after the fleet quieted: `--tool codex` alone 21s pass, both-tools
-      27s / 22s / 27s pass, against a 19s html-explain baseline. My earlier "almost certainly
+      27s / 22s / 27s pass, and a 19s html-explain baseline run. My earlier "almost certainly
       size-related" call was WRONG on cause — the payload gap is real (99 KB / 11 files vs
       55 KB / 6) but costs ~2s, nowhere near a timeout. Environmental: load average 14 with a
       Lima VM plus two Codex hosts running when the failure was seen. html-codesign has now had
-      session-backed validation on BOTH tools, so the coverage gap that motivated S1 never
-      existed. Lesson recorded rather than the conclusion alone: one deep-verify failure on a
+      session-backed validation on BOTH tools, so the coverage gap that motivated S1 turned
+      out never to have existed. Lesson recorded rather than the conclusion alone: one deep-verify failure on a
       loaded box is not evidence about the artifact — re-run quiet before diagnosing
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
@@ -949,7 +949,7 @@ portable; scope a separate fallback/project before testing that broader promise.
 | Codex marketplace install | Real install; all four `_shared` destination paths pass at v0.9.1 | Repeat with generated content and resolution checks |
 | Dev symlink | Real placement verified | Repeat resolution checks |
 | Direct copy of one skill | Real copy verified; plugin-root citations escape the copy | Must resolve every declared plugin-root shared reference |
-| Claude plugin install | **Mechanism proven, this plugin's install pending.** A real marketplace install materializes nested skill subdirectories at exactly the `_shared` shape — `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/<sub>/<file>.md`, a real directory, 315 such files across the cache — and a skill reads that shape relatively today (`use-html-theme/SKILL.md:59` cites `references/themes/<name>/tokens.md`). Not yet proven: an end-to-end install of THIS plugin post-P33. The earlier "source type not supported" failure was a local-path marketplace attempt, which tests the source type, not the installer's directory handling | End-to-end install of this plugin after P33, reading both page skills through the installed tree |
+| Claude plugin install | **Mechanism proven, this plugin's install pending.** A real marketplace install materializes nested skill subdirectories of the same shape `_shared` will use — `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/<sub>/<file>.md`, a real directory, 315 such files across the cache — and a skill reads that shape relatively today (`use-html-theme/SKILL.md:59` cites `references/themes/<name>/tokens.md`). Not yet proven: an end-to-end install of THIS plugin post-P33. The earlier "source type not supported" failure was a local-path marketplace attempt, which tests the source type, not the installer's directory handling | End-to-end install of this plugin after P33, reading both page skills through the installed tree |
 
 **Out of Scope**
 - Changing how any skill's own (non-shared) references work
@@ -972,7 +972,8 @@ portable; scope a separate fallback/project before testing that broader promise.
       released harness-kit revision is locked and proven in a fresh environment
 - [ ] [P33-T03] `gen-check`: compare each destination with rendered expected content
       (`banner(source_relative_path) + source_bytes`), not raw source bytes; fail on stale or
-      hand-edited content, unreadable source, unreadable/missing destination, declaration /
+      hand-edited content (when freshness checking is enabled, per T04), unreadable source,
+      unreadable/missing destination, declaration /
       citation mismatch, non-repo-relative banner, and exact-case mismatch. Resolve and compare
       path components with exact spelling so a case-insensitive local filesystem cannot mask
       a failure on case-sensitive `ubuntu-latest`
@@ -994,7 +995,10 @@ portable; scope a separate fallback/project before testing that broader promise.
       refuse any declared source whose bytes contain the literal `../../references/`
 - [ ] [P33-T08] Add `_shared` orphan pruning modeled on `_prune_orphan_vendors`, but scoped to
       banner-owned generated references rather than `scripts/_vendor`. Cover citation removal,
-      skill rename/removal, and source rename/removal; toggling `check_freshness` must never
+      skill rename/removal, and source rename/removal, with declared-reference precedence:
+      while a declaration or operational citation still names a copy, a missing or renamed
+      source is a hard error and the destination is preserved, never pruned — only unreferenced
+      generated copies are prunable orphans. Toggling `check_freshness` must never
       change the generated set or trigger pruning. Normal `gen` removes
       proven generated orphans; `gen --check` reports them and exits nonzero without deleting
       them
@@ -1076,8 +1080,9 @@ portable; scope a separate fallback/project before testing that broader promise.
   plugin-root shared reference** under its own `references/_shared/`
 - A migrated `_shared` citation with a missing/unreadable destination makes the pinned
   `harness-kit gen --check` exit nonzero, including when freshness checking is opted out
-- `gen --check` reports rather than deletes stale, missing, exact-case-mismatched, and orphaned
-  generated references; write-mode `gen` deterministically repairs or prunes them
+- `gen --check` reports rather than deletes stale (freshness-checked plugins only), missing,
+  exact-case-mismatched, and orphaned generated references; write-mode `gen` deterministically
+  repairs or prunes them
 - The broader sibling-skill theming citations remain explicitly deferred, not silently
   downgraded into this acceptance criterion
 
