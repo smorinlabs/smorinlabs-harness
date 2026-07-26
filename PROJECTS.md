@@ -858,8 +858,246 @@ ephemeral; that is a real answer, not a non-answer.
       (2) **PR #18**: TS03 read `[x]` while its own body admitted the with-an-argument case was
       unconfirmed — the tracker claimed full verification with a named regression case open.
       Split into TS03 (general case, confirmed) + TS05 (argument case, open); P31 back to `[~]`
+- [x] [P32-T15] S1 CLOSED — the html-codesign codex deep-verify timeout does not reproduce.
+      Five consecutive runs after the fleet quieted: `--tool codex` alone 21s pass, both-tools
+      27s / 22s / 27s pass, and a 19s html-explain baseline run. My earlier "almost certainly
+      size-related" call was WRONG on cause — the payload gap is real (99 KB / 11 files vs
+      55 KB / 6) but costs ~2s, nowhere near a timeout. Environmental: load average 14 with a
+      Lima VM plus two Codex hosts running when the failure was seen. html-codesign has now had
+      session-backed validation on BOTH tools, so the coverage gap that motivated S1 turned
+      out never to have existed. Lesson recorded rather than the conclusion alone: one deep-verify failure on a
+      loaded box is not evidence about the artifact — re-run quiet before diagnosing
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
+
+---
+
+## [ ] Project P33: vendor plugin-root references into citing skills (harness-kit)
+**Goal**: A skill directory copied on its own must still resolve every **declared plugin-root
+shared reference** it uses. Two skills (`html-codesign`, `html-explain`) currently read
+plugin-root files via `../../references/` across 8 call sites. That path escapes a lone copied
+skill tree, so generation must place deterministic copies at
+`references/_shared/<name>.md`, migrate the citations, and make an unreadable destination a
+hard error in every install mode. This guarantee is intentionally narrower than "every
+reference the skill cites": sibling-skill theming paths are a known separate problem.
+
+**Shape decided by codesign 2026-07-26** (`vendored-refs-codesign.html`, 5/5 answered):
+- `ch-01-a` **copy, not symlink** — symlinks are the one thing that reliably does not survive
+  a zip, a drag-and-drop, or Windows without developer mode, which is the exact failure being
+  fixed. Cost is ~14 KB per skill.
+- `ch-02-a` **commit the copies** — gitignoring keeps diffs clean but leaves "clone the repo,
+  copy one skill folder" broken, which is the most likely real path.
+- `ch-03-a` **land at `references/_shared/<name>.md`** — cannot collide with a skill's own
+  references, and the underscore reads as generated.
+- `ch-04-a` **both drift guards** — a header banner catches whoever opens the file, a
+  `gen-check` failure catches the edit that ships anyway. They catch different people at
+  different moments.
+- `ch-05-a` **automatic** for any skill declaring and citing a plugin-root reference, **plus**
+  a per-plugin freshness opt-out (per note-05). The escape hatch suppresses only the
+  `gen --check` staleness comparison; `gen` still regenerates copies on every run, and target
+  existence can never be waived.
+
+**Two open questions from the codesign, both resolved before scoping:**
+- `q-03` surfaced that `references/_shared/` alone is insufficient: the skill still *cites*
+  `../../references/…`, which escapes the copied tree, so the file would be present at the new
+  location while the citation pointed outside it. Mirroring the source path does not rescue
+  this either. **Resolution: stop citing `../../` entirely** — skills cite
+  `references/_shared/<name>.md`, a path inside themselves, and the generator guarantees it
+  exists. One citation, four install modes, no dual-path fallback, no citation rewriting.
+- `q-02` asked how copies stay fresh. **Resolution:** `harness-kit gen` copies on every run;
+  `gen-check` compares each destination with its rendered expected content and fails on drift
+  — the same `_write_if_changed` model already keeping manifests fresh, and the same check
+  that satisfies `ch-04-a`.
+
+**Bootstrap note (PR #20 review, Greptile):** the first draft of T01 detected skills by their
+`../../references/` citations while T02 deleted exactly those citations — so after a single
+run the generator could never find the skills again, and the new path named only a destination
+with no source. The second draft made every literal `_shared` path a declaration, but that
+turned examples and prose into phantom configuration. **Final resolution:** each participating
+SKILL.md carries an explicit fenced `harness-kit-shared-references` declaration block. Each
+entry names a plugin-root reference basename; operational citations still use
+`references/_shared/<name>.md`. Generation scans SKILL.md only, pairs declarations with
+citations, and resolves the source by convention to
+`plugins/<plugin>/references/<name>.md`.
+
+**Opt-out note (PR #20 review, Greptile P1):** the first constraint set also hard-errored
+whenever `check_freshness = false` coexisted with an operational `_shared` citation — which
+made the opt-out illegal for exactly the participating plugins it was meant to govern, and
+legal only where it was vacuous. **Final resolution:** the flag suppresses only the staleness
+comparison in `gen --check`; `gen` still regenerates copies on every run, and
+destination-existence checking is unconditional in every mode. The original defect (a citation
+whose destination exists nowhere) stays structurally impossible because existence checking
+never depended on this flag.
+
+**Adversarial-review note (2026-07-25):** two independent reviews from different model
+families converged on findings 1–7: unsafe opt-out semantics, self-locating source text,
+banner/comparison contradiction, an unpassable acceptance criterion, missing orphan pruning,
+an unstated harness-kit repin prerequisite, and a doctor design that violated its own check
+model. Their convergence is why P33 changed before implementation rather than shipping these
+defects and repairing them afterward.
+
+**Known deferred boundary:** `html-explain/SKILL.md` and
+`html-codesign/references/theming.md` also cite sibling-skill theme paths under
+`../use-html-theme/references/themes/`. A standalone skill copy still loses that plugin
+theming. P33 neither vendors those sibling-owned files nor claims to make those citations
+portable; scope a separate fallback/project before testing that broader promise.
+
+**Install-mode evidence before implementation:**
+
+| Mode | Evidence now | P33 completion evidence |
+| --- | --- | --- |
+| Codex marketplace install | Real install; all four `_shared` destination paths pass at v0.9.1 | Repeat with generated content and resolution checks |
+| Dev symlink | Real placement verified | Repeat resolution checks |
+| Direct copy of one skill | Real copy verified; plugin-root citations escape the copy | Must resolve every declared plugin-root shared reference |
+| Claude plugin install | **Mechanism proven, this plugin's install pending.** A real marketplace install materializes nested skill subdirectories of the same shape `_shared` will use — `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/<sub>/<file>.md`, a real directory, 315 such files across the cache — and a skill reads that shape relatively today (`use-html-theme/SKILL.md:59` cites `references/themes/<name>/tokens.md`). Not yet proven: an end-to-end install of THIS plugin post-P33. The earlier "source type not supported" failure was a local-path marketplace attempt, which tests the source type, not the installer's directory handling | End-to-end install of this plugin after P33, reading both page skills through the installed tree |
+
+**Out of Scope**
+- Changing how any skill's own (non-shared) references work
+- Vendoring sibling-skill theme files or claiming full standalone-plugin theming
+- Any runtime/install-time resolution — this is a build-time copy only
+- Version bumps or implementation edits in this spec-only PR; all such work is represented
+  below as future task rows
+
+### Tests & Tasks
+- [ ] [P33-T01] harness-kit: generate each explicitly declared plugin-root reference from
+      `plugins/<plugin>/references/<name>.md` to
+      `plugins/<plugin>/skills/<skill>/references/_shared/<name>.md`. Render the destination
+      as `banner(source_relative_path) + source_bytes`, matching the `_write_if_changed` model
+      in `harness-kit/src/harness_kit/manifests.py`; the banner path must be deterministic,
+      POSIX-style, and repo-relative, never an absolute checkout path that would trip CI's
+      tracked-file home-directory scrub
+- [ ] [P33-T02] Rewrite the 8 call sites in `html-codesign` + `html-explain` to cite
+      `references/_shared/<name>.md`; delete the `../../` form and add the explicit declaration
+      block from T09. This migration must execute only at ordered delivery step T16, after the
+      released harness-kit revision is locked and proven in a fresh environment
+- [ ] [P33-T03] `gen-check`: compare each destination with rendered expected content
+      (`banner(source_relative_path) + source_bytes`), not raw source bytes; fail on stale or
+      hand-edited content (when freshness checking is enabled, per T04), unreadable source,
+      unreadable/missing destination, declaration /
+      citation mismatch, non-repo-relative banner, and exact-case mismatch. Resolve and compare
+      path components with exact spelling so a case-insensitive local filesystem cannot mask
+      a failure on case-sensitive `ubuntu-latest`
+- [ ] [P33-T04] Add the explicit per-plugin schema
+      `[generated_shared_references] check_freshness = false`; automatic freshness checking is
+      the default. The setting suppresses only the staleness/source-equality comparison in
+      `gen --check` for that plugin's generated `_shared` destinations; `harness-kit gen`
+      still regenerates copies on every run, and destination-existence checking is
+      unconditional — an `_shared` citation with no readable destination is always a hard
+      error in both `gen` and `gen --check`, regardless of the setting
+- [ ] [P33-T05] Keep `skill-system-doctor` at its documented 12 checks: use Check 1's
+      fleet-wide `gen-check` for canonical source freshness, and extend Check 9 to resolve
+      installed targets. A missing generated reference is a NON-baselineable error, never an
+      advisory/baselineable Check 9 finding and never "healthy" because of T04
+- [ ] [P33-T06] `.gitattributes linguist-generated` on the vendored paths so reviews fold them
+- [ ] [P33-T07] Rewrite the self-locating sentences in plugin-root
+      `references/context-triage.md` and `references/delivery-close.md` so generated copies do
+      not instruct the reader to escape via `../../references/<name>.md`; make generation
+      refuse any declared source whose bytes contain the literal `../../references/`
+- [ ] [P33-T08] Add `_shared` orphan pruning modeled on `_prune_orphan_vendors`, but scoped to
+      banner-owned generated references rather than `scripts/_vendor`. Cover citation removal,
+      skill rename/removal, and source rename/removal, with declared-reference precedence:
+      while a declaration or operational citation still names a copy, a missing or renamed
+      source is a hard error and the destination is preserved, never pruned — only unreferenced
+      generated copies are prunable orphans. Toggling `check_freshness` must never
+      change the generated set or trigger pruning. Normal `gen` removes
+      proven generated orphans; `gen --check` reports them and exits nonzero without deleting
+      them
+- [ ] [P33-T09] Replace literal-text auto-declaration with one fenced
+      `harness-kit-shared-references` block in each participating SKILL.md. Parse only that
+      structured position, accept normalized plugin-root basenames only, reject malformed,
+      duplicate, traversal, typoed, case-mismatched, or unmatched entries, and document the
+      load-bearing SKILL.md-only scan scope. Literal examples/prose outside the block must not
+      silently create copies
+- [ ] [P33-T10] Add schema validation to `load_meta` for the
+      `[generated_shared_references]` table and its `check_freshness` boolean; reject unknown
+      tables/keys and wrong types so a typoed opt-out cannot be silently discarded while
+      misleading the plugin author
+- [ ] [P33-T11] Extend `plugins/use-html-theme/scripts/validate.py` beyond html-codesign and
+      the Claude manifest: resolve declared references for BOTH `html-codesign` and
+      `html-explain`, cover `_shared` and `.codex-plugin/plugin.json`, and add negative tests
+      for typoed declarations, missing sources, missing destinations, stale contents, orphaned
+      copies, and `check_freshness = false` masking staleness but never a missing destination
+
+### Ordered Delivery (hard dependency chain)
+- [ ] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
+      in harness-kit, including unit regressions equivalent to its existing orphan-prune and
+      `_write_if_changed` coverage; do not migrate consumer citations against an unreleased
+      local checkout
+- [ ] [P33-T13] **2 — release the generator:** release the harness-kit change and record its
+      immutable Git revision plus exact release tag; downstream work must consume that release
+      rather than an ambient source checkout
+- [ ] [P33-T14] **3 — pin the exact release:** add
+      `tag = "vX.Y.Z"` to harness-kit's `[tool.uv.sources]` Git entry in this repo's
+      `pyproject.toml`; the tag must identify the immutable revision recorded by T13
+- [ ] [P33-T15] **4 — bump the lock deliberately:** update this repo's `uv.lock` away from
+      `72cf4e1` to the exact T13/T14 revision. CI uses `uv sync --locked`, so neither citation
+      migration nor generated copies may land first
+- [ ] [P33-T16] **5 — prove the pin in a fresh environment:** perform a clean
+      `uv sync --locked`, record the installed harness-kit version and Git revision, and run
+      its focused unit suite before changing any citation
+- [ ] [P33-T21] **6 — fixture-repo end-to-end proof:** before any consumer migration, run the
+      released generator against a disposable fixture repo, never the live checkout — either a
+      scratch copy of `smorinlabs-harness` or a synthetic minimal repo with
+      `plugins/<plugin>/references/<name>.md` plus one citing SKILL.md (runnable any time
+      after T13's release). Cover two end-to-end scenarios: (1) happy path — declare + cite,
+      run `gen`, confirm banner + copy land at `references/_shared/<name>.md`, `gen --check`
+      exits 0, and the skill folder copied alone to a scratch directory still resolves the
+      reference; (2) failure path — delete the destination and confirm `gen --check` exits
+      nonzero naming it, then set `check_freshness = false` and confirm staleness is masked
+      while the missing destination still hard-errors
+- [ ] [P33-T17] **7 — migrate declarations/citations:** execute T02 only after T16 proves the
+      released generator is active and the T21 fixture proof has passed; include the T07
+      source-text rewrite and T06 attributes in
+      the same consumer migration
+- [ ] [P33-T18] **8 — generate committed outputs:** run the pinned `harness-kit gen`, inspect
+      every repo-relative banner and `_shared` destination, and commit only the outputs derived
+      from the declarations migrated in T17
+- [ ] [P33-T19] **9 — prove the pinned failure gate:** from the migrated state, remove or make
+      unreadable a declared destination without changing its source, confirm the pinned
+      `harness-kit gen --check` exits nonzero and names that destination, then restore it with
+      `gen`. Repeat with T04 enabled to prove the freshness escape hatch cannot hide absence
+- [ ] [P33-T20] Coordinate the cross-repo doctor delivery for T05 in
+      `smorin-harness` (currently skill-fleet plugin v0.11.0): update the doctor's SKILL.md and
+      docs page without adding a 13th check, bump the plugin version, regenerate manifests,
+      run its validation, and release the updated plugin
+- [ ] [P33-TS01] Install-mode matrix: prove declared plugin-root shared references resolve in
+      all four rows of the evidence table — real Claude plugin install, real Codex marketplace
+      install, dev symlink, and **direct copy of a lone skill folder** (the regression)
+- [ ] [P33-TS02] Drift test: hand-edit a vendored copy, confirm `gen-check` fails
+- [ ] [P33-TS03] Fleet regression: `gen-check` green across all 9 plugins after the change
+- [ ] [P33-TS04] Real-Claude gate — **narrowed 2026-07-26; the mechanism half is already
+      proven.** A real marketplace install DOES materialize nested skill subdirectories at the
+      `_shared` shape: `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/`
+      `<sub>/<file>.md` is a real directory from a real install (315 such files across
+      `~/.claude/plugins/cache`), and a skill reads that shape relatively today —
+      `use-html-theme/SKILL.md:59` cites `references/themes/<name>/tokens.md`, one level
+      deeper than `_shared` needs. So the installer's directory handling is NOT in question.
+      What remains: an end-to-end install of THIS plugin after P33 ships, reading both page
+      skills through the installed tree and resolving every declared `_shared` destination.
+      That needs `/plugin marketplace add` + `/plugin install` — in-session slash commands with
+      no CLI equivalent (`claude plugin` exposes only details/enable/disable/eval), so it is an
+      operator step, not automatable. Note for whoever runs it: the earlier "source type your
+      Claude Code version does not support" failure came from a LOCAL-PATH marketplace attempt
+      and tests the source type, not directory handling — install from the GitHub marketplace
+- [ ] [P33-TS05] Linux case gate: on case-sensitive `ubuntu-latest`, exercise an intentionally
+      mis-cased source, declaration, and destination; each must fail with an exact-case
+      diagnostic, while the correctly cased generated tree passes
+
+### Automated Verification
+- `just gen-check` exits 0 with vendored copies present and fresh
+- `uv sync --locked` in a fresh environment installs the exact tagged harness-kit revision
+  recorded by T13–T16
+- Each page-skill folder copied alone to a scratch directory resolves every **declared
+  plugin-root shared reference** under its own `references/_shared/`
+- A migrated `_shared` citation with a missing/unreadable destination makes the pinned
+  `harness-kit gen --check` exit nonzero, including when freshness checking is opted out
+- `gen --check` reports rather than deletes stale (freshness-checked plugins only), missing,
+  exact-case-mismatched, and orphaned generated references; write-mode `gen` deterministically
+  repairs or prunes them
+- The T21 fixture-repo proof passed against the released revision before any live-repo
+  citation changed
+- The broader sibling-skill theming citations remain explicitly deferred, not silently
+  downgraded into this acceptance criterion
 
 ---
 
