@@ -747,4 +747,51 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
 
 ---
 
+## [~] Project P32: shared delivery close-out for both HTML page skills (plugin v0.9.0)
+**Goal**: Both page skills end by telling the user where the file is and what they might
+want to do with it — additively, changing nothing that already exists in either delivery
+step. Two parts. (1) **The full absolute path, on its own line, every time**, promoted to a
+hard rule in both skills: a relative path is only meaningful from a working directory the
+reader cannot see, and whoever opens the file is routinely not in the shell that made it;
+when the file landed somewhere temporary the close-out says so, since scratch paths get
+reaped. (2) **Then ask what's next** — as a prose list, not a dialog, because the path must
+stay visible and prose sharing a turn with AskUserQuestion may never render (the same Iron
+Law that governs the triage gate).
+
+Every offer is strictly conditional, because an offer the session can't fulfil or the user
+can't take costs them a reply to decline: browser-open only when the session can actually
+reach a browser (never web-hosted / remote / headless / display-less sandbox, where the
+command reports success while nothing opens — in doubt, don't offer); `shelf` only when
+that skill is installed, and otherwise not mentioned at all, not even as a suggestion to
+install it; save-location whenever the file sits somewhere temporary, ranked shelf → repo
+path → ask, never moved silently.
+
+**Out of Scope**
+- Any change to existing delivery text — additive only
+- A `reader-steps` handoff block (considered and set aside: the operator's always-on digest
+  already covers it, and a read-only page's single "open the file" action is the one-line
+  form, not a block)
+
+### Tests & Tasks
+- [x] [P32-T01] `plugins/use-html-theme/references/delivery-close.md` — the shared close-out:
+      absolute-path rule with rationale, prose-not-dialog rule, three conditional offers with
+      their negative cases, per-platform open commands, gotchas table
+- [x] [P32-T02] html-codesign step 7 + html-explain step 11 — append the close-out pointer;
+      existing text untouched
+- [x] [P32-T03] "Deliver the absolute path" added to both skills' Hard rules
+- [x] [P32-T04] Smoke-test item added to both (path on its own line; offers conditional)
+- [x] [P32-T05] See-also entry in both skills
+- [x] [P32-T06] plugin.meta.toml 0.8.0 → 0.9.0 + description; marketplace 0.16.0 → 0.17.0;
+      gen + gen-check green
+- [x] [P32-T07] Docs: close-out section on both per-skill pages; README section blurb;
+      RELEASE-NOTES v0.17.0 entry
+- [x] [P32-TS01] Gate on the WORKTREE path: cross-tool verify both skills — claude-code and
+      codex each PASS, 0 errors / 0 warnings (the pre-existing `_generated` advisory is gone
+      this round). Descriptions unchanged at 988 / 994 chars, under the ~1000 envelope.
+      gen-check + just all green; all four CI guards clean
+- [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
+      an absolute path and offers only what this session can actually do
+
+---
+
 - [ ] Regression Test Status

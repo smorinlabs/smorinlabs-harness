@@ -1,5 +1,32 @@
 # Release Notes
 
+## v0.17.0 — 2026-07-25
+
+### Added
+
+- **use-html-theme 0.9.0 — a shared delivery close-out for both page skills**
+  (`plugins/use-html-theme/references/delivery-close.md`). Purely additive:
+  nothing in either skill's existing delivery step was changed or removed.
+  - **The full absolute path, on its own line, every time** — now a hard rule
+    in both skills. A relative path is only meaningful from a working
+    directory the reader cannot see, and the person opening the file is
+    routinely not in the shell that made it. When the file landed somewhere
+    temporary, the close-out says so plainly, because a scratch path can be
+    reaped.
+  - **Then ask what they'd like to do next**, as a prose list rather than a
+    dialog — the path has to stay visible, and prose sharing a turn with
+    AskUserQuestion may never render.
+  - Every offer is **strictly conditional**. *Open it in the browser* only
+    when the session can actually reach one — never on web-hosted, remote,
+    headless, or display-less sandbox sessions, where the command reports
+    success while nothing opens; when in doubt, don't offer. *Add it to
+    `shelf`* only when that skill is installed — if it isn't, it is not
+    mentioned at all, not even as a suggestion to install it. *Where to save
+    it* whenever the file sits somewhere temporary or unchosen, ranked shelf →
+    repo path → ask, and never moved silently.
+  - Each skill's own next moves still lead: codesign's paste-back loop,
+    html-explain's go-deeper / add-a-figure / restyle.
+
 ## v0.16.0 — 2026-07-25
 
 ### Added

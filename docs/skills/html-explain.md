@@ -104,6 +104,28 @@ when a draft is failing in a particular way, rather than recited up front.
 | Encoding | Bertin, Cleveland & McGill, Tufte, Neurath, Ware, Corum | Whether a mark reads as what it claims |
 | Interactive form | Victor, Ciechanowski, Case, Red Blob, Distill, Bostock, Lupi | Calibration targets, not rules |
 
+## Closing the delivery
+
+Both page skills in this plugin end the same way, via the shared
+`references/delivery-close.md` — added on top of each skill's own delivery
+step, not in place of it.
+
+**The full absolute path, on its own line, every time.** A relative path is
+only meaningful from a working directory the reader cannot see, and the
+person opening the file is routinely not in the shell that made it. If the
+file landed somewhere temporary, the close-out says so plainly — scratch
+paths get reaped, which is what makes the save offer below matter.
+
+**Then it asks what you'd like to do next**, as a prose list rather than a
+dialog (the path has to stay visible, and prose sharing a turn with
+AskUserQuestion may never render). Every offer is strictly conditional:
+
+| Offer | Only when |
+|---|---|
+| Open it in the browser | the session can actually reach one — never web-hosted, remote, headless, or a display-less sandbox, where the command reports success while nothing opens. In doubt → don't offer |
+| Add it to `shelf` | that skill is installed. If it isn't, `shelf` is not mentioned at all — not even as a suggestion to install it |
+| Where to save it | the file sits somewhere temporary or unchosen. Ranked shelf → repo path → ask. Never moved silently |
+
 ## How it composes with dataviz
 
 Quantitative charts defer to the `dataviz` skill when it is present — it

@@ -179,6 +179,15 @@ offer `html-explain` as the recommended option instead.
    record) or click "Another draft" / "Here are my answers" and paste the
    result back into any chat with you.
 
+   Then close out per `../../references/delivery-close.md`: the **full
+   absolute path on its own line** (never relative — the reader is often not
+   in the shell that made the file), and a short prose list of what they might
+   want next. Those offers are strictly conditional — open it in the browser
+   only when this session can actually reach one, add it to `shelf` only when
+   that skill is installed (if it isn't, don't mention it at all), and where
+   to save it whenever the file landed somewhere temporary. The paste-back
+   loop above leads; these come after it.
+
 8. **On a returned export or re-prompt**, follow
    `references/iteration-loop.md`: reuse every surviving ID, mint new IDs
    only for new choices, re-author every section's context for the v2,
@@ -219,6 +228,9 @@ offer `html-explain` as the recommended option instead.
   picks export identically however the page is folded.
 - **Exclusive means exclusive.** Pick-one sections enforce a single
   selection in the UI and are validated to ship with at most one default.
+- **Deliver the absolute path.** The full path, on its own line, every time.
+  A relative path is only meaningful from a working directory the reader
+  can't see.
 - **Declare the color scheme.** Light theme → `<meta name="color-scheme"
   content="light">`; dark theme → `dark`. (iOS Safari auto-darkens pages
   that don't declare.)
@@ -250,6 +262,10 @@ offer `html-explain` as the recommended option instead.
    envelope (summary + rec + verdict — never the body), all options, and
    the followed/went-against verdict; do exports ignore collapse state?
 8. Is the right `color-scheme` meta present?
+9. Delivery pass: is the **full absolute path** on its own line? Are the
+   convenience offers conditional — browser-open only if this session can
+   reach one, `shelf` only if that skill is installed (and unmentioned if
+   not)?
 
 # Gotchas
 
@@ -295,6 +311,8 @@ offer `html-explain` as the recommended option instead.
   skills.
 - `html-explain` (this plugin) — the sibling: read-only explainer pages for
   settled material, including a deep dive on a question already resolved.
+- `../../references/delivery-close.md` — the shared close-out: absolute
+  path, then the conditional convenience offers.
 - `use-html-theme` (this plugin) — owns the page's look.
 - `question-walkthrough` (this marketplace) — the synchronous alternative:
   the same open questions worked through one at a time in chat.

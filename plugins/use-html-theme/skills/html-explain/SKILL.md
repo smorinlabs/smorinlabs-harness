@@ -211,6 +211,15 @@ which difficulty rows the enrichments were spent on, and offer the obvious
 next moves — go deeper on a section, add a figure somewhere it was thin, or
 restyle under a different theme.
 
+Then close out per `../../references/delivery-close.md`: the **full absolute
+path on its own line** (never relative — the reader is often not in the shell
+that made the file), and a short prose list of what they might want next.
+Those offers are strictly conditional — open it in the browser only when this
+session can actually reach one, add it to `shelf` only when that skill is
+installed (if it isn't, don't mention it at all), and where to save it
+whenever the file landed somewhere temporary. The next moves above lead;
+these come after them.
+
 # Hard rules
 
 - **Self-contained.** One `.html`, embedded CSS/JS/assets, no external
@@ -232,6 +241,9 @@ restyle under a different theme.
   silently to `references/visual-encoding.md` when it is not. See the
   delegation rule there; `dataviz` is bundled with Claude Code and does not
   exist on Codex, so the fallback is load-bearing, not decorative.
+- **Deliver the absolute path.** The full path, on its own line, every time.
+  A relative path is only meaningful from a working directory the reader
+  can't see.
 - **Declare the color scheme.** Light theme → `<meta name="color-scheme"
   content="light">`; dark → `dark`. (iOS Safari auto-darkens pages that
   don't declare.)
@@ -268,6 +280,10 @@ restyle under a different theme.
 12. Does it open from `file://` with the network off, with nothing missing?
 13. Narrow-width pass: does anything overflow horizontally?
 14. Is the right `color-scheme` meta present, and does it match the theme?
+15. Delivery pass: is the **full absolute path** on its own line? Are the
+    convenience offers conditional — browser-open only if this session can
+    reach one, `shelf` only if that skill is installed (and unmentioned if
+    not)?
 
 # Gotchas
 
@@ -316,6 +332,8 @@ restyle under a different theme.
 - `explain` (explain plugin, this marketplace) — the same job inline in
   chat, and the source of the concrete-anchored anatomy this skill renders.
 - `dataviz` (bundled with Claude Code) — quantitative charts, when present.
+- `../../references/delivery-close.md` — the shared close-out: absolute
+  path, then the conditional convenience offers.
 - `references/difficulty-map.md` — step 3: rating intrinsic difficulty and
   allocating the page's budget.
 - `references/explanatory-canon.md` — clarity principles, indexed by symptom.
