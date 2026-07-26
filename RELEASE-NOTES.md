@@ -22,8 +22,20 @@
     success while nothing opens; when in doubt, don't offer. *Add it to
     `shelf`* only when that skill is installed — if it isn't, it is not
     mentioned at all, not even as a suggestion to install it. *Where to save
-    it* whenever the file sits somewhere temporary or unchosen, ranked shelf →
-    repo path → ask, and never moved silently.
+    it* whenever the file sits somewhere temporary or anywhere the agent chose
+    rather than the user — **read from context, never a fixed ranking**: the
+    place this session already saves to, the home the repo already has for
+    this kind of document, a new repo location flagged as new, `shelf` for
+    standalone work with no clean home (only when that skill is installed),
+    or **not saving at all** when the page is ephemeral. Never moved silently.
+  - *Copy the path to the clipboard*, gated identically to the browser-open:
+    only on the user's own machine. The remote case is worse here than for
+    opening — a clipboard write reports success into a clipboard the user
+    cannot reach, where a browser-open visibly does nothing. `printf '%s'`
+    rather than `echo`, so no trailing newline rides into the clipboard.
+  - Browser-open commands quote the path and use `explorer` on Windows —
+    `start` takes its first quoted argument as the window title, and
+    PowerShell aliases `start` to `Start-Process`.
   - Each skill's own next moves still lead: codesign's paste-back loop,
     html-explain's go-deeper / add-a-figure / restyle.
 

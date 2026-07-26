@@ -763,8 +763,11 @@ can't take costs them a reply to decline: browser-open only when the session can
 reach a browser (never web-hosted / remote / headless / display-less sandbox, where the
 command reports success while nothing opens — in doubt, don't offer); `shelf` only when
 that skill is installed, and otherwise not mentioned at all, not even as a suggestion to
-install it; save-location whenever the file sits somewhere temporary, ranked shelf → repo
-path → ask, never moved silently.
+install it; save-location whenever the file sits somewhere temporary or anywhere the agent
+chose rather than the user — **read from context, never a fixed ranking**, since a ladder
+errs both ways (filing a repo-bound design doc into a general library, and proposing a
+permanent home for a page nobody reopens). Recommend not saving at all when the page is
+ephemeral; that is a real answer, not a non-answer.
 
 **Out of Scope**
 - Any change to existing delivery text — additive only
@@ -789,6 +792,26 @@ path → ask, never moved silently.
       codex each PASS, 0 errors / 0 warnings (the pre-existing `_generated` advisory is gone
       this round). Descriptions unchanged at 988 / 994 chars, under the ~1000 envelope.
       gen-check + just all green; all four CI guards clean
+- [x] [P32-T08] Save-location rewritten from a ranking to a context read (user feedback):
+      signals are what this session already does, what the repo already does, a new
+      repo-fitting home flagged as new, `shelf` for standalone work with no clean home, and
+      "don't save this" for ephemera — stated as examples, not a taxonomy
+- [x] [P32-T09] PR #17 review round — 5 findings, all valid, all fixed. **P1 (Greptile,
+      verified with a runnable repro)**: browser-open templates were unquoted, so any path
+      containing a space (`My Documents`, `Application Support`) splits into multiple args
+      and opens the wrong target or nothing; the Windows form was also wrong — `start` takes
+      its first quoted argument as the window TITLE, so `start "C:\...\page.html"` opens an
+      empty console. Fixed: quote every path, and use `explorer` on Windows, which parses
+      identically from cmd.exe and PowerShell (Copilot independently flagged the same line).
+      P2 (Greptile): both skills' inline summaries narrowed the save trigger to "temporary",
+      suppressing the offer for a durable location the AGENT picked — trigger broadened in
+      both. 2x (Copilot): `references/delivery-close.md` read as relative to `docs/skills/`
+      on the docs pages — now qualified as being at the plugin root
+- [x] [P32-T10] Clipboard offer added (user request), gated identically to browser-open:
+      only on the user's own machine. Flagged as the SHARPER remote failure — a clipboard
+      write reports success into a clipboard the user cannot reach, where a browser-open
+      visibly does nothing. Uses `printf '%s'` not `echo` so no trailing newline rides into
+      the clipboard; per-platform (pbcopy / wl-copy / xclip / Set-Clipboard), path quoted
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
 

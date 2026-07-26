@@ -183,10 +183,13 @@ offer `html-explain` as the recommended option instead.
    absolute path on its own line** (never relative — the reader is often not
    in the shell that made the file), and a short prose list of what they might
    want next. Those offers are strictly conditional — open it in the browser
-   only when this session can actually reach one, add it to `shelf` only when
+   only when this session runs on the user's own machine (same gate for
+   copying the path to the clipboard), add it to `shelf` only when
    that skill is installed (if it isn't, don't mention it at all), and where
-   to save it whenever the file landed somewhere temporary. The paste-back
-   loop above leads; these come after it.
+   to save it whenever the file sits somewhere temporary **or anywhere you
+   chose rather than the user**. The save recommendation is read from
+   context, never a fixed ranking. The paste-back loop above leads; these
+   come after it.
 
 8. **On a returned export or re-prompt**, follow
    `references/iteration-loop.md`: reuse every surviving ID, mint new IDs
