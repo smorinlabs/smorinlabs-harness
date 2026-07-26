@@ -643,7 +643,7 @@ Frontmatter description byte-identical — capability change, minor bump, no ove
 
 ---
 
-## [~] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
+## [x] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
 **Goal**: Add `html-explain` — read-only explainer pages for settled material — and stop
 the two HTML page skills from being decided by accident. Both now run one shared
 context-triage preflight, classify recent context by density (many unanswered questions →
@@ -729,10 +729,12 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
       "not merged to HEAD" on a repo parked on a stale main — HEAD-relative, not the question
       asked). html-explain dev-placed on claude-code and codex, static verify pass each.
       Released as marketplace v0.16.0 (new skill = minor)
-- [ ] [P31-TS03] Headless E2E ⚠ SKIPPED LOUDLY — the changed contract on both page skills is
-      an interactive AskUserQuestion gate, and headless `-p` cannot answer dialogs. Needs a
-      live smoke test: trigger each skill and confirm the gate fires before any generation,
-      including on explicit invocation WITH an argument (the loophole most likely to regress)
+- [x] [P31-TS03] Headless E2E was skipped loudly — the changed contract on both page skills is
+      an interactive AskUserQuestion gate, and headless `-p` cannot answer dialogs — so it was
+      closed by live smoke test instead. Operator confirmed both skills in a fresh session
+      (2026-07-25): *"Both were tried and they both work."* Note the with-an-argument case was
+      not separately called out in that report; it remains the loophole most likely to regress
+      and is worth a targeted re-check if the gate ever misfires
 
 ### Automated Verification
 - `just gen-check` exits 0
