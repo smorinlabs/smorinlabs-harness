@@ -60,8 +60,7 @@ succeed and nothing would open, on a machine the user isn't looking at.
 |---|---|
 | macOS | `open '<abs-path>'` |
 | Linux | `xdg-open '<abs-path>'` |
-| Windows (PowerShell) | `explorer '<abs-path>'` |
-| Windows (cmd.exe) | `explorer "<abs-path>"` |
+| Windows | `explorer '<abs-path>'` (PowerShell — **prefer this**) |
 
 **Quote the path so the shell cannot touch it — single quotes on POSIX
 shells and PowerShell.** Two separate failures are being prevented:
@@ -76,8 +75,14 @@ shells and PowerShell.** Two separate failures are being prevented:
   passed through. PowerShell expands `$` in double quotes too. Single quotes
   suppress all of it.
 
-cmd.exe is the exception — it has no `$` or backtick expansion, so double
-quotes are correct and single quotes are not special there.
+**Use PowerShell on Windows, not cmd.exe.** cmd.exe has no `$` or backtick
+expansion, but it has its own: `%VAR%` expands **inside double quotes**, so a
+path containing a literal `%USERNAME%` or `%TEMP%` segment — legal on NTFS —
+is rewritten before Explorer ever sees it. There is no reliable escape at an
+interactive cmd prompt (`%%` works in batch files, not at the prompt), so the
+fix is to avoid the shell that has the problem. If cmd.exe is genuinely the
+only option and the path contains `%`, don't offer the open at all — print
+the path and let the user paste it into Explorer's address bar.
 
 **Escaping the quote character itself:** a literal `'` inside a POSIX
 single-quoted string is written `'\''`; in PowerShell it doubles to `''`.

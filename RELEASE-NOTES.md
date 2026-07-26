@@ -37,9 +37,11 @@
     shells and PowerShell. Double quotes stop spaces but not expansion — a
     POSIX shell still resolves `$name`, runs backticks, and ends the string
     at an embedded `"` inside `"…"`, and PowerShell expands `$` there too.
-    cmd.exe is the exception and uses double quotes. Windows opens with
-    `explorer`, not `start`, which takes its first quoted argument as the
-    window title and is aliased to `Start-Process` under PowerShell.
+    Windows opens with `explorer` **from PowerShell**, not `start` (which
+    takes its first quoted argument as the window title, and is aliased to
+    `Start-Process` under PowerShell) and not from cmd.exe, which expands
+    `%VAR%` inside double quotes with no reliable escape at an interactive
+    prompt.
   - Each skill's own next moves still lead: codesign's paste-back loop,
     html-explain's go-deeper / add-a-figure / restyle.
 

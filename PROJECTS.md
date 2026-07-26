@@ -830,6 +830,14 @@ ephemeral; that is a real answer, not a non-answer.
       interpolated rather than passed through. Switched to single quotes on POSIX and
       PowerShell (cmd.exe keeps double quotes — no `$`/backtick expansion there), for both
       the open and clipboard tables, with the `'\''` / `''` escape for a literal quote noted
+- [x] [P32-T13] Fourth Greptile round, again with a repro, again valid — and it landed on my
+      own claim: T12 asserted "cmd.exe is the exception, it has no expansion", which is true
+      for `$` and backticks and WRONG in general. cmd.exe expands `%VAR%` inside double
+      quotes, so a path containing a literal `%USERNAME%`/`%TEMP%` segment (legal on NTFS) is
+      rewritten before Explorer sees it, and `%%` escapes only in batch files, not at an
+      interactive prompt. Fix: drop the cmd.exe row entirely and direct Windows opens through
+      PowerShell; if cmd is genuinely the only shell and the path contains `%`, don't offer
+      the open — print the path for the user to paste into Explorer's address bar
 - [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
 
