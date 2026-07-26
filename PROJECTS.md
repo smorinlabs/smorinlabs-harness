@@ -872,7 +872,7 @@ ephemeral; that is a real answer, not a non-answer.
 
 ---
 
-## [ ] Project P33: vendor plugin-root references into citing skills (harness-kit)
+## [~] Project P33: vendor plugin-root references into citing skills (harness-kit)
 **Goal**: A skill directory copied on its own must still resolve every **declared plugin-root
 shared reference** it uses. Two skills (`html-codesign`, `html-explain`) currently read
 plugin-root files via `../../references/` across 8 call sites. That path escapes a lone copied
@@ -891,7 +891,8 @@ reference the skill cites": sibling-skill theming paths are a known separate pro
   references, and the underscore reads as generated.
 - `ch-04-a` **both drift guards** — a header banner catches whoever opens the file, a
   `gen-check` failure catches the edit that ships anyway. They catch different people at
-  different moments.
+  different moments. **Extended 2026-07-26 (operator):** a pre-commit hook (T22) adds a third
+  guard at commit time, catching the committer before either.
 - `ch-05-a` **automatic** for any skill declaring and citing a plugin-root reference, **plus**
   a per-plugin freshness opt-out (per note-05). The escape hatch suppresses only the
   `gen --check` staleness comparison; `gen` still regenerates copies on every run, and target
@@ -1017,6 +1018,15 @@ portable; scope a separate fallback/project before testing that broader promise.
       `html-explain`, cover `_shared` and `.codex-plugin/plugin.json`, and add negative tests
       for typoed declarations, missing sources, missing destinations, stale contents, orphaned
       copies, and `check_freshness = false` masking staleness but never a missing destination
+- [ ] [P33-T22] Wire the freshness check into a pre-commit hook in this repo so drift is
+      caught at commit time, not only by the banner (reader) and CI (push): run
+      `just gen-check` from committed hook wiring — the repo currently has no hook
+      framework, so introduce one (pre-commit framework preferred, matching the uv/ruff
+      toolchain) rather than an untracked `.git/hooks` script. A stale or hand-edited
+      `_shared` copy must fail the commit that would ship it; document the hook install
+      step alongside the existing `just` recipes. Order-independent: the hook runs
+      the pinned gen-check as-is, so it may land before the T12–T19 chain completes — but
+      P33 does not close without it (see Automated Verification)
 
 ### Ordered Delivery (hard dependency chain)
 - [ ] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
@@ -1096,6 +1106,8 @@ portable; scope a separate fallback/project before testing that broader promise.
   repairs or prunes them
 - The T21 fixture-repo proof passed against the released revision before any live-repo
   citation changed
+- The T22 pre-commit hook is wired and fails a commit that would ship a stale or missing
+  generated reference
 - The broader sibling-skill theming citations remain explicitly deferred, not silently
   downgraded into this acceptance criterion
 
