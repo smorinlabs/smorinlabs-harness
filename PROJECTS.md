@@ -643,7 +643,7 @@ Frontmatter description byte-identical — capability change, minor bump, no ove
 
 ---
 
-## [~] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
+## [x] Project P31: html-explain + a shared confirm-first triage for both page skills (plugin v0.8.0)
 **Goal**: Add `html-explain` — read-only explainer pages for settled material — and stop
 the two HTML page skills from being decided by accident. Both now run one shared
 context-triage preflight, classify recent context by density (many unanswered questions →
@@ -735,7 +735,7 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
       fresh session (2026-07-25): *"Both were tried and they both work."* **Scope of this row
       is exactly that: the general case.** The explicit-invocation-with-an-argument case is
       tracked separately as TS05 and is NOT covered here
-- [ ] [P31-TS05] Targeted regression check: invoke each page skill EXPLICITLY WITH AN ARGUMENT
+- [x] [P31-TS05] Targeted regression check: invoke each page skill EXPLICITLY WITH AN ARGUMENT
       (e.g. `/html-codesign the caching questions`) and confirm the pre-read still lands on its
       own turn before any dialog, and that no file is written until the answer. This is the
       loophole most likely to erode, because an argument makes skipping the gate feel most
@@ -743,6 +743,7 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
       gate but never removes it. Split out of TS03 after PR #18 review (Greptile P1): the
       original row carried its own caveat that this case was unconfirmed while still reporting
       `[x]`, so the tracker claimed full verification with a named regression case unverified
+      Passed 2026-07-26 — operator ran the fresh-session smoke test and confirmed.
 
 ### Automated Verification
 - `just gen-check` exits 0
@@ -757,7 +758,7 @@ the fact. Clarity canon ships advisory, indexed by symptom, never as rules.
 
 ---
 
-## [~] Project P32: shared delivery close-out for both HTML page skills (plugin v0.9.0)
+## [x] Project P32: shared delivery close-out for both HTML page skills (plugin v0.9.0)
 **Goal**: Both page skills end by telling the user where the file is and what they might
 want to do with it — additively, changing nothing that already exists in either delivery
 step. Two parts. (1) **The full absolute path, on its own line, every time**, promoted to a
@@ -867,8 +868,9 @@ ephemeral; that is a real answer, not a non-answer.
       session-backed validation on BOTH tools, so the coverage gap that motivated S1 turned
       out never to have existed. Lesson recorded rather than the conclusion alone: one deep-verify failure on a
       loaded box is not evidence about the artifact — re-run quiet before diagnosing
-- [ ] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
+- [x] [P32-TS02] Live smoke: generate one page with each skill and confirm the delivery prints
       an absolute path and offers only what this session can actually do
+      Passed 2026-07-26 — operator ran the fresh-session smoke test and confirmed.
 
 ---
 
