@@ -1052,7 +1052,7 @@ portable; scope a separate fallback/project before testing that broader promise.
       `uv sync --locked`, record the installed harness-kit version and Git revision, and run
       its focused unit suite before changing any citation
       done — fresh `uv sync --locked` proof in this PR's body
-- [ ] [P33-T21] **6 — fixture-repo end-to-end proof:** before any consumer migration, run the
+- [x] [P33-T21] **6 — fixture-repo end-to-end proof:** before any consumer migration, run the
       released generator against a disposable fixture repo, never the live checkout — either a
       scratch copy of `smorinlabs-harness` or a synthetic minimal repo with
       `plugins/<plugin>/references/<name>.md` plus one citing SKILL.md (runnable any time
@@ -1062,17 +1062,24 @@ portable; scope a separate fallback/project before testing that broader promise.
       reference; (2) failure path — delete the destination and confirm `gen --check` exits
       nonzero naming it, then set `check_freshness = false` and confirm staleness is masked
       while the missing destination still hard-errors
-- [ ] [P33-T17] **7 — migrate declarations/citations:** execute T02 only after T16 proves the
+      done — fixture transcript in Task 1 report / PR body
+- [x] [P33-T17] **7 — migrate declarations/citations:** execute T02 only after T16 proves the
       released generator is active and the T21 fixture proof has passed; include the T07
       source-text rewrite and T06 attributes in
       the same consumer migration
-- [ ] [P33-T18] **8 — generate committed outputs:** run the pinned `harness-kit gen`, inspect
+      done — 8 call sites in html-codesign + html-explain SKILL.md migrated to
+      `references/_shared/<name>.md`, declaration blocks added, self-locating sentences in
+      context-triage.md/delivery-close.md rewritten, .gitattributes added (this PR)
+- [x] [P33-T18] **8 — generate committed outputs:** run the pinned `harness-kit gen`, inspect
       every repo-relative banner and `_shared` destination, and commit only the outputs derived
       from the declarations migrated in T17
-- [ ] [P33-T19] **9 — prove the pinned failure gate:** from the migrated state, remove or make
+      done — pinned v0.3.0 `gen` produced exactly 4 `_shared` copies with repo-relative
+      banners; `just all` green; lone-copy proof passed for both skills (this PR)
+- [x] [P33-T19] **9 — prove the pinned failure gate:** from the migrated state, remove or make
       unreadable a declared destination without changing its source, confirm the pinned
       `harness-kit gen --check` exits nonzero and names that destination, then restore it with
       `gen`. Repeat with T04 enabled to prove the freshness escape hatch cannot hide absence
+      done — transcript in PR body
 - [ ] [P33-T20] Coordinate the cross-repo doctor delivery for T05 in
       `smorin-harness` (currently skill-fleet plugin v0.11.0): update the doctor's SKILL.md and
       docs page without adding a 13th check, bump the plugin version, regenerate manifests,
