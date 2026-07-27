@@ -17,4 +17,4 @@ dev = [
 ]
 
 [tool.uv.sources]
-harness-kit = { git = "https://github.com/smorinlabs/harness-kit" }
+harness-kit = { git = "https://github.com/smorinlabs/harness-kit", tag = "v0.3.0" }
