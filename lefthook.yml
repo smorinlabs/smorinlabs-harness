@@ -1,0 +1,14 @@
+# P33 T22 — lefthook scaffolding. Hook manager per fleet convention.
+# Mirrors CI's gen-check job (.github/workflows/ci.yml): a stale or
+# hand-edited generated file must fail here, not only on push.
+# See lefthook docs: https://lefthook.dev/configuration/
+
+min_version: 1.13.0
+
+pre-commit:
+  commands:
+    gen-check:
+      run: >-
+        command -v just >/dev/null 2>&1 ||
+        { echo "FAIL: just not on PATH — install just (brew install just) to commit here" >&2; exit 1; }
+        && just gen-check

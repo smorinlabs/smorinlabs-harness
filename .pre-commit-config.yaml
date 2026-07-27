@@ -1,9 +1,0 @@
-repos:
-  - repo: local
-    hooks:
-      - id: gen-check
-        name: gen-check
-        entry: just gen-check
-        language: system
-        pass_filenames: false
-        always_run: true

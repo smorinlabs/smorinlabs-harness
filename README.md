@@ -138,8 +138,9 @@ placeholder scan, marketplace parity). Placement rules:
 
 ### Hooks
 
-One-time setup per clone: `uvx pre-commit install`. This wires the `gen-check` hook
-(`.pre-commit-config.yaml`) so a stale or hand-edited generated file fails
+One-time setup per clone: `lefthook install` (requires
+[lefthook](https://lefthook.dev/), e.g. `brew install lefthook`). This wires the
+`gen-check` hook (`lefthook.yml`) so a stale or hand-edited generated file fails
 the commit locally, not just in CI. It installs into the shared `.git/hooks`, so it
 activates for every worktree of that clone, not just the one it was run from.
 

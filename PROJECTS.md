@@ -1023,13 +1023,13 @@ portable; scope a separate fallback/project before testing that broader promise.
 - [x] [P33-T22] Wire the freshness check into a pre-commit hook in this repo so drift is
       caught at commit time, not only by the banner (reader) and CI (push): run
       `just gen-check` from committed hook wiring — the repo currently has no hook
-      framework, so introduce one (pre-commit framework preferred, matching the uv/ruff
-      toolchain) rather than an untracked `.git/hooks` script. A stale or hand-edited
+      framework, so introduce one (lefthook, the fleet's hook manager convention)
+      rather than an untracked `.git/hooks` script. A stale or hand-edited
       `_shared` copy must fail the commit that would ship it; document the hook install
       step alongside the existing `just` recipes. Order-independent: the hook runs
       the pinned gen-check as-is, so it may land before the T12–T19 chain completes — but
       P33 does not close without it (see Automated Verification)
-      done — `.pre-commit-config.yaml` (local `gen-check` hook) + `uvx pre-commit install`
+      done — `lefthook.yml` (local `gen-check` hook) + `lefthook install`
       documented in README's Hooks note; TDD-proven fail-then-pass against a hand-edited
       `_shared` file
 
