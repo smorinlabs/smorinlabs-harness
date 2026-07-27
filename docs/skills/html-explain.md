@@ -180,8 +180,9 @@ so beyond Birchline there is not yet a fixed vocabulary worth hand-tuning.
 
 ## How it relates to html-codesign
 
-The two share one preflight (`references/context-triage.md` at the plugin
-root) and sit one step apart:
+The two share one preflight whose editable source is
+`references/context-triage.md` at the plugin root, read by each skill as its
+vendored `references/_shared/context-triage.md` copy, and sit one step apart:
 
 |  | Open questions | Settled material |
 |---|---|---|
