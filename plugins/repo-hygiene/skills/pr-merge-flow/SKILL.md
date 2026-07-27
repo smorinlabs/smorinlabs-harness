@@ -9,10 +9,13 @@ allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task
 Resolve every review thread on an open PR — triage, verify, fix or refute — then
 drive it to merge per the chosen end mode.
 
-> **Iron Law: EVERY THREAD RESOLVED BEFORE MERGE; EVERY WAIT BOUNDED.** A thread closes
-> only as fixed (commit pushed, reply posted) or refuted (reasoned reply
-> posted) — never silently. Every poll loop has an interval floor and a hard
-> time bound.
+> **Iron Law: EVERY THREAD RESOLVED BEFORE MERGE; EVERY WAIT BOUNDED.** A thread
+> closes only as fixed (commit pushed, reply posted), refuted (reasoned reply
+> posted), declined (valid but below the value floor — reasoned reply posted),
+> or deferred (tracked item created, reply names it) — never silently.
+> Escalated architectural threads are the one state this skill may not close:
+> they stay open and hold the merge at the gate for the user. Every poll loop
+> has an interval floor and a hard time bound.
 >
 > No exceptions: not "the bot comment is obviously noise", not "a tight loop
 > just this once", not "checks will finish any second".
@@ -36,7 +39,7 @@ default (`confirm`, no deep review). Natural language counts as the flag
   bots rarely review drafts.
 - Preferences: read `.claude/pr-merge-flow.local.md` if present (keys: `mode`,
   `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
-  `continue-until-clean`) and apply silently — its
+  `continue-until-clean`, `defer-target`) and apply silently — its
   whole point is not being asked every time. No file and no flag → `confirm`
   mode; after the first completed run, offer to save the choices there and
   ensure the file is ignored via `.git/info/exclude` — never edit
@@ -49,6 +52,9 @@ default (`confirm`, no deep review). Natural language counts as the flag
   (its budget is separate from core, and the two thread operations below have
   no REST equivalent) → route via `references/browser-fallback.md`, which
   decides between waiting out the reset and the gated browser escape hatch.
+- Deferral destination: resolve `defer-target` per the detection ladder in
+  `references/triage.md` (§ Deferral destinations) — repo evidence first,
+  ask once only when there is none, save the answer to the prefs file.
 
 ## 2. Bot-wait (bounded)
 
@@ -79,7 +85,9 @@ different times, and a reviewer can post while you are mid-triage. Maintain a
 a count — as the source of truth.
 
 Each entry carries: author, file/line, the concrete claim, and its state
-through `discovered → verdict → fixed → replied → resolved`.
+through `discovered → verdict → fixed | refuted | declined | deferred |
+escalated → replied → resolved`. The ledger also carries the per-wave
+trajectory table defined in `references/convergence.md`.
 
 Re-fetch the REST inventory at the start of every cycle and after every push —
 **fully paginated** (`gh api --paginate`, or follow the `Link` header); a PR
@@ -106,14 +114,25 @@ technical rigor, no performative agreement:
 2. Verify before believing: run the code, test, or failing scenario where
    feasible — a judgment call, but "ran it" beats "read it".
 3. Verdict:
-   - **Valid** → minimal fix, conventional commit, push, reply naming the fix
-     commit, resolve the thread.
    - **Invalid** → reply with the concrete reason it does not hold, resolve
      the thread.
+   - **Valid** → classify scope and value per `references/triage.md` before
+     any code: **small in-scope bug above the value floor** → minimal fix,
+     conventional commit, push, reply naming the fix commit, resolve ·
+     **valid but out of scope** → tracked item at `defer-target`, reply
+     `Deferred to <ref>`, resolve · **below the value floor** → decline or
+     refute with the one-line reason, resolve · **architectural** → one
+     design-question comment, mark **escalated**; it stays open and holds
+     the merge at the gate.
    - **Unclear** → `confirm`/`ready` modes: ask the user, one question at a
      time. `--auto` never asks: make the call if verification can settle it;
      if genuinely undecidable, leave the thread open and downgrade the run to
      a ready-report — the Iron Law forbids merging over it.
+
+   Hard rules: a finding against review-added code → consider reverting the
+   earlier fix to spec semantics before extending it; "it extends the PR's
+   own principle" is a defer signal, not a fix mandate; arrival cycle never
+   changes the class.
 
 When the resolve mutation is rate-limited, the verdicts and fixes are
 unchanged and only the closing move relocates: reply over REST first (it rides
@@ -132,33 +151,51 @@ comments for one already authored by us (`in_reply_to_id` matching the thread's
 top comment). A retry after a failed resolve must not post the reply twice —
 re-attempt only the step that failed.
 
-## 5. Re-review cycle
+## 5. Re-review cycle — measured, ratcheted
 
 Pushed fixes can trigger fresh bot reviews. Return to step 2, then re-fetch and
 **merge into the ledger** (step 3) before triaging — new entries are expected
 output of your own fixes, not an anomaly.
 
-**Bound: 4 cycles, then check in — never stop silently and never loop
-silently.** At the bound, report the ledger (resolved / replied-but-open /
-untriaged, each by id) and ask the user, one question, how to proceed:
+Record the wave in the trajectory table per `references/convergence.md`.
+Convergence is measured in **findings received — never fixes chosen**.
+**The bar ratchets** when any trips: cycle ≥ 3 · same-bot new findings not
+decreasing · a majority of a wave targeting review-added code. Under the
+ratcheted bar only would-ship-broken defects in the PR's own diff get code;
+everything else defaults to defer, decline, or refute.
 
-- **Continue until clean** — keep cycling with no cycle limit, bounded instead
-  by a **10-minute wall clock** from the moment they say so. Cycles still
-  obey every polling rule inside that window; on expiry, stop and report
-  wherever the ledger stands. This is the escape hatch for a PR that is
+**Bound: 4 cycles, or the ratchet tripping in two successive waves — then
+check in. Never stop silently and never loop silently.** The check-in
+reports the trajectory line (e.g. `11 → 4 → 5 · cycle 3 · majority on
+fix-added code`), asks the stopping question — **is the design still being
+questioned, or only the churn?** — and lists per-thread recommended
+dispositions. Then ask the user, one question, three endings:
+
+- **Continue until clean** — keep cycling with no cycle limit, bounded
+  instead by a **10-minute wall clock** from the moment they say so. Cycles
+  still obey every polling rule inside that window; on expiry, stop and
+  report wherever the ledger stands. The escape hatch for a PR that is
   genuinely converging, just slowly.
-- **Merge / gate now** — proceed to step 6 with whatever is clean, provided
-  the Iron Law holds (every ledger entry resolved).
-- **Stop** — ready-report and hand back.
+- **Merge and defer the residue** — batch-create the deferral artifacts at
+  `defer-target`, reply-and-resolve each remaining thread with its
+  reference, then proceed to step 6. The Iron Law holds: every entry fixed,
+  refuted, declined, or deferred.
+- **Pause for redesign** — the escalated threads become the agenda;
+  ready-report naming them and hand back.
+
+`--auto` cannot ask: a tripped ratchet or an escalated thread downgrades the
+run to a ready-report naming the open items.
 
 `cycle-bound` and `continue-until-clean` may be set in
 `.claude/pr-merge-flow.local.md` to skip the check-in for a repo that always
 wants one answer.
 
 A cycle that produces only new threads and no new fixes still counts against
-the bound; the bound is on cycles, not on progress. Convergence is not a reason
-to skip the check-in — findings shrinking is exactly when a run is most tempted
-to keep going on its own judgment.
+the bound; the bound is on cycles, not on progress. Convergence is not a
+reason to skip the check-in — findings shrinking is exactly when a run is
+most tempted to keep going on its own judgment. And a wave that is mostly
+minutia (severity draining, declined fraction rising) is evidence to merge,
+not work to do.
 
 ## 6. Merge preflight
 
