@@ -14,7 +14,9 @@
       "source": "./plugins/explain",
       "description": "Concrete-anchored explanation shorthand \u2014 /explain answers in a fixed anatomy: what it is, just-enough context, a real before/after example, and the payoff \u2014 with options/deeper/steps modes inferred from the target, and follow-up aware: a bare explain after an explanation diagnoses what's blocking action (step back to the bigger picture, clearer language, sharper example) and rewrites rather than repeats.",
       "version": "0.3.1",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "explain",
         "explanation",
@@ -29,7 +31,9 @@
       "source": "./plugins/factor-harness",
       "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
       "version": "0.1.1",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "architecture",
         "refactor",
@@ -44,7 +48,9 @@
       "source": "./plugins/guided-research",
       "description": "Orchestration layer over the built-in /deep-research skill \u2014 decides when deep research is worth doing, shapes the prompt with project constraints, invokes the engine, and organizes results into a durable, reusable research tree.",
       "version": "0.1.0",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "research",
         "deep-research",
@@ -59,7 +65,9 @@
       "source": "./plugins/project-harness",
       "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
       "version": "0.1.3",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "project-management",
         "projects",
@@ -74,7 +82,9 @@
       "source": "./plugins/question-walkthrough",
       "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time. Every non-obvious question is fronted by a pre-read \u2014 why it exists, impact, trade-offs, terms \u2014 delivered in a chat turn that ends BEFORE the dialog is raised (same-turn context is invisible context). Answer notes are classified and honored: option modifiers apply immediately; directives \u2014 extra work or a redirect that replaces the answer \u2014 get a one-line repeat-back and confirm, then run in an end-of-walk batch by default. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source and summarized in a final outcome table with parked items and directive outcomes called out. Pure-markdown skill, portable across Claude Code and Codex.",
       "version": "0.2.1",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "questions",
         "decisions",
@@ -90,7 +100,9 @@
       "source": "./plugins/reader-steps",
       "description": "Style spec for rendering actions only the reader can or will perform: a delineated task block toward the response's end \u2014 bounded frame (blockquote rail plus horizontal rules), a Completes line binding it to the tracked item by exact ID and title, steps numbered with a stable tag and grouped by surface (terminal, browser, desktop/system UI, phone, physical world) under merged dividers, each step titled by its outcome with the literal command or UI path below it and a \u2713 verification line, closing with the immediate next move. Scales down to a one-line inline form for a single step and up with a map and stop points past eight; breadcrumb navigation promotes to one hop per line past three hops or on any caveat; reactive actions nest inside the step that triggers them; in-flight processes re-render across turns as a progress scoreboard; errors state cause and fix. Decisions are never steps \u2014 they are asked (question-walkthrough) before instructing. Canonical spec behind an always-on digest users keep in global instructions.",
       "version": "0.3.1",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "style",
         "instructions",
@@ -107,7 +119,9 @@
       "source": "./plugins/repo-finder",
       "description": "One-command repo resolution for agents: resolve a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling) via a config-bounded multi-root scan \u2014 falling back to the user's configured GitHub orgs over gh REST-first (GraphQL only as configured fallback) for exact clone names. Deterministic ranking (checkouts, then worktrees labeled with their main repo, then nested copies); recency displayed, not ranked, so the consuming LLM decides. Single-file zero-dependency uv Python script inside the skill; conforms to the CLI Design Standard (small-CLI profile, minimal tier). Replaces token-expensive ls/find cascades and repeated gh repo view identity checks.",
       "version": "0.2.1",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "repo",
         "finder",
@@ -124,7 +138,9 @@
       "source": "./plugins/repo-hygiene",
       "description": "Repo & release-readiness checks \u2014 CI/pre-commit audit, version drift, README sync, manual test guides, and a PR merge flow that resolves every review thread before merging.",
       "version": "0.5.0",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "ci",
         "release",
@@ -143,7 +159,9 @@
       "source": "./plugins/use-html-theme",
       "description": "Themed-HTML toolkit, three pure skills sharing one context-triage preflight. use-html-theme: on any HTML-generation request, offer a catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project \u2014 natural language and [theme: x] inline-flag control, side-by-side preview on request. html-codesign: interactive 'pick and export' decision pages \u2014 every question opens with a collapsible context-and-recommendation preamble (free-form rich content on a clarity scaffold), the reader answers, skips, or raises a question on each section, folds answered sections to dense summary rows for review, then exports the decision as Markdown/JSON (slim by default, full ADR-style by toggle) with stable IDs for diffable iteration. html-explain: read-only explainer pages for settled material \u2014 authoring maps which parts are intrinsically hardest and budgets the page around them, then enriches with diagrams, annotated figures, build-up sequences, and manipulable widgets ONLY where comprehension actually breaks; clarity canon (Mayer, Sweller, Minto, Heath, Tufte, Bertin, Cleveland) carried as advisory aids, with a standalone encoding fallback for surfaces where the bundled dataviz skill does not exist. Both page skills read recent context and ALWAYS confirm before generating \u2014 codesign for unanswered questions, explain for settled work \u2014 and hand off to each other when triage disagrees with the request. Both page skills close delivery the same way: the full absolute path on its own line, then conditional convenience offers \u2014 open it in the browser only when the session can reach one, add it to shelf only when that skill is installed, and where to save it whenever the file sits somewhere temporary or anywhere the agent chose rather than the user, read from context rather than a fixed ranking; copying the path to the clipboard is offered under the same gate as opening it. Portable across Claude Code and Codex.",
       "version": "0.9.1",
-      "author": "Steve Morin",
+      "author": {
+        "name": "Steve Morin"
+      },
       "keywords": [
         "html",
         "css",
