@@ -1,5 +1,23 @@
 # Release Notes
 
+## v0.18.0 — 2026-07-27
+
+### Added
+
+- **repo-hygiene 0.6.0 — pr-merge-flow convergence guardrails.** Scope-gated
+  triage of every valid finding (fix / defer / decline / refute / escalate)
+  with a value floor; per-wave trajectory measurement with a ratcheting bar
+  (findings-received, never fixes-chosen); a check-in with three endings
+  (continue until clean · merge and defer the residue · pause for redesign);
+  deferral destinations detected from repo evidence (`defer-target` pref);
+  new `references/convergence.md`; seven new/split Red Flags rows. Grounded
+  in eleven measured review episodes across four repos (PR #31; auto-mode
+  consent question deferred to #32).
+- **use-html-theme 0.10.0 — vendored `_shared` references and html-explain
+  validation.** P33 close-out: `references/_shared` vendored into both page
+  skills, `validate.py` extended to the html-explain scaffold with
+  content-depth checks, preview-template updates (PRs #26–#28).
+
 ## v0.17.1 — 2026-07-26
 
 ### Fixed
