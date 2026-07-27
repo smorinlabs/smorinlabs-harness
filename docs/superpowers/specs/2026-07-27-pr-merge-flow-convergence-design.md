@@ -125,11 +125,46 @@ Three hard rules, each named for the observed rationalization it blocks:
    in. A genuine ship-breaking P1 in cycle 4 is still a small in-scope bug
    (protects the #18 release-breaker and #20 wave-2 P1 cases).
 
+### The value floor for small findings
+
+A commit is never free. Each review-fix commit in the corpus carried three
+costs regardless of size: a ~7% measured chance of shipping its own defect
+(#41's fix-regression rate), a fresh reviewer wave ~10 minutes later on the
+new surface, and a bite out of the cycle budget. A small fix therefore earns
+a commit only when its value clears that floor. The one-line test: **would a
+maintainer, holding the repo's conventions, ask for this change unprompted?**
+
+Dispositions within valid, small, in-scope findings:
+
+| Finding | Disposition |
+|---|---|
+| Functional bug — behavior is wrong | Fix |
+| Real typo — wrong word, command, or meaning in shipped text | Fix |
+| Style/lint a repo convention or CI gate actually enforces | Fix (the gate would fail — functionally a bug) |
+| Arbitrary style — reviewer taste with no convention behind it | **Decline**: reply "style-only; no repo convention requires this", resolve |
+| Contradicts a repo convention | **Refute citing the convention** (proven: CodeRabbit formally withdrew such a finding on #41) |
+| Arguable value with real blast radius (e.g. "remove redundant guard" on a safety-critical path) | **Decline citing risk asymmetry** — arguable upside, unarguable regression cost |
+
+This supersedes triage.md's current "apply when they match repo conventions
+and are cheap": *cheap to type is not cheap in system cost*, and "cheap"
+disappears as a justification.
+
+**Declined is a fourth first-class disposition**, distinct from refuted (the
+claim is false) and deferred (valuable, but not here). Valueless findings are
+never deferred — routing style noise into the tracker pollutes it and buries
+real deferrals. Declined threads get the same reply-and-resolve treatment.
+
+**Wave composition becomes a convergence signal.** A wave dominated by
+style/minutia (high declined-fraction, severities draining toward Minor) is
+positive evidence the reviewers have run out of functional bugs — presented
+at the check-in as support for *merge now* (#41's own session noticed this:
+"all P2 — severity dropping").
+
 **The Iron Law extends, it does not weaken:** every thread resolved as
-**fixed, refuted, or deferred-with-reference**. Escalated threads are the one
-state the agent may not resolve on its own: they stay open, they hold the
-merge at the gate, and only the user's disposition (fix here / defer /
-redesign) closes them.
+**fixed, refuted, declined-with-reason, or deferred-with-reference**.
+Escalated threads are the one state the agent may not resolve on its own:
+they stay open, they hold the merge at the gate, and only the user's
+disposition (fix here / defer / redesign) closes them.
 
 ### Deferral destinations — follow the repo's own evidence
 
@@ -162,6 +197,8 @@ The thread ledger (SKILL.md step 3) gains per-wave, per-reviewer columns:
   #15 was staggering, not escalation) and CodeRabbit has arrived +14 hours
   late (#20). Cross-cycle comparison is same-bot only.
 - fraction of the wave targeting code added during this review (fix-of-fix).
+- declined fraction and severity drain (§1 value floor) — a wave that is
+  mostly style/minutia is convergence evidence, not work.
 
 **Convergence is always measured in findings-received. Fixes-chosen is banned
 as a convergence metric** — the #62 "11 → 4 → 2" substitution is the named
@@ -225,6 +262,8 @@ New rows, one per observed rationalization:
 | "This extends the PR's own principle, so it's in scope" | Extension is the defer signal, not a fix mandate. |
 | "The count doubled — the review is escalating" | Bots stagger. Compare same-bot across waves before calling divergence. |
 | "One more fix for the fix and this thread class is closed" | Fix-of-fix is the divergence engine. Consider reverting to spec semantics first. |
+| "It's a one-word fix, cheaper to just do it" | Cheap to type is not cheap in system cost: every commit carries ~7% regression risk and draws a fresh review wave. Value must clear the floor. |
+| "Fixing the nit is more polite than declining it" | A reasoned decline is the etiquette here — bots accept it and have formally withdrawn findings. Fixing nits trains the loop that nits earn commits. |
 
 ## 5. Deep review gets the same gate
 
@@ -240,12 +279,12 @@ exemption from classification.
 |---|---|
 | `SKILL.md` step 1 | Deferral-destination detection joins settings resolution; new pref key `defer-target` |
 | `SKILL.md` step 3 | Ledger schema: per-wave per-bot columns, fix-of-fix fraction, `escalated` state |
-| `SKILL.md` step 4 | Scope axis summary + the three hard rules; Iron Law wording extended to fixed/refuted/deferred-with-reference, escalation carve-out |
+| `SKILL.md` step 4 | Scope axis summary + the three hard rules + value floor; Iron Law wording extended to fixed/refuted/declined-with-reason/deferred-with-reference, escalation carve-out |
 | `SKILL.md` step 5 | Ratchet triggers; check-in report contents; three endings; `--auto` downgrade |
 | `SKILL.md` step 7/9 | End-of-run report lists every deferral with reference (all modes) |
 | `SKILL.md` step 8 | Deep-review findings share ledger, scope axis, ratchet |
 | `SKILL.md` Red Flags | Split one row; add four rows (§4) |
-| `references/triage.md` | Verdict rubric: scope classification table, signals list, defer reply etiquette, destination-detection details |
+| `references/triage.md` | Verdict rubric: scope classification table, value floor + declined disposition (replaces the "cheap → apply" style rule), signals list, defer reply etiquette, destination-detection details |
 | `references/convergence.md` (new) | Trajectory bookkeeping, ratchet definition, staggering correction, check-in template — kept out of SKILL.md to respect progressive disclosure |
 | `plugin.meta.toml` / marketplace | Version bump + regen per harness conventions (implementation-plan detail) |
 | Skill `description` frontmatter | Add convergence/deferral phrasing so triggering reflects the new behavior; keep collision-safe |
@@ -268,7 +307,10 @@ exemption from classification.
    should: #62 cycle 2 (4 P1 extensions) → defer, not fix; #31 round 5 →
    revert-first fires; #57 → ratchet trips by cycle 3 and offers
    merge-and-defer; #18's late P1 → still fixed (class test, not cycle test);
-   #27 / #33 / #37 small-PR behavior → unchanged.
+   #27 / #33 / #37 small-PR behavior → unchanged; #17's comment-wording ask
+   and #27's markdown nits on an executed plan doc → declined under the value
+   floor; #41's convention-conflicting import ask → refuted citing the
+   convention.
 2. **Skill-quality gate** against the worktree (frontmatter, house style,
    docs completeness, collision check on the updated description), per the
    gate-against-the-worktree rule.
