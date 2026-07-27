@@ -1083,14 +1083,16 @@ portable; scope a separate fallback/project before testing that broader promise.
       `harness-kit gen --check` exits nonzero and names that destination, then restore it with
       `gen`. Repeat with T04 enabled to prove the freshness escape hatch cannot hide absence
       done — transcript in PR body
-- [ ] [P33-T20] Coordinate the cross-repo doctor delivery for T05 in
+- [x] [P33-T20] Coordinate the cross-repo doctor delivery for T05 in
       `smorin-harness` (currently skill-fleet plugin v0.11.0): update the doctor's SKILL.md and
       docs page without adding a 13th check, bump the plugin version, regenerate manifests,
       run its validation, and release the updated plugin
+      Done — code merged in the doctor PR; shipped as smorin-harness v0.12.0 (skill-fleet 0.12.0).
 - [ ] [P33-TS01] Install-mode matrix: prove declared plugin-root shared references resolve in
       all four rows of the evidence table — real Claude plugin install, real Codex marketplace
       install, dev symlink, and **direct copy of a lone skill folder** (the regression)
-- [ ] [P33-TS02] Drift test: hand-edit a vendored copy, confirm `gen-check` fails
+- [x] [P33-TS02] Drift test: hand-edit a vendored copy, confirm `gen-check` fails
+      Proven by the T22 hook PR's TDD transcript: a hand-edited vendored copy blocked the commit with gen-check naming the stale file (PR #26).
 - [ ] [P33-TS03] Fleet regression: `gen-check` green across all 9 plugins after the change
 - [ ] [P33-TS04] Real-Claude gate — **narrowed 2026-07-26; the mechanism half is already
       proven.** A real marketplace install DOES materialize nested skill subdirectories at the
