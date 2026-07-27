@@ -12,3 +12,9 @@ pre-commit:
         command -v just >/dev/null 2>&1 ||
         { echo "FAIL: just not on PATH — install just (brew install just) to commit here" >&2; exit 1; }
         && just gen-check
+    plugin-validate:
+      glob: "{.claude-plugin/*.json,plugins/*/.claude-plugin/*.json,plugins/*/plugin.meta.toml}"
+      run: >-
+        command -v claude >/dev/null 2>&1 ||
+        { echo "FAIL: claude CLI not on PATH — needed to validate plugin manifests" >&2; exit 1; }
+        && claude plugin validate .
