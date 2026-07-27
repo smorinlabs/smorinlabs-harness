@@ -1,7 +1,7 @@
 # PR Merge Flow — Convergence Guardrails — Design
 
 **Date:** 2026-07-27
-**Status:** Approved design; implementation pending
+**Status:** Implemented 2026-07-27
 **Target:** `plugins/repo-hygiene/skills/pr-merge-flow` (SKILL.md, `references/triage.md`, new `references/convergence.md`)
 
 ## Problem
@@ -212,7 +212,9 @@ anti-pattern.
   signal: the loop is reviewing its own output).
 
 Under the ratcheted bar, only would-ship-broken defects in the PR's own diff
-get code; everything else defaults to defer, decline, or refute. The scope axis of §1
+get code; everything else defaults to defer, decline, or refute — except
+architectural findings, which still escalate; the ratchet never downgrades
+an escalation. The scope axis of §1
 still governs *what class* a finding is; the ratchet only hardens *which
 classes* may produce commits.
 
@@ -225,8 +227,8 @@ two successive waves) reports:
   code · severity rising`;
 - the stopping question: **"is the design still being questioned, or only
   the churn?"**;
-- per-thread recommended dispositions (fix / defer-to-<ref> / refute /
-  escalate);
+- per-thread recommended dispositions (fix / defer-to-<ref> / decline /
+  refute / escalated);
 
 and offers exactly three endings:
 
@@ -234,7 +236,8 @@ and offers exactly three endings:
    unchanged.
 2. **Merge and defer the residue** — first-class now: batch-create the
    deferral artifacts, reply-and-resolve each thread with its reference,
-   proceed to the merge gate.
+   proceed to the merge gate. Offered only when no thread is escalated —
+   escalations hold the merge until the user disposes of them.
 3. **Pause for redesign** — the escalated architectural threads become the
    agenda; the run downgrades to a ready-report that names them.
 

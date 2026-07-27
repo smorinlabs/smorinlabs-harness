@@ -126,7 +126,9 @@ unprompted?**
 | Arguable value with real blast radius (e.g. "remove redundant guard" on a safety-critical path) | Decline citing risk asymmetry — arguable upside, unarguable regression cost |
 
 Never defer a valueless finding — style noise in the tracker buries real
-deferrals. Decline it.
+deferrals. Decline it. Each row names its one disposition: **refute** is
+reserved for claims that are false or contradict a repo convention;
+**decline** is for true-but-below-floor asks — never both.
 
 ### Three hard rules
 

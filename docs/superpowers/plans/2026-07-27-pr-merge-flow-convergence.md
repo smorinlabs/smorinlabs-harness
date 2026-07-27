@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Work in the `pmf-convergence-spec` worktree (`/Users/stevemorin/c/smorinlabs-harness/.claude/worktrees/pmf-convergence-spec`), branch `worktree-pmf-convergence-spec`. Never touch the main checkout.
+- Work in the `pmf-convergence-spec` worktree (under `.claude/worktrees/` in the repo), branch `worktree-pmf-convergence-spec`. Never touch the main checkout.
 - **Never write the private cross-tool verifier's name** into any file. Guard before every commit: `git grep -niE 'skill''smith' -- ':!.github/workflows/ci.yml'` must exit 1 (no hits).
 - Conventional commits; every commit ends with the trailer `Claude-Session: https://claude.ai/code/session_01PrbE6PuQu5Yap914WA3ZdW`.
 - The skill's `description:` frontmatter is a single-quoted YAML scalar — no bare apostrophes in added text.
@@ -87,7 +87,7 @@ defer the residue*.
 At the bound (4 cycles, or the ratchet tripping in two successive waves),
 report:
 
-- the trajectory line — e.g. `11 → 4 → 5 · cycle 3 · majority on fix-added
+- the trajectory line — e.g. `11 → 4 → 5 · cycle 3 · majority on review-added
   code · severity draining`;
 - the stopping question: **is the design still being questioned, or only
   the churn?**;
@@ -272,8 +272,9 @@ trajectory table defined in `references/convergence.md`.
      any code: **small in-scope bug above the value floor** → minimal fix,
      conventional commit, push, reply naming the fix commit, resolve ·
      **valid but out of scope** → tracked item at `defer-target`, reply
-     `Deferred to <ref>`, resolve · **below the value floor** → decline or
-     refute with the one-line reason, resolve · **architectural** → one
+     `Deferred to <ref>`, resolve · **below the value floor** → decline with
+     the one-line reason — refute instead only when the ask contradicts a
+     repo convention — resolve · **architectural** → one
      design-question comment, mark **escalated**; it stays open and holds
      the merge at the gate.
    - **Unclear** → `confirm`/`ready` modes: ask the user, one question at a
@@ -295,7 +296,8 @@ Convergence is measured in **findings received — never fixes chosen**.
 **The bar ratchets** when any trips: cycle ≥ 3 · same-bot new findings not
 decreasing · a majority of a wave targeting review-added code. Under the
 ratcheted bar only would-ship-broken defects in the PR's own diff get code;
-everything else defaults to defer, decline, or refute.
+everything else defaults to defer, decline, or refute — except architectural
+findings, which still escalate; the ratchet never downgrades an escalation.
 ```
 
 Then replace the check-in paragraph and options (`**Bound: 4 cycles, then check in…**` through the `- **Stop** — ready-report and hand back.` bullet) with:
@@ -304,7 +306,7 @@ Then replace the check-in paragraph and options (`**Bound: 4 cycles, then check 
 **Bound: 4 cycles, or the ratchet tripping in two successive waves — then
 check in. Never stop silently and never loop silently.** The check-in
 reports the trajectory line (e.g. `11 → 4 → 5 · cycle 3 · majority on
-fix-added code`), asks the stopping question — **is the design still being
+review-added code`), asks the stopping question — **is the design still being
 questioned, or only the churn?** — and lists per-thread recommended
 dispositions. Then ask the user, one question, three endings:
 
@@ -316,7 +318,8 @@ dispositions. Then ask the user, one question, three endings:
 - **Merge and defer the residue** — batch-create the deferral artifacts at
   `defer-target`, reply-and-resolve each remaining thread with its
   reference, then proceed to step 6. The Iron Law holds: every entry fixed,
-  refuted, declined, or deferred.
+  refuted, declined, or deferred. Offered only when no thread is escalated —
+  escalations hold the merge until the user disposes of them.
 - **Pause for redesign** — the escalated threads become the agenda;
   ready-report naming them and hand back.
 

@@ -1,6 +1,6 @@
 ---
 name: pr-merge-flow
-description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — verify each claim by running code where possible, then scope-gate it: fix small in-scope bugs, defer out-of-scope work to the repo tracker, decline style-only asks, escalate architectural redesigns to the user — every thread resolved either way, ratcheting the bar when review cycles stop converging. Cycles as fixes trigger new reviews, checks the PR title against repo conventions, then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout. Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
+description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — verify each claim by running code where possible, then scope-gate it: fix small in-scope bugs, defer out-of-scope work to the repo tracker, decline style-only asks, escalate architectural redesigns to the user — every thread answered in writing, ratcheting the bar when review cycles stop converging. Cycles as fixes trigger new reviews, checks the PR title against repo conventions, then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout. Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
 allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
 ---
 
@@ -85,9 +85,10 @@ different times, and a reviewer can post while you are mid-triage. Maintain a
 a count — as the source of truth.
 
 Each entry carries: author, file/line, the concrete claim, and its state
-through `discovered → verdict → fixed | refuted | declined | deferred |
-escalated → replied → resolved` (escalated stops at `replied` — only the
-user closes it). The ledger also carries the per-wave
+through `discovered → verdict → fixed | refuted | declined | deferred →
+replied → resolved`; escalated threads run `discovered → verdict →
+escalated → replied` and stay open — only the user closes them. The ledger
+also carries the per-wave
 trajectory table defined in `references/convergence.md`.
 
 Re-fetch the REST inventory at the start of every cycle and after every push —
@@ -121,8 +122,9 @@ technical rigor, no performative agreement:
      any code: **small in-scope bug above the value floor** → minimal fix,
      conventional commit, push, reply naming the fix commit, resolve ·
      **valid but out of scope** → tracked item at `defer-target`, reply
-     `Deferred to <ref>`, resolve · **below the value floor** → decline or
-     refute with the one-line reason, resolve · **architectural** → one
+     `Deferred to <ref>`, resolve · **below the value floor** → decline with
+     the one-line reason — refute instead only when the ask contradicts a
+     repo convention — resolve · **architectural** → one
      design-question comment, mark **escalated**; it stays open and holds
      the merge at the gate.
    - **Unclear** → `confirm`/`ready` modes: ask the user, one question at a
@@ -163,7 +165,8 @@ Convergence is measured in **findings received — never fixes chosen**.
 **The bar ratchets** when any trips: cycle ≥ 3 · same-bot new findings not
 decreasing · a majority of a wave targeting review-added code. Under the
 ratcheted bar only would-ship-broken defects in the PR's own diff get code;
-everything else defaults to defer, decline, or refute.
+everything else defaults to defer, decline, or refute — except architectural
+findings, which still escalate; the ratchet never downgrades an escalation.
 
 **Bound: 4 cycles, or the ratchet tripping in two successive waves — then
 check in. Never stop silently and never loop silently.** The check-in
@@ -180,7 +183,8 @@ dispositions. Then ask the user, one question, three endings:
 - **Merge and defer the residue** — batch-create the deferral artifacts at
   `defer-target`, reply-and-resolve each remaining thread with its
   reference, then proceed to step 6. The Iron Law holds: every entry fixed,
-  refuted, declined, or deferred.
+  refuted, declined, or deferred. Offered only when no thread is escalated —
+  escalations hold the merge until the user disposes of them.
 - **Pause for redesign** — the escalated threads become the agenda;
   ready-report naming them and hand back.
 

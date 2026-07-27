@@ -22,8 +22,9 @@ Extend the thread ledger with one row per completed reviewer wave:
 - **"On review-added code"** counts findings whose subject lines/files were
   introduced by this run's own fix commits (check the blame of the flagged
   lines against the fix SHAs).
-- **"Declined"** counts findings below the value floor (triage.md) — style
-  taste, convention-conflicting asks, arguable value with real blast radius.
+- **"Declined"** counts findings dispositioned as *declined* under the value
+  floor (triage.md). Convention-conflicting asks resolve as refutations and
+  do not count here.
 
 **Convergence is measured in findings received. Fixes chosen is a banned
 metric** — "11 → 4 → 2" where 2 is the fixes you elected to make hides a
@@ -40,8 +41,10 @@ The bar ratchets when **any** of these trips:
 
 Under the ratcheted bar, only **would-ship-broken defects in the PR's own
 diff** get code. Everything else defaults to defer, decline, or refute per
-the triage rubric. The scope class of a finding never depends on when it
-arrived — a ship-breaking P1 in cycle 4 is still a fix.
+the triage rubric — except architectural findings, which still **escalate**:
+the ratchet never downgrades an escalation. The scope class of a finding
+never depends on when it arrived — a ship-breaking P1 in cycle 4 is still a
+fix.
 
 ## Wave composition is a signal
 
@@ -63,5 +66,7 @@ report:
   refute / escalated);
 
 then ask one question with three endings — continue until clean (10-minute
-wall clock), merge and defer the residue, or pause for redesign. Details
-and mode behavior live in SKILL.md step 5.
+wall clock), merge and defer the residue, or pause for redesign. Merge and
+defer is offered only when no thread is escalated — escalations hold the
+merge until the user disposes of them. Details and mode behavior live in
+SKILL.md step 5.
