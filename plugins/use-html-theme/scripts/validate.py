@@ -233,6 +233,43 @@ if vs_script.is_file() and fx_good.is_file() and fx_bad.is_file():
 else:
     check("validate_spec fixtures present", False)
 
+# 9. html-explain skill (read-only explainer pages)
+he_base = "skills/html-explain"
+check("html-explain/SKILL.md exists", file_exists(f"{he_base}/SKILL.md"))
+check(
+    "html-explain SKILL.md has frontmatter name",
+    file_matches(f"{he_base}/SKILL.md", r"^name:\s*html-explain"),
+)
+check(
+    "html-explain SKILL.md has frontmatter description",
+    file_matches(f"{he_base}/SKILL.md", r"^description:"),
+)
+for ref in [
+    "difficulty-map.md",
+    "enrichment-ladder.md",
+    "explanatory-canon.md",
+    "visual-encoding.md",
+    "_shared/context-triage.md",
+    "_shared/delivery-close.md",
+]:
+    check(f"html-explain references/{ref} exists", file_exists(f"{he_base}/references/{ref}"))
+check(
+    "html-explain scaffold exists",
+    file_exists(f"{he_base}/assets/explainer-scaffold.html"),
+)
+check(
+    "html-explain scaffold declares color-scheme meta",
+    file_matches(f"{he_base}/assets/explainer-scaffold.html", r'<meta\s+name="color-scheme"'),
+)
+check(
+    "html-explain scaffold has :root token block",
+    file_matches(f"{he_base}/assets/explainer-scaffold.html", r":root\s*\{"),
+)
+check(
+    "birchline explain overlay exists",
+    file_exists("skills/use-html-theme/references/themes/birchline/explain.md"),
+)
+
 print()
 if failures:
     print(f"FAILED: {len(failures)} check(s)")

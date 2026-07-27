@@ -1015,11 +1015,14 @@ portable; scope a separate fallback/project before testing that broader promise.
       `[generated_shared_references]` table and its `check_freshness` boolean; reject unknown
       tables/keys and wrong types so a typoed opt-out cannot be silently discarded while
       misleading the plugin author
-- [ ] [P33-T11] Extend `plugins/use-html-theme/scripts/validate.py` beyond html-codesign and
+- [x] [P33-T11] Extend `plugins/use-html-theme/scripts/validate.py` beyond html-codesign and
       the Claude manifest: resolve declared references for BOTH `html-codesign` and
       `html-explain`, cover `_shared` and `.codex-plugin/plugin.json`, and add negative tests
       for typoed declarations, missing sources, missing destinations, stale contents, orphaned
       copies, and `check_freshness = false` masking staleness but never a missing destination
+      Rescoped 2026-07-27: html-explain now has the same structural checks as html-codesign;
+      the row's _shared negative tests and codex-manifest checks are superseded by the v0.3.0
+      generator's own guards (gen-check in CI + lefthook + doctor).
 - [x] [P33-T22] Wire the freshness check into a pre-commit hook in this repo so drift is
       caught at commit time, not only by the banner (reader) and CI (push): run
       `just gen-check` from committed hook wiring — the repo currently has no hook
