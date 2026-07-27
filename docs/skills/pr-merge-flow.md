@@ -67,6 +67,13 @@ the pr-review-toolkit agents). Precedence: invocation flag or plain ask >
 `.claude/pr-merge-flow.local.md` (git-ignored per-repo preferences: `mode`,
 `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
 `continue-until-clean`, `defer-target`) > default (confirm, no deep).
+Every run opens with an arming line naming the resolved mode, its source,
+and what it authorizes. `mode: auto` read from the prefs file asks a
+one-line arming confirmation each run (an explicit `--auto` flag never
+does — that is current consent, and scheduled runs pass the flag). A prefs
+file that is tracked by git arrived with the repo, not from you: its
+authority keys (`mode`, `merge-method`, `delete-branch`) are ignored with
+a warning.
 
 ## Install
 
