@@ -136,6 +136,12 @@ one home. Every push runs CI: gen-check plus static gates (path scrub,
 placeholder scan, marketplace parity). Placement rules:
 [`smorin-harness/docs/skills-placement-strategy.md`](https://github.com/smorin/smorin-harness/blob/main/docs/skills-placement-strategy.md).
 
+### Hooks
+
+One-time setup: `uvx pre-commit install`. This wires the `gen-check` hook
+(`.pre-commit-config.yaml`) so a stale or hand-edited generated file fails
+the commit locally, not just in CI.
+
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).

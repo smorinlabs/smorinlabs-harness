@@ -1020,7 +1020,7 @@ portable; scope a separate fallback/project before testing that broader promise.
       `html-explain`, cover `_shared` and `.codex-plugin/plugin.json`, and add negative tests
       for typoed declarations, missing sources, missing destinations, stale contents, orphaned
       copies, and `check_freshness = false` masking staleness but never a missing destination
-- [ ] [P33-T22] Wire the freshness check into a pre-commit hook in this repo so drift is
+- [x] [P33-T22] Wire the freshness check into a pre-commit hook in this repo so drift is
       caught at commit time, not only by the banner (reader) and CI (push): run
       `just gen-check` from committed hook wiring — the repo currently has no hook
       framework, so introduce one (pre-commit framework preferred, matching the uv/ruff
@@ -1029,6 +1029,9 @@ portable; scope a separate fallback/project before testing that broader promise.
       step alongside the existing `just` recipes. Order-independent: the hook runs
       the pinned gen-check as-is, so it may land before the T12–T19 chain completes — but
       P33 does not close without it (see Automated Verification)
+      done — `.pre-commit-config.yaml` (local `gen-check` hook) + `uvx pre-commit install`
+      documented in README's Hooks note; TDD-proven fail-then-pass against a hand-edited
+      `_shared` file
 
 ### Ordered Delivery (hard dependency chain)
 - [x] [P33-T12] **1 — implement and test harness-kit:** complete T01, T03, T04, and T07–T10
