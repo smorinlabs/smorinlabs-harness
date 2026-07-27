@@ -265,10 +265,61 @@ check(
     "html-explain scaffold has :root token block",
     file_matches(f"{he_base}/assets/explainer-scaffold.html", r":root\s*\{"),
 )
+# Scaffold's real load-bearing components (canon L3.7's answer-first .lede,
+# the .meta byline, the enrichment-ladder rungs 2-7: figure/figcaption,
+# .note callout, .table-wrap table, .seq-step build-up, details/summary,
+# and the .widget control shell). Mirrors section 8's per-template
+# component-content checks, scoped to what this scaffold actually has.
+for marker in [
+    'class="lede"',
+    'class="meta"',
+    "<figcaption>",
+    'class="note"',
+    'class="table-wrap"',
+    'class="seq-step"',
+    "<details>",
+    "<summary>",
+    'class="widget"',
+    'class="widget-controls"',
+    'class="widget-out"',
+]:
+    check(
+        f"html-explain scaffold has {marker}",
+        file_contains(f"{he_base}/assets/explainer-scaffold.html", marker),
+    )
 check(
     "birchline explain overlay exists",
     file_exists("skills/use-html-theme/references/themes/birchline/explain.md"),
 )
+
+# Birchline explain overlay: component coverage + token purity, mirroring the
+# codesign overlay checks above but scoped to explain's real component set
+# (the enrichment-ladder pieces the overlay actually re-styles) and its own
+# tokens.md (html-explain has only one overlay, so no cross-theme slot
+# vocabulary is needed — every var() the overlay names must be a real
+# birchline token).
+EXPLAIN_COMPONENTS = [
+    "`.lede`", "`.meta`", "`figcaption`", "`.note`", "`.seq-step`",
+    "`details`", "`summary`", "`.widget`", "`.widget-out`",
+]
+explain_overlay = ROOT / "skills/use-html-theme/references/themes/birchline/explain.md"
+explain_tokens = ROOT / "skills/use-html-theme/references/themes/birchline/tokens.md"
+if explain_overlay.is_file() and explain_tokens.is_file():
+    explain_text = explain_overlay.read_text(encoding="utf-8")
+    for comp in EXPLAIN_COMPONENTS:
+        check(f"birchline explain overlay covers {comp}", comp in explain_text)
+    explain_token_vars = set(
+        re.findall(r"--([a-z0-9-]+)\s*:", explain_tokens.read_text(encoding="utf-8"))
+    )
+    explain_used = set(re.findall(r"var\(--([a-z0-9-]+)\)", explain_text))
+    explain_unknown = explain_used - explain_token_vars
+    check(
+        "birchline explain overlay token purity",
+        not explain_unknown,
+        detail=f"unknown vars: {sorted(explain_unknown)}" if explain_unknown else "",
+    )
+else:
+    check("birchline explain overlay + tokens present", False)
 
 print()
 if failures:
