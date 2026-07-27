@@ -212,7 +212,7 @@ anti-pattern.
   signal: the loop is reviewing its own output).
 
 Under the ratcheted bar, only would-ship-broken defects in the PR's own diff
-get code; everything else defaults to defer or refute. The scope axis of §1
+get code; everything else defaults to defer, decline, or refute. The scope axis of §1
 still governs *what class* a finding is; the ratchet only hardens *which
 classes* may produce commits.
 

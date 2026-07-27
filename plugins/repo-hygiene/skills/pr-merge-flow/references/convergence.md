@@ -55,7 +55,7 @@ defer the residue*.
 At the bound (4 cycles, or the ratchet tripping in two successive waves),
 report:
 
-- the trajectory line — e.g. `11 → 4 → 5 · cycle 3 · majority on fix-added
+- the trajectory line — e.g. `11 → 4 → 5 · cycle 3 · majority on review-added
   code · severity draining`;
 - the stopping question: **is the design still being questioned, or only
   the churn?**;

@@ -6,8 +6,8 @@ allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task
 
 # PR merge flow
 
-Resolve every review thread on an open PR — triage, verify, fix or refute — then
-drive it to merge per the chosen end mode.
+Resolve every review thread on an open PR — triage, verify, then fix, refute,
+decline, or defer — and drive it to merge per the chosen end mode.
 
 > **Iron Law: EVERY THREAD RESOLVED BEFORE MERGE; EVERY WAIT BOUNDED.** A thread
 > closes only as fixed (commit pushed, reply posted), refuted (reasoned reply
@@ -86,7 +86,8 @@ a count — as the source of truth.
 
 Each entry carries: author, file/line, the concrete claim, and its state
 through `discovered → verdict → fixed | refuted | declined | deferred |
-escalated → replied → resolved`. The ledger also carries the per-wave
+escalated → replied → resolved` (escalated stops at `replied` — only the
+user closes it). The ledger also carries the per-wave
 trajectory table defined in `references/convergence.md`.
 
 Re-fetch the REST inventory at the start of every cycle and after every push —
@@ -96,7 +97,7 @@ from the ledger is a thread merged over — then **merge by id**. The id is what
 one already investigated: ids already in the ledger keep their state and are
 never re-triaged, re-replied, or re-argued; ids you have not seen enter at
 `discovered` and go through the identical loop — verify, validate, then either
-refute-and-resolve or fix-comment-resolve. Never diff by body text, position,
+refute-and-resolve or the scope-gated dispositions of step 4. Never diff by body text, position,
 or count — reviewers reword and re-post, and only the id is stable. A rising
 thread count is the normal lifecycle, not a failed read and not a reason to
 re-plan.
@@ -167,7 +168,7 @@ everything else defaults to defer, decline, or refute.
 **Bound: 4 cycles, or the ratchet tripping in two successive waves — then
 check in. Never stop silently and never loop silently.** The check-in
 reports the trajectory line (e.g. `11 → 4 → 5 · cycle 3 · majority on
-fix-added code`), asks the stopping question — **is the design still being
+review-added code`), asks the stopping question — **is the design still being
 questioned, or only the churn?** — and lists per-thread recommended
 dispositions. Then ask the user, one question, three endings:
 
@@ -183,7 +184,8 @@ dispositions. Then ask the user, one question, three endings:
 - **Pause for redesign** — the escalated threads become the agenda;
   ready-report naming them and hand back.
 
-`--auto` cannot ask: a tripped ratchet or an escalated thread downgrades the
+`--auto` cannot ask: when the check-in fires (the bound, or the ratchet
+tripping in two successive waves) or a thread is escalated, downgrade the
 run to a ready-report naming the open items.
 
 `cycle-bound` and `continue-until-clean` may be set in
@@ -235,8 +237,8 @@ not work to do.
   (branch protection — required approvals, etc.), downgrade to the
   ready-report; never force.
 - **confirm** (default) — one final menu: a summary line (threads
-  fixed/refuted/declined/deferred — each deferral with its reference —
-  checks, title), then **Merge now** (default) /
+  fixed/refuted/declined/deferred — each deferral with its reference — any
+  escalated threads by id, checks, title), then **Merge now** (default) /
   **Run deep review first** (non-default) / **Don't merge**. After a
   completed merge, continue to step 9.
 - **ready** — report the ready-to-merge state plus the exact merge command,
