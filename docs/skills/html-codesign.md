@@ -64,9 +64,11 @@ Code, Codex, or a stakeholder who only ever saw the HTML file.
 ## Closing the delivery
 
 Both page skills in this plugin end the same way, via the shared
-`references/delivery-close.md` **at the plugin root** (read by each skill as
-`../../references/delivery-close.md`) — added on top of each skill's own
-delivery step, not in place of it.
+`references/delivery-close.md` at the plugin root — the editable source of
+truth. Each skill reads its own vendored copy at
+`references/_shared/delivery-close.md`, generated from that source by the
+pinned harness-kit generator (kept in sync by `gen-check`) — added on top of
+each skill's own delivery step, not in place of it.
 
 **The full absolute path, on its own line, every time.** A relative path is
 only meaningful from a working directory the reader cannot see, and the
@@ -111,7 +113,7 @@ context in front of you decides.
 |---|---|---|
 | Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-harness` (ships both skills) |
 | Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/use-html-theme/skills/html-codesign" ~/.claude/skills/html-codesign` |
-| Direct copy | No marketplace access | copy the whole `plugins/use-html-theme/` directory and place the skill from inside it. Both page skills read shared references at the **plugin root** (`../../references/`), so copying `skills/html-codesign/` on its own leaves those dangling |
+| Direct copy | No marketplace access | copy just `skills/html-codesign/` — its shared references travel with it as vendored copies at `references/_shared/`. The one thing that doesn't survive a lone copy: sibling-skill theme paths (`../use-html-theme/...`) |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`. Pure skill —
 behavior is identical on Codex and Claude Code.
