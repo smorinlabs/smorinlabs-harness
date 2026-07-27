@@ -1,6 +1,6 @@
 ---
 name: pr-merge-flow
-description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — validate the claim, verify by running code where possible, fix valid findings and push, refute invalid ones with a reasoned reply — every thread resolved either way. Cycles as fixes trigger new reviews, checks the PR title against repo conventions (CLAUDE.md, else Conventional Commits), then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout (rate-limit preflight, 20s+ floor, bounded monitors). Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
+description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — validate the claim, verify by running code where possible, then scope-gate it: fix small in-scope bugs, defer out-of-scope work to the repo tracker, decline style-only asks, escalate architectural redesigns to the user — every thread resolved either way. Measures convergence across cycles and ratchets the bar when reviews stop converging. Cycles as fixes trigger new reviews, checks the PR title against repo conventions (CLAUDE.md, else Conventional Commits), then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout (rate-limit preflight, 20s+ floor, bounded monitors). Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
 allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
 ---
 
@@ -229,17 +229,19 @@ not work to do.
 
 - **auto** — merge now (`gh pr merge` with the merge strategy chosen via the CLAUDE.md
   merge-strategy precedence — user > repo CLAUDE.md/AGENTS.md > repo GitHub settings >
-  global default (defaults to `--merge`); `delete-branch` per prefs), then report what was done and run
+  global default (defaults to `--merge`); `delete-branch` per prefs), then report what was done
+  — including every deferral with its reference — and run
   the step 9 survey — report-only in this mode. If GitHub rejects the merge
   (branch protection — required approvals, etc.), downgrade to the
   ready-report; never force.
 - **confirm** (default) — one final menu: a summary line (threads
-  fixed/refuted, checks, title), then **Merge now** (default) /
+  fixed/refuted/declined/deferred — each deferral with its reference —
+  checks, title), then **Merge now** (default) /
   **Run deep review first** (non-default) / **Don't merge**. After a
   completed merge, continue to step 9.
-- **ready** — report the ready-to-merge state plus the exact merge command;
-  mention deep review is available; include the step 9 survey as a
-  post-merge preview; stop.
+- **ready** — report the ready-to-merge state plus the exact merge command,
+  every deferral with its reference, mention deep review is available;
+  include the step 9 survey as a post-merge preview; stop.
 
 ## 8. Deep review (opt-in, never default)
 
@@ -249,6 +251,11 @@ option (confirm mode only). Engines — offer whichever are installed, singly
 or as a panel: `/code-review` at high effort, a Codex adversarial pass, the
 pr-review-toolkit review agents. Findings land as PR comments and feed
 straight back into step 3's loop; when the pass is clean, return to step 7.
+
+Deep-review findings enter the same ledger with the same scope-and-value
+classification and count toward the same ratchet — dispatched reviewers
+produce 8–33 findings per round against the bots' 1–5, so they get no
+exemption.
 
 ## 9. Post-merge cleanup (survey → confirm; never unasked)
 
@@ -328,9 +335,15 @@ this skill's.
 | "An id is an id — I'll reuse it on the other surface" | REST `id`, GraphQL `databaseId`, and `#discussion_r<id>` are one integer; the thread node id (`PRRT_…`) is GraphQL-only. Check the correlation table in `browser-fallback.md` before crossing surfaces. |
 | "The button list shrank, so the click worked" | Counting is not verification: the page renders lazily and bots post mid-run, so totals move on their own. Re-read *that* thread's own state. |
 | "I tried twice and it failed, so it is impossible" | Negative results need the same rigor as positive ones. Vary the axis that matters before concluding anything is impossible — and never cite a rule from this skill as proof a capability is absent. |
-| "Every finding is valid, but there are a lot — let me ask how to proceed" | Valid is not unclear. The rubric already names the action: fix, commit, reply, resolve. Ask only when a verdict is genuinely undecidable, never about strategy. |
+| "Many valid small findings — let me ask how to proceed" | Valid small in-scope is not unclear. The rubric names the action; proceed. |
+| "These findings extend the PR's own principle, so they're in scope" | Extension is the defer signal, not a fix mandate. Architectural asks are escalated, never absorbed. |
 | "New bot comments arrived — time to re-plan" | That is step 5, the ordinary re-review cycle. Merge them into the ledger and triage them the same way; the bound is 4 cycles then a check-in, not a fresh design discussion. |
 | "I collected the threads at the start, so I know the set" | The set is live. Re-fetch and merge every cycle and after every push — a thread that arrived while you worked still blocks the merge. |
+| "Findings dropped 11 → 4 → 2 — we're converging" | Count findings received per bot, never fixes chosen. The round that reported 2 received 5. |
+| "The count doubled — the review is escalating" | Bots stagger; a slow bot's first report is not a trend. Compare same-bot across waves. |
+| "One more fix for the fix and this thread class is closed" | Fix-of-fix is the divergence engine. Consider reverting to spec semantics first. |
+| "It is a one-word fix, cheaper to just do it" | Cheap to type is not cheap in system cost: each commit carries regression risk and draws a fresh wave. The value floor applies. |
+| "Fixing the nit is more polite than declining it" | A reasoned decline is the etiquette — bots accept it and have withdrawn findings. Fixing nits trains the loop that nits earn commits. |
 
 ## See also
 
@@ -338,6 +351,8 @@ this skill's.
   monitor-script pattern, REST/GraphQL split.
 - `references/triage.md` — thread queries, verdict rubric, reply etiquette,
   bot roster.
+- `references/convergence.md` — trajectory table, ratchet, wave-composition
+  signals, the check-in template.
 - `references/browser-fallback.md` — the GraphQL-exhaustion escape hatch:
   trigger conditions, reset guard, the ID correlation table, the per-thread
   anchoring that keeps identity exact, and the degrade path.
