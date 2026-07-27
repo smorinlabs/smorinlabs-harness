@@ -64,7 +64,8 @@ merge gate; the default) · `--ready` (prepare everything, you merge) ·
 `--deep` (opt-in deep review via `/code-review`, a Codex adversarial pass, or
 the pr-review-toolkit agents). Precedence: invocation flag or plain ask >
 `.claude/pr-merge-flow.local.md` (git-ignored per-repo preferences: `mode`,
-`deep-review`, `merge-method`, `delete-branch`) > default (confirm, no deep).
+`deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
+`continue-until-clean`, `defer-target`) > default (confirm, no deep).
 
 ## Install
 
