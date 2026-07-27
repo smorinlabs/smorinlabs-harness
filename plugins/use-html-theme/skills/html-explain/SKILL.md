@@ -46,8 +46,13 @@ doesn't.
 
 ## 1. Triage and confirm the target — before anything else
 
-Run `../../references/context-triage.md` in full. It classifies recent
+Run `references/_shared/context-triage.md` in full. It classifies recent
 context, produces a confidence verdict, and defines the gate.
+
+```harness-kit-shared-references
+context-triage.md
+delivery-close.md
+```
 
 **The gate always fires** — including when this skill was invoked explicitly
 and including when an argument named the topic. An argument shortens the
@@ -211,7 +216,7 @@ which difficulty rows the enrichments were spent on, and offer the obvious
 next moves — go deeper on a section, add a figure somewhere it was thin, or
 restyle under a different theme.
 
-Then close out per `../../references/delivery-close.md`: the **full absolute
+Then close out per `references/_shared/delivery-close.md`: the **full absolute
 path on its own line** (never relative — the reader is often not in the shell
 that made the file), and a short prose list of what they might want next.
 Those offers are strictly conditional — open it in the browser only when this
@@ -327,14 +332,14 @@ ranking. The next moves above lead; these come after them.
 
 # See also
 
-- `../../references/context-triage.md` — the shared preflight; the routing
+- `references/_shared/context-triage.md` — the shared preflight; the routing
   authority between this skill and `html-codesign`.
 - `html-codesign` (this plugin) — the sibling that collects decisions.
 - `use-html-theme` (this plugin) — owns the page's look.
 - `explain` (explain plugin, this marketplace) — the same job inline in
   chat, and the source of the concrete-anchored anatomy this skill renders.
 - `dataviz` (bundled with Claude Code) — quantitative charts, when present.
-- `../../references/delivery-close.md` — the shared close-out: absolute
+- `references/_shared/delivery-close.md` — the shared close-out: absolute
   path, then the conditional convenience offers.
 - `references/difficulty-map.md` — step 3: rating intrinsic difficulty and
   allocating the page's budget.

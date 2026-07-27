@@ -51,7 +51,12 @@ because the page never needs a live connection to an agent.
 
 # Preflight — triage and confirm, before anything else
 
-Run `../../references/context-triage.md` in full, then **gate**.
+Run `references/_shared/context-triage.md` in full, then **gate**.
+
+```harness-kit-shared-references
+context-triage.md
+delivery-close.md
+```
 
 **Never open codesign without human confirmation.** Building a decision page
 is expensive, and a page of the wrong questions is worse than no page — it
@@ -183,7 +188,7 @@ offer `html-explain` as the recommended option instead.
    record) or click "Another draft" / "Here are my answers" and paste the
    result back into any chat with you.
 
-   Then close out per `../../references/delivery-close.md`: the **full
+   Then close out per `references/_shared/delivery-close.md`: the **full
    absolute path on its own line** (never relative — the reader is often not
    in the shell that made the file), and a short prose list of what they might
    want next. Those offers are strictly conditional — open it in the browser
@@ -313,12 +318,12 @@ offer `html-explain` as the recommended option instead.
 
 # See also
 
-- `../../references/context-triage.md` — the shared preflight this skill
+- `references/_shared/context-triage.md` — the shared preflight this skill
   runs before anything else; the routing authority between the two page
   skills.
 - `html-explain` (this plugin) — the sibling: read-only explainer pages for
   settled material, including a deep dive on a question already resolved.
-- `../../references/delivery-close.md` — the shared close-out: absolute
+- `references/_shared/delivery-close.md` — the shared close-out: absolute
   path, then the conditional convenience offers.
 - `use-html-theme` (this plugin) — owns the page's look.
 - `question-walkthrough` (this marketplace) — the synchronous alternative:
