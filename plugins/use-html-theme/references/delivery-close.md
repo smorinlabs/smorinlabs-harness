@@ -7,7 +7,8 @@ explanation, `html-explain` after its principles summary.
 already says; it comes after. Nothing here removes the codesign paste-back
 loop or the explainer's go-deeper offers.
 
-Read from either skill's directory as `../../references/delivery-close.md`.
+Each citing skill reads its own vendored copy of this file at
+`references/_shared/delivery-close.md`, inside the skill's own directory.
 
 ## 1. The absolute path — always, on its own line
 

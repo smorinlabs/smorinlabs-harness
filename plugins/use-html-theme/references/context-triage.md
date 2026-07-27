@@ -10,7 +10,8 @@ by the same request shape: *"make me an HTML page about what we've been
 working on."* This file is the single routing authority; neither skill
 re-derives it.
 
-Read from either skill's directory as `../../references/context-triage.md`.
+Each citing skill reads its own vendored copy of this file at
+`references/_shared/context-triage.md`, inside the skill's own directory.
 
 ## Why a preflight at all
 
