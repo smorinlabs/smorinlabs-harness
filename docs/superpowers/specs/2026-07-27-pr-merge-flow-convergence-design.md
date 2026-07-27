@@ -221,7 +221,7 @@ classes* may produce commits.
 The step-5 check-in (at the cycle bound, or when the ratchet has tripped in
 two successive waves) reports:
 
-- the trajectory line, e.g. `11 → 4 → 5 · cycle 3 · majority on fix-added
+- the trajectory line, e.g. `11 → 4 → 5 · cycle 3 · majority on review-added
   code · severity rising`;
 - the stopping question: **"is the design still being questioned, or only
   the churn?"**;
