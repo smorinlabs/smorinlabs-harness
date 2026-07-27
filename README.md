@@ -138,9 +138,10 @@ placeholder scan, marketplace parity). Placement rules:
 
 ### Hooks
 
-One-time setup: `uvx pre-commit install`. This wires the `gen-check` hook
+One-time setup per clone: `uvx pre-commit install`. This wires the `gen-check` hook
 (`.pre-commit-config.yaml`) so a stale or hand-edited generated file fails
-the commit locally, not just in CI.
+the commit locally, not just in CI. It installs into the shared `.git/hooks`, so it
+activates for every worktree of that clone, not just the one it was run from.
 
 ## License
 
