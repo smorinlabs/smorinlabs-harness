@@ -136,6 +136,14 @@ one home. Every push runs CI: gen-check plus static gates (path scrub,
 placeholder scan, marketplace parity). Placement rules:
 [`smorin-harness/docs/skills-placement-strategy.md`](https://github.com/smorin/smorin-harness/blob/main/docs/skills-placement-strategy.md).
 
+### Hooks
+
+One-time setup per clone: `lefthook install` (requires
+[lefthook](https://lefthook.dev/), e.g. `brew install lefthook`). This wires the
+`gen-check` hook (`lefthook.yml`) so a stale or hand-edited generated file fails
+the commit locally, not just in CI. It installs into the shared `.git/hooks`, so it
+activates for every worktree of that clone, not just the one it was run from.
+
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).
