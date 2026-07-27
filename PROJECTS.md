@@ -874,7 +874,7 @@ ephemeral; that is a real answer, not a non-answer.
 
 ---
 
-## [~] Project P33: vendor plugin-root references into citing skills (harness-kit)
+## [x] Project P33: vendor plugin-root references into citing skills (harness-kit)
 **Goal**: A skill directory copied on its own must still resolve every **declared plugin-root
 shared reference** it uses. Two skills (`html-codesign`, `html-explain`) currently read
 plugin-root files via `../../references/` across 8 call sites. That path escapes a lone copied
@@ -962,41 +962,56 @@ portable; scope a separate fallback/project before testing that broader promise.
   below as future task rows
 
 ### Tests & Tasks
-- [ ] [P33-T01] harness-kit: generate each explicitly declared plugin-root reference from
+- [x] [P33-T01] harness-kit: generate each explicitly declared plugin-root reference from
       `plugins/<plugin>/references/<name>.md` to
       `plugins/<plugin>/skills/<skill>/references/_shared/<name>.md`. Render the destination
       as `banner(source_relative_path) + source_bytes`, matching the `_write_if_changed` model
       in `harness-kit/src/harness_kit/manifests.py`; the banner path must be deterministic,
       POSIX-style, and repo-relative, never an absolute checkout path that would trip CI's
       tracked-file home-directory scrub
-- [ ] [P33-T02] Rewrite the 8 call sites in `html-codesign` + `html-explain` to cite
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; deterministic repo-relative banner rendering covered by its unit suite.
+- [x] [P33-T02] Rewrite the 8 call sites in `html-codesign` + `html-explain` to cite
       `references/_shared/<name>.md`; delete the `../../` form and add the explicit declaration
       block from T09. This migration must execute only at ordered delivery step T16, after the
       released harness-kit revision is locked and proven in a fresh environment
-- [ ] [P33-T03] `gen-check`: compare each destination with rendered expected content
+      Done — executed as the T17 migration (PR #24); 8 call sites, zero ../../references/
+      remain.
+- [x] [P33-T03] `gen-check`: compare each destination with rendered expected content
       (`banner(source_relative_path) + source_bytes`), not raw source bytes; fail on stale or
       hand-edited content (when freshness checking is enabled, per T04), unreadable source,
       unreadable/missing destination, declaration /
       citation mismatch, non-repo-relative banner, and exact-case mismatch. Resolve and compare
       path components with exact spelling so a case-insensitive local filesystem cannot mask
       a failure on case-sensitive `ubuntu-latest`
-- [ ] [P33-T04] Add the explicit per-plugin schema
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; rendered-content comparison plus exact-case mismatch detection covered by its
+      unit suite.
+- [x] [P33-T04] Add the explicit per-plugin schema
       `[generated_shared_references] check_freshness = false`; automatic freshness checking is
       the default. The setting suppresses only the staleness/source-equality comparison in
       `gen --check` for that plugin's generated `_shared` destinations; `harness-kit gen`
       still regenerates copies on every run, and destination-existence checking is
       unconditional — an `_shared` citation with no readable destination is always a hard
       error in both `gen` and `gen --check`, regardless of the setting
-- [ ] [P33-T05] Keep `skill-system-doctor` at its documented 12 checks: use Check 1's
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; the usable freshness opt-out (staleness-only, existence always unconditional)
+      covered by its unit suite.
+- [x] [P33-T05] Keep `skill-system-doctor` at its documented 12 checks: use Check 1's
       fleet-wide `gen-check` for canonical source freshness, and extend Check 9 to resolve
       installed targets. A missing generated reference is a NON-baselineable error, never an
       advisory/baselineable Check 9 finding and never "healthy" because of T04
-- [ ] [P33-T06] `.gitattributes linguist-generated` on the vendored paths so reviews fold them
-- [ ] [P33-T07] Rewrite the self-locating sentences in plugin-root
+      Done — executed as T20 (smorin-harness PR #34, shipped v0.12.0).
+- [x] [P33-T06] `.gitattributes linguist-generated` on the vendored paths so reviews fold them
+      Done — landed in PR #24 (linguist-generated on _shared paths).
+- [x] [P33-T07] Rewrite the self-locating sentences in plugin-root
       `references/context-triage.md` and `references/delivery-close.md` so generated copies do
       not instruct the reader to escape via `../../references/<name>.md`; make generation
       refuse any declared source whose bytes contain the literal `../../references/`
-- [ ] [P33-T08] Add `_shared` orphan pruning modeled on `_prune_orphan_vendors`, but scoped to
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; source refusal on the literal `../../references/` string covered by its unit
+      suite.
+- [x] [P33-T08] Add `_shared` orphan pruning modeled on `_prune_orphan_vendors`, but scoped to
       banner-owned generated references rather than `scripts/_vendor`. Cover citation removal,
       skill rename/removal, and source rename/removal, with declared-reference precedence:
       while a declaration or operational citation still names a copy, a missing or renamed
@@ -1005,16 +1020,25 @@ portable; scope a separate fallback/project before testing that broader promise.
       change the generated set or trigger pruning. Normal `gen` removes
       proven generated orphans; `gen --check` reports them and exits nonzero without deleting
       them
-- [ ] [P33-T09] Replace literal-text auto-declaration with one fenced
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; declared-precedence pruning of only unreferenced generated copies covered by its
+      unit suite.
+- [x] [P33-T09] Replace literal-text auto-declaration with one fenced
       `harness-kit-shared-references` block in each participating SKILL.md. Parse only that
       structured position, accept normalized plugin-root basenames only, reject malformed,
       duplicate, traversal, typoed, case-mismatched, or unmatched entries, and document the
       load-bearing SKILL.md-only scan scope. Literal examples/prose outside the block must not
       silently create copies
-- [ ] [P33-T10] Add schema validation to `load_meta` for the
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; declaration-block validation (malformed/duplicate/traversal/typoed/case-mismatched
+      entries) covered by its unit suite.
+- [x] [P33-T10] Add schema validation to `load_meta` for the
       `[generated_shared_references]` table and its `check_freshness` boolean; reject unknown
       tables/keys and wrong types so a typoed opt-out cannot be silently discarded while
       misleading the plugin author
+      Done — implemented in harness-kit v0.3.0 (PR #3, 42 feature tests) and hardened in
+      v0.3.1; meta schema validation (unknown tables/keys, wrong types) covered by its unit
+      suite.
 - [x] [P33-T11] Extend `plugins/use-html-theme/scripts/validate.py` beyond html-codesign and
       the Claude manifest: resolve declared references for BOTH `html-codesign` and
       `html-explain`, cover `_shared` and `.codex-plugin/plugin.json`, and add negative tests
@@ -1095,13 +1119,19 @@ portable; scope a separate fallback/project before testing that broader promise.
       docs page without adding a 13th check, bump the plugin version, regenerate manifests,
       run its validation, and release the updated plugin
       Done — code merged in the doctor PR; shipped as smorin-harness v0.12.0 (skill-fleet 0.12.0).
-- [ ] [P33-TS01] Install-mode matrix: prove declared plugin-root shared references resolve in
+- [x] [P33-TS01] Install-mode matrix: prove declared plugin-root shared references resolve in
       all four rows of the evidence table — real Claude plugin install, real Codex marketplace
       install, dev symlink, and **direct copy of a lone skill folder** (the regression)
+      Done 2026-07-27 — all four modes proven with generated content: real Codex marketplace
+      install (8/8 resolution checks in the versioned cache), dev symlink (doctor Check 9 live
+      run resolved all 8 installed citations), direct copy (T21 fixture lone-copy + real-skill
+      scratch copies), and real Claude GitHub-marketplace install (below).
 - [x] [P33-TS02] Drift test: hand-edit a vendored copy, confirm `gen-check` fails
       Proven by the T22 hook PR's TDD transcript: a hand-edited vendored copy blocked the commit with gen-check naming the stale file (PR #26).
-- [ ] [P33-TS03] Fleet regression: `gen-check` green across all 9 plugins after the change
-- [ ] [P33-TS04] Real-Claude gate — **narrowed 2026-07-26; the mechanism half is already
+- [x] [P33-TS03] Fleet regression: `gen-check` green across all 9 plugins after the change
+      Done — fleet-wide gen-check green in CI on every merge since the migration, plus the T16
+      fresh-env run.
+- [x] [P33-TS04] Real-Claude gate — **narrowed 2026-07-26; the mechanism half is already
       proven.** A real marketplace install DOES materialize nested skill subdirectories at the
       `_shared` shape: `claude-plugins-official/cloudflare/1.0.0/skills/cloudflare/references/`
       `<sub>/<file>.md` is a real directory from a real install (315 such files across
@@ -1115,9 +1145,16 @@ portable; scope a separate fallback/project before testing that broader promise.
       operator step, not automatable. Note for whoever runs it: the earlier "source type your
       Claude Code version does not support" failure came from a LOCAL-PATH marketplace attempt
       and tests the source type, not directory handling — install from the GitHub marketplace
-- [ ] [P33-TS05] Linux case gate: on case-sensitive `ubuntu-latest`, exercise an intentionally
+      Done 2026-07-27 — operator ran /plugin marketplace add + /plugin install from the GitHub
+      marketplace; 8/8 validation checks in the installed cache (4 bannered _shared files, 4
+      in-place citation resolutions, zero escape paths). The first attempt caught a real defect
+      — marketplace author fields violated Claude Code's schema — fixed in harness-kit v0.3.1 +
+      PR #29 before the passing retry.
+- [x] [P33-TS05] Linux case gate: on case-sensitive `ubuntu-latest`, exercise an intentionally
       mis-cased source, declaration, and destination; each must fail with an exact-case
       diagnostic, while the correctly cased generated tree passes
+      Done — case-gate tests (mis-cased source/destination/citation) merged in harness-kit
+      PR #6, green on case-sensitive ubuntu-latest CI.
 
 ### Automated Verification
 - `just gen-check` exits 0 with vendored copies present and fresh
