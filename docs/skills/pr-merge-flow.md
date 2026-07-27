@@ -4,10 +4,21 @@ Drives an open GitHub PR to merge by resolving every review thread before the
 merge happens. It waits a bounded few minutes for AI reviewer bots (Claude,
 Codex, Greptile, Copilot, …) to finish commenting, then triages each unresolved
 thread with review-receiving rigor: restate the claim, verify it by running the
-code or a test where possible, fix valid findings (commit, push, reply naming
-the fix, resolve) and refute invalid ones with a reasoned reply before
-resolving — never a silent resolve. Because pushed fixes can trigger fresh bot
-reviews, it cycles (bounded, 4 by default, then a check-in offering to continue under a 10-minute wall clock) until a pass is clean, checks the PR
+code or a test where possible, scope-gate valid findings — small in-scope bugs above the value floor get a
+fix (commit, push, reply naming the fix, resolve); valid-but-out-of-scope
+work is deferred to the repo's tracker (PROJECTS.md rows, GitHub issues, or
+an external tracker, detected from repo evidence) with the reference in the
+reply; style-only or convention-conflicting asks are declined with a
+one-line reason; architectural redesigns are never absorbed into the PR —
+they become a design-question comment escalated to the user and hold the
+merge — and refute invalid claims with a reasoned reply before resolving —
+never a silent resolve. Because pushed fixes can trigger fresh bot
+reviews, it cycles with the trajectory measured per reviewer wave (findings received,
+never fixes chosen; the bar ratchets at cycle 3, on non-decreasing same-bot
+counts, or when a wave mostly targets review-added code), bounded at 4
+cycles before a check-in offering three endings — continue under a
+10-minute wall clock, merge and defer the residue, or pause for redesign —
+until a pass is clean, checks the PR
 title against repo conventions (repo `CLAUDE.md` first, Conventional Commits as
 the default — with squash merges the title becomes the commit subject), then
 ends per mode. All GitHub polling is quota-safe: rate-limit preflight, a
