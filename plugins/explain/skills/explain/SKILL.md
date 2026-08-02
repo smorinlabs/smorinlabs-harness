@@ -14,6 +14,8 @@ description: >
   (example per option + recommendation), deeper, steps (operator
   instructions). Not for manual testing
   steps (manual-test-guide) or whole-session recaps.
+arguments: [target]
+argument-hint: "[options|deeper|steps] [target]"
 allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git diff:*), Bash(git log:*), Bash(git show:*)
 ---
 

@@ -1176,7 +1176,7 @@ portable; scope a separate fallback/project before testing that broader promise.
 
 ---
 
-## [~] Project P34: pr-merge-flow argument-hint (plugin v0.7.1)
+## [>] Project P34: pr-merge-flow argument-hint (plugin v0.7.1) — publish folded into P35
 **Goal**: pr-merge-flow's `--auto`/`--confirm`/`--ready`/`--deep` flags were documented
 only in the SKILL.md body's `## Arguments` section (prose the model reads on load), never
 in frontmatter — so the `/`-menu's tab-completion had nothing to show, even though the
@@ -1203,17 +1203,72 @@ flags, not positional args, so `argument-hint` alone carries the shape.
       at 1021 chars, no placeholders), docs ✓ (per-skill page + README row already present,
       unchanged), conventions ✓ (`gen-check` green, listed in marketplace.json), loads ✓
       (see P34-TS01) — 0 blocking findings
-- [ ] [P34-T03] Commit, push, PR, merge — holding for user confirmation before any
-      shared-state action (push/PR are not pre-authorized by the worktree-discipline rule)
-- [ ] [P34-T04] Cross-repo follow-up: `smorin-harness`'s `skill-create` (plugin
+- [>] [P34-T03] Commit, push, PR, merge — held locally at the closeout gate per explicit
+      user choice; folded into P35-T04, which publishes this repo's whole
+      argument-hint branch (pr-merge-flow + the P35 audit fixes) as one PR
+- [x] [P34-T04] Cross-repo follow-up: `smorin-harness`'s `skill-create` (plugin
       `skill-fleet`) updated, via the `skill-create` skill itself, to set `argument-hint`
       whenever a scaffolded skill declares flags/positional args — contingent on this
-      project's codex-compatibility result (confirmed compatible; see P34-TS01)
+      project's codex-compatibility result (confirmed compatible; see P34-TS01). Landed as
+      `smorin-harness` P36
 
 ### Automated Verification
 - `just gen-check` exits 0
 - `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep` exits 0, no
   errors, no warnings attributable to `pr-merge-flow/SKILL.md`
+
+---
+
+## [~] Project P35: fleet-wide argument-hint audit — smorinlabs-harness half (7 skills)
+**Goal**: P34 fixed pr-merge-flow but assumed (wrongly, per its own Out of Scope note) that
+no other repo-hygiene skill needed the same fix. Requested follow-up: audit every skill in
+both `smorin-harness` and `smorinlabs-harness` against the `argument-hint` house-style rule
+P34/P36 established, one Opus subagent per skill (each free to spawn Sonnet/Haiku search
+subagents), dispatched in parallel. This project covers this repo's half: 22 skills audited,
+7 needed fixes. The `smorin-harness` half (17 skills, 4 fixes) is tracked as that repo's P37.
+
+**Findings (this repo, 22 skills)**
+- **NEEDS_HINT → fixed (7)**: `explain`, `ci-audit`, `manual-test-guide`, `readme-sync`,
+  `version-check`, `html-codesign`, `html-explain`
+- **Already correct (3)**: `project-add`, `project-audit` (one cosmetic nit — hint says
+  `[--check]` where the body documents `--<check-id>`; non-blocking, not fixed here),
+  `project-refine`
+- **No args needed (11)**: `factor-architect`, `factor-dedup`, `factor-scan`,
+  `using-factor-harness`, `guided-research`, `project-next`, `using-project-harness`,
+  `question-walkthrough`, `reader-steps`, `repo-finder`, `use-html-theme` — all fire by
+  description-matching alone with no typed invocation surface
+
+**Out of Scope**
+- `project-audit`'s `[--check]` → `[--<check-id>]` cosmetic nit — flagged, not fixed;
+  functions correctly as written.
+- Any smorin-harness finding — that repo's own P37.
+
+### Tests & Tasks
+- [x] [P35-T01] 22 Opus audit subagents dispatched in parallel (2 batches of foreground
+      calls), each checking frontmatter vs body for real invocation-time argument evidence
+      (flags, positional placeholders, a dedicated Arguments section) vs natural-language
+      trigger phrases (not arguments)
+- [x] [P35-T02] 7 fixes applied in the P34 worktree (`worktree-pmf-argument-hint`):
+      `arguments`/`argument-hint` added per skill, placed before `allowed-tools` (or after
+      `description` where no `allowed-tools` key exists)
+- [x] [P35-T03] 3 plugin.meta.toml bumps (patch, matching P34's classification —
+      metadata-only, no behavior change): `explain` 0.3.1→0.3.2, `repo-hygiene` 0.7.1→0.7.2
+      (stacks on P34's own 0.7.0→0.7.1), `use-html-theme` 0.10.0→0.10.1; `just gen` +
+      `gen-check` green
+- [x] [P35-TS01] Diff scan: all 7 edits are single-line frontmatter additions, zero
+      description drift (no docs/README refresh owed), zero secrets/personal-paths/placeholders
+- [x] [P35-TS02] Gate: `skillsmith verify -t claude-code -t codex --deep` on all 3 affected
+      plugins (`explain`, `repo-hygiene`, `use-html-theme`) — 0 errors, 0 warnings beyond the
+      pre-existing unrelated `claude._generated` info line; skill-quality layers 1-3 applied
+      directly (content/docs/conventions all clean, no changes owed)
+- [ ] [P35-T04] Push `worktree-pmf-argument-hint`, open PR carrying both P34 (pr-merge-flow)
+      and P35 (this project) as one branch, per explicit user instruction
+
+### Automated Verification
+- `just gen-check` exits 0
+- `skillsmith verify plugins/explain -t claude-code -t codex --deep` exits 0
+- `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep` exits 0
+- `skillsmith verify plugins/use-html-theme -t claude-code -t codex --deep` exits 0
 
 ---
 
