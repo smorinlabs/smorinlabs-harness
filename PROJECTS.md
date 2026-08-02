@@ -1176,4 +1176,45 @@ portable; scope a separate fallback/project before testing that broader promise.
 
 ---
 
+## [~] Project P34: pr-merge-flow argument-hint (plugin v0.7.1)
+**Goal**: pr-merge-flow's `--auto`/`--confirm`/`--ready`/`--deep` flags were documented
+only in the SKILL.md body's `## Arguments` section (prose the model reads on load), never
+in frontmatter — so the `/`-menu's tab-completion had nothing to show, even though the
+skill honors the flags correctly when typed by hand. Add `argument-hint` to frontmatter,
+matching the pattern already used by three `project-harness` skills
+(`arguments`/`argument-hint`, documented in that plugin's `_conventions.md`, sourced from
+the official `code.claude.com/docs/en/skills.md` spec). No `arguments:` list — these are
+flags, not positional args, so `argument-hint` alone carries the shape.
+
+**Out of Scope**
+- Rewriting the body `## Arguments` prose — unaffected, still the source the model reads.
+- Backfilling `argument-hint` onto other repo-hygiene skills (`ci-audit`, `manual-test-guide`,
+  `readme-sync`, `version-check`) — none currently take flags/args; no gap to close there.
+
+### Tests & Tasks
+- [x] [P34-T01] `argument-hint: "[--auto|--confirm|--ready] [--deep]"` added to
+      `pr-merge-flow/SKILL.md` frontmatter
+- [x] [P34-TS01] `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep`:
+      both `pass`/`warn`(pre-existing, unrelated `_generated` info on claude-code manifest
+      only) — zero findings attributable to the new field on either tool; codex deep mode
+      loads the plugin in a real sandboxed session with 0 findings
+- [x] [P34-T02] plugin.meta.toml 0.7.0 → 0.7.1; `just gen` + `gen-check` green
+- [x] [P34-TS02] Gate: skill-quality — content ✓ (frontmatter valid, description unchanged
+      at 1021 chars, no placeholders), docs ✓ (per-skill page + README row already present,
+      unchanged), conventions ✓ (`gen-check` green, listed in marketplace.json), loads ✓
+      (see P34-TS01) — 0 blocking findings
+- [ ] [P34-T03] Commit, push, PR, merge — holding for user confirmation before any
+      shared-state action (push/PR are not pre-authorized by the worktree-discipline rule)
+- [ ] [P34-T04] Cross-repo follow-up: `smorin-harness`'s `skill-create` (plugin
+      `skill-fleet`) updated, via the `skill-create` skill itself, to set `argument-hint`
+      whenever a scaffolded skill declares flags/positional args — contingent on this
+      project's codex-compatibility result (confirmed compatible; see P34-TS01)
+
+### Automated Verification
+- `just gen-check` exits 0
+- `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep` exits 0, no
+  errors, no warnings attributable to `pr-merge-flow/SKILL.md`
+
+---
+
 - [ ] Regression Test Status
