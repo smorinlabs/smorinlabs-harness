@@ -1281,7 +1281,7 @@ subagents), dispatched in parallel. This project covers this repo's half: 22 ski
 
 ---
 
-## [~] Project P36: local pre-commit mirrors CI's static-checks job
+## [x] Project P36: local pre-commit mirrors CI's static-checks job
 **Goal**: P35's own CI failure (P35-T05) exposed a real gap: `lefthook.yml`'s pre-commit
 block mirrors CI's `gen-check` and `plugin-validate` jobs (per its own header comment —
 "a stale or hand-edited generated file must fail here, not only on push") but never
@@ -1319,8 +1319,9 @@ follow-up if a parity drift ever reaches CI the same way this one did.
       `{{PLACEHOLDER}}` in README.md each correctly fail their respective hook with the
       expected message;
       working tree confirmed clean after cleanup
-- [ ] [P36-T03] Commit, push, PR — holding for user confirmation before any shared-state
-      action
+- [x] [P36-T03] Pushed `worktree-lefthook-static-checks`, opened
+      [PR #35](https://github.com/smorinlabs/smorinlabs-harness/pull/35), per explicit user
+      instruction
 
 ### Automated Verification
 - `lefthook run pre-commit` (with any file staged) exits 0 on a clean tree
