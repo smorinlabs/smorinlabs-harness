@@ -35,7 +35,7 @@ pre-commit:
       run: >-
         needle='skill''smith';
         status=0;
-        git grep -niE "$needle" -- ':!.github/workflows/ci.yml' ':!lefthook.yml' || status=$?;
+        git grep -niE "$needle" -- ':!.github/workflows/ci.yml' || status=$?;
         case "$status" in
           0) echo "FAIL: private-tooling reference found while it is still private" >&2; exit 1 ;;
           1) exit 0 ;;

@@ -1309,9 +1309,8 @@ follow-up if a parity drift ever reaches CI the same way this one did.
       `no-placeholders-in-docs` to `lefthook.yml`'s `pre-commit.commands`, same shell logic
       as CI (status-code case/esac), GitHub Actions `::error::` annotations swapped for
       plain `FAIL: ... >&2`. `no-private-tooling-refs` keeps CI's own `needle='skill''smith'`
-      quote-obfuscation (so the check's source line never matches its own pattern) and adds
-      `lefthook.yml` itself to the path exclusion, mirroring how CI excludes its own
-      workflow file
+      quote-obfuscation, which alone is sufficient — the reconstructed needle never matches
+      the file's own split-literal source
 - [x] [P36-TS01] Positive test: `lefthook run pre-commit` with `lefthook.yml` staged — all
       3 new hooks + `gen-check` pass clean
 - [x] [P36-TS02] Negative test (3 scratch files, created/asserted-fail/deleted, never
@@ -1322,6 +1321,15 @@ follow-up if a parity drift ever reaches CI the same way this one did.
 - [x] [P36-T03] Pushed `worktree-lefthook-static-checks`, opened
       [PR #35](https://github.com/smorinlabs/smorinlabs-harness/pull/35), per explicit user
       instruction
+- [x] [P36-T04] Copilot review, verified before merge: real finding — `no-private-tooling-refs`
+      originally added a `lefthook.yml` self-exclusion CI's own scan doesn't have (CI excludes
+      only `.github/workflows/ci.yml`), breaking the parity this whole project exists to
+      establish — a plain (non-obfuscated) mention added to `lefthook.yml` later would have
+      passed local pre-commit while still failing CI. Removed; re-verified the
+      quote-obfuscation alone keeps the file from self-matching, both positive and negative
+      re-tested. Second finding (PROJECTS.md task line looked unchecked) was stale — anchored
+      to commit `7c00f7a`, already fixed in `72a8eff` before the review ran; replied, no
+      code change
 
 ### Automated Verification
 - `lefthook run pre-commit` (with any file staged) exits 0 on a clean tree
