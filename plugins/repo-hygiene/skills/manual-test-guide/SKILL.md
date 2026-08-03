@@ -1,6 +1,8 @@
 ---
 name: manual-test-guide
 description: Use when the user asks "how to manually test", "what are manual testing steps", "what commands to test", "how to test the latest features", "what to test", "what are the testing commands", or any request for manual testing instructions and validation steps for a project.
+arguments: [feature-or-area]
+argument-hint: "[--recent|--full] [feature-or-area]"
 ---
 
 # Manual test guide

@@ -15,6 +15,8 @@ description: |
   questions; this explains — including a deep dive on one already resolved).
   Inline chat explanations are the `explain` skill; charts defer to dataviz
   when present. Pairs with use-html-theme.
+arguments: [topic]
+argument-hint: "[topic]"
 allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion, Bash
 ---
 

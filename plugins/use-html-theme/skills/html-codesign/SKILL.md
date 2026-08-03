@@ -15,6 +15,8 @@ description: |
   Answered questions are out of scope; if context is mostly settled material
   it offers html-explain instead. Styled by use-html-theme. NOT for signing
   macOS/iOS binaries (Apple's codesign).
+arguments: [topic]
+argument-hint: "[topic]"
 allowed-tools: Read Write Edit Glob Bash AskUserQuestion
 ---
 
