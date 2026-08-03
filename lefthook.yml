@@ -2,6 +2,10 @@
 # Mirrors CI's gen-check job (.github/workflows/ci.yml): a stale or
 # hand-edited generated file must fail here, not only on push.
 # See lefthook docs: https://lefthook.dev/configuration/
+#
+# no-personal-paths / no-private-tooling-refs / no-placeholders-in-docs mirror
+# CI's static-checks job (same file) for the same reason: a public-repo scrub
+# violation must fail here, not only on push.
 
 min_version: 1.13.0
 
@@ -18,3 +22,42 @@ pre-commit:
         command -v claude >/dev/null 2>&1 ||
         { echo "FAIL: claude CLI not on PATH — needed to validate plugin manifests" >&2; exit 1; }
         && claude plugin validate .
+    no-personal-paths:
+      run: >-
+        status=0;
+        git grep -nE '/Users/[[:alnum:]_.-]+' -- ':!.github' || status=$?;
+        case "$status" in
+          0) echo "FAIL: absolute personal paths found (see above) — public-repo scrub rule" >&2; exit 1 ;;
+          1) exit 0 ;;
+          *) echo "FAIL: personal-path scan failed (exit $status)" >&2; exit "$status" ;;
+        esac
+    no-private-tooling-refs:
+      run: >-
+        needle='skill''smith';
+        status=0;
+        git grep -niE "$needle" -- ':!.github/workflows/ci.yml' || status=$?;
+        case "$status" in
+          0) echo "FAIL: private-tooling reference found while it is still private" >&2; exit 1 ;;
+          1) exit 0 ;;
+          *) echo "FAIL: private-tooling scan failed (exit $status)" >&2; exit "$status" ;;
+        esac
+    no-placeholders-in-docs:
+      run: >-
+        fail=0;
+        status=0;
+        grep -nE '\{\{|TBD|<TODO' README.md || status=$?;
+        case "$status" in
+          0) echo "FAIL: unfilled placeholder found in README.md" >&2; fail=1 ;;
+          1) : ;;
+          *) echo "FAIL: README.md placeholder scan failed (exit $status)" >&2; exit "$status" ;;
+        esac;
+        if [ -d docs ]; then
+          status=0;
+          grep -rnE '\{\{|TBD|<TODO' docs --exclude-dir=templates || status=$?;
+          case "$status" in
+            0) echo "FAIL: unfilled placeholder found in docs/" >&2; fail=1 ;;
+            1) : ;;
+            *) echo "FAIL: docs/ placeholder scan failed (exit $status)" >&2; exit "$status" ;;
+          esac;
+        fi;
+        exit "$fail"

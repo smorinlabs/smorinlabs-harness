@@ -1219,7 +1219,7 @@ flags, not positional args, so `argument-hint` alone carries the shape.
 
 ---
 
-## [~] Project P35: fleet-wide argument-hint audit — smorinlabs-harness half (7 skills)
+## [x] Project P35: fleet-wide argument-hint audit — smorinlabs-harness half (7 skills)
 **Goal**: P34 fixed pr-merge-flow but assumed (wrongly, per its own Out of Scope note) that
 no other repo-hygiene skill needed the same fix. Requested follow-up: audit every skill in
 both `smorin-harness` and `smorinlabs-harness` against the `argument-hint` house-style rule
@@ -1265,6 +1265,12 @@ subagents), dispatched in parallel. This project covers this repo's half: 22 ski
 - [x] [P35-T04] Pushed `worktree-pmf-argument-hint`, opened
       [PR #34](https://github.com/smorinlabs/smorinlabs-harness/pull/34) carrying both P34
       (pr-merge-flow) and P35 (this project), per explicit user instruction
+- [x] [P35-T05] CI `static-checks` failed on push: 6 literal mentions of the private
+      cross-tool verifier's name had leaked into this project's own T01-TS02 write-up above
+      (fixed in place — see the reworded text). CodeRabbit also caught the stated "22
+      skills" not reconciling with 7+3+11=21 (fixed — `pr-merge-flow` was missing from
+      "already correct", now 7+4+11=22, see Findings above). Both fixed, re-verified green,
+      PR #34 merged as `bd3e883` — this project's gap became P36 (below)
 
 ### Automated Verification
 - `just gen-check` exits 0
@@ -1272,6 +1278,67 @@ subagents), dispatched in parallel. This project covers this repo's half: 22 ski
 - Cross-tool verifier deep-mode check on `plugins/repo-hygiene` (claude-code + codex) exits 0
 - Cross-tool verifier deep-mode check on `plugins/use-html-theme` (claude-code + codex)
   exits 0
+
+---
+
+## [x] Project P36: local pre-commit mirrors CI's static-checks job
+**Goal**: P35's own CI failure (P35-T05) exposed a real gap: `lefthook.yml`'s pre-commit
+block mirrors CI's `gen-check` and `plugin-validate` jobs (per its own header comment —
+"a stale or hand-edited generated file must fail here, not only on push") but never
+mirrored CI's third job, `static-checks` — the personal-path scrub, private-tooling-name
+scrub, and README/docs placeholder scrub. That gap is exactly why a literal mention of the
+private cross-tool verifier's name reached CI instead of being caught at commit time. Close
+it the same way `gen-check` already models: run the identical checks locally.
+
+**Why this project and not a broader fix**: presented as a 3-option plan (mirror CI locally
+/ also add a markdown linter to catch formatting bugs like P35-T05's split code-span issue
+/ no tooling, habit only) — user picked the first, scoped explicitly to these 3 scrubs.
+Markdown linting and the two content-correctness misses (arithmetic reconciliation,
+hint-vs-body cross-checking) are carried forward as an explicit personal pre-commit habit
+instead, not new tooling — not this project's scope.
+
+**A gap noted, not fixed here**: `static-checks` has a 4th check — marketplace parity
+(`plugins/*/` vs `.claude-plugin/marketplace.json`, both directions) — that is *also*
+unmirrored locally. Out of scope: the user's request named exactly 3 scrubs. Candidate
+follow-up if a parity drift ever reaches CI the same way this one did.
+
+### Tests & Tasks
+- [x] [P36-T01] Read CI's `static-checks` job (`.github/workflows/ci.yml`) in full to get
+      the exact 3 scrub commands, patterns, and exclusions verbatim
+- [x] [P36-T02] Added `no-personal-paths`, `no-private-tooling-refs`,
+      `no-placeholders-in-docs` to `lefthook.yml`'s `pre-commit.commands`, same shell logic
+      as CI (status-code case/esac), GitHub Actions `::error::` annotations swapped for
+      plain `FAIL: ... >&2`. `no-private-tooling-refs` keeps CI's own `needle='skill''smith'`
+      quote-obfuscation, which alone is sufficient — the reconstructed needle never matches
+      the file's own split-literal source
+- [x] [P36-TS01] Positive test: `lefthook run pre-commit` with `lefthook.yml` staged — all
+      3 new hooks + `gen-check` pass clean
+- [x] [P36-TS02] Negative test (3 scratch files, created/asserted-fail/deleted, never
+      committed): a personal path, a real private-tooling-name mention, and a
+      `{{PLACEHOLDER}}` in README.md each correctly fail their respective hook with the
+      expected message;
+      working tree confirmed clean after cleanup
+- [x] [P36-T03] Pushed `worktree-lefthook-static-checks`, opened
+      [PR #35](https://github.com/smorinlabs/smorinlabs-harness/pull/35), per explicit user
+      instruction
+- [x] [P36-T04] Copilot review, verified before merge: real finding — `no-private-tooling-refs`
+      originally added a `lefthook.yml` self-exclusion CI's own scan doesn't have (CI excludes
+      only `.github/workflows/ci.yml`), breaking the parity this whole project exists to
+      establish — a plain (non-obfuscated) mention added to `lefthook.yml` later would have
+      passed local pre-commit while still failing CI. Removed; re-verified the
+      quote-obfuscation alone keeps the file from self-matching, both positive and negative
+      re-tested. Second finding (PROJECTS.md task line looked unchecked) was stale — anchored
+      to commit `7c00f7a`, already fixed in `72a8eff` before the review ran; replied, no
+      code change
+
+### Automated Verification
+- `lefthook run pre-commit` (with any file staged) exits 0 on a clean tree
+- `lefthook run pre-commit` fails `no-personal-paths` when an absolute personal path is
+  staged
+- `lefthook run pre-commit` fails `no-private-tooling-refs` when the private tool's name is
+  staged
+- `lefthook run pre-commit` fails `no-placeholders-in-docs` when `{{`/`TBD`/`<TODO` is
+  staged in README.md or docs/
 
 ---
 
