@@ -1194,10 +1194,10 @@ flags, not positional args, so `argument-hint` alone carries the shape.
 ### Tests & Tasks
 - [x] [P34-T01] `argument-hint: "[--auto|--confirm|--ready] [--deep]"` added to
       `pr-merge-flow/SKILL.md` frontmatter
-- [x] [P34-TS01] `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep`:
-      both `pass`/`warn`(pre-existing, unrelated `_generated` info on claude-code manifest
-      only) — zero findings attributable to the new field on either tool; codex deep mode
-      loads the plugin in a real sandboxed session with 0 findings
+- [x] [P34-TS01] Cross-tool verifier deep-mode check on `plugins/repo-hygiene`
+      (claude-code + codex): both `pass`/`warn`(pre-existing, unrelated `_generated` info on
+      claude-code manifest only) — zero findings attributable to the new field on either
+      tool; codex deep mode loads the plugin in a real sandboxed session with 0 findings
 - [x] [P34-T02] plugin.meta.toml 0.7.0 → 0.7.1; `just gen` + `gen-check` green
 - [x] [P34-TS02] Gate: skill-quality — content ✓ (frontmatter valid, description unchanged
       at 1021 chars, no placeholders), docs ✓ (per-skill page + README row already present,
@@ -1214,8 +1214,8 @@ flags, not positional args, so `argument-hint` alone carries the shape.
 
 ### Automated Verification
 - `just gen-check` exits 0
-- `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep` exits 0, no
-  errors, no warnings attributable to `pr-merge-flow/SKILL.md`
+- Cross-tool verifier deep-mode check on `plugins/repo-hygiene` (claude-code + codex)
+  exits 0, no errors, no warnings attributable to `pr-merge-flow/SKILL.md`
 
 ---
 
@@ -1230,9 +1230,9 @@ subagents), dispatched in parallel. This project covers this repo's half: 22 ski
 **Findings (this repo, 22 skills)**
 - **NEEDS_HINT → fixed (7)**: `explain`, `ci-audit`, `manual-test-guide`, `readme-sync`,
   `version-check`, `html-codesign`, `html-explain`
-- **Already correct (3)**: `project-add`, `project-audit` (one cosmetic nit — hint says
-  `[--check]` where the body documents `--<check-id>`; non-blocking, not fixed here),
-  `project-refine`
+- **Already correct (4)**: `pr-merge-flow` (this project's own fix, sanity-checked),
+  `project-add`, `project-audit` (one cosmetic nit — hint says `[--check]` where the body
+  documents `--<check-id>`; non-blocking, not fixed here), `project-refine`
 - **No args needed (11)**: `factor-architect`, `factor-dedup`, `factor-scan`,
   `using-factor-harness`, `guided-research`, `project-next`, `using-project-harness`,
   `question-walkthrough`, `reader-steps`, `repo-finder`, `use-html-theme` — all fire by
@@ -1257,18 +1257,21 @@ subagents), dispatched in parallel. This project covers this repo's half: 22 ski
       `gen-check` green
 - [x] [P35-TS01] Diff scan: all 7 edits are single-line frontmatter additions, zero
       description drift (no docs/README refresh owed), zero secrets/personal-paths/placeholders
-- [x] [P35-TS02] Gate: `skillsmith verify -t claude-code -t codex --deep` on all 3 affected
-      plugins (`explain`, `repo-hygiene`, `use-html-theme`) — 0 errors, 0 warnings beyond the
-      pre-existing unrelated `claude._generated` info line; skill-quality layers 1-3 applied
-      directly (content/docs/conventions all clean, no changes owed)
-- [ ] [P35-T04] Push `worktree-pmf-argument-hint`, open PR carrying both P34 (pr-merge-flow)
-      and P35 (this project) as one branch, per explicit user instruction
+- [x] [P35-TS02] Gate: cross-tool verifier deep-mode check on all 3 affected plugins
+      (`explain`, `repo-hygiene`, `use-html-theme`; claude-code + codex) — 0 errors,
+      0 warnings beyond the pre-existing unrelated `claude._generated` info line;
+      skill-quality layers 1-3 applied directly (content/docs/conventions all clean, no
+      changes owed)
+- [x] [P35-T04] Pushed `worktree-pmf-argument-hint`, opened
+      [PR #34](https://github.com/smorinlabs/smorinlabs-harness/pull/34) carrying both P34
+      (pr-merge-flow) and P35 (this project), per explicit user instruction
 
 ### Automated Verification
 - `just gen-check` exits 0
-- `skillsmith verify plugins/explain -t claude-code -t codex --deep` exits 0
-- `skillsmith verify plugins/repo-hygiene -t claude-code -t codex --deep` exits 0
-- `skillsmith verify plugins/use-html-theme -t claude-code -t codex --deep` exits 0
+- Cross-tool verifier deep-mode check on `plugins/explain` (claude-code + codex) exits 0
+- Cross-tool verifier deep-mode check on `plugins/repo-hygiene` (claude-code + codex) exits 0
+- Cross-tool verifier deep-mode check on `plugins/use-html-theme` (claude-code + codex)
+  exits 0
 
 ---
 
