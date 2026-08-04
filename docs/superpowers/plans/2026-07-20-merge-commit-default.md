@@ -562,11 +562,11 @@ Expected: one commit touching only `CLAUDE.md`.
 ### Task 7: Memory reflects the new default
 
 **Files:**
-- Modify: `~/.claude/projects/-Users-stevemorin-c/memory/git-main-branch-discipline.md`
+- Modify: `~/.claude/projects/<project-dir>/memory/git-main-branch-discipline.md`
 
 - [ ] **Step 1: Read the current file in full**
 
-Run: `cat ~/.claude/projects/-Users-stevemorin-c/memory/git-main-branch-discipline.md`
+Run: `cat ~/.claude/projects/<project-dir>/memory/git-main-branch-discipline.md`
 
 - [ ] **Step 2: Reframe the squash divergence passage**
 
@@ -583,7 +583,7 @@ Do not change the `--ff-only` guidance itself — it is reinforced, not replaced
 
 - [ ] **Step 3: Verify**
 
-Run: `rg -c 'fleet default is merge commits' ~/.claude/projects/-Users-stevemorin-c/memory/git-main-branch-discipline.md`
+Run: `rg -c 'fleet default is merge commits' ~/.claude/projects/<project-dir>/memory/git-main-branch-discipline.md`
 Expected: `1`
 
 - [ ] **Step 4: No commit** — the memory dir is not a git repo in this workflow.
