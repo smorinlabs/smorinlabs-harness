@@ -186,9 +186,11 @@ re-attempt only the step that failed.
 ## 5. Re-review cycle — measured, ratcheted
 
 **Under `--one-pass` this step is skipped entirely**: once every thread from
-the single pass's inventory is disposed of, go straight to step 6 preflight
-and end with the ready-report (step 7), noting in it that the pushed fixes
-may draw new reviews. The cycle machinery below never engages.
+the single pass's inventory is disposed of, re-fetch the inventory one final
+time — fully paginated, merged by id — so the ready-report can name late
+arrivals as open (never triaged), then go straight to step 6 preflight and
+end with the ready-report (step 7), noting in it that the pushed fixes may
+draw new reviews. The cycle machinery below never engages.
 
 Pushed fixes can trigger fresh bot reviews. Return to step 2, then re-fetch and
 **merge into the ledger** (step 3) before triaging — new entries are expected

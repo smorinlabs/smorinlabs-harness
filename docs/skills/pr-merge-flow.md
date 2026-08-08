@@ -43,7 +43,8 @@ untouched. Throughout, threads are tracked in a **ledger keyed by comment `id`**
 and re-merged every cycle — new reviewer comments arriving mid-run are the
 normal lifecycle, and the run is complete only when every ledger entry is
 resolved (under `--one-pass` the work set is fixed at the single pass's
-inventory; later arrivals are reported open, never merged over, since
+inventory; a final inventory refresh before the ready-report catches later
+arrivals, which are reported open — never triaged, never merged over, since
 one-pass never merges). After a successful merge it runs a read-only cleanup survey — local and remote PR
 branch, worktrees on the merged branch, stale merged branches, prunable
 worktree entries, dirty uncommitted state — and presents two lists:
