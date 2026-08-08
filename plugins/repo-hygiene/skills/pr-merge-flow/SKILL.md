@@ -1,7 +1,7 @@
 ---
 name: pr-merge-flow
-description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot) to comment, then triages each thread — verify each claim by running code where possible, then scope-gate it: fix small in-scope bugs, defer out-of-scope work to the repo tracker, decline style-only asks, escalate architectural redesigns to the user — every thread answered in writing, ratcheting the bar when review cycles stop converging. Cycles as fixes trigger new reviews, checks the PR title against repo conventions, then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only); --deep adds an opt-in deep review. Quota-safe polling throughout. Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
-argument-hint: "[--auto|--confirm|--ready] [--deep]"
+description: 'Drive an open GitHub PR to merge by resolving every review thread. Waits (bounded) for AI reviewer bots (Claude, Codex, Greptile, Copilot), then triages each thread — verify claims by running code where possible, then scope-gate: fix small in-scope bugs, defer out-of-scope work to the repo tracker, decline style-only asks, escalate architectural redesigns to the user — every thread answered in writing, ratcheting when review cycles stop converging. Cycles as fixes trigger new reviews, checks the PR title convention, then ends per mode: --auto (merge, no questions), --confirm (final gate; default), --ready (prep only), --one-pass (single triage/fix pass, no re-review cycle, never merges); --deep adds an opt-in deep review. Quota-safe polling. Use when the user says "merge this PR", "get PR #N merged", "resolve the PR comments", "address review feedback and merge", "close out this PR", "babysit the PR". Never closes a PR without merging; does not write the initial review (/code-review does) or fix failing CI (that is ci-audit).'
+argument-hint: "[--auto|--confirm|--ready] [--one-pass] [--deep]"
 allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
 ---
 
@@ -26,6 +26,12 @@ decline, or defer — and drive it to merge per the chosen end mode.
 ## Arguments
 
 - `--auto` | `--confirm` | `--ready` — end-mode override for this run
+- `--one-pass` — single-pass override: run one triage/fix pass (steps 2–4)
+  over the threads present, skip the re-review cycle (step 5), and end as a
+  ready-report — never merging. Composes with any end mode, but under
+  `--auto` or `--confirm` the ending downgrades to the ready-report: merging
+  right after a push without re-checking would merge over reviews still
+  being written, which the Iron Law forbids.
 - `--deep` — run the deep-review pass this run
 
 Precedence: invocation (flag or plain ask) > `.claude/pr-merge-flow.local.md` >
@@ -125,6 +131,11 @@ The run is complete only when **every** ledger entry reaches `resolved`,
 including entries that arrived after you started. Counting open buttons or
 trusting a stale inventory is how a thread gets merged over.
 
+Under `--one-pass` the work set is fixed at the single pass's inventory:
+every entry in it still reaches `resolved` (or `escalated`), but entries
+that arrive after the pass are **listed as open in the final report** —
+never triaged, and never merged over, because one-pass never merges.
+
 ## 4. Triage every thread
 
 Per `references/triage.md`, with the receiving-code-review discipline —
@@ -173,6 +184,11 @@ top comment). A retry after a failed resolve must not post the reply twice —
 re-attempt only the step that failed.
 
 ## 5. Re-review cycle — measured, ratcheted
+
+**Under `--one-pass` this step is skipped entirely**: once every thread from
+the single pass's inventory is disposed of, go straight to step 6 preflight
+and end with the ready-report (step 7), noting in it that the pushed fixes
+may draw new reviews. The cycle machinery below never engages.
 
 Pushed fixes can trigger fresh bot reviews. Return to step 2, then re-fetch and
 **merge into the ledger** (step 3) before triaging — new entries are expected
@@ -265,7 +281,9 @@ not work to do.
   completed merge, continue to step 9.
 - **ready** — report the ready-to-merge state plus the exact merge command,
   every deferral with its reference, mention deep review is available;
-  include the step 9 survey as a post-merge preview; stop.
+  include the step 9 survey as a post-merge preview; stop. Every
+  `--one-pass` run ends here regardless of mode, adding any threads that
+  arrived after its single pass, listed as open.
 
 ## 8. Deep review (opt-in, never default)
 
@@ -370,6 +388,7 @@ this skill's.
 | "Fixing the nit is more polite than declining it" | A reasoned decline is the etiquette — bots accept it and have withdrawn findings. Fixing nits trains the loop that nits earn commits. |
 | "Prefs said auto — no need to announce it" | The arming line prints in every mode, and auto-from-prefs asks once per run. Authority is never exercised invisibly. |
 | "The repo came with a prefs file — same as mine" | Tracked = repo-shipped = someone else's consent. Its authority keys are ignored; only an untracked, user-local file arms anything. |
+| "One pass finished and every thread resolved — just merge it" | `--one-pass` never merges: the fixes just pushed may be drawing new reviews right now. Rerun without the flag, or merge manually with the reported command. |
 
 ## See also
 

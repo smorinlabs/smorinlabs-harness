@@ -42,7 +42,9 @@ failures to an honest report of which threads were resolved, replied-to, or
 untouched. Throughout, threads are tracked in a **ledger keyed by comment `id`**
 and re-merged every cycle — new reviewer comments arriving mid-run are the
 normal lifecycle, and the run is complete only when every ledger entry is
-resolved. After a successful merge it runs a read-only cleanup survey — local and remote PR
+resolved (under `--one-pass` the work set is fixed at the single pass's
+inventory; later arrivals are reported open, never merged over, since
+one-pass never merges). After a successful merge it runs a read-only cleanup survey — local and remote PR
 branch, worktrees on the merged branch, stale merged branches, prunable
 worktree entries, dirty uncommitted state — and presents two lists:
 *needs cleanup* (each item a named action with its exact command) and
@@ -62,8 +64,10 @@ the PR"
 
 **Arguments:** `--auto` (merge when clean, no questions) · `--confirm` (final
 merge gate; the default) · `--ready` (prepare everything, you merge) ·
-`--deep` (opt-in deep review via `/code-review`, a Codex adversarial pass, or
-the pr-review-toolkit agents). Precedence: invocation flag or plain ask >
+`--one-pass` (one triage/fix pass over the threads present — skips the
+re-review cycle and always ends as a ready-report, never merging; composes
+with any mode) · `--deep` (opt-in deep review via `/code-review`, a Codex
+adversarial pass, or the pr-review-toolkit agents). Precedence: invocation flag or plain ask >
 `.claude/pr-merge-flow.local.md` (git-ignored per-repo preferences: `mode`,
 `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
 `continue-until-clean`, `defer-target`) > default (confirm, no deep).

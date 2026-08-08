@@ -1342,4 +1342,39 @@ follow-up if a parity drift ever reaches CI the same way this one did.
 
 ---
 
+## [~] Project P37: pr-merge-flow --one-pass flag (plugin v0.8.0)
+**Goal**: Add a `--one-pass` flag to pr-merge-flow: run a single triage/fix pass
+(steps 2–4) over the threads present, skip the step-5 re-review cycle entirely,
+and always end as a ready-report — never merging, since merging right after a
+push without re-checking would merge over reviews still being written (Iron
+Law). Orthogonal to the end modes; under `--auto`/`--confirm` the ending
+downgrades to the ready-report. The step-3 ledger rule gets a one-pass
+carve-out: the work set is fixed at the single pass's inventory, later
+arrivals are reported open.
+
+**Out of Scope**
+- A prefs-file `one-pass` key (per-invocation by nature; not requested).
+- A true read-only/dry-run mode (one-pass still fixes, replies, resolves).
+- Edits to references/ (the skipped step 5 means the cycle machinery is
+  simply unreached).
+
+### Tests & Tasks
+- [x] [P37-T01] `--one-pass` added to `## Arguments` with compose/downgrade
+      semantics; step 5 skip line; step 7 ready-bullet mention; step 3 ledger
+      carve-out; red-flag row
+- [x] [P37-T02] `argument-hint` frontmatter updated to
+      `"[--auto|--confirm|--ready] [--one-pass] [--deep]"`; description mode
+      list gains `--one-pass` (trimmed elsewhere: 1041 chars vs 1021 baseline)
+- [x] [P37-T03] Docs refreshed: `docs/skills/pr-merge-flow.md` (Arguments +
+      ledger paragraph) and README row; repo-hygiene bumped 0.7.2 → 0.8.0
+      (minor, capability change); `just gen` + `gen-check` clean
+- [x] [P37-TS01] Overlap re-scan: no fleet skill uses "one-pass"/"single pass"
+      vocabulary (grep over placed SKILL.md descriptions — clean)
+- [x] [P37-TS02] skill-quality gate on the worktree copy passes (content ✓,
+      docs ✓, conventions ✓ gen-check green, loads ✓ both tools static pass;
+      advisory: description 1041 chars vs ~1000 soft envelope, net +20 over
+      the 1021 pre-edit baseline after trims)
+
+---
+
 - [ ] Regression Test Status
