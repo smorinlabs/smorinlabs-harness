@@ -1,5 +1,39 @@
 # Release Notes
 
+## v0.19.0 — 2026-08-08
+
+### Added
+
+- **repo-hygiene 0.8.0 — pr-merge-flow `--one-pass`.** A single-pass override:
+  run one triage/fix pass over the threads present, skip the step-5 re-review
+  cycle entirely, and always end as a ready-report — never merging, because
+  merging straight after a push without re-checking would merge over reviews
+  still being written. It composes with any end mode (`--auto`/`--confirm`
+  endings downgrade to the ready-report) and answers the "fix all the comments,
+  just don't start another round" case that previously needed a repo-sticky
+  `cycle-bound: 1` pref plus a check-in answer. The step-3 ledger rule gains a
+  one-pass carve-out — the work set is fixed at the pass's inventory, and a
+  final fully-paginated refresh at the exit boundary reports late arrivals as
+  open rather than triaging them (PR #37; the refresh itself came from the
+  PR's own Copilot and CodeRabbit review round).
+- **repo-hygiene 0.7.0 — pr-merge-flow auto-mode consent.** An arming line
+  printed every run naming the resolved mode, its source, and what it
+  authorizes; a one-question arming confirmation when `auto` resolves from the
+  prefs file (an explicit `--auto` flag is current consent and never asks); and
+  a provenance gate that ignores the authority keys of a git-tracked prefs file,
+  since a repo-shipped file is someone else's consent, not the user's (PR #33).
+
+### Fixed
+
+- **`argument-hint` backfilled fleet-wide across 7 skills** — repo-hygiene
+  0.7.1/0.7.2, explain 0.3.2, use-html-theme 0.10.1. Flags documented only in
+  SKILL.md body prose are invisible to the CLI's `/`-menu, so tab-completion
+  had nothing to show for skills that honored the flags correctly when typed by
+  hand (PRs #34, #35).
+- **Local pre-commit now mirrors CI's static-checks job** — personal-path,
+  private-tooling, and docs-placeholder scrubs run via lefthook, closing the
+  gap where a violation passed locally and failed in CI (PR #35).
+
 ## v0.18.0 — 2026-07-27
 
 ### Added
