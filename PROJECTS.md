@@ -1377,4 +1377,21 @@ arrivals are reported open.
 
 ---
 
+## [~] Project P38: html-codesign wizard-by-default view + plain-language digest (use-html-theme v0.11.0)
+**Goal**: The codesign page opens as a step-through wizard by default (one question per screen; explicit Next/Back + "Question N of M" progress with clickable answered/skipped dots; last step's "Finish → review" lands on list view with all sections folded), with a Wizard|List control-bar toggle that resumes the exact question. Opening view is the spec's optional `defaultView` ("wizard" when absent; "list" authorable with a reason); everything after open is DOM-only view state — identical picks export identically. Wizard is engine-owned (body[data-view] + section[data-current] + one .wiz-nav; zero per-section authored DOM). Addendum: every question self-explanatory in clear, plain language — `clear-technical-communication` invoked when available, an approved ~130-word digest embedded in SKILL.md step 2 as the fallback proxy.
+
+### Tests & Tasks
+- [x] [P38-T01] Template: wizard CSS + engine (setView/wizGo/wizNext/wizRefresh), View seg, .wiz-nav, body data-view; current step overrides collapsed state; feedback + bottom bar hidden in wizard
+- [x] [P38-T02] validate_spec.py: optional defaultView enum ("wizard"|"list"); fixtures exercise valid ("list") and invalid ("carousel") values
+- [x] [P38-T03] References: spec-format.md (field row + validator note + invariant), design-notes.md (invariant 6 amended to "all motion is reader-initiated"; 2026-08-09 decision history incl. plain-language addendum)
+- [x] [P38-T04] SKILL.md: description (+wizard, trimmed to ~1006 chars), What-this-makes, steps 2/3/6/7, hard rules, smoke-test 6b wizard pass, gotcha; clear-communication conditional + approved digest
+- [x] [P38-T05] Wiring: use-html-theme 0.10.1 → 0.11.0 (minor, capability + trigger change); docs/skills/html-codesign.md + README row refreshed; just gen + gen-check clean
+- [x] [P38-TS01] Browser smoke test (Chrome, localhost): 22/22 assertions — opens wizard, Back disabled, no auto-advance, Finish → review (list + all folded, List seg active), resume position, dot jump, collapsed-step trap, exports byte-identical across views, zero console errors
+- [x] [P38-TS02] Overlap re-scan: no placed skill description uses "wizard" or "step-through"; description avoids question-walkthrough's "one at a time" vocabulary — clean
+- [x] [P38-TS04] Deep load verify: pass on both tools (session-backed, 0 err/0 warn)
+- [x] [P38-TS05] Headless E2E (claude -p against the worktree skill): fresh session authored a valid defaultView:"list" spec + page (validator exit 0 on file and embedded copy; DOM mirrors spec; wizard chrome present); live check confirms list-opening branch (opens in list, wiz-nav hidden, toggle to wizard works)
+- [x] [P38-TS03] skill-quality on the worktree: content ✓ (no PII/placeholders; description 1006 chars, soft-envelope advisory), docs ✓, conventions ✓ (gen-check green), loads ✓ (both tools static pass, 0 err/0 warn)
+
+---
+
 - [ ] Regression Test Status

@@ -53,6 +53,9 @@ def validate(spec: dict[str, Any]) -> None:
         err(f'mode must be "codesign", got {spec.get("mode")!r}')
     if not isinstance(spec.get("title"), str) or not spec["title"].strip():
         err("title must be a non-empty string")
+    dv = spec.get("defaultView")
+    if dv is not None and dv not in ("wizard", "list"):
+        err(f'defaultView must be "wizard" or "list" when present, got {dv!r}')
 
     sections = spec.get("sections")
     if not isinstance(sections, list) or not sections:

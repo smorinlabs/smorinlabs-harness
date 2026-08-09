@@ -88,10 +88,15 @@ Slim/Full toggle is page state, not spec state.
 - **Decision state** — selections, notes, contexts, recommendations: lives
   in the spec, flows into exports.
 - **View state** — section collapse, hidden unchosen options, context
-  open/closed, export variant: lives ONLY in DOM attributes. Never in the
-  spec, never in exports. Identical picks export identically regardless of
-  folding. Keep it that way — persisted view state would make exports
+  open/closed, export variant, current wizard/list view and wizard
+  position: lives ONLY in DOM attributes. Never in the spec, never in
+  exports. Identical picks export identically regardless of folding or
+  view. Keep it that way — persisted view state would make exports
   nondeterministic and pollute the iteration loop.
+- **One deliberate spec-side view knob** (2026-08-09): `defaultView`
+  chooses the view the page *opens* in (`"wizard"` when absent). It is
+  authored once, read once at load, and never round-trips — everything
+  after open is DOM-only per the rule above.
 
 Derived, not stored: the followed/went-against-recommendation verdict is
 computed from `selected` vs `recommended` at render/export time. Storing it
@@ -109,9 +114,13 @@ would create a second source of truth that drifts.
    engine hydrates FROM the spec.
 4. **Validator-before-render**: never render from an unvalidated spec.
 5. **Sections stay AskUserQuestion-shaped** (see lineage above).
-6. **All collapse is manual.** Auto-collapse/wizard flows were considered
-   and explicitly rejected (surprise motion; pick-any has no "done"
-   signal). Don't add them without a new decision.
+6. **All motion is reader-initiated.** Auto-collapse and auto-advance
+   remain rejected (surprise motion; pick-any has no "done" signal). The
+   2026-08-09 decision added a *manual* step-through wizard view as the
+   default opening view — it survives this invariant precisely because
+   nothing moves without a click: explicit Next/Back, clickable progress
+   dots, a Wizard|List toggle, and answering never advances the step.
+   Don't add auto-motion without another decision.
 
 ## Decision history (2026-07-17 ergonomics redesign)
 
@@ -135,3 +144,40 @@ and body_html-in-JSON — escaping and bloat); default clarity scaffold,
 extendable (over mandatory slots and guidance-prose-only); envelope-only
 full exports (over innerText extraction). Spec:
 docs/superpowers/specs/2026-07-18-html-codesign-ergonomics-2-design.md.
+
+## Decision history (2026-08-09 wizard view)
+
+User-requested reversal-with-conditions of the 2026-07-17 "no wizard"
+call. The original objections were *surprise motion* and *pick-any has no
+"done" signal* — both are objections to **auto-advance**, and the accepted
+design contains none: the wizard is a projection the reader steps through
+by hand. Interviewed decisions, in order:
+
+- **Wizard is the default opening view** via an optional spec `defaultView`
+  (`"wizard"` when absent; `"list"` authorable with a reason) — over
+  always-wizard-no-knob and a section-count heuristic (implicit, surprising).
+- **Explicit Next/Back + "Question N of M" progress, never auto-advance;
+  the last step's Next is "Finish → review"**, which lands on the review
+  screen — over auto-advance-on-pick and ending with no review.
+- **Review screen = list view + collapse-all.** Not a third view state:
+  finishing switches to list and folds every section to its summary row,
+  with the export controls in the bar. The toggle correctly shows List
+  active after finishing.
+- **Wizard|List toggle in the control bar; toggling back resumes the exact
+  question; progress dots are clickable jumps** (answered/skipped state
+  shown per dot) — over first-unanswered-on-reentry and Next/Back-only.
+- **Engine-owned, zero per-section authoring**: the wizard is CSS
+  (`body[data-view]`, `section[data-current]`) plus one fixed `.wiz-nav`
+  element. Agents author nothing wizard-specific per section, so the
+  authoring and smoke-test surface didn't grow with the feature. The
+  current step forcibly renders expanded (a collapsed section would be a
+  blank step); the `.feedback` block and bottom bar hide in wizard view
+  and appear on the review.
+- **Plain-language addendum** (same interview): every question must be
+  self-explanatory in clear, plain language; when the
+  `clear-technical-communication` skill is available in the session it is
+  used to sharpen titles, contexts, and labels — when absent, SKILL.md
+  step 2 carries an approved ~130-word digest of that skill (iron law,
+  four reader gates, name+description at first use, consequences per
+  choice, form-follows-structure, sentence controls, cold-read test) as
+  the embedded proxy. Same conditional pattern as the `shelf` offer.

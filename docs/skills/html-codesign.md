@@ -1,8 +1,17 @@
 # html-codesign
 
 Builds an interactive **"codesign" decision page** as a single self-contained
-HTML file: sections of choices (pick-one or pick-any), each opening with a
-collapsible **context & recommendation preamble** — free-form rich content
+HTML file, **opened as a step-through wizard by default** — one question per
+screen with Next/Back, a "Question N of M" progress line, and clickable
+progress dots showing answered/skipped state; the last step's **Finish →
+review** lands on every section folded to its summary row with the export
+controls, and a **Wizard | List** toggle in the control bar reaches the
+classic full-list view (and back, resuming the same question) at any time.
+The spec's optional `defaultView` field can open a page in list view when a
+wizard frame adds nothing (e.g. 1–2 questions); either way the current view
+and position are pure view state — identical picks export identically.
+Under either view: sections of choices (pick-one or pick-any), each opening
+with a collapsible **context & recommendation preamble** — free-form rich content
 (prose, pros/cons tables, inline SVG charts, images) on a clarity scaffold
 (*What this is* → *Why you're being asked* → analysis → ★ recommendation),
 with a ★ badge on the recommended option — plus per-section notes, a
@@ -15,7 +24,12 @@ of manual collapse make review ergonomic: fold the context out of the way,
 hide unchosen options (the note stays visible), or fold a whole section to
 a dense one-line summary — question, picks, followed/went-against/skipped/❓
 markers, and the note — so a finished page scans as a review of the
-decision. The reader — who may not be in the chat at all — opens the file
+decision. Every question is written to be **self-explanatory in clear,
+plain language** — decidable from its own screen by a reader who was never
+in the chat; when the `clear-technical-communication` skill is installed
+the authoring pass applies its reader-side checks to every title, context,
+and label, and when it isn't, SKILL.md carries a compact digest of that
+skill as the built-in proxy. The reader — who may not be in the chat at all — opens the file
 anywhere, toggles what they want, and sends the export back. Every
 choosable element carries a **stable ID** (`sec-01`, `ch-01-a`, `ctx-01`,
 `q-01`) so a pasted line like "keep `ch-01-a`, swap `ch-02-b`" resolves
