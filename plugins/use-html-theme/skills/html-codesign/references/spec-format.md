@@ -25,6 +25,7 @@ sibling `contexts` array, never inside a section. (Lineage and rationale:
   "title": "Dashboard redesign — pick a direction",
   "lead": "Review each context, toggle your picks, then export.",
   "generated_at": "2026-07-16T09:12:00-07:00",
+  "defaultView": "wizard",
   "sections": [
     {
       "id": "sec-01-direction",
@@ -63,6 +64,7 @@ sibling `contexts` array, never inside a section. (Lineage and rationale:
 | `mode` | always `"codesign"` |
 | `title`, `lead` | strings; become the H1 and lead on render |
 | `generated_at` | ISO 8601, set at first render |
+| `defaultView` | optional; `"wizard"` or `"list"` — the view the page OPENS in. Absent means `"wizard"` (the step-through default). This is the only spec-side view knob: it sets the opening view and nothing else — the reader's current view and wizard position stay DOM-only and never export. Author `"list"` only with a reason (e.g. a 1–2 question page where a wizard frame adds nothing). |
 | `sections[].exclusive` | `true` = pick-one (radio behavior), `false` = pick-any (checkbox behavior) |
 | `choices[].label` | ≤ 120 chars, non-empty |
 | `choices[].detail` | optional one-line elaboration shown under the label |
@@ -105,7 +107,8 @@ against `recommended` — never stored.
 ## What the validator does and doesn't check
 
 `validate_spec.py` enforces: the literal `version`/`skill`/`mode` values,
-non-empty `title`, the full ID grammar, global ID uniqueness, unique section
+non-empty `title`, `defaultView` being `"wizard"` or `"list"` when present,
+the full ID grammar, global ID uniqueness, unique section
 numbers, choice/note/context numbers matching their section, `exclusive`
 present as a boolean, ≤1 selected choice in exclusive sections, label
 type/length, **exactly one context envelope per section with non-empty
@@ -132,3 +135,7 @@ smoke test; neither replaces the other.
 - Collapse/hide/ask-visibility state is view state — DOM only, never in
   this document, never in exports. Skip state exists only at export time
   (`skipped: true` in the answers doc), never in this document.
+- `defaultView` is the one deliberate exception: the *opening* view is spec
+  state (so a page can be authored to open in list view), but the *current*
+  view and wizard position after open are DOM-only like all other view
+  state. Identical picks export identically from either view.

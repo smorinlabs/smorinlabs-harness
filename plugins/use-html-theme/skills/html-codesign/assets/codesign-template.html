@@ -45,6 +45,30 @@
   .seg .seg-label{font-size:12px;color:var(--muted);padding:0 8px 0 10px;}
   .seg .seg-btn{border:0;border-radius:0;padding:7px 12px;background:var(--card);}
   .seg .seg-btn[aria-pressed="true"]{background:var(--accent);color:#fff;}
+  button:disabled{opacity:.45;cursor:default;}
+  button:disabled:hover{border-color:var(--line);}
+  /* ============ WIZARD VIEW (engine-owned — no per-section authoring) ============
+     body[data-view] switches the projection; the engine marks the current
+     section with data-current. Wizard/list and the wizard position are view
+     state (DOM only) — identical picks export identically from either view. */
+  body[data-view="wizard"] .feedback,
+  body[data-view="wizard"] .bar.bottom{display:none;}
+  body[data-view="wizard"] section:not([data-current="true"]){display:none;}
+  body[data-view="wizard"] section .fold{display:none;}
+  /* The current step always renders in full — overrides a collapsed state so
+     a folded section can never appear as a blank wizard step. */
+  body[data-view="wizard"] section[data-current="true"] .sec-head{display:flex;}
+  body[data-view="wizard"] section[data-current="true"] .sec-body{display:block;}
+  body[data-view="wizard"] section[data-current="true"] .summary{display:none;}
+  body[data-view="list"] .wiz-nav{display:none;}
+  .wiz-nav{display:flex;align-items:center;gap:14px;margin:18px 0 0;flex-wrap:wrap;}
+  .wiz-nav .spacer{flex:1;}
+  .wiz-progress{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .wiz-dots{display:inline-flex;gap:7px;align-items:center;flex-wrap:wrap;}
+  .wiz-dot{width:13px;height:13px;padding:0;border-radius:999px;border:1.5px solid var(--line);background:var(--card);}
+  .wiz-dot[data-state="answered"]{background:var(--accent);border-color:var(--accent);}
+  .wiz-dot[data-state="skipped"]{background:var(--line-soft);border-color:var(--muted);}
+  .wiz-dot[aria-current="step"]{outline:2px solid var(--accent);outline-offset:2px;}
   .wrap{max-width:720px;margin:0 auto;padding:36px 24px 64px;}
   h1{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.01em;
     margin:0 0 10px;text-wrap:balance;}
@@ -146,7 +170,9 @@
   }
 </style>
 </head>
-<body>
+<!-- data-view matches the spec's defaultView ("wizard" when absent) so the
+     opening view renders without a flash; the engine re-asserts it on load. -->
+<body data-view="wizard">
 
 <!-- ============ SPEC (source of truth) ============
      Replace with YOUR validated spec (references/spec-format.md).
@@ -162,6 +188,7 @@
   "title": "Sample decision — codesign",
   "lead": "Review each context, answer or skip each question, then export your picks.",
   "generated_at": "2026-07-18T00:00:00Z",
+  "defaultView": "wizard",
   "sections": [
     {
       "id": "sec-01-direction",
@@ -216,6 +243,11 @@
     <span class="seg-label">Export</span>
     <button class="seg-btn" id="segSlim" aria-pressed="true" onclick="setVariant('slim')">Slim</button>
     <button class="seg-btn" id="segFull" aria-pressed="false" onclick="setVariant('full')">Full</button>
+  </span>
+  <span class="seg" role="group" aria-label="View">
+    <span class="seg-label">View</span>
+    <button class="seg-btn" id="segWizard" aria-pressed="true" onclick="setView('wizard')">Wizard</button>
+    <button class="seg-btn" id="segList" aria-pressed="false" onclick="setView('list')">List</button>
   </span>
   <button onclick="collapseAll()">Collapse all</button>
   <button onclick="expandAll()">Expand all</button>
@@ -308,6 +340,16 @@
     <h3>Overall feedback</h3>
     <textarea id="note-overall" aria-label="Overall feedback" placeholder="Anything the options above don't capture?"></textarea>
   </div>
+
+  <!-- Wizard navigation — ONE fixed element, engine-populated. Never author
+       per-section wizard DOM; sections need nothing wizard-specific. -->
+  <nav class="wiz-nav" aria-label="Wizard navigation">
+    <button id="wizBack" onclick="wizGo(WIZ_POS-1)">← Back</button>
+    <span class="wiz-progress" id="wizProgress"></span>
+    <span class="wiz-dots" id="wizDots"></span>
+    <span class="spacer"></span>
+    <button class="primary" id="wizNext" onclick="wizNext()">Next →</button>
+  </nav>
 </div>
 
 <div class="bar bottom" role="toolbar" aria-label="Codesign actions (bottom)">
@@ -341,6 +383,9 @@ try {
   banner.style.cssText = "background:#8B2E2E;color:#fff;padding:12px 20px;font:14px/1.4 system-ui;position:sticky;top:0;z-index:99;";
   document.body.prepend(banner);
   document.querySelectorAll("button").forEach(function(b){ b.disabled = true; });
+  // Without a parsed spec the wizard never initializes — fall back to list
+  // view so the page's content stays visible under the banner.
+  document.body.setAttribute("data-view", "list");
   throw e;
 }
 
@@ -430,6 +475,7 @@ function refresh(){
       sk.setAttribute("aria-pressed", on ? "true" : "false");
     }
   });
+  wizRefresh();
 }
 
 /* ---- view state (DOM only — identical picks export identically regardless) ---- */
@@ -457,6 +503,76 @@ function setVariant(v){
   var s = document.getElementById("segSlim"), f = document.getElementById("segFull");
   if(s) s.setAttribute("aria-pressed", v === "slim" ? "true" : "false");
   if(f) f.setAttribute("aria-pressed", v === "full" ? "true" : "false");
+}
+/* ---- wizard view. The OPENING view is the spec's defaultView ("wizard"
+   when absent) — the only spec-side view knob. Everything after open —
+   current view, wizard position — is DOM view state: never in the spec,
+   never in exports. Toggling List and back resumes the same question. ---- */
+var VIEW = (SPEC.defaultView === "list") ? "list" : "wizard";
+var WIZ_POS = 0;
+function setView(v){
+  VIEW = v;
+  document.body.setAttribute("data-view", v);
+  var w = document.getElementById("segWizard"), l = document.getElementById("segList");
+  if(w) w.setAttribute("aria-pressed", v === "wizard" ? "true" : "false");
+  if(l) l.setAttribute("aria-pressed", v === "list" ? "true" : "false");
+  if(v === "wizard") wizGo(WIZ_POS); else refresh();
+}
+function wizGo(i){
+  var n = SPEC.sections.length;
+  if(i < 0) i = 0;
+  if(i > n - 1) i = n - 1;
+  WIZ_POS = i;
+  SPEC.sections.forEach(function(s, j){
+    var el = secEl(s.id); if(!el) return;
+    if(j === i){
+      el.setAttribute("data-current", "true");
+      // A collapsed section would be a blank step — the current one opens.
+      el.setAttribute("data-collapsed", "false");
+      var f = el.querySelector(".fold"); if(f) f.setAttribute("aria-expanded", "true");
+    } else {
+      el.removeAttribute("data-current");
+    }
+  });
+  refresh();
+  window.scrollTo(0, 0);
+}
+function wizNext(){
+  if(WIZ_POS >= SPEC.sections.length - 1){
+    // Finish → review: the list view with every section folded to its summary.
+    setView("list");
+    collapseAll();
+    window.scrollTo(0, 0);
+    return;
+  }
+  wizGo(WIZ_POS + 1);
+}
+function wizRefresh(){
+  var n = SPEC.sections.length;
+  var p = document.getElementById("wizProgress");
+  if(p) p.textContent = "Question " + (WIZ_POS + 1) + " of " + n;
+  var back = document.getElementById("wizBack");
+  if(back) back.disabled = WIZ_POS === 0;
+  var next = document.getElementById("wizNext");
+  if(next) next.textContent = WIZ_POS === n - 1 ? "Finish → review" : "Next →";
+  var dots = document.getElementById("wizDots");
+  if(!dots) return;
+  while(dots.firstChild) dots.removeChild(dots.firstChild);
+  SPEC.sections.forEach(function(s, j){
+    var d = document.createElement("button");
+    d.type = "button";
+    d.className = "wiz-dot";
+    var answered = s.choices.some(function(c){ return isSel(c.id); });
+    d.setAttribute("data-state", isSkipped(s.id) ? "skipped" : (answered ? "answered" : "unanswered"));
+    if(j === WIZ_POS) d.setAttribute("aria-current", "step");
+    d.setAttribute("aria-label", "Go to question " + (j + 1) + " of " + n + ": " + s.title);
+    d.title = s.id + " · " + s.title;
+    d.addEventListener("click", function(){
+      if(VIEW !== "wizard") setView("wizard");
+      wizGo(j);
+    });
+    dots.appendChild(d);
+  });
 }
 /* Skip is decision state: skipping clears picks; picking clears skip. */
 function setSkipped(sid, on){
@@ -667,7 +783,7 @@ function copyPanel(){
     .catch(function(){ btn.textContent="Copy failed — select manually"; });
 }
 document.querySelectorAll("textarea").forEach(function(t){ t.addEventListener("input", refresh); });
-refresh();
+setView(VIEW);
 </script>
 </body>
 </html>

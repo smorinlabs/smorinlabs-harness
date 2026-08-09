@@ -2,18 +2,19 @@
 name: html-codesign
 description: |
   Build an interactive "codesign" decision page as one self-contained HTML
-  file: the reader toggles choices (pick-one or pick-any), adds notes, and
-  exports the decision as Markdown and JSON with stable IDs (sec-01, ch-01-a)
-  so picks can be quoted in chat — "keep ch-01-a, swap ch-02-b" yields a
-  diffable v2. Use when the user wants to choose between options and capture
-  the decision: design directions, plan A vs B, prioritization, async option
-  pages for a stakeholder. Triggers: codesign, co-design, decision
+  file, opened as a step-through wizard by default (full-list view one
+  toggle away): the reader toggles choices (pick-one or pick-any), adds
+  notes, and exports the decision as Markdown and JSON with stable IDs so
+  picks can be quoted in chat — "keep ch-01-a, swap ch-02-b" yields a
+  diffable v2. Use when the user wants to choose between options and
+  capture the decision: design directions, plan A vs B, prioritization,
+  async stakeholder option pages. Triggers: codesign, co-design, decision
   page, pick from these, which should we, compare the options, prioritize
-  these. ALWAYS confirms before generating — lists the UNANSWERED questions
-  found in recent context, each with its ID and a recommendation, then waits
-  for a yes; the gate fires even on explicit invocation with an argument.
-  Answered questions are out of scope; if context is mostly settled material
-  it offers html-explain instead. Styled by use-html-theme. NOT for signing
+  these. ALWAYS confirms before generating — lists the UNANSWERED
+  questions found in context with IDs and recommendations,
+  then waits for a yes; the gate fires even on explicit invocation with an
+  argument. Answered questions are out of scope; mostly settled context
+  offers html-explain instead. Styled by use-html-theme. NOT for signing
   macOS/iOS binaries (Apple's codesign).
 arguments: [topic]
 argument-hint: "[topic]"
@@ -23,8 +24,14 @@ allowed-tools: Read Write Edit Glob Bash AskUserQuestion
 # What this makes
 
 A single `.html` file that turns a decision into something a person can
-*operate*: sections of choices (pick-one or pick-any), each opening with a
-collapsible **context & recommendation** preamble — free-form content
+*operate*. It opens as a **step-through wizard** by default — one question
+per screen with Next/Back, a "Question N of M" progress line, and clickable
+progress dots (answered/skipped state visible per dot); the last step's
+**Finish → review** lands on all sections folded to their summary rows with
+the export controls. A **Wizard | List** toggle in the control bar switches
+to the classic full-list view and back at any time, resuming the exact
+question. Under either view: sections of choices (pick-one or pick-any),
+each opening with a collapsible **context & recommendation** preamble — free-form content
 (prose, tables, inline SVG charts, images) shaped by a clarity scaffold,
 with a ★ badge on the recommended option — plus per-section notes, a
 **Skip** control on every question (deliberately-not-deciding is a
@@ -152,11 +159,39 @@ offer `html-explain` as the recommended option instead.
    themes should learn the new look?", never "Theme overlay coverage");
    write every context for a reader who was never in this chat — zero
    session jargon, define each term of art at first use, orient before
-   arguing.
+   arguing. Every question must be **self-explanatory in clear, plain
+   language** — decidable from its own screen, which the wizard view makes
+   literal (one question per screen, nothing else to lean on). When the
+   `clear-technical-communication` skill is available in this session,
+   invoke it and apply its reader-side checks to every section title,
+   context, and choice label before rendering; when it isn't, apply this
+   digest of it as the proxy:
+
+   **Clear-communication digest (fallback proxy).** Minimize what the
+   reader must infer — never make them reconstruct your mental model.
+   Gate every title, context, and label four ways: relevant (what this
+   reader needs, no process chatter), findable (the question and
+   recommendation are easy to locate), understandable (terms, references,
+   and status explicit), usable (decidable in one pass). Pair every
+   technical name with a plain description at first use — never judge
+   that "this reader already knows it". Every choice states its
+   consequence (behavior, cost, or risk), not just its name; the
+   recommendation argues, it never merely points. Pick the form that
+   exposes the structure: three or more options sharing dimensions
+   suggest a comparison table in the context body; an exact snippet
+   beats prose describing one. One primary assertion per sentence;
+   literal verbs; essential constraints in main sentences, never
+   parentheses; repeat the noun when a pronoun could point two ways.
+   Cold-read to finish: could a stranger say what this asks, why it
+   matters now, what each option costs, and what happens after — without
+   having been in this chat?
 
 3. **Write the spec first.** Author the `codesign-spec` JSON to
    `references/spec-format.md`, with IDs per `references/id-grammar.md`.
-   Write it to a file next to where the artifact will go.
+   Write it to a file next to where the artifact will go. Omit
+   `defaultView` (the page opens as a wizard) unless there's a reason to
+   open in list view — e.g. a 1–2 question page — in which case author
+   `"defaultView": "list"`.
 
 4. **Validate before rendering.** Run
    `scripts/validate_spec.py <spec-file>` (stdlib Python, no deps). Fix
@@ -178,11 +213,18 @@ offer `html-explain` as the recommended option instead.
    `.badge-rec` on each recommended choice, and each section's `.summary`
    row, `.fold` button, `.sec-actions` (opt/skip/ask toggles), and
    `.q-wrap` with its `q-NN` textarea in place — and keep the engine
-   script intact. Apply the theme layer per step 5.
+   script intact. The wizard is **engine-owned**: keep the template's
+   single `.wiz-nav` element and the View seg in the control bar, set
+   `<body data-view="…">` to match the spec's opening view, and author
+   **nothing** wizard-specific per section. Apply the theme layer per
+   step 5.
 
 7. **Deliver and explain the loop.** Give the file path (and open/preview it
    only when the shared gate in the close-out below permits — never merely
-   because the platform has a command for it). Tell the user the reader can review then collapse
+   because the platform has a command for it). Tell the user the reader
+   steps through the questions one per screen (Next/Back, clickable
+   progress dots, **Finish → review** at the end) or toggles to the full
+   list at any time, can review then collapse
    each context, **skip questions they're not deciding**, **raise a
    question when they can't answer** ("Questions first" bundles them into
    a paste-back), fold answered sections to scan their decisions, and
@@ -238,8 +280,15 @@ offer `html-explain` as the recommended option instead.
   as `codesign-answers` documents (`references/export-formats.md`), slim by
   default with a Full toggle. Don't make the user choose a format.
 - **Collapse is view state.** Section folding, hidden options, context
-  open/closed, and the Slim/Full toggle live in the DOM only — identical
-  picks export identically however the page is folded.
+  open/closed, the Slim/Full toggle, and the current Wizard/List view and
+  wizard position live in the DOM only — identical picks export
+  identically however the page is folded or viewed.
+- **Wizard is the default opening view.** The spec's optional
+  `defaultView` (`"wizard"` when absent) decides only what the page opens
+  as; `"list"` is authorable with a reason (e.g. a 1–2 question page).
+  Navigation is always reader-initiated — Next/Back, clickable progress
+  dots, the Finish → review step — never auto-advance. The wizard is
+  engine-owned: one `.wiz-nav` element, zero per-section wizard DOM.
 - **Exclusive means exclusive.** Pick-one sections enforce a single
   selection in the UI and are validated to ship with at most one default.
 - **Deliver the absolute path.** The full path, on its own line, every time.
@@ -270,6 +319,15 @@ offer `html-explain` as the recommended option instead.
    "Hide unchosen options" leave the question, picks, and note visible;
    does folding a section show the dense summary (picks + rec/skip/❓
    markers + note excerpt); do Collapse all / Expand all work?
+   6b. Wizard pass: does the page open in the spec's view (wizard when
+   `defaultView` is absent, list when `"list"`); does exactly one section
+   show per step with Back disabled on the first; does the last step's
+   "Finish → review" land on list view with every section folded and the
+   toggle showing List active; does Wizard → List → Wizard resume the same
+   question; do the progress dots jump and show answered/skipped state;
+   does a section collapsed in list view still render in full when it
+   becomes the current wizard step; are the feedback block and bottom bar
+   hidden in wizard view and present in list view?
 7. Export pass: does slim MD/JSON carry exactly ID · question · picks ·
    note; is a skipped section absent from MD but `skipped: true` in JSON;
    does an `open_question` surface in both; does Full add the context
@@ -291,6 +349,10 @@ offer `html-explain` as the recommended option instead.
   provide a runtime and would silently break everywhere else.
 - **Don't bloat sections.** More than ~5 choices per section means the
   decision is under-shaped — split the section or pre-filter with the user.
+- **Don't author wizard DOM per section.** The wizard is a projection the
+  engine and CSS own (`body[data-view]`, `section[data-current]`, one
+  `.wiz-nav`). If a section needs something wizard-specific to work,
+  the change belongs in the engine, not the page.
 - **A "report" request is not codesign.** If nothing is chosen or exported,
   it's an explainer — hand it to `html-explain`, which owns read-only pages
   and their figures.
