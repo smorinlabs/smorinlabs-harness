@@ -1377,7 +1377,7 @@ arrivals are reported open.
 
 ---
 
-## [~] Project P38: html-codesign wizard-by-default view + plain-language digest (use-html-theme v0.11.0)
+## [x] Project P38: html-codesign wizard-by-default view + plain-language digest (use-html-theme v0.11.0)
 **Goal**: The codesign page opens as a step-through wizard by default (one question per screen; explicit Next/Back + "Question N of M" progress with clickable answered/skipped dots; last step's "Finish → review" lands on list view with all sections folded), with a Wizard|List control-bar toggle that resumes the exact question. Opening view is the spec's optional `defaultView` ("wizard" when absent; "list" authorable with a reason); everything after open is DOM-only view state — identical picks export identically. Wizard is engine-owned (body[data-view] + section[data-current] + one .wiz-nav; zero per-section authored DOM). Addendum: every question self-explanatory in clear, plain language — `clear-technical-communication` invoked when available, an approved ~130-word digest embedded in SKILL.md step 2 as the fallback proxy.
 
 ### Tests & Tasks
