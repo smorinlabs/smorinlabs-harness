@@ -1,5 +1,23 @@
 # Release Notes
 
+## v0.20.0 — 2026-08-09
+
+### Added
+
+- **use-html-theme 0.11.0 — html-codesign wizard-by-default view +
+  plain-language digest.** The codesign page now opens as a step-through
+  wizard: one question per screen, explicit Next/Back with a
+  "Question N of M" progress line and clickable answered/skipped dots, and
+  a last-step "Finish → review" that lands on the list view with every
+  section folded. A Wizard|List control-bar toggle reaches the classic
+  full-list view and back at any time, resuming the exact question. The
+  spec's optional `defaultView` ("wizard" when absent) can open small
+  pages in list view; everything after open is DOM-only view state, so
+  identical picks export identically from either view. Every question is
+  now required to be self-explanatory in clear, plain language —
+  `clear-technical-communication` is applied when installed, with an
+  embedded digest in the skill as the fallback proxy.
+
 ## v0.19.0 — 2026-08-08
 
 ### Added
