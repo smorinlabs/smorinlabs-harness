@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.19.0"
+    "version": "0.20.0"
   },
   "plugins": [
     {
