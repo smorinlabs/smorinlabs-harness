@@ -60,8 +60,11 @@ neutral dump. Infer, show, then confirm or ask:
   ```bash
   d="$(cd "<skill-dir>" && pwd -P)"          # -P resolves the symlink to the real plugin path
   digest="$d/../session-recap/scripts/transcript_digest.py"
-  [ -f "$digest" ] || echo "sibling digest not installed"
-  python3 "$digest"
+  if [ -f "$digest" ]; then
+    python3 "$digest"
+  else
+    echo "sibling digest not installed — compose from context"
+  fi
   ```
 
   The sibling is present under a plugin or dev-symlink install, which bring
