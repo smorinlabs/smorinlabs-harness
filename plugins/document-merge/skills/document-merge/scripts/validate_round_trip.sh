@@ -17,11 +17,19 @@ if [ ! -f "$DECISIONS_LOG" ]; then
   exit 1
 fi
 
+# Every merged doc must exist. A skipped path would make the gate pass against
+# files it never read, so this is checked here rather than inside the command
+# substitution below, where `exit` would only leave the subshell.
+for doc in "$@"; do
+  if [ ! -f "$doc" ]; then
+    echo "FAIL: merged doc not found at $doc" >&2
+    exit 1
+  fi
+done
+
 # Inline markers: <!-- CONFLICT: CFL-### -->
 markers=$(for doc in "$@"; do
-  if [ -f "$doc" ]; then
-    grep -oE "CONFLICT: CFL-[0-9]+" "$doc" | grep -oE "CFL-[0-9]+" || true
-  fi
+  grep -oE "CONFLICT: CFL-[0-9]+" "$doc" | grep -oE "CFL-[0-9]+" || true
 done | sort -u)
 
 # Log entries: ### [ ] CFL-### or ### [x] CFL-###
