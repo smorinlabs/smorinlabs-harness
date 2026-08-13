@@ -183,7 +183,7 @@ Expect zero diff. **If the diff is non-empty, stop** — the merge modified a so
 
 - `scripts/capture_source_sha256.sh` — Phase 1 snapshot (cross-platform: detects `shasum`/`sha256sum`).
 - `scripts/validate_round_trip.sh` — Phase 4 marker↔log enforcement (parameterized).
-- `scripts/coverage_audit.sh` — Phase 7 source-heading vs. topic-map diff.
+- `scripts/coverage_audit.sh` — source-heading dump for the Phase 7 manual coverage diff. It lists headings and reminds you what to check; it does not read the topic map, and comparing them is your job.
 - `assets/cfl_entry_template.md` — The 6-field CFL entry structure.
 - `assets/plan_template.md` — Plan doc template for the 8 phases.
 - `references/cfl_classification.md` — Decision tree for "is this CFL-worthy?"
