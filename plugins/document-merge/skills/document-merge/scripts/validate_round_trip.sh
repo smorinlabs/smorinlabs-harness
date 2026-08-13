@@ -32,9 +32,22 @@ for doc in "$@"; do
 done
 
 # Inline markers: <!-- CONFLICT: CFL-### -->
-markers=$(for doc in "$@"; do
-  grep -oE "CONFLICT: CFL-[0-9]+" "$doc" | grep -oE "CFL-[0-9]+" || true
-done | sort -u)
+# Collected in a plain loop, not a command substitution: a read error must be
+# able to abort the script, and `exit` inside a substitution only leaves the
+# subshell. grep exit 1 means "no markers in this doc", which is normal;
+# anything above 1 is a real read failure and must never be swallowed into an
+# empty marker set.
+raw_markers=""
+for doc in "$@"; do
+  status=0
+  found=$(grep -oE "CONFLICT: CFL-[0-9]+" "$doc") || status=$?
+  if [ "$status" -gt 1 ]; then
+    echo "FAIL: could not read markers from $doc (grep exit $status)" >&2
+    exit 1
+  fi
+  [ -n "$found" ] && raw_markers="$raw_markers$found"$'\n'
+done
+markers=$(printf '%s' "$raw_markers" | grep -oE "CFL-[0-9]+" | sort -u || true)
 
 # Log entries: ### [ ] CFL-### or ### [x] CFL-###
 entries=$(grep -E "^### \[[x ]\] CFL-[0-9]+" "$DECISIONS_LOG" | grep -oE "CFL-[0-9]+" | sort -u || true)

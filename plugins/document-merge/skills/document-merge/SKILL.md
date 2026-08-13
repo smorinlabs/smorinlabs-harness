@@ -99,7 +99,7 @@ Reviewing the skeletons with the user before filling them avoids expensive backt
 
 ### Phase 4: Write the validation script
 
-Place `scripts/validate_round_trip.sh` (provided) in the consolidated dir. It enforces that every `<!-- CONFLICT: CFL-XXX -->` marker in the merged docs has a matching `### [ ] CFL-XXX` or `### [x] CFL-XXX` entry in the decisions log, and vice versa.
+Place `scripts/validate_round_trip.sh` (provided) in the consolidated dir. It enforces that every `<!-- CONFLICT: CFL-XXX -->` marker in the merged docs has a matching `### [ ] CFL-XXX` or `### [x] CFL-XXX` entry in the decisions log, and vice versa. **One exception:** an entry retired under the ID-hygiene rule — its body carrying a `**Status:** Withdrawn` line — is expected to have no inline marker, so it is excluded from the comparison and reported as excluded. A withdrawn entry whose marker is still in a doc remains a failure.
 
 Run it after every merge phase. If it fails, fix before continuing.
 
@@ -157,11 +157,25 @@ Conclusion sections, repeated rationale paragraphs, and content fully captured e
    match it in step 3.
 
    ```bash
+   # (a) two sources sharing a basename
    for f in <source-files...>; do basename "$f"; done | sort | uniq -d
+
+   # (b) a destination that already exists — e.g. from an earlier run
+   for f in <source-files...>; do
+     [ -e "<archive-dir>/$(basename "$f")" ] && echo "occupied: $(basename "$f")"
+   done
    ```
 
-   Any output is a collision. Resolve it by archiving those sources into
-   separate directories, and only then continue.
+   Any output from either check is a collision. **Both matter:** (a) catches
+   two sources colliding with each other, (b) catches a source colliding with
+   a file already in the archive, which (a) cannot see.
+
+   Resolve a collision by renaming or relocating the *source* before Phase 1,
+   or by archiving the colliding sources in a separate run with its own
+   baseline. Do **not** archive them into subdirectories under
+   `<archive-dir>/`: the step-4 verification globs the archive's top level
+   only and rewrites a single flat path prefix, so a nested file would not be
+   hashed and the guarantee would silently cover less than it claims.
 3. Move each source file: `git mv` if in a git repo, plain `mv` otherwise.
    `git mv` already refuses to clobber (`fatal: destination exists`), so this
    only bites outside a repo, where the loss is unrecoverable. Note that
