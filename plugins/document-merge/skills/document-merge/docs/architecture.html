@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>document-merge — Architecture &amp; Workflow</title>
+<style>
+  :root {
+    --bg: #fdfdfb;
+    --fg: #1b1b1b;
+    --muted: #555;
+    --rule: #ddd;
+    --accent: #1c4f82;
+    --good: #1f6d3f;
+    --bad: #8a2a2a;
+    --code-bg: #f3f1ec;
+    --box-bg: #fff;
+    --box-border: #c8c4ba;
+    --hl: #fffbe8;
+    /* artifact role colors */
+    --role-input:    #d8e8f3;
+    --role-input-b:  #6691b8;
+    --role-output:   #d8ecdf;
+    --role-output-b: #65a583;
+    --role-log:      #f6e8c8;
+    --role-log-b:    #c69b00;
+    --role-gate:     #f0d8d8;
+    --role-gate-b:   #b3666a;
+  }
+  body {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    max-width: 940px;
+    margin: 2.5rem auto;
+    padding: 0 1.4rem 4rem;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.55;
+    font-size: 17px;
+  }
+  h1 {
+    font-size: 1.95rem;
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  h1 + .tagline {
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 2.4rem;
+  }
+  h2 {
+    margin-top: 3.2rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 1.4rem;
+    letter-spacing: -0.005em;
+  }
+  h3 {
+    margin-top: 2rem;
+    font-size: 1.12rem;
+    color: var(--accent);
+  }
+  h4 {
+    margin-top: 1.2rem;
+    font-size: 0.98rem;
+  }
+  p { margin: 0.7rem 0; }
+  code {
+    font-family: "SF Mono", "Menlo", Consolas, monospace;
+    font-size: 0.91em;
+    background: var(--code-bg);
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.9rem 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.85em;
+    line-height: 1.45;
+  }
+  pre code { background: transparent; padding: 0; }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.32rem 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    font-size: 0.94em;
+  }
+  th, td {
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    background: var(--code-bg);
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-weight: 600;
+    font-size: 0.83em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Role chip */
+  .chip {
+    display: inline-block;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.18em 0.55em;
+    border-radius: 3px;
+    border: 1px solid;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+  }
+  .chip.input  { background: var(--role-input);  border-color: var(--role-input-b);  color: #234766; }
+  .chip.output { background: var(--role-output); border-color: var(--role-output-b); color: #205a3a; }
+  .chip.log    { background: var(--role-log);    border-color: var(--role-log-b);    color: #7a5b00; }
+  .chip.gate   { background: var(--role-gate);   border-color: var(--role-gate-b);   color: #7a2727; }
+
+  /* Artifact deep-dive blocks */
+  .artifact-card {
+    border: 1px solid var(--box-border);
+    border-radius: 6px;
+    margin: 1.8rem 0;
+    background: var(--box-bg);
+    overflow: hidden;
+  }
+  .artifact-card .head {
+    background: var(--code-bg);
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid var(--box-border);
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 0.95em;
+    color: var(--accent);
+  }
+  .artifact-card .head .filename { font-weight: 600; }
+  .artifact-card .body { padding: 1rem 1.1rem; }
+  .artifact-card .body h4 { margin-top: 0; }
+
+  /* Verdict cards */
+  .verdict {
+    border-left: 4px solid var(--rule);
+    padding: 0.65rem 1rem;
+    margin: 0.8rem 0;
+    background: var(--box-bg);
+  }
+  .verdict.good { border-color: var(--good); }
+  .verdict.bad  { border-color: var(--bad); }
+  .verdict h4 {
+    margin: 0 0 0.3rem;
+    font-size: 0.98rem;
+    letter-spacing: -0.005em;
+  }
+  .verdict.good h4 { color: var(--good); }
+  .verdict.bad h4  { color: var(--bad); }
+  .verdict p { margin: 0.3rem 0; font-size: 0.95em; }
+
+  /* Callout box */
+  .callout {
+    background: var(--hl);
+    border-left: 3px solid var(--role-log-b);
+    padding: 0.7rem 1rem;
+    margin: 1.2rem 0;
+    font-size: 0.95em;
+  }
+  .callout strong { color: #7a5b00; }
+
+  /* Diagram wrapper */
+  .diagram {
+    margin: 1.4rem auto;
+    display: block;
+    background: var(--box-bg);
+    border: 1px solid var(--box-border);
+    border-radius: 6px;
+    padding: 1rem 0.8rem 0.4rem;
+  }
+  .legend {
+    font-size: 0.83em;
+    color: var(--muted);
+    margin: 0.4rem auto 1rem;
+    text-align: center;
+    max-width: 720px;
+  }
+
+  /* Color legend bar */
+  .color-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+    justify-content: center;
+    margin: 1.2rem 0 0.4rem;
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+  .color-legend .item { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .color-legend .sw {
+    width: 16px; height: 16px; border-radius: 3px; border: 1px solid;
+    display: inline-block;
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--box-bg);
+    border: 1px solid var(--box-border);
+    border-radius: 5px;
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 2.5rem;
+    font-size: 0.94em;
+  }
+  .toc ol { margin: 0.3rem 0 0; padding-left: 1.3rem; }
+  .toc li { margin: 0.18rem 0; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 3rem 0 1.5rem;
+  }
+  footer {
+    color: var(--muted);
+    font-size: 0.84em;
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  /* Two-column layout for compact illustration + text */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+    gap: 1.2rem;
+    align-items: start;
+    margin: 1rem 0;
+  }
+  @media (max-width: 720px) {
+    .split { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>document-merge</h1>
+<div class="tagline">An architectural reference for the workflow that merges N markdown documents into M consolidated outputs without losing information.</div>
+
+<!-- ============================================================ -->
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#big-picture">At a glance — the five artifacts</a></li>
+    <li><a href="#workflow">The workflow — 8 phases on a timeline</a></li>
+    <li><a href="#per-file">Inside each artifact (deep dive)</a></li>
+    <li><a href="#invariants">The three invariants the design enforces</a></li>
+    <li><a href="#good">Why this is good design</a></li>
+    <li><a href="#bad">Why this is expensive design</a></li>
+    <li><a href="#when">When to use vs. when to skip</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="problem">1. The problem</h2>
+
+<p>You have <em>N</em> markdown documents covering the same territory — research notes, design drafts, README variants, spec revisions. They overlap. They contradict in places. Some sections are unique to one document; others are word-for-word duplicates across several.</p>
+
+<p>You want a smaller number of <em>consolidated</em> outputs (often just one) with three properties:</p>
+
+<ol>
+  <li><strong>Zero information loss.</strong> Every unique fact, code sample, value, and recommendation present in any source must survive or be explicitly logged as intentionally omitted with a reason.</li>
+  <li><strong>Auditable synthesis.</strong> Every non-trivial judgment call — choosing source A's wording over source B's, picking one version pin over another — must be traceable to its sources and reviewable later.</li>
+  <li><strong>Reverifiable originals.</strong> The source files must remain byte-identical somewhere accessible, so the merge can be re-audited months later against exactly what it saw.</li>
+</ol>
+
+<p>A naïve approach — open the files, write a new doc — fails all three quietly. You don't know what you dropped. You can't reconstruct why you chose what you chose. By the time you want to check, the originals may have been edited or deleted.</p>
+
+<!-- ============================================================ -->
+<h2 id="big-picture">2. At a glance — the five artifacts</h2>
+
+<p>Every merge produces (or operates on) five named artifacts. Each has a single role. Two are immutable inputs, two are synthesized outputs, two are audit logs, and one is a verification gate. (Five artifacts, six roles — the consolidated docs are both outputs and the substrate the audit logs annotate.)</p>
+
+<div class="color-legend">
+  <span class="item"><span class="sw" style="background:var(--role-input);  border-color:var(--role-input-b);"></span> immutable input</span>
+  <span class="item"><span class="sw" style="background:var(--role-output); border-color:var(--role-output-b);"></span> synthesized output</span>
+  <span class="item"><span class="sw" style="background:var(--role-log);    border-color:var(--role-log-b);"></span> audit log</span>
+  <span class="item"><span class="sw" style="background:var(--role-gate);   border-color:var(--role-gate-b);"></span> verification gate</span>
+</div>
+
+<svg class="diagram" viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+    <marker id="arrv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a2a2a"/>
+    </marker>
+  </defs>
+
+  <!-- Sources (input) -->
+  <g>
+    <rect x="20" y="40" width="190" height="80" rx="5"
+          fill="#d8e8f3" stroke="#6691b8" stroke-width="1.5"/>
+    <text x="115" y="62" text-anchor="middle"
+          font-family="Georgia, serif" font-size="14" fill="#1b1b1b">N source .md files</text>
+    <text x="115" y="82" text-anchor="middle"
+          font-family="SF Mono, Menlo, monospace" font-size="10" fill="#234766">source-a.md</text>
+    <text x="115" y="98" text-anchor="middle"
+          font-family="SF Mono, Menlo, monospace" font-size="10" fill="#234766">source-b.md</text>
+    <text x="115" y="114" text-anchor="middle"
+          font-family="SF Mono, Menlo, monospace" font-size="10" fill="#234766">source-c.md  …</text>
+  </g>
+
+  <!-- SHA manifest (audit log, frozen baseline) -->
+  <g>
+    <rect x="20" y="220" width="190" height="70" rx="5"
+          fill="#f6e8c8" stroke="#c69b00" stroke-width="1.5"/>
+    <text x="115" y="245" text-anchor="middle"
+          font-family="Georgia, serif" font-size="13" fill="#1b1b1b">.source-sha256</text>
+    <text x="115" y="262" text-anchor="middle"
+          font-family="Georgia, serif" font-size="13" fill="#1b1b1b">-pre-merge.txt</text>
+    <text x="115" y="280" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">frozen baseline</text>
+  </g>
+
+  <!-- Consolidated docs (output) -->
+  <g>
+    <rect x="360" y="40" width="200" height="100" rx="5"
+          fill="#d8ecdf" stroke="#65a583" stroke-width="1.5"/>
+    <text x="460" y="64" text-anchor="middle"
+          font-family="Georgia, serif" font-size="14" fill="#1b1b1b">consolidated/*.md</text>
+    <text x="460" y="84" text-anchor="middle"
+          font-family="SF Mono, Menlo, monospace" font-size="10" fill="#205a3a">concepts.md</text>
+    <text x="460" y="99" text-anchor="middle"
+          font-family="SF Mono, Menlo, monospace" font-size="10" fill="#205a3a">implementation.md</text>
+    <text x="460" y="116" text-anchor="middle"
+          font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">
+      inline &lt;!-- CONFLICT: CFL-XXX --&gt;
+    </text>
+    <text x="460" y="130" text-anchor="middle"
+          font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">
+      markers at end of synth blocks
+    </text>
+  </g>
+
+  <!-- decisions-and-conflicts.md (audit log) -->
+  <g>
+    <rect x="360" y="200" width="200" height="120" rx="5"
+          fill="#f6e8c8" stroke="#c69b00" stroke-width="1.5"/>
+    <text x="460" y="222" text-anchor="middle"
+          font-family="Georgia, serif" font-size="13" fill="#1b1b1b">decisions-and-conflicts.md</text>
+    <text x="460" y="248" text-anchor="start"
+          font-family="SF Mono, Menlo, monospace" font-size="9.5" fill="#7a5b00">
+      <tspan x="375" dy="0">• topic-to-source map</tspan>
+      <tspan x="375" dy="14">• CFL-001 … CFL-NNN</tspan>
+      <tspan x="375" dy="14">  (6 fields each)</tspan>
+      <tspan x="375" dy="14">• intentionally-omitted</tspan>
+      <tspan x="375" dy="14">  source sections</tspan>
+    </text>
+  </g>
+
+  <!-- validate.sh (gate) -->
+  <g>
+    <rect x="710" y="200" width="160" height="80" rx="5"
+          fill="#f0d8d8" stroke="#b3666a" stroke-width="1.5"/>
+    <text x="790" y="225" text-anchor="middle"
+          font-family="Georgia, serif" font-size="13" fill="#1b1b1b">validate.sh</text>
+    <text x="790" y="246" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">enforces</text>
+    <text x="790" y="262" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">marker ↔ entry</text>
+    <text x="790" y="278" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">round-trip</text>
+  </g>
+
+  <!-- archive/*.md (output, byte-identical to sources) -->
+  <g>
+    <rect x="710" y="40" width="160" height="90" rx="5"
+          fill="#d8ecdf" stroke="#65a583" stroke-width="1.5"/>
+    <text x="790" y="65" text-anchor="middle"
+          font-family="Georgia, serif" font-size="14" fill="#1b1b1b">archive/*.md</text>
+    <text x="790" y="86" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">byte-identical</text>
+    <text x="790" y="102" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">to inputs,</text>
+    <text x="790" y="118" text-anchor="middle"
+          font-family="Georgia, serif" font-size="11" fill="#555" font-style="italic">verified at end</text>
+  </g>
+
+  <!-- arrows: composition flow -->
+  <!-- sources -> SHA manifest -->
+  <path d="M115,120 L115,220" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+  <text x="125" y="175" font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">snapshot</text>
+
+  <!-- sources -> consolidated -->
+  <path d="M210,80 L360,80" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+  <text x="245" y="73" font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">merge</text>
+
+  <!-- sources -> decisions (topic map) -->
+  <path d="M210,100 Q280,150 360,235" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+  <text x="240" y="160" font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">bind line ranges</text>
+
+  <!-- consolidated -> decisions (markers create entries) -->
+  <path d="M460,140 L460,200" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+  <text x="467" y="175" font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">each marker → entry</text>
+
+  <!-- decisions -> validate -->
+  <path d="M560,250 L710,250" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+  <!-- consolidated -> validate -->
+  <path d="M560,100 Q640,140 720,210" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+
+  <!-- sources -> archive -->
+  <path d="M210,60 Q450,30 710,60" stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arr1)"/>
+  <text x="430" y="22" font-family="Georgia, serif" font-size="10" fill="#555" font-style="italic">git mv (Phase 8)</text>
+
+  <!-- VERIFY: archive vs SHA manifest -->
+  <path d="M710,110 Q450,200 210,255"
+        stroke="#8a2a2a" stroke-width="1.7" stroke-dasharray="5 4"
+        fill="none" marker-end="url(#arrv)"/>
+  <text x="430" y="345" font-family="Georgia, serif" font-size="11" fill="#8a2a2a" font-style="italic"
+        text-anchor="middle">
+    Phase 8 verification: shasum of archive vs. baseline must diff to zero
+  </text>
+</svg>
+
+<div class="legend">Solid arrows: artifact A is needed to produce or constrain artifact B. Dashed red arrow: the byte-identical verification gate run at the end of the merge. The archive and SHA manifest are produced at opposite ends of the workflow but tie together by this single check.</div>
+
+<!-- ============================================================ -->
+<h2 id="workflow">3. The workflow — 8 phases on a timeline</h2>
+
+<p>The workflow is a strict sequence of eight phases. Each phase produces or modifies one or more artifacts. The diagram below shows which phase touches which artifact, and what verification gate (if any) runs at each step.</p>
+
+<svg class="diagram" viewBox="0 0 900 460" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#777"/>
+    </marker>
+  </defs>
+
+  <!-- Phase columns -->
+  <g font-family="-apple-system, sans-serif" font-size="10" fill="#555" font-weight="600" text-transform="uppercase">
+    <text x="60"  y="25" text-anchor="middle">PHASE 1</text>
+    <text x="160" y="25" text-anchor="middle">PHASE 2</text>
+    <text x="260" y="25" text-anchor="middle">PHASE 3</text>
+    <text x="360" y="25" text-anchor="middle">PHASE 4</text>
+    <text x="475" y="25" text-anchor="middle">PHASE 5</text>
+    <text x="615" y="25" text-anchor="middle">PHASE 6</text>
+    <text x="725" y="25" text-anchor="middle">PHASE 7</text>
+    <text x="835" y="25" text-anchor="middle">PHASE 8</text>
+  </g>
+
+  <g font-family="Georgia, serif" font-size="10" fill="#1b1b1b">
+    <text x="60"  y="42" text-anchor="middle">snapshot</text>
+    <text x="160" y="42" text-anchor="middle">topic map</text>
+    <text x="260" y="42" text-anchor="middle">skeletons</text>
+    <text x="360" y="42" text-anchor="middle">validation</text>
+    <text x="475" y="42" text-anchor="middle">merge content</text>
+    <text x="615" y="42" text-anchor="middle">cross-refs</text>
+    <text x="725" y="42" text-anchor="middle">coverage audit</text>
+    <text x="835" y="42" text-anchor="middle">archive + verify</text>
+  </g>
+
+  <!-- Vertical phase guides -->
+  <g stroke="#eee" stroke-width="1">
+    <line x1="60"  y1="55" x2="60"  y2="430"/>
+    <line x1="160" y1="55" x2="160" y2="430"/>
+    <line x1="260" y1="55" x2="260" y2="430"/>
+    <line x1="360" y1="55" x2="360" y2="430"/>
+    <line x1="475" y1="55" x2="475" y2="430"/>
+    <line x1="615" y1="55" x2="615" y2="430"/>
+    <line x1="725" y1="55" x2="725" y2="430"/>
+    <line x1="835" y1="55" x2="835" y2="430"/>
+  </g>
+
+  <!-- Row labels -->
+  <g font-family="-apple-system, sans-serif" font-size="11" fill="#444" text-anchor="end">
+    <text x="50" y="89">sources</text>
+    <text x="50" y="139">SHA manifest</text>
+    <text x="50" y="189">consolidated docs</text>
+    <text x="50" y="239">topic map</text>
+    <text x="50" y="289">CFL log</text>
+    <text x="50" y="339">intent.-omitted</text>
+    <text x="50" y="389">archive</text>
+    <text x="50" y="425" font-weight="600" font-style="italic">validate.sh runs</text>
+  </g>
+
+  <!-- Sources row (input, always present) -->
+  <rect x="55" y="78" width="780" height="22" fill="#d8e8f3" stroke="#6691b8" stroke-width="1" rx="3"/>
+  <text x="445" y="93" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#234766" font-style="italic">immutable throughout — read by phases 1, 2, 5, 7</text>
+
+  <!-- SHA manifest -->
+  <rect x="55"  y="128" width="20" height="22" fill="#c69b00" rx="3"/>
+  <rect x="75"  y="128" width="755" height="22" fill="#f6e8c8" stroke="#c69b00" stroke-width="1" rx="3"/>
+  <text x="450" y="143" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#7a5b00" font-style="italic">written in Phase 1 — read by Phase 8 for the diff</text>
+
+  <!-- Consolidated docs: skeleton (P3), filled (P5), cross-refs added (P6) -->
+  <rect x="255" y="178" width="20" height="22" fill="#65a583" rx="3"/>
+  <rect x="275" y="178" width="200" height="22" fill="#d8ecdf" stroke="#65a583" stroke-width="1" rx="3"/>
+  <text x="375" y="193" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#205a3a" font-style="italic">skeletons</text>
+  <rect x="475" y="178" width="140" height="22" fill="#65a583" rx="3" opacity="0.9"/>
+  <text x="545" y="193" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#fff" font-weight="600">merge content + markers</text>
+  <rect x="615" y="178" width="110" height="22" fill="#65a583" rx="3" opacity="0.7"/>
+  <text x="670" y="193" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#fff" font-weight="600">cross-refs</text>
+
+  <!-- Topic-to-source map -->
+  <rect x="155" y="228" width="20" height="22" fill="#c69b00" rx="3"/>
+  <rect x="175" y="228" width="655" height="22" fill="#f6e8c8" stroke="#c69b00" stroke-width="1" rx="3"/>
+  <text x="500" y="243" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#7a5b00" font-style="italic">written in Phase 2 — referenced in 5, audited in 7</text>
+
+  <!-- CFL log -->
+  <rect x="475" y="278" width="140" height="22" fill="#c69b00" rx="3"/>
+  <text x="545" y="293" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#fff" font-weight="600">entries written</text>
+  <rect x="615" y="278" width="215" height="22" fill="#f6e8c8" stroke="#c69b00" stroke-width="1" rx="3"/>
+  <text x="722" y="293" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#7a5b00" font-style="italic">resolution notes added later</text>
+
+  <!-- Intentionally-omitted log -->
+  <rect x="725" y="328" width="105" height="22" fill="#c69b00" rx="3"/>
+  <text x="777" y="343" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#fff" font-weight="600">audit fills it</text>
+
+  <!-- Archive -->
+  <rect x="830" y="378" width="40" height="22" fill="#65a583" rx="3"/>
+  <text x="850" y="393" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#fff" font-weight="600">move</text>
+
+  <!-- validate.sh runs (red ticks) -->
+  <g fill="#b3666a">
+    <circle cx="360" cy="425" r="5"/>
+    <circle cx="475" cy="425" r="5"/>
+    <circle cx="540" cy="425" r="5"/>
+    <circle cx="615" cy="425" r="5"/>
+    <circle cx="725" cy="425" r="5"/>
+    <circle cx="835" cy="425" r="5"/>
+  </g>
+  <text x="360" y="445" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#8a2a2a" font-style="italic">first run (0/0)</text>
+  <text x="540" y="445" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#8a2a2a" font-style="italic">after each doc</text>
+  <text x="725" y="445" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#8a2a2a" font-style="italic">post-audit</text>
+  <text x="835" y="445" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#8a2a2a" font-style="italic">final</text>
+</svg>
+
+<div class="legend">Time flows left to right. A dark colored bar = the artifact is being created or modified in that phase. A light colored bar = the artifact exists and is being read/referenced. Red dots = <code>validate.sh</code> is run as a gate.</div>
+
+<h3>Phase-by-phase</h3>
+
+<ol>
+  <li><strong>Pre-flight snapshot.</strong> Compute SHA-256 of every source file. Write to <code>.source-sha256-pre-merge.txt</code>. This is the only verifiable baseline; without it, Phase 8 cannot prove anything.</li>
+  <li><strong>Topic-to-source map.</strong> Extract every heading from every source with its line range. For each planned output section, bind it to its contributing source file(s) and line range(s). Save as the first section of <code>decisions-and-conflicts.md</code>.</li>
+  <li><strong>Skeleton outputs.</strong> Write the section structure of each consolidated doc — headings only, empty bodies. Forces architectural decisions before any synthesis happens.</li>
+  <li><strong>Validation script.</strong> Drop in the marker↔entry round-trip enforcer. First run reports 0/0 PASS. This is the gate for every subsequent phase.</li>
+  <li><strong>Merge content.</strong> Fill each skeleton from the mapped source ranges. Log every non-trivial synthesis as a CFL entry. Mark each entry's location inline at the end of the synthesized block. Run <code>validate.sh</code> after each output doc completes.</li>
+  <li><strong>Cross-references.</strong> If multiple output docs, link between them using GitHub anchor rules. Verify every anchor resolves.</li>
+  <li><strong>Coverage audit.</strong> Dump every source heading. For each one not in the topic-to-source map, add an entry to <em>Intentionally omitted source sections</em> with a reason. No silent drops survive this gate.</li>
+  <li><strong>Archive and verify.</strong> <code>git mv</code> originals to <code>archive/</code>. Diff SHA-256 of the archive against the Phase 1 baseline — must be zero diff. Run <code>validate.sh</code> one final time.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="per-file">4. Inside each artifact</h2>
+
+<p>This section is the heart of the document. For each artifact, we show: what it contains, what logic produces it, what consumes it downstream, and a representative snippet.</p>
+
+<!-- ============================================================ -->
+<div class="artifact-card">
+  <div class="head">
+    <span class="chip input">input</span>
+    <span class="filename">source-*.md  (N source files)</span>
+  </div>
+  <div class="body">
+    <h4>Purpose</h4>
+    <p>The raw inputs to the merge. Multiple markdown documents with overlapping content. Never modified during the workflow — the inviolable-originals guarantee depends on it.</p>
+
+    <h4>Logic</h4>
+    <p>None. These are user inputs. The workflow only reads them.</p>
+
+    <h4>What consumes it</h4>
+    <ul>
+      <li><strong>Phase 1</strong> computes SHA-256 over each file to write the baseline manifest.</li>
+      <li><strong>Phase 2</strong> reads each file to extract headings for the topic-to-source map.</li>
+      <li><strong>Phase 5</strong> reads the mapped line ranges to produce the merged content.</li>
+      <li><strong>Phase 7</strong> re-reads every heading for the coverage audit.</li>
+      <li><strong>Phase 8</strong> moves them to <code>archive/</code> via <code>git mv</code>.</li>
+    </ul>
+
+    <h4>Snippet (illustrative)</h4>
+<pre><code># Observability on GCP — A Tracing-First Guide
+
+## Google Cloud's observability stack
+Cloud Trace is where spans land …
+
+## Distributed tracing from first principles
+A trace represents a single end-to-end request …
+</code></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="artifact-card">
+  <div class="head">
+    <span class="chip log">audit log</span>
+    <span class="filename">consolidated/.source-sha256-pre-merge.txt</span>
+  </div>
+  <div class="body">
+    <h4>Purpose</h4>
+    <p>A frozen baseline of every source file's byte-content, captured before any merging starts. The single source of truth for "what the originals were when the merge began."</p>
+
+    <h4>Logic</h4>
+    <p>One line per source file. Each line is <code>shasum -a 256</code> output: a 64-character hex digest, two spaces, and the relative path. Sorted for deterministic comparison. Written once in Phase 1; never modified again.</p>
+
+    <h4>What consumes it</h4>
+    <ul>
+      <li><strong>Phase 8 verification.</strong> After archiving, the workflow computes SHA-256 of every archived file and diffs the result against this baseline. Any non-empty diff means a source file was modified during the merge — a violation of the inviolable-originals guarantee.</li>
+    </ul>
+
+    <h4>Snippet</h4>
+<pre><code>05f01c0089753c1e6cf70fc34bd416cb0eecfe5504465ee9d45a18af0527365d  research/Structured Logging on GCP with Bun.md
+503416b1c5391611c77459841b11adfe7c063830672fe7a1293b824a7eddd945  research/o03 - Observability Tracing-First Guide.md
+66e8ce92dffa46a977cddeed56cc19a4e74152753d1b4efe42ec7c8755ef7a78  research/o01 - The Opinionated Guide.md
+…
+</code></pre>
+
+    <h4>Why the file is hidden (leading dot)</h4>
+    <p>The manifest is bookkeeping, not content. Hiding it from default <code>ls</code> output keeps the <code>consolidated/</code> directory listing focused on the user-facing outputs. It is committed to git as a regular file — hidden in the filesystem, visible in version control.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="artifact-card">
+  <div class="head">
+    <span class="chip output">output</span>
+    <span class="filename">consolidated/*.md  (the merged documents)</span>
+  </div>
+  <div class="body">
+    <h4>Purpose</h4>
+    <p>The user-facing result. One or more markdown documents containing the synthesized content from the sources, organized into the section structure decided in Phase 3.</p>
+
+    <h4>Logic</h4>
+    <p>Each output doc is structured as a series of sections (typically <code>##</code> top-level, <code>###</code> subsections). Each section is filled with content from the source line ranges mapped to it in Phase 2's topic-to-source map. When a synthesis combines material from multiple sources, the merged paragraph ends with an inline HTML comment marker: <code>&lt;!-- CONFLICT: CFL-XXX --&gt;</code>. The marker points at the corresponding entry in <code>decisions-and-conflicts.md</code>.</p>
+
+    <h4>Marker placement rule</h4>
+    <p>Markers go at the <strong>end</strong> of the synthesized block, never at the start. The reader sees the content first, then the audit pointer. This is the single most common review violation; reviewers will flag it and require a fix.</p>
+
+    <h4>What consumes it</h4>
+    <ul>
+      <li><strong>The user</strong> — this is what the merge is for.</li>
+      <li><strong>validate.sh</strong> — greps for <code>CFL-XXX</code> markers to verify each has a matching log entry.</li>
+      <li><strong>Phase 7 coverage audit</strong> — indirectly: the topic-to-source map is the contract, and reviewers verify each mapped range is represented in the merged content.</li>
+    </ul>
+
+    <h4>Snippet</h4>
+<pre><code>## 5.7 Context propagation to downstream services
+
+The `propagation.inject()` call writes both `traceparent` and
+`X-Cloud-Trace-Context` headers because we configured a
+`CompositePropagator`. The downstream service extracts these headers,
+and the full request flow appears as a single trace in Cloud Trace.
+&lt;!-- CONFLICT: CFL-013 --&gt;
+</code></pre>
+    <p class="legend" style="text-align:left;">The marker on the last line points at <code>CFL-013</code> in the decisions log — the entry there explains which source the synthesis came from and what was chosen.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="artifact-card">
+  <div class="head">
+    <span class="chip log">audit log</span>
+    <span class="filename">consolidated/decisions-and-conflicts.md</span>
+  </div>
+  <div class="body">
+    <h4>Purpose</h4>
+    <p>The complete audit log for the merge. Holds three distinct things: a topic-to-source map (the contract), a list of CFL entries (the per-decision log), and a list of intentionally-omitted source sections (the coverage receipt).</p>
+
+    <h4>Structure</h4>
+    <p>The file is divided into three top-level sections, written in this order:</p>
+    <ol>
+      <li><strong>Topic-to-source-section map</strong> — one table per output doc, binding each section to source file(s) and line ranges.</li>
+      <li><strong>Intentionally omitted source sections</strong> — bullet list, one entry per source section not in the map, with a reason.</li>
+      <li><strong>CFL entries</strong> — one entry per non-trivial judgment call, each with stable ID and six standard fields.</li>
+    </ol>
+
+    <h4>Logic</h4>
+    <p>The map is written in Phase 2 from heading extraction. CFL entries are appended in Phase 5 as decisions arise; IDs are monotonic and gap-free. The intentionally-omitted log is filled in Phase 7 from the coverage audit's diff between source headings and the topic-to-source map.</p>
+
+    <h4>What consumes it</h4>
+    <ul>
+      <li><strong>validate.sh</strong> — greps <code>### [ ] CFL-XXX</code> and <code>### [x] CFL-XXX</code> entries to verify every one has an inline marker.</li>
+      <li><strong>Phase 5 reviewers</strong> — read the topic-to-source map to verify each mapped range is represented in the merged content.</li>
+      <li><strong>Future readers</strong> — the user, months later, auditing why a decision was made.</li>
+    </ul>
+
+    <h4>The anatomy of a CFL entry</h4>
+    <p>Every CFL entry has the same six fields. This is the anatomy:</p>
+
+    <svg class="diagram" viewBox="0 0 800 460" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="20" width="640" height="420" fill="#fffbf2" stroke="#c69b00" stroke-width="1.5" rx="6"/>
+
+      <!-- Header line -->
+      <text x="50" y="55" font-family="SF Mono, Menlo, monospace" font-size="13" fill="#7a5b00">### [ ] CFL-013 — Context propagation across services</text>
+
+      <!-- Where -->
+      <text x="50" y="100" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">Where:</text>
+      <text x="120" y="100" font-family="SF Mono, Menlo, monospace" font-size="11" fill="#555">implementation.md § 5.7 (final paragraph)</text>
+
+      <!-- Type -->
+      <text x="50" y="135" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">Type:</text>
+      <text x="120" y="135" font-family="-apple-system,sans-serif" font-size="11" fill="#555">Synthesis judgment</text>
+
+      <!-- Sources -->
+      <text x="50" y="170" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">Sources:</text>
+      <text x="120" y="170" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#555">o03 lines 444–492 · Production-Grade lines 807–844</text>
+
+      <!-- The conflict / decision -->
+      <text x="50" y="210" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">The conflict / decision:</text>
+      <text x="50" y="230" font-family="Georgia,serif" font-size="11" fill="#444" font-style="italic">Why a non-trivial judgment was needed: factual conflict, framing difference, or non-obvious choice.</text>
+
+      <!-- Excerpts -->
+      <text x="50" y="270" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">Source excerpts:</text>
+      <text x="50" y="290" font-family="Georgia,serif" font-size="11" fill="#444" font-style="italic">Verbatim quote from source A · verbatim quote from source B — long enough to verify the synthesis without re-reading the originals.</text>
+
+      <!-- Synthesized version -->
+      <text x="50" y="335" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">Synthesized / chosen version:</text>
+      <text x="50" y="355" font-family="Georgia,serif" font-size="11" fill="#444" font-style="italic">The text that ended up in the merged doc, verbatim. Round-trips to the inline marker.</text>
+
+      <!-- Resolution notes -->
+      <text x="50" y="395" font-family="-apple-system,sans-serif" font-size="11" font-weight="700" fill="#1b1b1b">Resolution notes:</text>
+      <text x="50" y="415" font-family="Georgia,serif" font-size="11" fill="#444" font-style="italic">Empty by default — for the user to fill in when reviewing. Check the [x] box to mark accepted.</text>
+
+      <!-- Side annotations -->
+      <g font-family="-apple-system,sans-serif" font-size="10" fill="#1c4f82" font-style="italic">
+        <text x="690" y="55">stable ID (write-once)</text>
+        <text x="690" y="100">where the marker lives</text>
+        <text x="690" y="135">one of six standard</text>
+        <text x="690" y="148">classification labels</text>
+        <text x="690" y="170">line-range citations</text>
+        <text x="690" y="220">prose explaining the</text>
+        <text x="690" y="233">choice and rationale</text>
+        <text x="690" y="280">primary evidence —</text>
+        <text x="690" y="293">enables re-audit</text>
+        <text x="690" y="345">what landed in the</text>
+        <text x="690" y="358">merged doc</text>
+        <text x="690" y="405">user review field</text>
+      </g>
+
+      <!-- Connecting lines from annotations -->
+      <g stroke="#1c4f82" stroke-width="0.8" fill="none" opacity="0.5">
+        <line x1="675" y1="50" x2="685" y2="50"/>
+        <line x1="675" y1="95" x2="685" y2="95"/>
+        <line x1="675" y1="130" x2="685" y2="130"/>
+        <line x1="675" y1="165" x2="685" y2="165"/>
+        <line x1="675" y1="215" x2="685" y2="215"/>
+        <line x1="675" y1="275" x2="685" y2="275"/>
+        <line x1="675" y1="340" x2="685" y2="340"/>
+        <line x1="675" y1="400" x2="685" y2="400"/>
+      </g>
+    </svg>
+
+    <h4>Snippets</h4>
+
+    <p><em>Topic-to-source map (one row):</em></p>
+<pre><code>| § 5.7 Context propagation to downstream services
+| `o03 - Tracing-First Guide.md`, `Production-Grade Logging.md`
+| 444–492 (o03), 807–844 (Production-Grade) |
+</code></pre>
+
+    <p><em>Intentionally-omitted entry:</em></p>
+<pre><code>- `o01 - The Opinionated Guide.md` § "Conclusion" (lines 533–end):
+  Wrap-up paragraph and prioritized action list. Each action is implemented in
+  implementation.md §§ 3.1, 4.3, 5.9, 9.2, 10.3. No new technical content.
+</code></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="artifact-card">
+  <div class="head">
+    <span class="chip gate">verification gate</span>
+    <span class="filename">consolidated/validate.sh</span>
+  </div>
+  <div class="body">
+    <h4>Purpose</h4>
+    <p>Enforces the round-trip between the inline <code>CFL-XXX</code> markers in the merged docs and the <code>### [ ] CFL-XXX</code> entries in the audit log. Fails (exits non-zero) if either side has an unmatched ID.</p>
+
+    <h4>Logic</h4>
+    <ol>
+      <li>Grep every <code>CFL-XXX</code> ID out of inline <code>&lt;!-- CONFLICT: CFL-XXX --&gt;</code> markers across all merged docs. Sort and dedupe — call this set <code>markers</code>.</li>
+      <li>Grep every <code>### [ ] CFL-XXX</code> or <code>### [x] CFL-XXX</code> heading out of the decisions log. Sort and dedupe — call this set <code>entries</code>.</li>
+      <li><code>comm -23 markers entries</code> — markers without entries (audit pointer goes nowhere).</li>
+      <li><code>comm -13 markers entries</code> — entries without markers (log entry orphaned).</li>
+      <li>If either is non-empty, print the offending IDs and exit 1. Otherwise print <code>PASS: N markers and N entries (all matched)</code> and exit 0.</li>
+    </ol>
+
+    <h4>Why bash and not a Python script</h4>
+    <p>The check is pure set algebra over text patterns — <code>grep | sort | comm</code> is the minimal toolset and has zero dependencies. The skill ships <code>validate_round_trip.sh</code> that runs anywhere a POSIX shell does.</p>
+
+    <h4>What it does not check</h4>
+    <p>The script verifies <em>structural</em> round-trip — that every ID has a partner on both sides. It does not check that the CFL entry text is correct, that the marker is placed at the end of the block, that the synthesis is sound, or that the entry's source line ranges are accurate. Those require human review.</p>
+
+    <h4>Snippet — what running it looks like</h4>
+<pre><code>$ bash validate.sh
+PASS: 27 markers and 27 entries (all matched)
+
+$ bash validate.sh   # after adding an entry but forgetting the marker
+FAIL: log entries without matching inline markers:
+  - CFL-028
+</code></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="artifact-card">
+  <div class="head">
+    <span class="chip output">output</span>
+    <span class="filename">archive/*.md  (the preserved originals)</span>
+  </div>
+  <div class="body">
+    <h4>Purpose</h4>
+    <p>The original source files, moved (not copied) out of their working location after the merge is verified complete. The archive lets future readers re-verify the merge against the exact bytes the merge saw.</p>
+
+    <h4>Logic</h4>
+    <p>In Phase 8, each source file is moved to <code>archive/</code> via <code>git mv</code> (so rename history is preserved). After the move, SHA-256 of each archived file is computed and diffed against the <code>.source-sha256-pre-merge.txt</code> baseline. The diff must be empty.</p>
+
+    <h4>The byte-identical guarantee</h4>
+    <p>If the post-archive sums differ from the pre-merge baseline by even a single byte, a source file was modified during the merge. This is treated as a hard failure — investigate and revert before proceeding. The guarantee is not "the originals are still readable" — it is "the originals are bit-for-bit unchanged."</p>
+
+    <h4>What consumes it</h4>
+    <ul>
+      <li><strong>Future re-audits</strong> — a reader can compare CFL excerpts in the log against the original lines in <code>archive/</code> at any time.</li>
+      <li><strong>git revert workflow</strong> — if the merge is later found wrong, <code>git revert</code> on the archive-move commit restores the originals to their working location.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="invariants">5. The three invariants the design enforces</h2>
+
+<p>The five artifacts exist to enforce three invariants. Each invariant has a single mechanical check that proves it.</p>
+
+<!-- Invariant 1: CFL round-trip -->
+<h3>Invariant 1 — every judgment call is auditable both ways</h3>
+<div class="split">
+  <div>
+    <p>Every <code>CFL-XXX</code> marker in a merged doc has a matching entry in the log, and every entry has a matching marker in a doc. No orphans on either side.</p>
+    <p><strong>Enforced by:</strong> <code>validate.sh</code> (Phase 4 onwards).</p>
+    <p><strong>Failure mode it prevents:</strong> writing an audit entry that refers to no specific paragraph, or marking a paragraph as "see CFL-014" when no such entry exists.</p>
+  </div>
+  <svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" class="diagram" style="margin:0;">
+    <defs>
+      <marker id="arr-rt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#1c4f82"/>
+      </marker>
+    </defs>
+    <!-- Merged doc -->
+    <rect x="20" y="30" width="130" height="180" fill="#d8ecdf" stroke="#65a583" stroke-width="1.5" rx="4"/>
+    <text x="85" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="11" font-weight="600">consolidated/*.md</text>
+    <g font-family="SF Mono,Menlo,monospace" font-size="9.5" fill="#205a3a">
+      <text x="35" y="78">…paragraph…</text>
+      <text x="35" y="93">CFL-001 --&gt;</text>
+      <text x="35" y="118">…paragraph…</text>
+      <text x="35" y="133">CFL-002 --&gt;</text>
+      <text x="35" y="158">…paragraph…</text>
+      <text x="35" y="173">CFL-003 --&gt;</text>
+      <text x="35" y="198" fill="#444">… 27 total …</text>
+    </g>
+    <!-- Decisions log -->
+    <rect x="210" y="30" width="130" height="180" fill="#f6e8c8" stroke="#c69b00" stroke-width="1.5" rx="4"/>
+    <text x="275" y="50" text-anchor="middle" font-family="Georgia,serif" font-size="11" font-weight="600">decisions-and-conflicts.md</text>
+    <g font-family="SF Mono,Menlo,monospace" font-size="9.5" fill="#7a5b00">
+      <text x="225" y="78">### [ ] CFL-001</text>
+      <text x="225" y="98">### [ ] CFL-002</text>
+      <text x="225" y="118">### [ ] CFL-003</text>
+      <text x="225" y="138">### [ ] CFL-004</text>
+      <text x="225" y="158">### [ ] CFL-005</text>
+      <text x="225" y="178">### [ ] CFL-006</text>
+      <text x="225" y="200" fill="#444">… 27 total …</text>
+    </g>
+    <!-- Round-trip arrows -->
+    <path d="M150,85 L210,75" stroke="#1c4f82" stroke-width="1.3" fill="none" marker-end="url(#arr-rt)"/>
+    <path d="M210,80 L150,90" stroke="#1c4f82" stroke-width="1.3" fill="none" marker-end="url(#arr-rt)"/>
+    <text x="180" y="222" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#1c4f82" font-style="italic">validate.sh ensures both directions</text>
+  </svg>
+</div>
+
+<!-- Invariant 2: byte-identical -->
+<h3>Invariant 2 — originals are bit-for-bit unchanged</h3>
+<div class="split">
+  <svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" class="diagram" style="margin:0;">
+    <defs>
+      <marker id="arr-bi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+      </marker>
+    </defs>
+    <!-- Phase 1: snapshot sources -->
+    <text x="180" y="22" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-weight="600">PHASE 1</text>
+    <rect x="30" y="40" width="120" height="55" fill="#d8e8f3" stroke="#6691b8" rx="4"/>
+    <text x="90" y="65" text-anchor="middle" font-family="Georgia,serif" font-size="11">research/*.md</text>
+    <text x="90" y="82" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="9" fill="#555" font-style="italic">(at start)</text>
+    <path d="M150,67 L180,67" stroke="#555" stroke-width="1.3" fill="none" marker-end="url(#arr-bi)"/>
+    <rect x="190" y="40" width="140" height="55" fill="#f6e8c8" stroke="#c69b00" rx="4"/>
+    <text x="260" y="65" text-anchor="middle" font-family="Georgia,serif" font-size="11">.source-sha256</text>
+    <text x="260" y="82" text-anchor="middle" font-family="Georgia,serif" font-size="11">-pre-merge.txt</text>
+
+    <!-- Phase 8 -->
+    <text x="180" y="118" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-weight="600">PHASE 8</text>
+    <rect x="30" y="135" width="120" height="55" fill="#d8ecdf" stroke="#65a583" rx="4"/>
+    <text x="90" y="160" text-anchor="middle" font-family="Georgia,serif" font-size="11">archive/*.md</text>
+    <text x="90" y="177" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="9" fill="#555" font-style="italic">(after git mv)</text>
+
+    <path d="M150,162 L180,162" stroke="#8a2a2a" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-bi)"/>
+    <text x="195" y="158" font-family="Georgia,serif" font-size="10" fill="#8a2a2a" font-style="italic">shasum</text>
+    <text x="195" y="170" font-family="Georgia,serif" font-size="10" fill="#8a2a2a" font-style="italic">+ diff</text>
+
+    <path d="M255,135 L255,95" stroke="#8a2a2a" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-bi)"/>
+    <text x="335" y="120" text-anchor="end" font-family="Georgia,serif" font-size="10" fill="#8a2a2a" font-style="italic">must match</text>
+  </svg>
+  <div>
+    <p>The SHA-256 sums of the archived originals, computed in Phase 8, exactly match the sums of the source files captured in Phase 1.</p>
+    <p><strong>Enforced by:</strong> <code>diff baseline post-archive-sums.txt</code> at the end of Phase 8.</p>
+    <p><strong>Failure mode it prevents:</strong> silently editing a source file during the merge (intentionally or accidentally), losing the ability to re-audit against what the merge actually saw.</p>
+  </div>
+</div>
+
+<!-- Invariant 3: heading coverage -->
+<h3>Invariant 3 — every source heading is accounted for</h3>
+<div class="split">
+  <div>
+    <p>Every <code>#</code>, <code>##</code>, and <code>###</code> heading in any source file appears in exactly one of two places: the topic-to-source map (it contributed to an output section), or the intentionally-omitted log (it was duplicate or unneeded, with a stated reason).</p>
+    <p><strong>Enforced by:</strong> the Phase 7 coverage audit. The skill ships <code>coverage_audit.sh</code> which dumps every heading for manual diff against the two lists.</p>
+    <p><strong>Failure mode it prevents:</strong> silently dropping a section of source content because no reviewer noticed it was missing from the merge.</p>
+  </div>
+  <svg viewBox="0 0 360 250" xmlns="http://www.w3.org/2000/svg" class="diagram" style="margin:0;">
+    <!-- Source headings -->
+    <rect x="20" y="20" width="320" height="50" fill="#d8e8f3" stroke="#6691b8" stroke-width="1.5" rx="4"/>
+    <text x="180" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-weight="600">All source headings (#, ##, ###)</text>
+    <text x="180" y="60" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-style="italic">e.g. 80 headings across 7 sources</text>
+
+    <!-- Split -->
+    <path d="M180,70 L100,110" stroke="#555" stroke-width="1.3" fill="none"/>
+    <path d="M180,70 L260,110" stroke="#555" stroke-width="1.3" fill="none"/>
+
+    <rect x="20" y="120" width="160" height="100" fill="#f6e8c8" stroke="#c69b00" stroke-width="1.5" rx="4"/>
+    <text x="100" y="145" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-weight="600">Topic-to-source map</text>
+    <text x="100" y="165" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-style="italic">contributed to an</text>
+    <text x="100" y="180" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-style="italic">output section</text>
+    <text x="100" y="205" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#7a5b00" font-weight="600">e.g. 72 headings</text>
+
+    <rect x="200" y="120" width="160" height="100" fill="#f6e8c8" stroke="#c69b00" stroke-width="1.5" rx="4"/>
+    <text x="280" y="145" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-weight="600">Intentionally omitted</text>
+    <text x="280" y="165" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-style="italic">duplicate, conclusion,</text>
+    <text x="280" y="180" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="10" fill="#555" font-style="italic">or noted as unneeded</text>
+    <text x="280" y="205" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#7a5b00" font-weight="600">e.g. 8 headings</text>
+
+    <text x="180" y="244" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#555" font-style="italic">no third bucket allowed — every heading must land somewhere</text>
+  </svg>
+</div>
+
+<div class="callout">
+  <strong>The deeper pattern:</strong> the workflow does not try to verify the merge is <em>correct</em>. It verifies it is <em>complete</em> (no information lost) and <em>auditable</em> (every choice can be re-examined). Correctness still requires human review — but those three mechanical invariants raise the floor of what's possible to check automatically.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="good">6. Why this is good design</h2>
+
+<div class="verdict good">
+  <h4>Every promise is mechanically verifiable</h4>
+  <p>"No information was lost" is normally a human claim. Here it decomposes into three specific, scriptable checks: SHA round-trip, marker↔entry round-trip, and heading coverage. Software trusts evidence, not assertions.</p>
+</div>
+
+<div class="verdict good">
+  <h4>Each artifact is load-bearing</h4>
+  <p>Phase 1 produces the SHA manifest that Phase 8 consumes. Phase 2 produces the topic map that Phase 7 audits against. Phase 5 produces markers that Phase 4's script enforces. Nothing exists for its own sake — every artifact closes a verification loop somewhere later.</p>
+</div>
+
+<div class="verdict good">
+  <h4>Right-sized abstractions</h4>
+  <p>Stable CFL IDs are three digits and monotonic — cheap to assign but durable for cross-referencing in review comments months later. Inline markers are HTML comments — invisible in rendered output, greppable in source. The validation script is 50 lines of bash, not a framework.</p>
+</div>
+
+<div class="verdict good">
+  <h4>Pre-mortem orientation</h4>
+  <p>Phase 1 (SHA snapshot) and Phase 3 (skeletons before content) both happen before any destructive work. The workflow assumes you will make mistakes and builds the audit infrastructure first.</p>
+</div>
+
+<div class="verdict good">
+  <h4>Self-policing structure</h4>
+  <p>The validation script is the lever that makes the rest of the discipline automatic. A human can write a marker and forget the log entry — the script catches it. A human can write a log entry and forget the marker — the script catches it too.</p>
+</div>
+
+<div class="verdict good">
+  <h4>Reviewable in pieces</h4>
+  <p>Subagent-driven execution dispatches one task per phase or per output doc, with two-stage review after each. Reviewers see small focused diffs against a known spec instead of one giant merge.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="bad">7. Why this is expensive design</h2>
+
+<p>Every property above costs something. The workflow earns its weight on large, conflict-heavy merges. On small or low-conflict merges, the same machinery is overhead.</p>
+
+<div class="verdict bad">
+  <h4>Heavy for what most merges actually look like</h4>
+  <p>Eight phases, five artifacts, two-stage review per phase. For merging two README variants of 60 lines each, you spend more time on audit infrastructure than on the merge itself. The lite path exists for this reason, but the cognitive default is the full path.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>Structural, not semantic, verification</h4>
+  <p>The validation script confirms every marker has a log entry. It does not confirm the log entry is correct. A reviewer can write "I synthesized A and B by choosing A" while actually having chosen B, and every mechanical check still passes.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>The topic-to-source map is hand-built</h4>
+  <p>Phase 2 is the most time-consuming and worst-scaling phase. With 7 sources it takes an hour; with 70 it takes a week. There is no tooling here — just reading and table-writing.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>CFL classification is subjective</h4>
+  <p>"Non-trivial synthesis, conflict, or judgment call" is the rule. Reviewer A logs every paragraph that merges two sources; Reviewer B only logs paragraphs where the sources disagreed factually. Both are defensible; both produce different log densities.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>Stable IDs are a maintenance promise</h4>
+  <p>Once <code>CFL-014</code> is written, it cannot be renumbered. Retired entries accumulate. Small but real cognitive overhead in long-lived merges.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>Cross-references rot silently</h4>
+  <p>Markdown anchors are derived from heading text. Rename a heading and every cross-reference breaks — no error, no warning, just a link landing at the top of the page. Manual verification only.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>Coverage audit is reactive</h4>
+  <p>Phase 7 detects missing source content at the end. Earlier feedback would be ideal — per-doc, not whole-merge — but the audit is structured as a final gate.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>Markdown-only, Unix-only</h4>
+  <p>The validation script assumes <code>grep -E</code>, <code>comm</code>, <code>sort</code>, <code>shasum</code>. Marker syntax assumes HTML comments inside markdown. Anchor rules assume GitHub-flavored markdown. Porting to RST, AsciiDoc, or DOCX is non-trivial.</p>
+</div>
+
+<div class="verdict bad">
+  <h4>Subagent overhead</h4>
+  <p>Three dispatches per task (implementer + spec reviewer + code-quality reviewer) is expensive. Phase 1 (SHA snapshot) does not need a code-quality review. A more granular policy would help.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="when">8. When to use vs. when to skip</h2>
+
+<table>
+  <thead><tr><th>Use full path</th><th>Use lite path</th><th>Don't use this skill</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>≥3 source documents</td>
+      <td>2 short, low-conflict sources</td>
+      <td>One document needs editing, not merging</td>
+    </tr>
+    <tr>
+      <td>Conflicting facts, recommendations, or values across sources</td>
+      <td>Mostly complementary content, minimal overlap</td>
+      <td>Sources are in a non-markdown format and you don't want to convert</td>
+    </tr>
+    <tr>
+      <td>You will reference the merge result months later</td>
+      <td>Quick one-time consolidation</td>
+      <td>You don't need to verify nothing was dropped</td>
+    </tr>
+    <tr>
+      <td>Multiple people will review or extend the result</td>
+      <td>You're the only consumer</td>
+      <td>A diff tool plus a manual edit pass is sufficient</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The honest claim is not "this is the right way to merge documents." It is: <em>"this is the right way to merge documents when you cannot afford the merge to be wrong and cannot prove it later."</em> Most of the time, that condition does not hold. When it does, the workflow earns every minute of its overhead.</p>
+
+<hr>
+
+<footer>
+  document-merge skill — architectural reference — generated from session experience consolidating 7 observability research documents into 3 consolidated outputs with 27 CFL entries, zero silent drops, SHA-256-verified archive.
+</footer>
+
+</body>
+</html>

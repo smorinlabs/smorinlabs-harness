@@ -1,5 +1,28 @@
 # Release Notes
 
+## v0.21.0 — 2026-08-12
+
+### Added
+
+- **8 skills adopted from the private harness.** `clear-technical-communication`
+  (reader-centered review and rewriting of technical communication),
+  `design-by-elements` (element-by-element prototyping of an artifact's form),
+  `document-merge` (verifiable consolidation of overlapping documents), and the
+  five `session-*` skills — `session-recap`, `session-loose-ends`,
+  `session-handoff`, `session-status`, `session-agent-list` — as the new
+  `session` plugin. Marketplace goes from 9 plugins / 21 skills to 13 / 30.
+- **pytest job in CI.** `plugins/repo-finder/tests/` shipped tracked tests that
+  nothing ran; `just test` and a `pytest` CI job now cover them, plus the new
+  `tests/test_transcript_digest.py` — 36 tests total.
+
+### Changed
+
+- **`session-handoff` effectiveness log is now opt-in and user-scope.** It
+  appends to `~/.claude/session-handoff/effectiveness.md` only when that
+  directory already exists, and never creates it. Previously it wrote inside
+  the skill's own directory, which mutates an installed plugin. Create the
+  directory once to opt in.
+
 ## v0.20.0 — 2026-08-09
 
 ### Added

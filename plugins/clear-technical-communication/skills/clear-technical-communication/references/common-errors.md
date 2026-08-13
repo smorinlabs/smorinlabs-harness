@@ -1,0 +1,54 @@
+# Common technical-communication errors
+
+Use this catalog as an active review checklist. Apply every relevant row. A
+message can fail several rows at once; fixing only vocabulary or sentence
+length is not sufficient.
+
+| Error | Detection signal | Prescriptive correction | Compact example |
+|---|---|---|---|
+| No purpose anchor | The opening names a mechanism, metaphor, or artifact but not the reader's problem, desired outcome, or decision. | Begin with the goal, problem, conclusion, or requested decision. | `Explosion control...` → `Goal: keep the test suite small enough to implement.` |
+| Undefined context | Words such as `this`, `the document`, `the corpus`, `current`, or `baseline` depend on earlier conversation. | Restate the minimum local context needed to understand the message by itself. | `This stays buildable.` → `Limiting each group to one changing dimension keeps the test suite implementable.` |
+| Unexplained identifiers | Requirements, groups, tests, or decisions appear only as IDs. | At first use, pair each ID with a short gloss or link. | `REQ-26 conflicts with D14.` → `REQ-26 (legacy fallback support) conflicts with D14 (reject legacy versions).` |
+| Unexplained notation | Symbols, tuples, operators, or compact values are not labeled. | Name every dimension, value, and relationship before using symbolic notation. | `plain@branch × exact-copy × claude` → a labeled baseline table. |
+| Invented local metaphor | The draft uses a coined metaphor that names nothing in the system, such as `tombstone`, `ladder`, `slug`, or `full product`. Test: the term appears in no code, command, API, or specification. | Replace it with literal wording, or coin it explicitly as a defined term. Never apply this row to a real name; see `Precise name replaced by description`. | `Tombstone the ladder.` → `If support is no longer required, remove the legacy fallback requirement and unreachable code.` |
+| Noun piles | Three or more nouns carry a relationship that no verb states. | Add an actor and a literal action; split separate relationships. | `config walk-up boundary` → `Choose where the configuration search stops.` |
+| Ambiguous reference | A pronoun or generic noun can refer to more than one antecedent. | Repeat the exact noun or identifier. | `REQ-26 specifies it.` → `REQ-26 requires the pre-0.95 fallback behavior.` |
+| Too many ideas per sentence | A sentence contains several actors, dimensions, contrasts, conditions, or conclusions. | Give each sentence one primary assertion. Treat about 25 words as a review signal. | One 40-word matrix sentence → one sentence per group plus a table. |
+| Logic hidden in punctuation | Dashes, semicolons, parentheses, colons, or slashes carry essential cause, contrast, sequence, or scope. | State the relationship with words or separate labeled fields. | `D14 refuses it + the matrix excludes it.` → `The path is unreachable because D14 rejects those versions and the matrix excludes them.` |
+| Wrong presentation form | Repeated fields, several dimensions, or parallel decisions are encoded in prose. | Use a table when it materially improves a repeated comparison; use a fixed labeled template for repeated decisions. | Three group/dimension comparisons → consider `Group | Changes | Holds constant`. |
+| Important information demoted | A constraint, exception, consequence, or decision appears only in parentheses, a note, or a trailing clause. | Put information needed for interpretation or action in a main sentence or labeled field. | `(no parent branch)` → `Constraint: a detached HEAD has no parent branch.` |
+| Status is unclear | Facts, requirements, proposals, interpretations, assumptions, estimates, and decisions appear alike. | Label each statement's status and use consistent modal language. | `The search stops here.` → `Proposal: stop the search at the worktree root.` |
+| Unsupported estimate | A number or range has no source, calculation, confidence, or implication. | Give the basis and explain why the estimate matters. | `Roughly ~90–120 rows.` → `Estimate: 90–120 rows. Basis: [calculation needed]. Acceptance limit: [limit needed].` |
+| Undefined exclusion or conclusion | A combination is called invalid, meaningless, impossible, unreachable, or dead without a governing rule or evidence. | State the criterion and the evidence that applies it. | `These cells are N/A.` → `Mark a cell N/A only when [governing exclusion rule] applies.` |
+| Missing reader action | The reader cannot tell whether the message is informational, a proposal, a review request, or an approval request. | End with one explicit action or state that no action is required. If the source does not reveal the intended action, preserve that as a gap. | `Expected volume: 120.` → `Action: [state whether information, review, or approval is intended].` |
+| No option consequences | Choices are named without their effects on behavior, cost, risk, compatibility, or follow-up work. | State what changes under each option and why the difference matters. | `Keep or remove?` → `Keep: restore reachability and test it. Remove: update the requirement and delete unreachable code.` |
+| No recommendation or owner dumping | The author transfers unresolved questions to the reader without researching or taking a position. | Resolve discoverable facts, recommend a choice, and escalate only genuine policy or preference decisions. | `Only you can answer these.` → `Recommendation: [choose after researching the support policy]. Response needed: approve or override.` |
+| Possible false choice | The draft presents two options without showing they exhaust the feasible set. | Test the option set against constraints; add a third option or invite a bounded alternative when necessary. | `Test or remove.` → also consider changing the version policy that makes the path unreachable. |
+| Process chatter | The message discusses drafting, queuing, agent coordination, or confidence without helping the reader interpret or act. | Remove coordination commentary unless it changes ownership, timing, or the requested response. | `I will queue these with anything Codex adds.` → omit it. |
+| Inconsistent question form | Parallel decision items use different structures; some are statements rather than questions. | Give every decision the same fields and one explicit question. | A heading plus complaint → `Decision: What source should generate the name?` |
+| Contractions and shorthand | **The author's own prose** uses contractions, Latin abbreviations, symbols as conjunctions, or chat abbreviations. Does not apply inside quotations, code spans, commands, configuration values, or captured output. | Use full words where shorthand can slow or confuse the intended reader. Reproduce quoted and code text exactly; never restyle it. | `I'll`, `there's`, `e.g.`, `A + B` → `I will`, `there is`, `for example`, `A and B`. But `The command prints "I'll retry in 30s."` stays exactly as printed. |
+| Precise name replaced by description | Prose names a thing by describing it — "the fast-forward-only flag", "the account repository class" — when an exact name exists **and the reader must identify, search for, invoke, or modify that specific thing**. Does not fire on a role description that states an implementation-independent rule or invariant. | Restore the exact name in code font and keep the description alongside it. | `Use the fast-forward-only flag.` → ``Use `--ff-only`, the flag that makes `git pull` refuse a non-fast-forward update.`` |
+| Name present, description absent | A verbatim technical name appears in prose at first use with no statement of what it is or does. | Pair the name with a description at first use. Do not assume reader familiarity. A short role phrase is sufficient, and one shared gloss may cover a group of parallel names. | ``The fix is in `UserAccountRepository`.`` → ``The fix is in `UserAccountRepository`, the class that loads and persists account records.`` |
+| Verbatim text edited | Quoted text no longer matches its source; shorthand expanded or style corrected inside a code span, command, or error message. | Reproduce quoted and code text character for character. Explain it outside the quotation. | Error `e.g. missing arg` rewritten to `for example, missing argument` → quote the error exactly, then explain it. |
+| Behavior described where a snippet is exact | A call, signature, configuration, or output is paraphrased into prose **in a context where the reader must reproduce it in a specific language or format**. Does not fire on a format-independent instruction such as "create the client with a 30-second timeout". | Show the code, command, or output. Keep prose for why it matters. | `Pass a callback that receives an array of result objects each having a status field.` → show the signature, then state the consequence. |
+| Missing example for a mechanism | An explanation asserts a behavior with no concrete instance, **and the behavior is non-obvious, disputed, or required in order to implement or verify something**. Does not fire on a standard mechanism whose behavior follows from its name, such as "the mutex prevents concurrent writes". | Add one minimal concrete example: an input and its result, or a before and after. | `The matcher normalizes paths.` → add `` `./a/../b` → `b` ``. |
+| Unframed artifact | A code block, command, configuration, or quoted output appears with no lead-in stating why it is present and no reading stating what to take from it. | Add the lead-in and the reading. The artifact never ships alone. | A bare config block → state the question it answers above it and the takeaway below it. |
+| Unframed diagram | A diagram appears without the question it answers or what the reader should notice in it. | State the question before the diagram and the takeaway after it. | A pipeline sketch with no caption → `Where does the pipeline block?` above, `The queue is the only unbounded stage.` below. |
+| Bare number | A quantity appears with no unit, or with a unit but no reference point that makes it interpretable. | Give the unit and a comparison that makes the value interpretable. | `200ms` → `200ms, roughly 3x the p50`. |
+
+## Repair order
+
+Fix failures in this order because later edits depend on earlier meaning:
+
+1. Purpose, intended reader, and required action
+2. Missing context, evidence, constraints, and option consequences
+3. Status and causal relationships
+4. Structure and presentation form
+5. Terms, identifiers, notation, references, and sentence mechanics
+
+Do not polish an under-analyzed decision request. Supply the missing analysis
+first. Do not shorten a message until the required context and relationships are
+explicit.
+
+Never remove a name, an example, or a quoted artifact in the name of
+simplification. Removing required precision is a defect, not a cleanup.

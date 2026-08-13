@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Nine
-plugins, twenty-one skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Thirteen
+plugins, thirty skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -122,6 +122,42 @@ always-on digest users keep in their global instructions.
 | Skill | Does | Details |
 |---|---|---|
 | `reader-steps` | Renders actions only the reader can or will perform (agent-impossible actions, manual verification handoffs, user-claimed work) as a delineated end-of-response block: a bounded frame binding to the tracked item by ID, tag-numbered steps grouped by surface (⌨️ 🌐 🖥️ 📱 🖐️) under intent-carrying dividers, each titled by its outcome with the literal command or UI path and a ✓ line beneath. Scales from a one-line inline form to a mapped, stop-pointed long sequence; nests reactive prompts inside their triggering step; re-renders across turns as a scoreboard; states errors as cause and fix. Decisions are never steps (they're asked via question-walkthrough). | [docs/skills/reader-steps.md](docs/skills/reader-steps.md) |
+
+### session
+
+Session-state quintet — orient, sweep, hand off, glance, and find.
+
+| Skill | Does | Details |
+|---|---|---|
+| `session-recap` | Orients you when returning to a coding session that went idle, compacted, or reopened cold: the arc, done vs open, live git/PR/worktree state, ranked next steps, and a close-or-continue verdict. Strictly read-only. | [docs/skills/session-recap.md](docs/skills/session-recap.md) |
+| `session-loose-ends` | The acting sibling of `session-recap`: sweeps working-state artifacts, running processes, unfulfilled promises, and tracking drift; reports each with evidence and a recommendation in both directions, then executes and verifies only what you confirmed item by item. | [docs/skills/session-loose-ends.md](docs/skills/session-loose-ends.md) |
+| `session-handoff` | Packages the current session into a self-contained handoff a fresh, zero-context session — often on another machine — can act on cold: the outcome, repo identity and paths, resume state, and the tacit context that dies on compaction. | [docs/skills/session-handoff.md](docs/skills/session-handoff.md) |
+| `session-status` | The mid-flight glance — a manually triggered, plain-language progress map of the active stream, with finished work rolled up and remaining work fine-grained where you stand. Probe-free and read-only. | [docs/skills/session-status.md](docs/skills/session-status.md) |
+| `session-agent-list` | Finds and lists Claude Code and Codex sessions across the machine as action-ready cards: end-state triage (open / handed off / closed clean / loose ends), lineage, and copy-paste resume or transcript commands. | [docs/skills/session-agent-list.md](docs/skills/session-agent-list.md) |
+
+### clear-technical-communication
+
+Reader-centered technical communication — review, rewrite, and compose.
+
+| Skill | Does | Details |
+|---|---|---|
+| `clear-technical-communication` | Makes technical communication reader-centered and actionable by minimizing what the reader must infer. Detects missing purpose or context, undefined terms and identifiers, hidden logic, mixed status, false choices, absent option consequences, the wrong presentation form, stripped or unexplained names, and unframed code, diagrams, or examples — then rewrites without inventing facts. Audits against the four ISO 24495-1 reader outcomes and uses selected ASD-STE100 mechanics for sentence control. | [docs/skills/clear-technical-communication.md](docs/skills/clear-technical-communication.md) |
+
+### design-by-elements
+
+Element-by-element prototyping for the form of an artifact.
+
+| Skill | Does | Details |
+|---|---|---|
+| `design-by-elements` | Iteratively prototypes the visual or textual form of an artifact — terminal output, report and CLI layouts, table designs, page and email mockups — before building it: decompose into lockable elements, settle meaning before form, contrast opposed variants, lock each with its rationale, and promote every fix into a named rule. | [docs/skills/design-by-elements.md](docs/skills/design-by-elements.md) |
+
+### document-merge
+
+Verifiable consolidation of overlapping documents.
+
+| Skill | Does | Details |
+|---|---|---|
+| `document-merge` | Merges multiple overlapping markdown documents into one or more consolidated outputs without losing information: every synthesis decision is logged with a stable ID, every source line range maps to an output section, and originals are archived byte-identical so the merge can be audited and reversed. | [docs/skills/document-merge.md](docs/skills/document-merge.md) |
 
 `factor-harness` and `project-harness` were previously standalone repos (now archived);
 they live here as plugins. Manifests are generated from each plugin's `plugin.meta.toml`
