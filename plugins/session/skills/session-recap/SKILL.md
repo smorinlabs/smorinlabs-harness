@@ -83,11 +83,20 @@ different harness), fall back to the most recently modified transcript for this
 repo and pass it positionally:
 
 ```bash
-ls -t ~/.claude/projects/*/*.jsonl | head -1   # then: transcript_digest.py <that-path>
+# Transcripts are filed per working directory, so scope to THIS repo instead
+# of globbing every project: the newest transcript on the machine is often
+# another repo's, and a recap of the wrong repo reads as perfectly correct.
+proj=~/.claude/projects/"$(echo "$PWD" | tr '/.' '--')"
+newest="$(ls -t "$proj" 2>/dev/null | grep '\.jsonl$' | head -1)"
+[ -n "$newest" ] && echo "$proj/$newest"   # then: transcript_digest.py <that-path>
 ```
 
-If no transcript exists at all, recap from what's in your context and say so
-plainly — don't pretend to a richer history than you have.
+Listing the directory rather than globbing it keeps an absent directory quiet
+under both bash and zsh.
+
+If that prints nothing — or no transcript exists at all — recap from what's in
+your context and say so plainly. Don't pretend to a richer history than you
+have, and never widen the search to other repos to fill the gap.
 
 ### 2. Working tree, branch, and worktree
 

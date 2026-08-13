@@ -74,8 +74,18 @@ neutral dump. Infer, show, then confirm or ask:
   prompt, compaction markers, branch changes, the last turns, and a
   **references** block (tickets, spec/doc files, URLs) — the raw material for
   artifacts and tacit context. On `NO_TRANSCRIPT`, fall back to the newest
-  transcript on this machine (`ls -t ~/.claude/projects/*/*.jsonl | head -1`; best-effort,
-  may be a different repo) and pass it positionally; if there is none, compose from context and say so.
+  transcript **for this repo** — transcripts are filed per working directory,
+  so scope the lookup rather than taking the newest on the machine, which is
+  frequently another repo's:
+
+  ```bash
+  proj=~/.claude/projects/"$(echo "$PWD" | tr '/.' '--')"
+  newest="$(ls -t "$proj" 2>/dev/null | grep '\.jsonl$' | head -1)"
+  [ -n "$newest" ] && echo "$proj/$newest"
+  ```
+
+  Pass that positionally. If there is none, compose from context and say so —
+  never widen the search to other repos to fill the gap.
 
 - **Repo identity** (so the target can locate or *clone* the repo):
 
