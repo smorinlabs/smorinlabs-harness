@@ -60,8 +60,10 @@ For each output doc:
 
 ### Task (5+M): Archive originals
 - [ ] Create `<archive-dir>/`
-- [ ] Check basenames for collisions before moving anything — any output means stop:
+- [ ] Check for collisions before moving anything — any output from either means stop:
       `for f in <source-files...>; do basename "$f"; done | sort | uniq -d`
+      `for f in <source-files...>; do [ -e "<archive-dir>/$(basename "$f")" ] && echo "occupied: $f"; done`
+      Resolve by renaming/relocating the source, or archive in a separate run — never into a subdirectory of `<archive-dir>/`, which the flat verification below would not hash
 - [ ] `git mv` (or `mv` if not a git repo) each source file to archive
 - [ ] Verify byte-identical against the Phase 1 baseline (expect zero diff):
 
