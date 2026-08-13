@@ -1,7 +1,10 @@
 """tests/test_document_merge_scripts.py"""
 
+import os
 import subprocess
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VALIDATE = (
@@ -37,6 +40,31 @@ def test_missing_merged_doc_is_an_error(tmp_path):
         f"expected failure for a missing merged doc, got exit 0:\n{result.stdout}"
     )
     assert "does-not-exist.md" in result.stdout + result.stderr
+
+
+@pytest.mark.skipif(
+    hasattr(os, "geteuid") and os.geteuid() == 0,
+    reason="root bypasses permission bits, so an unreadable file cannot be simulated",
+)
+def test_unreadable_merged_doc_is_an_error(tmp_path):
+    """A doc that exists but cannot be read must fail, not pass vacuously.
+
+    The existence check alone let this through: grep reported permission
+    denied, `|| true` swallowed it, and the gate still printed PASS — the same
+    defect as a missing path, arriving through a different door.
+    """
+    log = write(tmp_path / "log.md", "# Decisions log\n\nNo conflicts yet.\n")
+    doc = write(tmp_path / "merged.md", "text <!-- CONFLICT: CFL-001 -->\n")
+    doc.chmod(0o000)
+
+    try:
+        result = run_validate(log, doc)
+    finally:
+        doc.chmod(0o644)
+
+    assert result.returncode != 0, (
+        f"expected failure for an unreadable merged doc:\n{result.stdout}"
+    )
 
 
 WITHDRAWN_LOG = """# Decisions log

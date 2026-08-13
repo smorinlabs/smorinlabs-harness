@@ -25,6 +25,10 @@ for doc in "$@"; do
     echo "FAIL: merged doc not found at $doc" >&2
     exit 1
   fi
+  if [ ! -r "$doc" ]; then
+    echo "FAIL: merged doc not readable at $doc" >&2
+    exit 1
+  fi
 done
 
 # Inline markers: <!-- CONFLICT: CFL-### -->
