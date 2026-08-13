@@ -1,6 +1,6 @@
 # session-status
 
-The mid-flight glance of the session quartet: a fast, plain-language
+The mid-flight glance of the session quintet: a fast, plain-language
 "you are here" map of the ACTIVE stream of work — what it is, what's done,
 what's in progress, and what's left — rendered as a ledger (`The work` /
 `Done` / `Now` / `Left` label column, counts footer) at the zoom level the
