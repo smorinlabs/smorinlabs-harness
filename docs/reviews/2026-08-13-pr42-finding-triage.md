@@ -674,9 +674,63 @@ regression test that fails before it, and `just all` green before each PR.
 | 5 · session-transcript scoping | C4, C5 | Portable launch line; repo-scoped fallback |
 | 6 · documentation accuracy | B1, B5, B6, C2 | Template command, resource-list wording, heading-depth contract, worked example |
 
-**Blocked on owner decisions before any code:** B3 (marker cardinality), B8
-(interactivity of Phase 8), C6 (verified closure vs. heuristic), and the B6 half
-that asks which coverage promise is true.
+## Decisions (2026-08-13, owner walkthrough)
 
-**Closed with no action:** A1, C1, C7, D2 (refuted with evidence above) and D1
-(already fixed).
+Every finding was walked with the owner after Phase 1. Two outcomes only.
+
+**All 12 REAL findings: FIX.** None skipped.
+
+**All 9 non-REAL findings: CLOSED, no action.** This covers the four refutations
+(A1, C1, C7, D2), the already-fixed D1, *and* the three items triaged as
+REAL-BUT-DESIGN (B3, B8, C6) plus the real half of B6 — the owner elected to close
+the design questions rather than answer them.
+
+### Three consequences of closing the design questions
+
+These constrain the fixes and are recorded so a future reader does not re-open them:
+
+1. **B3 closed** → `validate_round_trip.sh` keeps set semantics. The B2 and B4
+   fixes must leave `sort -u` alone; marker-to-entry cardinality stays many-to-one.
+2. **B8 closed** → no confirmation gate in Phase 8. The B7 fix must be entirely
+   non-interactive.
+3. **B6 closed** → the contradiction between `SKILL.md:29` ("every source heading …
+   no silent drops") and the `^#{1,3}` extraction in both `SKILL.md:87` and
+   `coverage_audit.sh:30` stays in place. Headings at `####` and deeper remain
+   silently unextractable. This is a known, accepted defect, not an oversight.
+
+### Per-finding decisions
+
+| # | Finding | Decision | Shape of the fix as settled |
+|---|---|---|---|
+| 1 | B4 | Fix | Missing merged doc becomes a hard error, matching the existing line-17 policy for the decisions log; also fail when the argument list resolves to zero readable documents. Regression test first. |
+| 2 | B2 | Fix | Validator skips log entries carrying a `**Status:** Withdrawn` line. Regression test first. |
+| 3 | B9 | Fix | Rewrite rules 3-4 to state that a dash is removed and each surrounding space becomes a hyphen (yielding `#a--b`); invert the line-42 example; correct its transposed `#54-`/`#45-` digits; re-check `SKILL.md:130`. |
+| 4 | B7 | Fix | **Prose scale, not a script.** Pre-move basename-collision check across the source set, `mv -n`, and directory-prefix disambiguation on collision. Non-interactive per the B8 closure. |
+| 5 | A3 | Fix | Quoting rules covering **every rendered command in the spec**, not only `--exec` — the `--compact` line-3 resume command at `format-spec.md:292` is in scope. Single-quoted paths with embedded-quote escaping; transcript-derived text never on an executable line and newline-stripped even in comments. |
+| 6 | C4 | Fix | The pasteable line carries a tilde-anchored full path: `~/<basedir>/<repo>/docs/handoffs/<file>.md`. Survives a bare copy-paste, breaks on neither machine nor repo, and trips no absolute-path CI gate. Spec documents the placeholder shape; a generated handoff renders it concrete. |
+| 7 | C5 | Fix | Derive the repo-scoped project directory from `$PWD` at runtime instead of globbing all projects. **No-transcript case falls back to recapping from context**, reusing the behavior `SKILL.md:89-90` already specifies. Same treatment for `session-handoff/SKILL.md:69`. |
+| 8 | C3 | Fix | Two edits (scope validated below): `SKILL.md:62` degrades to the same context fallback as C5 when the sibling script is absent, and `docs/skills/session-handoff.md:44` names `session-recap/` as required alongside. Vendoring a second copy of the script was considered and rejected — it would guarantee drift. |
+| 9 | A2 | Fix | Resolve via `Path(__file__).resolve().parents[1]`, **and** assert on `result.returncode` inside `run()` so a missing script fails loudly instead of as an assertion against an empty string. |
+| 10 | B1 | Fix | Replace the template line with the working pipeline from `SKILL.md:153-156`, including the `sed` path-rewrite. A generated plan is worked through directly, so it carries the runnable command rather than a pointer. |
+| 11 | B5 | Fix | Reword `SKILL.md:168` to "source-heading dump for the Phase 7 manual coverage diff." Building a genuinely enforcing diff was rejected: it would implement a coverage contract that the B6 closure left unsettled. |
+| 12 | C2 | Fix | Name `T-X-…` in the rewrite as the individual test-case identifier family and state that the specification must define its naming scheme — demonstrating the harder case of carrying a name forward when the name is a pattern. |
+
+### Cross-reference validation (owner-directed, executed 2026-08-13)
+
+Run before planning the C3 fix, to establish whether it was one instance of a
+pattern. It is not.
+
+- **No stale plugin-name references anywhere.** Nothing in the repository points at
+  the pre-rename `plugins/session-recap/`; every path uses the post-P39 form
+  `plugins/session/skills/session-recap/`.
+- **Exactly one cross-skill dependency exists in the whole `session` plugin** —
+  `session-handoff` → `session-recap`, at one operative line (`SKILL.md:62`) plus
+  four historical mentions in `DESIGN.md` that stay as design record.
+- **The other four session skills are self-contained**, so their direct-copy install
+  rows are correct. Only `docs/skills/session-handoff.md:44` is wrong.
+- Target confirmed present: `transcript_digest.py`, 12,688 bytes.
+
+### Standing directive for Phase 2
+
+Every fix gets an **adversarial check** before its PR is opened — the fix is
+attacked on its own terms, not merely re-read. Owner-directed, applies to all 12.
