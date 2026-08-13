@@ -148,8 +148,26 @@ Conclusion sections, repeated rationale paragraphs, and content fully captured e
 ### Phase 8: Archive and verify
 
 1. Create the archive directory (default `<sources-parent>/archive/`).
-2. Move each source file: `git mv` if in a git repo, plain `mv` otherwise.
-3. Verify byte-identical against the Phase 1 baseline:
+2. **Check for basename collisions before moving anything.** Sources drawn
+   from different directories can share a filename — `README.md`, `notes.md`
+   and `index.md` are the common ones in a merge — and the archive is flat, so
+   the second move would overwrite the first. Stop and report the colliding
+   pair instead; do not rename to disambiguate, because the Phase 1 baseline
+   records each file under its original path and a renamed file can never
+   match it in step 3.
+
+   ```bash
+   for f in <source-files...>; do basename "$f"; done | sort | uniq -d
+   ```
+
+   Any output is a collision. Resolve it by archiving those sources into
+   separate directories, and only then continue.
+3. Move each source file: `git mv` if in a git repo, plain `mv` otherwise.
+   `git mv` already refuses to clobber (`fatal: destination exists`), so this
+   only bites outside a repo, where the loss is unrecoverable. Note that
+   `mv -n` is **not** a substitute for the check above: it declines silently
+   and still exits 0, leaving the source in place with nothing reported.
+4. Verify byte-identical against the Phase 1 baseline:
 
 ```bash
 shasum -a 256 <archive-dir>/*.md | sort | sed "s| <archive-dir>/| <source-dir>/|" > /tmp/post-archive-sums.txt
@@ -158,8 +176,8 @@ diff <consolidated-dir>/.source-sha256-pre-merge.txt /tmp/post-archive-sums.txt
 
 Expect zero diff. **If the diff is non-empty, stop** — the merge modified a source file, which violates the inviolable-originals guarantee. Investigate and revert before proceeding.
 
-4. Run the validation script one final time (`PASS` expected).
-5. Commit the archive move with a message documenting the SHA-256 verification.
+5. Run the validation script one final time (`PASS` expected).
+6. Commit the archive move with a message documenting the SHA-256 verification.
 
 ## Bundled resources
 
