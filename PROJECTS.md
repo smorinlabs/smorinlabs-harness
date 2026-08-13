@@ -1416,8 +1416,8 @@ arrivals are reported open.
 
 ---
 
-## [ ] Project P40: Fix the 12 surviving PR-42 review findings (v0.22.0)
-**Goal**: Fix the 12 findings that survived triage of the 21 AI-reviewer findings inherited from PR #42, in six clustered PRs. Every behavioral fix ships with a regression test that fails before it, and every fix gets an adversarial check before its PR opens.
+## [~] Project P40: Fix the 12 surviving PR-42 review findings (v0.22.0)
+**Goal**: Fix the 12 findings that survived triage of the 21 AI-reviewer findings inherited from PR #42, as one PR with one commit per finding. Every behavioral fix ships with a regression test that fails before it, and every fix plan gets an adversarial check as it is written.
 
 **References**: `docs/reviews/2026-08-13-pr42-finding-triage.md` — per-finding evidence, verdicts, and the settled shape of each fix.
 
@@ -1426,21 +1426,28 @@ arrivals are reported open.
 - Three defects deliberately left standing as a consequence: set semantics in `validate_round_trip.sh` (B3), a non-interactive Phase 8 (B8), and headings at `####` and deeper staying unextractable despite the "no silent drops" guarantee at `document-merge/SKILL.md:29` (B6).
 
 ### Tests & Tasks
-- [ ] [P40-TS01] Regression test: `validate_round_trip.sh` must fail when a merged-doc path does not exist (B4) — asserts against the current vacuous `PASS: 0 markers and 0 entries`
-- [ ] [P40-T01] B4: hard-fail a missing merged doc, matching the existing line-17 policy for the decisions log; fail when the argument list resolves to zero readable documents
-- [ ] [P40-TS02] Regression test: a log entry marked `**Status:** Withdrawn` must not fail the gate (B2)
-- [ ] [P40-T02] B2: skip withdrawn entries in the marker-to-entry comparison; leave `sort -u` untouched per the B3 closure
-- [ ] [P40-T03] B9: correct the inverted em/en dash rules in `anchor_rules.md` (a dash is removed and each surrounding space becomes a hyphen, yielding `#a--b`); invert the line-42 example; fix its transposed `#54-`/`#45-` digits; re-check `SKILL.md:130`
-- [ ] [P40-T04] A3: add quoting rules covering every rendered command in `format-spec.md` — `--exec` blocks and the `--compact` line-3 resume command; transcript-derived text never on an executable line and newline-stripped in comments
-- [ ] [P40-T05] B7: pre-move basename-collision check across the source set, `mv -n`, and directory-prefix disambiguation; non-interactive per the B8 closure
-- [ ] [P40-TS03] A2: resolve `SCRIPT` from `Path(__file__).resolve().parents[1]` and assert on `result.returncode` in `run()`; suite green from any working directory
-- [ ] [P40-T06] C3: `session-handoff/SKILL.md:62` degrades to the context fallback when the sibling script is absent; `docs/skills/session-handoff.md:44` names `session-recap/` as required alongside
-- [ ] [P40-T07] C4: the handoff launch line carries a tilde-anchored full path (`~/<basedir>/<repo>/docs/handoffs/<file>.md`) so a bare copy-paste resolves on any machine and in any repo
-- [ ] [P40-T08] C5: derive the repo-scoped project directory from `$PWD` instead of globbing all projects; no-transcript case recaps from context; same treatment for `session-handoff/SKILL.md:69`
-- [ ] [P40-T09] B1: replace the non-runnable verification line in `plan_template.md` with the working pipeline from `SKILL.md:153-156`
-- [ ] [P40-T10] B5: reword `document-merge/SKILL.md:168` to "source-heading dump for the Phase 7 manual coverage diff"
-- [ ] [P40-T11] C2: name `T-X-…` in the worked-example rewrite as the test-case identifier family and state that the specification must define its naming scheme
-- [ ] [P40-TS04] `just all` green before each of the six PRs; adversarial check completed on every fix before its PR opens
+- [x] [P40-TS01] Regression test: `validate_round_trip.sh` must fail when a merged-doc path does not exist (B4) — asserts against the current vacuous `PASS: 0 markers and 0 entries`
+- [x] [P40-T01] B4: hard-fail a missing merged doc, matching the existing line-17 policy for the decisions log; fail when the argument list resolves to zero readable documents
+- [x] [P40-TS02] Regression test: a log entry marked `**Status:** Withdrawn` must not fail the gate (B2)
+- [x] [P40-T02] B2: skip withdrawn entries in the marker-to-entry comparison; leave `sort -u` untouched per the B3 closure
+- [x] [P40-T03] B9: correct the inverted em/en dash rules in `anchor_rules.md` (a dash is removed and each surrounding space becomes a hyphen, yielding `#a--b`); invert the line-42 example; fix its transposed `#54-`/`#45-` digits; re-check `SKILL.md:130`
+- [x] [P40-T04] A3: add quoting rules covering every rendered command in `format-spec.md` — `--exec` blocks and the `--compact` line-3 resume command; transcript-derived text never on an executable line and newline-stripped in comments
+- [x] [P40-T05] B7: pre-move basename-collision check across the source set, `mv -n`, and directory-prefix disambiguation; non-interactive per the B8 closure
+- [x] [P40-TS03] A2: resolve `SCRIPT` from `Path(__file__).resolve().parents[1]` and assert on `result.returncode` in `run()`; suite green from any working directory
+- [x] [P40-T06] C3: `session-handoff/SKILL.md:62` degrades to the context fallback when the sibling script is absent; `docs/skills/session-handoff.md:44` names `session-recap/` as required alongside
+- [x] [P40-T07] C4: the handoff launch line carries a tilde-anchored full path (`~/<basedir>/<repo>/docs/handoffs/<file>.md`) so a bare copy-paste resolves on any machine and in any repo
+- [x] [P40-T08] C5: derive the repo-scoped project directory from `$PWD` instead of globbing all projects; no-transcript case recaps from context; same treatment for `session-handoff/SKILL.md:69`
+- [x] [P40-T09] B1: replace the non-runnable verification line in `plan_template.md` with the working pipeline from `SKILL.md:153-156`
+- [x] [P40-T10] B5: reword `document-merge/SKILL.md:168` to "source-heading dump for the Phase 7 manual coverage diff"
+- [x] [P40-T11] C2: name `T-X-…` in the worked-example rewrite as the test-case identifier family and state that the specification must define its naming scheme
+- [x] [P40-TS04] `just all` green (39 tests, up from 36); adversarial check completed on all 12 fix plans
+
+### Fix shapes changed by the adversarial checks
+- **B7** — planned directory-prefix disambiguation rejected: a renamed file can never match its Phase 1 baseline entry, since that comparison is a straight prefix swap. `mv -n` rejected as a lone guard because it declines silently and still exits 0. Landed as a pre-move collision check that hard-fails.
+- **A2** — planned per-call `returncode` assertion rejected: `test_no_transcript_missing_file` legitimately expects exit 2, and a missing script also exits 2, so the cases are indistinguishable there. Landed as a module-level existence guard.
+- **B2** — silently excluding withdrawn entries would have reintroduced the silent-skip defect just fixed in B4, so exclusions are reported in the output.
+- **C5** — the snippet lists the project directory instead of globbing it: an unmatched glob errors loudly under zsh before redirection applies.
+- **B1** — also carries B7's collision check into the template, since a template one step behind `SKILL.md` recreates the drift B1 is.
 
 ### Automated Verification
 - `just all` — gen-check clean, full suite green before each PR
