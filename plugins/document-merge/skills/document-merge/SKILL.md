@@ -127,7 +127,7 @@ After completing each output doc, run the validation script. Run a code/spec rev
 
 ### Phase 6: Cross-references between output docs
 
-If you split into ≥2 output docs, content will inevitably reference content in another doc. Use GitHub-flavored anchor links (lowercase, spaces→hyphens, em-dash with surrounding spaces collapses to single hyphen). Verify every cross-reference resolves.
+If you split into ≥2 output docs, content will inevitably reference content in another doc. Use GitHub-flavored anchor links (lowercase, spaces→hyphens, a spaced em-dash yields a *double* hyphen — see `references/anchor_rules.md`). Verify every cross-reference resolves.
 
 ### Phase 7: Coverage audit
 

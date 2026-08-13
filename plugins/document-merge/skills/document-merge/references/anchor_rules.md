@@ -6,8 +6,8 @@ When you write `## Section Title` in a markdown file, GitHub (and most renderers
 
 1. **Lowercase everything.** `## My Section` → `#my-section`.
 2. **Spaces become hyphens.** `## My Long Section` → `#my-long-section`.
-3. **Em-dash with surrounding spaces collapses to a single hyphen.** `## A — B` → `#a--b` becomes `#a-b` after collapse. **This is the single most common gotcha.** If a section title contains an em-dash with spaces around it, the auto-anchor is one hyphen, not two or three.
-4. **En-dash same rule.** `## A – B` → `#a-b`.
+3. **A spaced em-dash yields a DOUBLE hyphen.** `## A — B` → `#a--b`. **This is the single most common gotcha.** The dash character is removed, but the spaces on either side of it are not — and each one still becomes a hyphen, so the two survive side by side. There is no collapsing step.
+4. **En-dash same rule.** `## A – B` → `#a--b`.
 5. **Punctuation is stripped.** `## Section 1.2: Topic!` → `#section-12-topic`. Periods, colons, exclamation marks, question marks all drop.
 6. **Parentheses, brackets, braces drop.** `## Function (Variant)` → `#function-variant`.
 7. **Slashes drop.** `## Reads/Writes` → `#readswrites` (no hyphen between).
@@ -39,6 +39,7 @@ If a section title changes during the merge, every cross-reference to it breaks.
 
 ## Common bugs caught by reviewers
 
-- `#54-the-special-json-payload--how-gcp-interprets-your-stdout` (double-dash from "—") instead of `#54-the-special-json-payload-how-gcp-interprets-your-stdout` — collapsed em-dash.
+- Writing `#45-the-special-json-payload-how-gcp-interprets-your-stdout` (one hyphen, assuming the em-dash collapses) when the real anchor is `#45-the-special-json-payload--how-gcp-interprets-your-stdout`. The doubled hyphen is correct — do not "fix" it.
+- Note the number in that example: `## 4.5 …` slugs to `#45-…`, because the period drops and the digits close up.
 - Forgetting that periods drop: `#section-1.2` doesn't work; it's `#section-12`.
 - Backticks in titles: `\`useEffect\` Hook` becomes `#useeffect-hook`, not `#use-effect-hook` or `#-useeffect--hook`.
