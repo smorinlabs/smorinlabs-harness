@@ -5,7 +5,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCRIPT = Path("plugins/session/skills/session-recap/scripts/transcript_digest.py")
+SCRIPT = (
+    Path(__file__).resolve().parents[1]
+    / "plugins/session/skills/session-recap/scripts/transcript_digest.py"
+)
+
+# Checked once, loudly. A missing script exits 2 with its message on stderr,
+# which is indistinguishable from the NO_TRANSCRIPT case below and otherwise
+# surfaces as an assertion against an empty stdout.
+assert SCRIPT.is_file(), f"transcript_digest.py not found at {SCRIPT}"
 
 
 def run(*args):

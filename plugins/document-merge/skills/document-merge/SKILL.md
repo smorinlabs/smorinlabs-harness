@@ -99,7 +99,7 @@ Reviewing the skeletons with the user before filling them avoids expensive backt
 
 ### Phase 4: Write the validation script
 
-Place `scripts/validate_round_trip.sh` (provided) in the consolidated dir. It enforces that every `<!-- CONFLICT: CFL-XXX -->` marker in the merged docs has a matching `### [ ] CFL-XXX` or `### [x] CFL-XXX` entry in the decisions log, and vice versa.
+Place `scripts/validate_round_trip.sh` (provided) in the consolidated dir. It enforces that every `<!-- CONFLICT: CFL-XXX -->` marker in the merged docs has a matching `### [ ] CFL-XXX` or `### [x] CFL-XXX` entry in the decisions log, and vice versa. **One exception:** an entry retired under the ID-hygiene rule — its body carrying a `**Status:** Withdrawn` line — is expected to have no inline marker, so it is excluded from the comparison and reported as excluded. A withdrawn entry whose marker is still in a doc remains a failure.
 
 Run it after every merge phase. If it fails, fix before continuing.
 
@@ -127,7 +127,7 @@ After completing each output doc, run the validation script. Run a code/spec rev
 
 ### Phase 6: Cross-references between output docs
 
-If you split into ≥2 output docs, content will inevitably reference content in another doc. Use GitHub-flavored anchor links (lowercase, spaces→hyphens, em-dash with surrounding spaces collapses to single hyphen). Verify every cross-reference resolves.
+If you split into ≥2 output docs, content will inevitably reference content in another doc. Use GitHub-flavored anchor links (lowercase, spaces→hyphens, a spaced em-dash yields a *double* hyphen — see `references/anchor_rules.md`). Verify every cross-reference resolves.
 
 ### Phase 7: Coverage audit
 
@@ -148,8 +148,40 @@ Conclusion sections, repeated rationale paragraphs, and content fully captured e
 ### Phase 8: Archive and verify
 
 1. Create the archive directory (default `<sources-parent>/archive/`).
-2. Move each source file: `git mv` if in a git repo, plain `mv` otherwise.
-3. Verify byte-identical against the Phase 1 baseline:
+2. **Check for basename collisions before moving anything.** Sources drawn
+   from different directories can share a filename — `README.md`, `notes.md`
+   and `index.md` are the common ones in a merge — and the archive is flat, so
+   the second move would overwrite the first. Stop and report the colliding
+   pair instead; do not rename to disambiguate, because the Phase 1 baseline
+   records each file under its original path and a renamed file can never
+   match it in step 3.
+
+   ```bash
+   # (a) two sources sharing a basename
+   for f in <source-files...>; do basename "$f"; done | sort | uniq -d
+
+   # (b) a destination that already exists — e.g. from an earlier run
+   for f in <source-files...>; do
+     [ -e "<archive-dir>/$(basename "$f")" ] && echo "occupied: $(basename "$f")"
+   done
+   ```
+
+   Any output from either check is a collision. **Both matter:** (a) catches
+   two sources colliding with each other, (b) catches a source colliding with
+   a file already in the archive, which (a) cannot see.
+
+   Resolve a collision by renaming or relocating the *source* before Phase 1,
+   or by archiving the colliding sources in a separate run with its own
+   baseline. Do **not** archive them into subdirectories under
+   `<archive-dir>/`: the step-4 verification globs the archive's top level
+   only and rewrites a single flat path prefix, so a nested file would not be
+   hashed and the guarantee would silently cover less than it claims.
+3. Move each source file: `git mv` if in a git repo, plain `mv` otherwise.
+   `git mv` already refuses to clobber (`fatal: destination exists`), so this
+   only bites outside a repo, where the loss is unrecoverable. Note that
+   `mv -n` is **not** a substitute for the check above: it declines silently
+   and still exits 0, leaving the source in place with nothing reported.
+4. Verify byte-identical against the Phase 1 baseline:
 
 ```bash
 shasum -a 256 <archive-dir>/*.md | sort | sed "s| <archive-dir>/| <source-dir>/|" > /tmp/post-archive-sums.txt
@@ -158,14 +190,14 @@ diff <consolidated-dir>/.source-sha256-pre-merge.txt /tmp/post-archive-sums.txt
 
 Expect zero diff. **If the diff is non-empty, stop** — the merge modified a source file, which violates the inviolable-originals guarantee. Investigate and revert before proceeding.
 
-4. Run the validation script one final time (`PASS` expected).
-5. Commit the archive move with a message documenting the SHA-256 verification.
+5. Run the validation script one final time (`PASS` expected).
+6. Commit the archive move with a message documenting the SHA-256 verification.
 
 ## Bundled resources
 
 - `scripts/capture_source_sha256.sh` — Phase 1 snapshot (cross-platform: detects `shasum`/`sha256sum`).
 - `scripts/validate_round_trip.sh` — Phase 4 marker↔log enforcement (parameterized).
-- `scripts/coverage_audit.sh` — Phase 7 source-heading vs. topic-map diff.
+- `scripts/coverage_audit.sh` — source-heading dump for the Phase 7 manual coverage diff. It lists headings and reminds you what to check; it does not read the topic map, and comparing them is your job.
 - `assets/cfl_entry_template.md` — The 6-field CFL entry structure.
 - `assets/plan_template.md` — Plan doc template for the 8 phases.
 - `references/cfl_classification.md` — Decision tree for "is this CFL-worthy?"

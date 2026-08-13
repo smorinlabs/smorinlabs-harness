@@ -62,9 +62,10 @@ avoid explaining it.
 > Read the table as the coverage contract: every group holds all unlisted
 > dimensions at the canonical baseline, which is what keeps the suite bounded.
 >
-> `G-VER` tests selected high-risk combinations. One example combines a linked
-> worktree with the `exact+ignored` file state. It does not test every possible
-> combination.
+> `G-VER` tests selected high-risk combinations, listed as its `T-X-…` rows.
+> One example combines a linked worktree with the `exact+ignored` file state.
+> It does not test every possible combination. The specification must state
+> what the `T-X-…` identifiers name and how they are numbered.
 >
 > The specification marks an invalid combination as `N/A`. Add the rule that
 > defines an invalid combination. The coverage checker does not require a test
@@ -80,6 +81,12 @@ avoid explaining it.
 The rewrite does not invent the missing tuple labels, exclusion criterion,
 estimate calculation, implementation limit, or requested action. It exposes
 each as a precise gap that the author must fill.
+
+Note that all four flagged identifiers survive into the rewrite, `T-X-…`
+included. A name is carried forward even when it is a pattern rather than a
+single identifier, and even when its meaning is exactly what the author still
+has to supply — dropping it would remove the precision the rewrite exists to
+protect.
 
 ## Example 2: owner-decision request
 

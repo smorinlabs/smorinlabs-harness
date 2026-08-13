@@ -298,6 +298,30 @@ invent fields.
    lead; identity + commands demoted to a `<sub>` footer (the only place UUID
    abbreviation is allowed).
 
+### Shell safety in rendered commands
+
+Binding on **every** command this skill renders — the `--exec` blocks, the
+compact listing's line-3 resume command, the ledger footer, and the
+data-access one-liners. The reader pastes these into a live shell, so a
+command that word-splits is a correctness bug and a command built from
+transcript text is an injection path.
+
+- **Quote every path, with the tilde outside the quotes.**
+  `cd ~/'c/my repo' && claude --resume <uuid>`. A path with a space
+  otherwise fails with `cd: too many arguments`, and a tilde *inside* the
+  quotes is taken literally rather than expanded to the home directory —
+  `cd '~/c/repo'` does not work. Write an embedded single quote as
+  `'\''`.
+- **Session ids are rendered bare only after they are checked.** A resume
+  id must match `[0-9a-f-]{36}`; anything else is quoted like a path.
+- **Never place transcript-derived text on an executable line.** Titles,
+  summaries, and left-off notes are model-generated from transcript
+  content, which can include text an agent fetched from the web or read
+  from a dependency. They belong on `#` comment lines only.
+- **Strip newlines and carriage returns from that text even in comments.**
+  An embedded newline ends the comment and drops whatever follows onto an
+  executable line, which defeats the comment-only rule above.
+
 ### Compact discipline (v7.1 — first-contact fixes, 2026-08-08)
 
 Real listings stress compact mode in ways the golden mocks never did; these

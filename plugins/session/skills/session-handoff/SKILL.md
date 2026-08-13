@@ -59,16 +59,36 @@ neutral dump. Infer, show, then confirm or ask:
 
   ```bash
   d="$(cd "<skill-dir>" && pwd -P)"          # -P resolves the symlink to the real plugin path
-  python3 "$d/../session-recap/scripts/transcript_digest.py"
+  digest="$d/../session-recap/scripts/transcript_digest.py"
+  if [ -f "$digest" ]; then
+    python3 "$digest"
+  else
+    echo "sibling digest not installed — compose from context"
+  fi
   ```
+
+  The sibling is present under a plugin or dev-symlink install, which bring
+  the whole `session` plugin. A **direct copy of this skill alone does not
+  have it** — if the script is missing, say so plainly and compose the
+  handoff from what is in context, exactly as when no transcript exists.
 
   `$CLAUDE_CODE_SESSION_ID` names this session's transcript; the script reads it
   from its own environment, so pass no argument. It returns the title, opening
   prompt, compaction markers, branch changes, the last turns, and a
   **references** block (tickets, spec/doc files, URLs) — the raw material for
   artifacts and tacit context. On `NO_TRANSCRIPT`, fall back to the newest
-  transcript on this machine (`ls -t ~/.claude/projects/*/*.jsonl | head -1`; best-effort,
-  may be a different repo) and pass it positionally; if there is none, compose from context and say so.
+  transcript **for this repo** — transcripts are filed per working directory,
+  so scope the lookup rather than taking the newest on the machine, which is
+  frequently another repo's:
+
+  ```bash
+  proj=~/.claude/projects/"$(echo "$PWD" | tr '/.' '--')"
+  newest="$(ls -t "$proj" 2>/dev/null | grep '\.jsonl$' | head -1)"
+  [ -n "$newest" ] && echo "$proj/$newest"
+  ```
+
+  Pass that positionally. If there is none, compose from context and say so —
+  never widen the search to other repos to fill the gap.
 
 - **Repo identity** (so the target can locate or *clone* the repo):
 
@@ -195,9 +215,18 @@ context, in-flight complexity}:
   then print the launch line:
 
   > ▶ ⌨️ — Start a new session in `<repo>` and paste:
-  > `Read <abs-path-to-handoff>.md and continue.`
+  > `Read ~/<basedir>/<repo>/docs/handoffs/<file>.md and continue.`
   > ✓ The handoff doc is itself uncommitted until you commit it — commit it if it
   > must reach another machine.
+
+  **The pasted line must locate the file on its own.** Only the code span
+  survives a copy-paste; the surrounding "start a session in `<repo>`" prose
+  does not. A bare repo-relative path (`docs/handoffs/<file>.md`) resolves to
+  nothing when the new session opens in a different repo, and a machine-local
+  absolute path breaks on a different machine — so render the full path
+  tilde-anchored, with the base directory and repo name inside the code span.
+  Keep the absolute path, if you show one at all, beside the pasteable line as
+  a local convenience rather than inside it.
 
 - `--file` / `--inline` in the invocation force the mode; the default location is
   overridable on request.
