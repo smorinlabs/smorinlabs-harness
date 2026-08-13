@@ -1,0 +1,9 @@
+name = "clear-technical-communication"
+version = "0.2.0"
+description = "Aggressively review, rewrite, and compose technical explanations, comparisons, status, handoffs, and decision requests so readers get the necessary context, explicit relationships, clear status, option effects, recommendations, and exact actions without reconstructing the author's mental model; restores stripped precision by keeping exact names paired with descriptions and frames every embedded code block, diagram, and example"
+author = "Steve Morin"
+keywords = ["communication", "technical-writing", "plain-language", "clarity", "decisions", "reader-centered", "asd-ste100", "iso-24495"]
+
+[interface]
+displayName = "Clear Technical Communication"
+category = "Developer Tools"

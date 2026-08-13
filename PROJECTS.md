@@ -1394,4 +1394,26 @@ arrivals are reported open.
 
 ---
 
+## [x] Project P39: Adopt 8 skills from the private harness (v0.21.0)
+**Goal**: Adopt clear-technical-communication, design-by-elements, document-merge, and the five session-* skills (plugin `session`, renamed from `session-recap`) from smorin/smorin-harness, scrubbed of private references.
+
+**Out of Scope**
+- The 8 skills that stay private (skill-fleet ×5, repo-secrets ×2, claim-package-name-skill) — each blocked on a private dependency.
+- The 3 sandbox skills — deferred by owner decision.
+
+### Tests & Tasks
+- [x] [P39-T01] Copy four plugins tracked-files-only (`git archive`); rename session-recap → session
+- [x] [P39-T02] Apply scrub manifest A1–A6 before the first commit
+- [x] [P39-T03] Redirect the session-handoff effectiveness log to opt-in user scope
+- [x] [P39-T04] Regenerate manifests, write 8 docs pages, add 4 README sections
+- [x] [P39-T05] Port tests/test_transcript_digest.py and add a pytest CI job
+- [x] [P39-TS01] `just all` green (gen-check + 36 tests); scrub gates return zero hits
+- [x] [P39-TS02] document-merge research provenance reviewed and accepted (scrub manifest A7)
+
+### Automated Verification
+- `just all` — gen-check clean, 36 tests pass
+- `git grep` gates: no private-tooling references, no absolute personal paths
+
+---
+
 - [ ] Regression Test Status

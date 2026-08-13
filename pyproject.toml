@@ -1,6 +1,6 @@
 [project]
 name = "smorinlabs-harness"
-version = "0.20.0"
+version = "0.21.0"
 description = "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -14,6 +14,7 @@ package = false
 [dependency-groups]
 dev = [
     "harness-kit",
+    "pytest>=9.1.1",
 ]
 
 [tool.uv.sources]

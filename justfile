@@ -8,4 +8,8 @@ gen:
 gen-check:
     uv run harness-kit gen --check
 
-all: gen-check
+# run the test suite
+test:
+    uv run pytest
+
+all: gen-check test
