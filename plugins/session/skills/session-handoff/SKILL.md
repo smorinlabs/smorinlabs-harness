@@ -202,9 +202,18 @@ context, in-flight complexity}:
   then print the launch line:
 
   > ▶ ⌨️ — Start a new session in `<repo>` and paste:
-  > `Read <abs-path-to-handoff>.md and continue.`
+  > `Read ~/<basedir>/<repo>/docs/handoffs/<file>.md and continue.`
   > ✓ The handoff doc is itself uncommitted until you commit it — commit it if it
   > must reach another machine.
+
+  **The pasted line must locate the file on its own.** Only the code span
+  survives a copy-paste; the surrounding "start a session in `<repo>`" prose
+  does not. A bare repo-relative path (`docs/handoffs/<file>.md`) resolves to
+  nothing when the new session opens in a different repo, and a machine-local
+  absolute path breaks on a different machine — so render the full path
+  tilde-anchored, with the base directory and repo name inside the code span.
+  Keep the absolute path, if you show one at all, beside the pasteable line as
+  a local convenience rather than inside it.
 
 - `--file` / `--inline` in the invocation force the mode; the default location is
   overridable on request.
