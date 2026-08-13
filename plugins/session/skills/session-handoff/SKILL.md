@@ -59,8 +59,15 @@ neutral dump. Infer, show, then confirm or ask:
 
   ```bash
   d="$(cd "<skill-dir>" && pwd -P)"          # -P resolves the symlink to the real plugin path
-  python3 "$d/../session-recap/scripts/transcript_digest.py"
+  digest="$d/../session-recap/scripts/transcript_digest.py"
+  [ -f "$digest" ] || echo "sibling digest not installed"
+  python3 "$digest"
   ```
+
+  The sibling is present under a plugin or dev-symlink install, which bring
+  the whole `session` plugin. A **direct copy of this skill alone does not
+  have it** — if the script is missing, say so plainly and compose the
+  handoff from what is in context, exactly as when no transcript exists.
 
   `$CLAUDE_CODE_SESSION_ID` names this session's transcript; the script reads it
   from its own environment, so pass no argument. It returns the title, opening
