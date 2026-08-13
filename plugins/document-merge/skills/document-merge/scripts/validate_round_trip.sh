@@ -35,8 +35,28 @@ done | sort -u)
 # Log entries: ### [ ] CFL-### or ### [x] CFL-###
 entries=$(grep -E "^### \[[x ]\] CFL-[0-9]+" "$DECISIONS_LOG" | grep -oE "CFL-[0-9]+" | sort -u || true)
 
+# IDs retired per the ID-hygiene rule carry a `**Status:** Withdrawn` line in
+# their body and have no inline marker by design, so they are excluded from the
+# comparison. The id is tracked across lines because the status sits under its
+# own heading, and the exclusion is reported below rather than applied silently.
+withdrawn=$(awk '
+  /^### \[[x ]\] CFL-[0-9]+/ {
+    match($0, /CFL-[0-9]+/); id = substr($0, RSTART, RLENGTH); next
+  }
+  id != "" && tolower($0) ~ /^\*\*status:\*\*[[:space:]]*withdrawn/ { print id; id = "" }
+' "$DECISIONS_LOG" | sort -u)
+
+if [ -n "$withdrawn" ]; then
+  entries=$(comm -23 <(echo "$entries") <(echo "$withdrawn") || true)
+fi
+
 markers_only=$(comm -23 <(echo "$markers") <(echo "$entries") || true)
 entries_only=$(comm -13 <(echo "$markers") <(echo "$entries") || true)
+
+if [ -n "$withdrawn" ]; then
+  echo "Withdrawn entries excluded from the comparison (no inline marker expected):"
+  echo "$withdrawn" | sed 's/^/  - /'
+fi
 
 failed=0
 if [ -n "$markers_only" ]; then
