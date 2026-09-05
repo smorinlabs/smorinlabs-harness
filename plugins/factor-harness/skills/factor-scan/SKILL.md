@@ -1,7 +1,6 @@
 ---
 name: factor-scan
-description: Broad sweep over a code area surfacing bugs, quality issues, and architectural smells. Walks the user through findings one at a time. Produces an inline spec ready to feed to Superpowers writing-plans. Use this whenever the user wants to scan a directory, file set, or recently-changed code for issues — even if they don't say "factor-scan" by name (phrases like "any bugs in this?", "review this for quality", "audit these files", "what's wrong here?", "code health check" should all trigger).
-when_to_use: When the user says "scan", "audit", "review for bugs", "find issues", "quality check", "code health check", "what's wrong with this?", "any problems in this code?", or points at a file/directory and asks for a sweep. Also when `factor-architect` or `factor-dedup` reaches a point where a broader scan would inform their decision.
+description: Sweep a directory, file set, or recent changes for bugs, quality issues, and architectural smells, walking findings one at a time into a spec for writing-plans. Use when the user asks "any bugs in this?", "audit these files", "what's wrong here?", or "code health check". Not for architecture review (factor-architect).
 allowed-tools: Read Grep Glob Task TodoWrite
 ---
 

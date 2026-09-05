@@ -1,6 +1,6 @@
 ---
 name: reader-steps
-description: Render actions only the READER can or will perform as a delineated, self-contained task block — a bounded frame (rail + rules) carrying what it completes, steps numbered with a stable tag, grouped by surface (terminal, browser, desktop/system UI, phone, physical world), each step titled by its outcome with the literal command or UI path below it and a ✓ verification line, closing with the immediate next move. Scales down to one line for a single step and up with a map and stop points for long sequences; re-renders in-flight processes across turns as a scoreboard; states errors as cause and fix. Fire on request — "format the manual steps", "what do I need to do by hand", "what's left for me" — and when composing any handoff with agent-impossible actions, manual verification, or work the user claimed. Decisions are not steps — anything needing the user's judgment is asked (question-walkthrough) before instructing. Canonical spec behind an always-on digest kept in global instructions.
+description: Render actions only the reader can perform as a self-contained task block, grouped by surface, each step titled by its outcome with the literal command or UI path and a verification line. Use when the user asks "format the manual steps" or "what do I need to do by hand", and when a handoff includes actions the agent cannot perform. Decisions are asked first (question-walkthrough), never rendered as steps.
 ---
 
 # reader-steps

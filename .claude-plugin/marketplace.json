@@ -32,7 +32,7 @@
       "name": "design-by-elements",
       "source": "./plugins/design-by-elements",
       "description": "Iterative, element-by-element method for prototyping the visual or textual form of an artifact \u2014 terminal output, report and CLI layouts, table designs, page and email mockups \u2014 before building it: decompose into lockable elements, settle meaning before form, contrast opposed variants, lock with rationale, and promote every fix into a named rule",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Steve Morin"
       },
@@ -51,7 +51,7 @@
       "name": "document-merge",
       "source": "./plugins/document-merge",
       "description": "Merge overlapping markdown docs into consolidated outputs without information loss, with full traceability of every synthesis decision",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "Steve Morin"
       },
@@ -86,7 +86,7 @@
       "name": "factor-harness",
       "source": "./plugins/factor-harness",
       "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "Steve Morin"
       },
@@ -103,7 +103,7 @@
       "name": "guided-research",
       "source": "./plugins/guided-research",
       "description": "Orchestration layer over the built-in /deep-research skill \u2014 decides when deep research is worth doing, shapes the prompt with project constraints, invokes the engine, and organizes results into a durable, reusable research tree.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Steve Morin"
       },
@@ -155,7 +155,7 @@
       "name": "reader-steps",
       "source": "./plugins/reader-steps",
       "description": "Style spec for rendering actions only the reader can or will perform: a delineated task block toward the response's end \u2014 bounded frame (blockquote rail plus horizontal rules), a Completes line binding it to the tracked item by exact ID and title, steps numbered with a stable tag and grouped by surface (terminal, browser, desktop/system UI, phone, physical world) under merged dividers, each step titled by its outcome with the literal command or UI path below it and a \u2713 verification line, closing with the immediate next move. Scales down to a one-line inline form for a single step and up with a map and stop points past eight; breadcrumb navigation promotes to one hop per line past three hops or on any caveat; reactive actions nest inside the step that triggers them; in-flight processes re-render across turns as a progress scoreboard; errors state cause and fix. Decisions are never steps \u2014 they are asked (question-walkthrough) before instructing. Canonical spec behind an always-on digest users keep in global instructions.",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "author": {
         "name": "Steve Morin"
       },
@@ -242,7 +242,7 @@
       "name": "use-html-theme",
       "source": "./plugins/use-html-theme",
       "description": "Themed-HTML toolkit, three pure skills sharing one context-triage preflight. use-html-theme: on any HTML-generation request, offer a catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project \u2014 natural language and [theme: x] inline-flag control, side-by-side preview on request. html-codesign: interactive 'pick and export' decision pages, opened as a step-through wizard by default (Next/Back, progress dots, Finish-to-review; full-list view one toggle away) \u2014 every question opens with a collapsible context-and-recommendation preamble (free-form rich content on a clarity scaffold) in clear, plain, self-explanatory language (sharpened by clear-technical-communication when installed, an embedded digest otherwise), the reader answers, skips, or raises a question on each section, folds answered sections to dense summary rows for review, then exports the decision as Markdown/JSON (slim by default, full ADR-style by toggle) with stable IDs for diffable iteration. html-explain: read-only explainer pages for settled material \u2014 authoring maps which parts are intrinsically hardest and budgets the page around them, then enriches with diagrams, annotated figures, build-up sequences, and manipulable widgets ONLY where comprehension actually breaks; clarity canon (Mayer, Sweller, Minto, Heath, Tufte, Bertin, Cleveland) carried as advisory aids, with a standalone encoding fallback for surfaces where the bundled dataviz skill does not exist. Both page skills read recent context and ALWAYS confirm before generating \u2014 codesign for unanswered questions, explain for settled work \u2014 and hand off to each other when triage disagrees with the request. Both page skills close delivery the same way: the full absolute path on its own line, then conditional convenience offers \u2014 open it in the browser only when the session can reach one, add it to shelf only when that skill is installed, and where to save it whenever the file sits somewhere temporary or anywhere the agent chose rather than the user, read from context rather than a fixed ranking; copying the path to the clipboard is offered under the same gate as opening it. Portable across Claude Code and Codex.",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "author": {
         "name": "Steve Morin"
       },

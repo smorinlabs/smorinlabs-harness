@@ -1,7 +1,6 @@
 ---
 name: factor-dedup
-description: Cross-implementation consolidation for N similar implementations. Walks comparator reports per-implementation, classifies divergences as intentional or accidental, proposes a unified design (or documents why divergence should stay). Produces an inline consolidation spec ready to feed to Superpowers writing-plans. Use this whenever the user has multiple files/functions/commands they suspect are duplicates — even if they don't say "factor-dedup" (phrases like "consolidate these", "these all look the same", "DRY this up", "extract common code", "shared abstraction" should all trigger).
-when_to_use: When the user has N implementations they suspect are duplicates and wants to consolidate. Triggers include "consolidate these N files", "deduplicate", "extract common code", "DRY this up", "these look identical", "merge these implementations", "shared abstraction across X", "5 commands doing the same thing".
+description: Consolidate several similar implementations by classifying their divergences as intentional or accidental and proposing a unified design, as a spec for writing-plans. Use when the user says "consolidate these", "DRY this up", "these all look the same", or "extract common code". Not for architecture review (factor-architect).
 allowed-tools: Read Grep Glob Task TodoWrite WebFetch WebSearch
 ---
 

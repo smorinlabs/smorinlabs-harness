@@ -1,14 +1,6 @@
 ---
 name: using-factor-harness
-description: >-
-  Orient across the four factor-harness skills (using-factor-harness, factor-architect,
-  factor-scan, factor-dedup) and route to the right one. factor-harness is the small skill set for
-  two recurring code-quality activities: architecture-aware review/refactor and
-  cross-implementation deduplication. Each workflow skill produces an inline spec that hands off
-  to Superpowers writing-plans for the actual code changes. Use this skill when the user mentions
-  architecture review, refactor opportunities, code scanning, bug hunting, or duplicated
-  implementations — even if they don't name a specific factor-harness skill.
-when_to_use: When the user starts a session that mentions architecture, refactoring, code review, bug hunting, quality checks, or duplicate implementations; when the user asks "what factor-harness skills exist?"; before invoking any specific factor-* skill if the right choice is unclear.
+description: Route code-quality requests to the right factor-harness skill, factor-architect for architecture review, factor-scan for bug and quality sweeps, or factor-dedup for consolidating duplicates. Use when the user asks for an architecture review, refactor opportunities, or duplicate consolidation without naming a skill.
 allowed-tools: Read
 ---
 

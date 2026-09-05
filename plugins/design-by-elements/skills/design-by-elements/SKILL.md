@@ -1,17 +1,6 @@
 ---
 name: design-by-elements
-description: >-
-  Iterative, element-by-element method for prototyping the visual or textual FORM of an artifact —
-  terminal output, report/CLI layouts, table designs, page or email mockups, status blocks — BEFORE
-  building it. Decompose the artifact into independently lockable elements; settle what each element
-  MEANS and which reader-question it answers before arguing form; offer 2–3 deliberately OPPOSED
-  variants (short IDs, pick by shorthand) instead of a catalog; lock each with its rationale in a
-  decisions log; and promote every fix into a NAMED RULE that polices the rest, so the design
-  converges instead of looping. Ends with a zoom-out pass and scale probes (1 vs many vs zoomed-out).
-  Use when the user says "design this layout/format", "prototype the look", "iterate on this output",
-  "let's lock this section", "element-wise", or when a formatting debate keeps looping. NOT general
-  feature/product brainstorming (superpowers:brainstorming), NOT an async HTML decision page
-  (html-codesign).
+description: Prototype the visual or textual form of an artifact element by element, choosing between opposed variants and locking each with its rationale. Use when the user says "design this layout", "prototype the look", or "iterate on this output", or when a formatting debate keeps looping. Not for feature brainstorming (superpowers:brainstorming) or async decision pages (html-codesign).
 ---
 
 # Design by elements

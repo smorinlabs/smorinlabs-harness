@@ -1,7 +1,6 @@
 ---
 name: factor-architect
-description: Architectural review against precedent, conventions, and external good-pattern references. Two trigger contexts — pre-execution (review a Superpowers plan before code is written) or post-execution (review delivered code for refactor opportunities). Walks user through findings per-bucket. Produces an inline architectural review and refactor spec ready for Superpowers writing-plans. Use this whenever the user has just gotten a plan back, just shipped a feature, or wants an architectural review — even if they don't say "factor-architect" (phrases like "review this plan", "is this architecturally sound?", "any refactor opportunities?", "does this fit our patterns?", "look at recent commits" should all trigger).
-when_to_use: After a Superpowers writing-plans output is produced and the user wants architectural review before executing-plans. Or after features ship and the user wants refactor opportunities reviewed. Triggers include "review this plan", "architectural review", "any refactor opportunities?", "does this fit our patterns?", "review recent commits", "look at the new auth module", "is this the right shape?", "should we apply pattern X here?".
+description: Architectural review of a plan before code is written, or of delivered code after, against precedent, conventions, and external references, producing a refactor spec for writing-plans. Use when the user asks "review this plan", "is this architecturally sound?", or "any refactor opportunities?". Not for bug and quality sweeps (factor-scan) or duplicate consolidation (factor-dedup).
 allowed-tools: Read Grep Glob Task TodoWrite WebFetch WebSearch
 ---
 
