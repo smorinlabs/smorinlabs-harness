@@ -1,6 +1,6 @@
 ---
 name: readme-sync
-description: Use when the user asks to "update README", "sync README", "check README", "is README up to date", "are docs consistent", "does README match the code", or any request to verify or update README.md to match the current state of the codebase.
+description: Check or update README.md so it matches the current state of the codebase. Use when the user asks to update, sync, or check the README, or whether the docs still match the code.
 argument-hint: "[--check|--fix] [--since <commit>]"
 ---
 

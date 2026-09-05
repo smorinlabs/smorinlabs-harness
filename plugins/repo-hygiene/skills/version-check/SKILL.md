@@ -1,6 +1,6 @@
 ---
 name: version-check
-description: Use when the user asks "what version", "check version", "is version published", "version mismatch", "bump version", "what version is this project", "check if published", or any request to inspect, compare, or validate project versions across local files, git tags, and package registries.
+description: Inspect, compare, or validate a project's version across local files, git tags, and package registries. Use when the user asks "what version is this", "is it published", "version mismatch", or "bump the version".
 argument-hint: "[--full] [--bump patch|minor|major]"
 ---
 

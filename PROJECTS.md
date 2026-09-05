@@ -1471,7 +1471,7 @@ arrivals are reported open.
 ### Tests & Tasks
 - [x] [P41-T01] session ×5 → plugin 0.11.1
 - [x] [P41-T02] project-harness ×5 → plugin 0.1.4; `when_to_use` removed
-- [ ] [P41-T03] repo-hygiene ×5
+- [x] [P41-T03] repo-hygiene ×5 → plugin 0.8.1; Group 3 approved and applied verbatim
 - [~] [P41-T04] factor-harness ×4 → plugin 0.1.2, `when_to_use` removed; repo-finder pending
 - [~] [P41-T05] html-explain + use-html-theme → plugin 0.11.1; guided-research → plugin 0.1.1; html-codesign and explain pending
 - [~] [P41-T06] design-by-elements → 0.1.1, document-merge → 0.1.2, reader-steps → 0.3.2; clear-technical-communication and question-walkthrough pending
