@@ -1,7 +1,6 @@
 ---
 name: using-project-harness
-description: Bootstraps the project-harness bundle by establishing its five skills, running a four-step idempotent setup on first use per repo, and routing project-state edits through the right sibling skill.
-when_to_use: When the user mentions a project, plan, roadmap, milestone, or backlog as tracked work, starts a repo session with project-management state, or is about to edit PROJECTS.md/projects/. Does not handle VM/Lima/sandbox execution setup; route that to a separate sandbox plugin.
+description: Bootstrap the project-harness bundle in a repo and route project-tracking work to the right sibling skill. Use when the user treats a project, roadmap, milestone, or backlog as tracked work, or is about to edit PROJECTS.md or projects/. Not for sandbox project definitions (sandbox-project).
 allowed-tools: Read Write Bash AskUserQuestion
 ---
 

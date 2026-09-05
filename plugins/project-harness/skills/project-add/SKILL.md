@@ -1,7 +1,6 @@
 ---
 name: project-add
-description: Captures a project idea in at most four questions asked one at a time (the fourth is optional — open questions and notes), picks the next available P## from the local trunk (always max+1), and writes the idea stub from templates/project-idea.md plus the trunk row in a single atomic git commit. Refuses to scope or decompose — points at project-refine if depth is wanted.
-when_to_use: When the user says "I had an idea", "capture this", "add a project for...", or any phrasing that signals a new project to register on the trunk.
+description: Capture a new project idea on the PROJECTS.md trunk in at most four questions, assigning the next P## and committing the idea stub. Use when the user says "I had an idea", "capture this", or "add a project for X". Not for scoping or decomposing an existing project (project-refine).
 arguments: [seed]
 argument-hint: "[seed-title]"
 allowed-tools: Read Edit Write Bash

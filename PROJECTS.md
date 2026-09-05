@@ -1459,4 +1459,33 @@ arrivals are reported open.
 
 ---
 
+## [~] Project P41: Shorten skill descriptions to action-scoped triggers (v0.23.0)
+**Goal**: Rewrite every skill description in this harness to one shape — what it does, "use when" a specific action or event, "not for" at most one or two sibling collisions — targeting about 300 characters with a hard ceiling of 500, and fold every `when_to_use` field into `description`. Motivation: Claude Code caps the skill listing at 1% of the context window and drops descriptions from the least-used skills first (31 of 58 fleet skills were name-only in one session), and Codex truncates long descriptions; a description that is invisible cannot route.
+
+**References**: Eric Provencher, "Rethinking skills and prompts for GPT-6 Astra" (https://x.com/i/article/2095989703967125509); Claude Code docs, Skills → skill listing budget (`skillListingBudgetFraction`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
+
+**Out of Scope**
+- Skill bodies, `argument-hint`, README rows, and docs pages — unchanged; README summaries are independent prose, not copies of the description.
+- The private harness, agent-fork, and the standalone skill repos — tracked in their own repos.
+
+### Tests & Tasks
+- [x] [P41-T01] session ×5 → plugin 0.11.1
+- [x] [P41-T02] project-harness ×5 → plugin 0.1.4; `when_to_use` removed
+- [ ] [P41-T03] repo-hygiene ×5
+- [ ] [P41-T04] factor-harness ×4 + repo-finder; `when_to_use` removed
+- [ ] [P41-T05] use-html-theme ×3 + explain + guided-research
+- [ ] [P41-T06] clear-technical-communication, design-by-elements, document-merge, question-walkthrough, reader-steps
+- [ ] [P41-TS01] Every description ≤ 500 chars, parses as YAML, no `when_to_use` remains in `plugins/*/skills/*/SKILL.md`
+- [ ] [P41-TS02] `just all` green; `skill-quality` run on every touched skill against the worktree path
+- [ ] [P41-TS03] After merge and `git pull --ff-only`, a fresh session's skill listing shows a description for all 30 skills
+
+### Automated Verification
+- `just all` — gen-check clean, tests pass
+- `awk` over `plugins/*/skills/*/SKILL.md` reports no description over 500 characters
+
+### Manual Verification
+- Open a new Claude Code session and confirm no harness skill appears as a bare name in the skill listing
+
+---
+
 - [ ] Regression Test Status

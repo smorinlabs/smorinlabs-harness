@@ -1,7 +1,6 @@
 ---
 name: project-audit
-description: Runs eleven drift checks (or a scoped subset) against PROJECTS.md and projects/ by dispatching one project-auditor subagent per check in parallel, then walks each finding interactively and asks before fixing. Defaults to focus mode — auditing only the candidate set most likely to hold drift (out-of-order, stragglers, recent active). Use --all for the full sweep. Each accepted fix is one revertable commit and is post-fix re-verified. Stateless — does not remember past skips.
-when_to_use: When the user says "audit projects", "is everything in order?", "did I forget to flip anything?"; periodically (weekly, before merging a long-running branch).
+description: Run drift checks against PROJECTS.md and projects/ and walk each finding, asking before any fix. Use when the user says "audit projects", "is everything in order?", or "did I forget to flip anything?", or before merging a long-running branch. Not for choosing what to work on next (project-next).
 arguments: [scope]
 argument-hint: "[P##] [--all|--focus|--candidates] [--check]"
 allowed-tools: Read Edit Write Bash Agent
