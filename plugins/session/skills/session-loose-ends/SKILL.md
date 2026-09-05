@@ -1,6 +1,6 @@
 ---
 name: session-loose-ends
-description: Sweep a session for loose ends and clean them up with per-item consent — the acting sibling of session-recap (which orients and never mutates). Checks four classes — working-state artifacts (uncommitted/unpushed work, stashes, stale worktrees, scratch files), running or zombie processes (uncollected background tasks, lingering Codex jobs, stale watch loops), promises made in the conversation but not done, and light project-tracking drift (stalled in-progress rows, work done but never checked off). Reports every finding with its evidence and a recommendation in BOTH directions (clean vs deliberately keep, with reasons), walks the recommendations one at a time for confirmation, then executes only what was approved and verifies each action. Use when the user asks "any loose ends?", "anything to clean up?", "what's dangling here?", "tie this off", or returns to a thread wanting the actionable state only — NOT a full recap (session-recap) and NOT a deep tracking audit (project-audit).
+description: Sweep the session for loose ends such as uncommitted or unpushed work, stale worktrees, zombie background jobs, unkept promises, and tracking drift. Reports each with a recommendation and cleans up only what the user approves. Use when the user asks "any loose ends?", "anything to clean up?", or "tie this off". Not for a full recap (session-recap).
 ---
 
 # session-loose-ends

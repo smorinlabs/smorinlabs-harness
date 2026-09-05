@@ -2,7 +2,7 @@
 name: session-handoff
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion
 argument-hint: "[--file|--inline]"
-description: Package the CURRENT session into a self-contained handoff a fresh, zero-context session — often on a DIFFERENT machine — can act on cold — the outcome to pursue, full repo identity and paths, the resume state, and the tacit context that dies on compaction (decisions and why, constraints, rejected approaches). Scopes to an outcome first — infers the likely goal(s), shows them, and confirms or asks before generating — then filters everything to that goal. Adapts delivery to size — short handoffs print an inline prompt block, involved ones write a docs/handoffs/ file plus one launch line. Use when the user says "hand this off", "write a handoff", "start a fresh/new session with this context", "continue this in a new window/session", "pick this up on another machine", or "pass the baton". NOT backward orientation of the current session (that is session-recap's "where was I / catch me up") and NOT in-place cleanup (session-loose-ends).
+description: Package the current session into a self-contained handoff that a fresh session, possibly on another machine, can act on cold. Use when the user says "hand this off", "write a handoff", or wants to continue this work in a new session or on another machine. Not for recapping the current session (session-recap).
 ---
 
 # session-handoff

@@ -1,7 +1,7 @@
 ---
 name: session-status
 allowed-tools: Read, Glob, Grep
-description: Mid-flight progress check for the ACTIVE stream of work — a fast, plain-language "you are here" map of what the work is, what's done, what's in progress, and what's left, scaled to the shape of the work. Manually triggered only — fire on /session-status or an explicit ask like "session status", "status check", "give me a status", "how far along are we"; never ambiently. Flat work → every task as a plain sentence with its ID; phased work → a named phase map, heavy detail only on what's left in the current phase, one line for the rest; done always rolls up. Reads the plan of record (PROJECTS.md, projects/, task lists, plan docs) plus the conversation; read-only and probe-free — never mutates, never runs tests, never hits git/PR/CI. NOT for returning cold to an idle or compacted session or full orientation with live git/PR probes (session-recap), not cleanup (session-loose-ends), not picking what to work on next (project-next).
+description: Mid-flight progress map of the active work, covering what it is, what is done, in progress, and left, read from the plan of record and the conversation without running probes. Manual only, fire on /session-status or an explicit "status check" or "how far along are we". Not for returning cold to a session (session-recap).
 ---
 
 # session-status

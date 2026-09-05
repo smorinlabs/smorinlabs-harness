@@ -1,7 +1,7 @@
 ---
 name: session-recap
 allowed-tools: Bash, Read, Glob, Grep
-description: Orient yourself (and the user) when returning to a coding session that's been left idle, compacted, or reopened cold. Produces a structured recap — what the session is about, where it started and ended, what's done vs. open, the live state of git/PR/worktree, and ranked next steps — ending in a close-or-continue verdict. Use this whenever the user asks to "catch me up", "where was I", "where are we", "recap this session", "what's the state of this", "what was I doing", "get me up to speed", "did I finish", or returns to a repo after time away and seems unsure of the current state. Reach for it even when the user doesn't say "recap" but is clearly disoriented about an in-flight task.
+description: Orient in a session that was left idle, compacted, or reopened cold, covering what it is about, done versus open, live git and PR state, and ranked next steps. Use when the user asks "catch me up", "where was I", or "what was I doing", or returns to a repo unsure where things stand. Not for mid-flight progress of active work (session-status) or cleanup (session-loose-ends).
 ---
 
 # session-recap
