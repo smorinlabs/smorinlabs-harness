@@ -1,19 +1,6 @@
 ---
 name: explain
-description: >
-  Explain anything in a concrete-anchored style — succinct, just-enough
-  context, always grounded in a real example. Use when the
-  user invokes /explain, or asks in their own words: "explain X", "give me a before and after", "add more context on
-  <finding/step/option>", "show examples of the options so I can decide",
-  "what does this change get us", "what's the bigger picture here", "give me
-  step by step instructions". A bare "explain" right after an explanation
-  means "not enough to act on yet": diagnose the gap (bigger picture,
-  clearer language, or a sharper example) and usually rewrite, not append;
-  an argument steers the focus; a dissimilar target restarts fresh. Modes
-  (inferred from the target; explicit argument wins): default, options
-  (example per option + recommendation), deeper, steps (operator
-  instructions). Not for manual testing
-  steps (manual-test-guide) or whole-session recaps.
+description: "Explain a concept, code change, finding, or set of options in chat using concrete examples and enough context to act. Use when the user asks \"explain X\", \"give me a before and after\", \"show examples of these options\", \"what's the bigger picture\", or \"how do I do this\", including follow-ups asking for more context. Not for polishing technical prose (clear-technical-communication), manual testing guides (manual-test-guide), or HTML explainer pages (html-explain)."
 arguments: [target]
 argument-hint: "[options|deeper|steps] [target]"
 allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git diff:*), Bash(git log:*), Bash(git show:*)

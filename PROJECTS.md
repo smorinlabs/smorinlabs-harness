@@ -1472,16 +1472,19 @@ arrivals are reported open.
 - [x] [P41-T01] session ×5 → plugin 0.11.1
 - [x] [P41-T02] project-harness ×5 → plugin 0.1.4; `when_to_use` removed
 - [x] [P41-T03] repo-hygiene ×5 → plugin 0.8.1; Group 3 approved and applied verbatim
-- [~] [P41-T04] factor-harness ×4 → plugin 0.1.2, `when_to_use` removed; repo-finder pending
-- [~] [P41-T05] html-explain + use-html-theme → plugin 0.11.1; guided-research → plugin 0.1.1; html-codesign and explain pending
-- [~] [P41-T06] design-by-elements → 0.1.1, document-merge → 0.1.2, reader-steps → 0.3.2; clear-technical-communication and question-walkthrough pending
-- [ ] [P41-TS01] Every description ≤ 500 chars, parses as YAML, no `when_to_use` remains in `plugins/*/skills/*/SKILL.md`
-- [ ] [P41-TS02] `just all` green; `skill-quality` run on every touched skill against the worktree path
+- [x] [P41-T04] factor-harness ×4 → plugin 0.1.2, `when_to_use` removed; repo-finder → plugin 0.2.2
+- [x] [P41-T05] html-explain + use-html-theme + html-codesign → plugin 0.11.1; guided-research → plugin 0.1.1; explain → plugin 0.3.3
+- [x] [P41-T06] design-by-elements → 0.1.1, document-merge → 0.1.2, reader-steps → 0.3.2; clear-technical-communication → 0.2.1; question-walkthrough → 0.2.2
+- [x] [P41-TS01] All 30 descriptions parse as YAML, span 177–465 characters, and contain no `when_to_use`; skill bodies and other frontmatter preserved
+- [x] [P41-TS02] `just all`: 40 passed; all 30 worktree skills passed static verification, with docs pages and README entries present. Claude validation covers skills; Codex static validation covers manifests only. Fresh-session loading remains under P41-TS03.
 - [ ] [P41-TS03] After merge and `git pull --ff-only`, a fresh session's skill listing shows a description for all 30 skills
 
 ### Automated Verification
 - `just all` — gen-check clean, tests pass
-- `awk` over `plugins/*/skills/*/SKILL.md` reports no description over 500 characters
+- YAML parsing of `plugins/*/skills/*/SKILL.md` confirms all 30 descriptions are 177–465 characters and no `when_to_use` remains; comparison with the base commit confirms skill bodies and other frontmatter are unchanged
+- All 13 affected plugins receive one patch bump; the `repo-finder` CLI version is synchronized to 0.2.2
+
+The shared character-limit decision remains open, and its convention is unchanged. The latest approved replacements fit the user's approximately 900-character maximum guidance.
 
 ### Manual Verification
 - Open a new Claude Code session and confirm no harness skill appears as a bare name in the skill listing

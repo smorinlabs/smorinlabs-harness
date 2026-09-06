@@ -13,7 +13,7 @@
       "name": "clear-technical-communication",
       "source": "./plugins/clear-technical-communication",
       "description": "Aggressively review, rewrite, and compose technical explanations, comparisons, status, handoffs, and decision requests so readers get the necessary context, explicit relationships, clear status, option effects, recommendations, and exact actions without reconstructing the author's mental model; restores stripped precision by keeping exact names paired with descriptions and frames every embedded code block, diagram, and example",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "Steve Morin"
       },
@@ -69,7 +69,7 @@
       "name": "explain",
       "source": "./plugins/explain",
       "description": "Concrete-anchored explanation shorthand \u2014 /explain answers in a fixed anatomy: what it is, just-enough context, a real before/after example, and the payoff \u2014 with options/deeper/steps modes inferred from the target, and follow-up aware: a bare explain after an explanation diagnoses what's blocking action (step back to the bigger picture, clearer language, sharper example) and rewrites rather than repeats.",
-      "version": "0.3.2",
+      "version": "0.3.3",
       "author": {
         "name": "Steve Morin"
       },
@@ -137,7 +137,7 @@
       "name": "question-walkthrough",
       "source": "./plugins/question-walkthrough",
       "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time. Every non-obvious question is fronted by a pre-read \u2014 why it exists, impact, trade-offs, terms \u2014 delivered in a chat turn that ends BEFORE the dialog is raised (same-turn context is invisible context). Answer notes are classified and honored: option modifiers apply immediately; directives \u2014 extra work or a redirect that replaces the answer \u2014 get a one-line repeat-back and confirm, then run in an end-of-walk batch by default. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source and summarized in a final outcome table with parked items and directive outcomes called out. Pure-markdown skill, portable across Claude Code and Codex.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "Steve Morin"
       },
@@ -174,7 +174,7 @@
       "name": "repo-finder",
       "source": "./plugins/repo-finder",
       "description": "One-command repo resolution for agents: resolve a repo name to every local copy with orientation facts (path, origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling) via a config-bounded multi-root scan \u2014 falling back to the user's configured GitHub orgs over gh REST-first (GraphQL only as configured fallback) for exact clone names. Deterministic ranking (checkouts, then worktrees labeled with their main repo, then nested copies); recency displayed, not ranked, so the consuming LLM decides. Single-file zero-dependency uv Python script inside the skill; conforms to the CLI Design Standard (small-CLI profile, minimal tier). Replaces token-expensive ls/find cascades and repeated gh repo view identity checks.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "Steve Morin"
       },

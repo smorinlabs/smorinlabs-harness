@@ -1,6 +1,6 @@
 ---
 name: repo-finder
-description: Resolve a repo name to its local path(s) and identity facts — origin, default branch, checkout-vs-worktree kind, branch, dirty state, build tooling — with one fast config-bounded command instead of exploring the filesystem. Fire whenever a repo is referenced by bare name and its location isn't already established in this session — BEFORE running ls/find/glob over home or code directories to locate a repo, BEFORE gh repo view/list to identify an origin or enumerate org repos, and for "where is <repo>", "what repos do I have", "which org owns X", "is this a worktree", "what's the exact name to clone". Covers local multi-root scan plus a gh REST-first remote org fallback from user config. Not for searching file contents inside an already-located repo, and not for cloning or mutating anything — it only finds and describes.
+description: "Find a repository's local checkouts and worktrees, or its exact GitHub owner and repository name. Report its branch, uncommitted changes, and build tools. Use when a repo is named and its location is not established, or the user asks \"where is this repo\", \"what repos do I have\", \"which org owns X\", or \"is this a worktree\". Not for searching files inside a located repo, cloning it, or changing repository state."
 allowed-tools: Bash
 ---
 
