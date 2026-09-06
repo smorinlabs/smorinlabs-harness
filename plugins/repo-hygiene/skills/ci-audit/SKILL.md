@@ -1,6 +1,6 @@
 ---
 name: ci-audit
-description: Use when the user asks about "GitHub Actions", "CI", "fix CI", "fix GitHub actions", "actions broken", "check actions", "monitor actions", "actionlint", "pre-commit hooks", "are hooks running", "check if actions are passing", or any request to audit, fix, monitor, or troubleshoot CI/CD pipelines and pre-commit hooks.
+description: Audit, fix, monitor, or troubleshoot GitHub Actions workflows and pre-commit hooks. Use when the user asks to fix or check CI, says "actions broken", or asks whether hooks are running. Not for driving a PR to merge (pr-merge-flow).
 argument-hint: "[--fix] [--actions-only|--hooks-only] [--update-versions]"
 ---
 

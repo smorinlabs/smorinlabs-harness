@@ -24,4 +24,4 @@ prose. When running under Codex CLI, substitute these equivalents:
 - The hooks/SessionStart context injection is Claude Code / Cursor
   specific. Under Codex, `using-project-harness` discovery relies on
   the `~/.agents/skills/project-harness` symlink and the skill's own
-  `description` and `when_to_use` frontmatter.
+  `description` frontmatter, which includes when to invoke the skill.

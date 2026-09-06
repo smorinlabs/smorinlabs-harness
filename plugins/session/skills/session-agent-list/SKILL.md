@@ -3,7 +3,7 @@ name: session-agent-list
 allowed-tools: Read, Glob, Grep, Bash
 argument-hint: "[query] [--compact|--exec|--ledger]"
 arguments: [query]
-description: Find and list Claude Code and Codex sessions across this machine, rendered as action-ready cards — how long ago, open mid-work vs handed off vs closed (clean / loose ends), what each did (repos, worktrees, three-horizon story), lineage (forks, handoffs in/out), and copy-paste commands to resume or read the transcript. Closed sessions get transcript-only commands — the card changes which actions it hands you. Use when the user asks "list my sessions", "find that session", "which sessions are open", "what other sessions touched this repo", "find the session where I did X", "show my Codex sessions", or wants a resume command for a past session. Full cards by default; --compact condenses to a triage listing, --exec a respawn console, --ledger a what-it-did view. Cross-session discovery only — NOT orienting inside the current session (session-recap), not active-stream progress (session-status), not cleanup (session-loose-ends), not writing handoffs (session-handoff).
+description: List Claude Code and Codex sessions on this machine as action-ready cards with resume commands. Use when the user asks to list, find, or resume a past session, or which sessions touched a repo. Not for orienting inside the current session (session-recap).
 ---
 
 # session-agent-list

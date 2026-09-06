@@ -1459,4 +1459,36 @@ arrivals are reported open.
 
 ---
 
+## [~] Project P41: Shorten skill descriptions to action-scoped triggers (v0.23.0)
+**Goal**: Rewrite every skill description in this harness to one shape — what it does, "use when" a specific action or event, "not for" at most one or two sibling collisions — using the approved per-skill text, and fold every `when_to_use` field into `description`. Motivation: Claude Code caps the skill listing at 1% of the context window and drops descriptions from the least-used skills first (31 of 58 fleet skills were name-only in one session), and Codex truncates long descriptions; a description that is invisible cannot route.
+
+**References**: Eric Provencher, "Rethinking skills and prompts for GPT-6 Astra" (https://x.com/i/article/2095989703967125509); Claude Code docs, Skills → skill listing budget (`skillListingBudgetFraction`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
+
+**Out of Scope**
+- Skill bodies, `argument-hint`, README rows, and docs pages — unchanged; README summaries are independent prose, not copies of the description.
+- The private harness, agent-fork, and the standalone skill repos — tracked in their own repos.
+
+### Tests & Tasks
+- [x] [P41-T01] session ×5 → plugin 0.11.1
+- [x] [P41-T02] project-harness ×5 → plugin 0.1.4; `when_to_use` removed
+- [x] [P41-T03] repo-hygiene ×5 → plugin 0.8.1; Group 3 approved and applied verbatim
+- [x] [P41-T04] factor-harness ×4 → plugin 0.1.2, `when_to_use` removed; repo-finder → plugin 0.2.2
+- [x] [P41-T05] html-explain + use-html-theme + html-codesign → plugin 0.11.1; guided-research → plugin 0.1.1; explain → plugin 0.3.3
+- [x] [P41-T06] design-by-elements → 0.1.1, document-merge → 0.1.2, reader-steps → 0.3.2; clear-technical-communication → 0.2.1; question-walkthrough → 0.2.2
+- [x] [P41-TS01] All 30 descriptions parse as YAML, span 177–465 characters, and contain no `when_to_use`; skill bodies and other frontmatter preserved
+- [x] [P41-TS02] `just all`: 40 passed; all 30 worktree skills passed static verification, with docs pages and README entries present. Claude validation covers skills; Codex static validation covers manifests only. Fresh-session loading remains under P41-TS03.
+- [ ] [P41-TS03] After merge and `git pull --ff-only`, a fresh session's skill listing shows a description for all 30 skills
+
+### Automated Verification
+- `just all` — gen-check clean, tests pass
+- YAML parsing of `plugins/*/skills/*/SKILL.md` confirms all 30 descriptions are 177–465 characters and no `when_to_use` remains; comparison with the base commit confirms skill bodies and other frontmatter are unchanged
+- All 13 affected plugins receive one patch bump; the `repo-finder` CLI version is synchronized to 0.2.2
+
+The shared numeric character-limit rules remain unchanged; changing them is a separate open owner decision. The user's approximately 900-character maximum is guidance for proposal drafts, not an adopted convention. All approved replacements also meet the existing 500-character plugin conventions. Frontmatter templates and discovery guidance are updated only to fold `when_to_use` into `description`.
+
+### Manual Verification
+- Open a new Claude Code session and confirm no harness skill appears as a bare name in the skill listing
+
+---
+
 - [ ] Regression Test Status

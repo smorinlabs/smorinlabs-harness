@@ -1,14 +1,6 @@
 ---
 name: document-merge
-description: >-
-  Merge multiple overlapping markdown documents into one or more consolidated outputs without
-  losing information. Use whenever the user wants to consolidate, deduplicate, reconcile, or merge
-  two or more research notes, specs, drafts, README variants, design docs, or reference material —
-  even when they don't say the word "merge" (phrases like "combine these into one", "make a single
-  source of truth", "I have these overlapping docs", or "dedupe this material" should all trigger
-  this skill). Produces a verifiable merge: every synthesis decision is logged with a stable ID,
-  every source line range is mapped to an output section, originals are archived byte-identical,
-  and a validation script enforces the round-trip between markers and the decision log.
+description: Merge two or more overlapping markdown documents into consolidated output with every synthesis decision logged, originals archived, and a round-trip validation script. Use when the user asks to combine, consolidate, deduplicate, or reconcile notes, specs, drafts, or design docs into one source of truth. Not for managing a document library (shelf).
 ---
 
 # Document Merge

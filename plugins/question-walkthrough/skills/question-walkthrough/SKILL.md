@@ -1,6 +1,6 @@
 ---
 name: question-walkthrough
-description: Walk a pile of open questions or undecided to-dos one at a time via the AskUserQuestion tool — smartest question first, just-enough context per item, and after EVERY answer re-evaluate the remaining pile (drop what became moot, reorder what changed, surface implied follow-ups). Sources it handles — mine open questions from the current conversation, read them from a document the user points at (PRD, design doc, notes), take a list given inline, or pull undecided items from task systems (tasks, PROJECTS.md). Decisions are recorded back at their source. Use when the user says "go through these one by one", "walk me through the open questions", "there's a bunch of to-dos, help me decide", "triage these decisions with me", or a doc/plan is blocked on several unanswered questions. Not for scoping a project idea (project-refine), not for batch shareable decision pages (html-codesign — offer it if they'd rather review async), and context style defers to the explain skill's anatomy.
+description: "Walk through a set of unresolved questions one at a time, explain each decision, record answers at their source, and reassess what remains after every answer. Use when the user says \"go through these one by one\", \"walk me through the open questions\", or wants help deciding a set of items from the conversation, a document, or a task tracker. Not for scoping one project (project-refine) or creating a shareable decision page (html-codesign)."
 ---
 
 # question-walkthrough

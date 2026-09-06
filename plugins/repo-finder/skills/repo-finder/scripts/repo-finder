@@ -24,7 +24,7 @@ import tomllib
 import urllib.parse
 from pathlib import Path
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 DEFAULT_DEPTH = 3
 SEARCH_RESULT_CAP = 1000  # GitHub's hard ceiling on search results
 PRUNE = {".git", "node_modules", ".venv", "venv", "__pycache__", ".cache",

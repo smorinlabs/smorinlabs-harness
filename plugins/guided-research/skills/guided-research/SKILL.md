@@ -1,6 +1,6 @@
 ---
 name: guided-research
-description: Orchestrates deep research at high-value moments and organizes the results for reuse. Use this skill whenever you are (1) making an architectural decision — choosing between libraries, algorithms, frameworks, or structural approaches; (2) kicking off a new project, major feature, or milestone where the problem domain has established best practices (billing, auth, caching, CLI design, etc.); (3) about to go deep on how a chosen library or technique works for a specific use case; or (4) hitting repeated errors with an unfamiliar API or pattern after a couple of ordinary web searches. Also use it when the user asks for deep research, thorough research, or research on options/best practices/approaches — and consult it during planning phases, before writing PRDs or implementation plans, even if the user doesn't say the word "research." Agents habitually under-research — a couple of shallow web searches at a decision point is usually a signal this skill should have fired.
+description: Run deep, organized research and file the results for reuse. Use when the user asks for deep or thorough research on options or best practices, or when a library, framework, or architectural choice is about to be made in a domain with established practice. Not for executing Doxa research jobs (doxa-research).
 ---
 
 # Guided Research

@@ -1,7 +1,6 @@
 ---
 name: project-next
-description: Reads PROJECTS.md and projects/ to surface a composite menu of in-progress projects, the next 2-3 lowest-ID unstarted projects, and the 2-3 most recently committed project files, then asks the user where to focus and points at the appropriate sibling skill or framework. Read-only — never edits PROJECTS.md or projects/.
-when_to_use: When the user asks "what's next?", "what should I work on?", or returns to a repo after time away.
+description: Read PROJECTS.md and projects/ to offer a menu of in-progress, next unstarted, and recently touched projects, then route to the right sibling skill. Read-only. Use when the user asks "what's next?" or "what should I work on?". Not for auditing tracking drift (project-audit).
 allowed-tools: Read Bash
 ---
 

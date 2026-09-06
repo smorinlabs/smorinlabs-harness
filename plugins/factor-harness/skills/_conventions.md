@@ -168,10 +168,12 @@ Every workflow `SKILL.md` follows this frontmatter:
 ---
 name: factor-<verb>
 description: <one-paragraph third-person summary including when to invoke. ≤500 chars.>
-when_to_use: <specific user phrases / contexts that trigger the skill>
 allowed-tools: <space-separated tool list>
 ---
 ```
+
+Put specific trigger phrases and contexts in `description`; do
+not add a separate `when_to_use` field.
 
 Subagent files in `agents/` use a simpler frontmatter (matching
 the project-harness convention):

@@ -1,20 +1,6 @@
 ---
 name: html-explain
-description: |
-  Build a read-only "explainer" page as one self-contained HTML file — a rich
-  explanation of settled material, where diagrams, annotated figures, charts,
-  and small interactive widgets do work prose cannot. Authoring maps which
-  parts are intrinsically hardest, budgets the page around them, then enriches
-  ONLY where comprehension actually breaks. Use when an explanation should be
-  a shareable PAGE not inline chat: "explain the design we just landed",
-  "write up what the tests showed", "make an explainer for this spec", "deep
-  dive on X as a page", explainer, walkthrough page, "explain this
-  visually". Reads recent context and ALWAYS confirms the target before
-  generating, even on explicit invocation with an argument. If context is
-  mostly UNANSWERED questions it offers html-codesign instead (that answers
-  questions; this explains — including a deep dive on one already resolved).
-  Inline chat explanations are the `explain` skill; charts defer to dataviz
-  when present. Pairs with use-html-theme.
+description: Build a read-only explainer page as one self-contained HTML file, with diagrams, figures, and small widgets where prose is not enough, confirming the target before generating. Use when an explanation should be a shareable page, such as "explain the design we landed as a page", "make an explainer for this spec", or "deep dive on X as a page". Not for inline explanations (explain) or pages that collect decisions (html-codesign).
 arguments: [topic]
 argument-hint: "[topic]"
 allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion, Bash

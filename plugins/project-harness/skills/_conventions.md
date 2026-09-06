@@ -18,8 +18,7 @@ files in that repo so a curious reader can compare.
 ```yaml
 ---
 name: project-<verb>
-description: <Third-person verb-phrase summary of what the skill does. ≤500 chars.>
-when_to_use: <Specific user phrases / contexts that trigger the skill. ≤500 chars.>
+description: <Verb-phrase summary of what the skill does and when to invoke it. ≤500 chars.>
 arguments: [<positional-arg-name>]          # optional
 argument-hint: "[example arg shape]"        # optional, paired with arguments
 allowed-tools: Read Edit Write Bash Agent   # scoped per skill
@@ -35,17 +34,11 @@ allowed-tools: Read Edit Write Bash Agent   # scoped per skill
   oriented form (`project-add`) is allowed by the spec as an
   alternative to gerund form (`adding-projects`).
 
-- **`description`** — third-person verb-phrase describing what
-  the skill *does*, not who triggers it. The Anthropic best-
-  practices doc shows this canonical shape: *"Generate
-  descriptive commit messages by analyzing git diffs."* Avoid
-  first or second person. Front-load the key verb.
-
-- **`when_to_use`** — Claude Code-specific field appended to
-  `description` in the skill listing. Put trigger phrases the
-  user might say here (*"when the user asks 'what's next?'"*).
-  Combined `description + when_to_use` is truncated at 1,536
-  chars in the listing — front-load the key use case.
+- **`description`** — begin with a verb phrase describing what
+  the skill does, then include specific user phrases or contexts
+  that trigger it, such as *"when the user asks 'what's next?'"*.
+  Front-load the key use case. Trigger guidance belongs in this
+  field; do not add a separate `when_to_use` field.
 
 - **`arguments`** — list of named positional args. Project-harness
   declares `arguments` on the three skills users may invoke
@@ -310,15 +303,9 @@ low-freedom operations vague.
 
 ### Front-load the key use case
 
-> *"The combined `description` and `when_to_use` text is truncated
-> at 1,536 characters in the skill listing to reduce context
-> usage."*
->
-> — `code.claude.com/docs/en/skills.md`
-
 Put the most distinguishing verb-phrase in the first ~200 chars
-of `description`. The truncation happens late, but Claude reads
-top-down — the first sentence does the heavy triggering work.
+of `description`. Include the activation cues in this field and
+keep execution details in the skill body.
 
 ### References one level deep from SKILL.md
 
@@ -392,12 +379,11 @@ implement this guidance for project-harness.
 
 - **Use Skills in Claude Code** —
   `https://code.claude.com/docs/en/skills.md`
-  Claude Code-specific frontmatter (`when_to_use`,
+  Claude Code-specific frontmatter (
   `argument-hint`, `arguments`, `disable-model-invocation`,
   `user-invocable`, `allowed-tools`, `model`, `effort`,
   `context: fork`, `agent`, `hooks`, `paths`, `shell`),
-  string substitutions, the 1,536-char skill-listing
-  truncation.
+  string substitutions and skill-listing behavior.
 
 ### Secondary (community examples)
 

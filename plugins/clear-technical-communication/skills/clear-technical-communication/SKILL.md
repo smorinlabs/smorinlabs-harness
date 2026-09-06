@@ -1,7 +1,6 @@
 ---
 name: clear-technical-communication
-description: >
-  Make technical communication reader-centered, explicit, and actionable by minimizing what the reader must infer. Use when the user says "make this draft clearer", "this message is not understandable", "rewrite this technical message", "review this for clarity", or "make this decision request actionable"; and proactively before sending dense artifacts such as design summaries, plans, status reports, handoffs, comparisons, or owner-decision requests. Detects missing purpose/context, undefined terms/IDs/notation, hidden logic, mixed status, false choices, absent consequences, wrong presentation form, stripped or unexplained names, and unframed code, diagrams, or examples; rewrites without inventing facts. Apply aggressively when a reader would reconstruct the author's mental model. Not for teaching the underlying subject (`explain`), interactive form design (`design-by-elements`), walking decisions (`question-walkthrough`), or reader-only task blocks (`reader-steps`).
+description: "Review, rewrite, or compose technical communication so the reader can understand it and act. Use when the user asks to clarify a draft, rewrite a technical message, review clarity, or make a decision request actionable; also when drafting plans, status reports, handoffs, or comparisons that need explicit context, terms, evidence, and next actions. Not for teaching the underlying subject (explain) or walking through decisions (question-walkthrough)."
 arguments: [target]
 argument-hint: "[target]"
 allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git diff:*), Bash(git log:*), Bash(git show:*)

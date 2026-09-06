@@ -1,7 +1,6 @@
 ---
 name: project-refine
-description: Walks the user through one of three sub-modes (refine notes/references, scope an idea up to ready, or decompose into tasks) using one-question-at-a-time dialog. Promotion from idea ([?]) to ready ([ ]) requires explicit user confirmation. Dispatches project-researcher subagents in parallel when the user uses verbs like find / look up / research / investigate. Refuses to create new projects (project-add) or execute tasks (Superpowers).
-when_to_use: When the user says "flesh out P##", "scope P##", "promote P##", "add tasks to P##", "decompose P##", or "refine the references on P##".
+description: Refine one project on the trunk by scoping an idea up to ready, decomposing it into tasks, or refining its notes and references, one question at a time. Promotion to ready needs explicit confirmation. Use when the user says "scope P##", "flesh out P##", "decompose P##", or "add tasks to P##". Not for registering a new idea (project-add).
 arguments: [project]
 argument-hint: "[P##]"
 allowed-tools: Read Edit Write Bash Agent

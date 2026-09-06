@@ -1,19 +1,6 @@
 ---
 name: use-html-theme
-description: |
-  Whenever the user asks Claude to generate or restyle HTML — a page, artifact,
-  mockup, dashboard, doc, status page, landing page, release-notes page, HTML
-  email, or styled snippet — offer a small catalog of visual themes and apply
-  the chosen one to all subsequent HTML in the session. v1 catalog: birchline
-  (warm editorial), technical-minimal (docs-site neutral), high-contrast-dark
-  (dashboard/terminal). Each theme is a self-contained folder of tokens,
-  components, anti-patterns, and a worked example; only the chosen theme's
-  files are read (progressive disclosure). The choice persists in session
-  memory and can be saved per-project to `.claude/use-html-theme.local.md`.
-  Overrides via natural language and `[theme: <name>]` / `[notheme]` inline
-  flags; ask to preview or compare the themes to get a side-by-side catalog
-  page. Do NOT activate for markdown, JSON, prose, or non-HTML code, or when
-  the user said `[notheme]` or asked for no theme.
+description: "Offer a small catalog of visual themes and apply the chosen one to every HTML page, artifact, mockup, or email generated in the session, saving the choice for the project with user consent. Use when the user asks to generate or restyle HTML and no theme has been chosen yet, or asks to preview or switch themes. Not for markdown, JSON, or non-HTML output, or when the user said [notheme]."
 allowed-tools: Read Write Edit Glob AskUserQuestion
 ---
 

@@ -1,21 +1,6 @@
 ---
 name: html-codesign
-description: |
-  Build an interactive "codesign" decision page as one self-contained HTML
-  file, opened as a step-through wizard by default (full-list view one
-  toggle away): the reader toggles choices (pick-one or pick-any), adds
-  notes, and exports the decision as Markdown and JSON with stable IDs so
-  picks can be quoted in chat — "keep ch-01-a, swap ch-02-b" yields a
-  diffable v2. Use when the user wants to choose between options and
-  capture the decision: design directions, plan A vs B, prioritization,
-  async stakeholder option pages. Triggers: codesign, co-design, decision
-  page, pick from these, which should we, compare the options, prioritize
-  these. ALWAYS confirms before generating — lists the UNANSWERED
-  questions found in context with IDs and recommendations,
-  then waits for a yes; the gate fires even on explicit invocation with an
-  argument. Answered questions are out of scope; mostly settled context
-  offers html-explain instead. Styled by use-html-theme. NOT for signing
-  macOS/iOS binaries (Apple's codesign).
+description: "Build a self-contained HTML page for reviewing unanswered questions, choosing options, adding notes, and exporting decisions. Use when the user asks for a codesign or decision page to compare designs, plans, or priorities asynchronously. Confirm the question set before generating. Not for settled material (html-explain), decisions walked through in chat (question-walkthrough), or signing Apple binaries."
 arguments: [topic]
 argument-hint: "[topic]"
 allowed-tools: Read Write Edit Glob Bash AskUserQuestion
