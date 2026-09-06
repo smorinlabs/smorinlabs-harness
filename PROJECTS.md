@@ -1460,7 +1460,7 @@ arrivals are reported open.
 ---
 
 ## [~] Project P41: Shorten skill descriptions to action-scoped triggers (v0.23.0)
-**Goal**: Rewrite every skill description in this harness to one shape — what it does, "use when" a specific action or event, "not for" at most one or two sibling collisions — targeting about 300 characters with a hard ceiling of 500, and fold every `when_to_use` field into `description`. Motivation: Claude Code caps the skill listing at 1% of the context window and drops descriptions from the least-used skills first (31 of 58 fleet skills were name-only in one session), and Codex truncates long descriptions; a description that is invisible cannot route.
+**Goal**: Rewrite every skill description in this harness to one shape — what it does, "use when" a specific action or event, "not for" at most one or two sibling collisions — using the approved per-skill text, and fold every `when_to_use` field into `description`. Motivation: Claude Code caps the skill listing at 1% of the context window and drops descriptions from the least-used skills first (31 of 58 fleet skills were name-only in one session), and Codex truncates long descriptions; a description that is invisible cannot route.
 
 **References**: Eric Provencher, "Rethinking skills and prompts for GPT-6 Astra" (https://x.com/i/article/2095989703967125509); Claude Code docs, Skills → skill listing budget (`skillListingBudgetFraction`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
 
@@ -1484,7 +1484,7 @@ arrivals are reported open.
 - YAML parsing of `plugins/*/skills/*/SKILL.md` confirms all 30 descriptions are 177–465 characters and no `when_to_use` remains; comparison with the base commit confirms skill bodies and other frontmatter are unchanged
 - All 13 affected plugins receive one patch bump; the `repo-finder` CLI version is synchronized to 0.2.2
 
-The shared character-limit decision remains open, and its convention is unchanged. The latest approved replacements fit the user's approximately 900-character maximum guidance.
+The shared numeric character-limit rules remain unchanged; changing them is a separate open owner decision. The user's approximately 900-character maximum is guidance for proposal drafts, not an adopted convention. All approved replacements also meet the existing 500-character plugin conventions. Frontmatter templates and discovery guidance are updated only to fold `when_to_use` into `description`.
 
 ### Manual Verification
 - Open a new Claude Code session and confirm no harness skill appears as a bare name in the skill listing
