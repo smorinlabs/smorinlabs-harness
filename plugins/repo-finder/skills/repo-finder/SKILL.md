@@ -1,6 +1,6 @@
 ---
 name: repo-finder
-description: "Find a repository's local checkouts and worktrees, or its exact GitHub owner and repository name. Report its branch, uncommitted changes, and build tools. Use when a repo is named and its location is not established, or the user asks \"where is this repo\", \"what repos do I have\", \"which org owns X\", or \"is this a worktree\". Not for searching files inside a located repo, cloning it, or changing repository state."
+description: "Find a repository's local checkouts and worktrees, or its exact GitHub owner and repository name within configured organizations. For local matches, report branch, uncommitted changes, and build tools. Use when a repo is named and its location is not established, or the user asks \"where is this repo\", \"what repos do I have\", \"which org owns X\", or \"is this a worktree\". Not for searching files inside a located repo, cloning it, or changing repository state."
 allowed-tools: Bash
 ---
 

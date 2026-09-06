@@ -1,6 +1,6 @@
 ---
 name: use-html-theme
-description: Offer a small catalog of visual themes and apply the chosen one to every HTML page, artifact, mockup, or email generated in the session, persisting the choice. Use when the user asks to generate or restyle HTML and no theme has been chosen yet, or asks to preview or switch themes. Not for markdown, JSON, or non-HTML output, or when the user said [notheme].
+description: "Offer a small catalog of visual themes and apply the chosen one to every HTML page, artifact, mockup, or email generated in the session, saving the choice for the project with user consent. Use when the user asks to generate or restyle HTML and no theme has been chosen yet, or asks to preview or switch themes. Not for markdown, JSON, or non-HTML output, or when the user said [notheme]."
 allowed-tools: Read Write Edit Glob AskUserQuestion
 ---
 
