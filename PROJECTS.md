@@ -1459,7 +1459,7 @@ arrivals are reported open.
 
 ---
 
-## [~] Project P41: Shorten skill descriptions to action-scoped triggers (v0.23.0)
+## [x] Project P41: Shorten skill descriptions to action-scoped triggers (v0.23.0)
 **Goal**: Rewrite every skill description in this harness to one shape — what it does, "use when" a specific action or event, "not for" at most one or two sibling collisions — using the approved per-skill text, and fold every `when_to_use` field into `description`. Motivation: Claude Code caps the skill listing at 1% of the context window and drops descriptions from the least-used skills first (31 of 58 fleet skills were name-only in one session), and Codex truncates long descriptions; a description that is invisible cannot route.
 
 **References**: Eric Provencher, "Rethinking skills and prompts for GPT-6 Astra" (https://x.com/i/article/2095989703967125509); Claude Code docs, Skills → skill listing budget (`skillListingBudgetFraction`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
@@ -1476,19 +1476,19 @@ arrivals are reported open.
 - [x] [P41-T05] html-explain + use-html-theme + html-codesign → plugin 0.11.1; guided-research → plugin 0.1.1; explain → plugin 0.3.3
 - [x] [P41-T06] design-by-elements → 0.1.1, document-merge → 0.1.2, reader-steps → 0.3.2; clear-technical-communication → 0.2.1; question-walkthrough → 0.2.2
 - [x] [P41-TS01] All 30 descriptions parse as YAML, span 177–465 characters, and contain no `when_to_use`; skill bodies and other frontmatter preserved
-- [x] [P41-TS02] `just all`: 40 passed; all 30 worktree skills passed static verification, with docs pages and README entries present. Claude validation covers skills; Codex static validation covers manifests only. Fresh-session loading remains under P41-TS03.
-- [ ] [P41-TS03] After merge and `git pull --ff-only`, a fresh session's skill listing shows a description for all 30 skills
+- [x] [P41-TS02] `just all`: 40 passed; all 30 worktree skills passed static verification, with docs pages and README entries present. Claude validation covers skills; Codex static validation covers manifests only. Fresh-session loading is recorded under P41-TS03.
+- [x] [P41-TS03] After PR #47 merged and local main fast-forwarded, fresh Claude Code (`--model opus`) and Codex sessions showed descriptions for all 30 skills on 2026-09-07 UTC. Each returned an exact source-description prefix without loading skill bodies; both installed skill roots match the merged sources. Claude required the local `skillListingBudgetFraction` setting at `0.02`: its default budget had left some descriptions as bare names. Codex still shortens descriptions, so this verifies discovery, not complete wording visibility or end-to-end skill behavior.
 
 ### Automated Verification
 - `just all` — gen-check clean, tests pass
 - YAML parsing of `plugins/*/skills/*/SKILL.md` confirms all 30 descriptions are 177–465 characters and no `when_to_use` remains; comparison with the base commit confirms skill bodies and other frontmatter are unchanged
 - All 13 affected plugins receive one patch bump; the `repo-finder` CLI version is synchronized to 0.2.2
 
-The shared numeric character-limit rules remain unchanged; changing them is a separate open owner decision. The user's approximately 900-character maximum is guidance for proposal drafts, not an adopted convention. All approved replacements also meet the existing 500-character plugin conventions. Frontmatter templates and discovery guidance are updated only to fold `when_to_use` into `description`.
+The owner skipped changing the shared numeric character-limit rules on 2026-09-06. All approved replacements meet the existing 500-character plugin conventions; the earlier approximately 900-character draft guidance was not adopted. Frontmatter templates and discovery guidance were updated only to fold `when_to_use` into `description`. The local Claude listing-budget setting in P41-TS03 allocates context space and does not change the shared per-description limit.
 
 ### Manual Verification
 - Open a new Claude Code session and confirm no harness skill appears as a bare name in the skill listing
 
 ---
 
-- [ ] Regression Test Status
+- [x] Regression Test Status — P41: 40 tests passed in P41-TS02; post-merge discovery verified in P41-TS03.
