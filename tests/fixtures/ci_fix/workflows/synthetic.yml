@@ -14,6 +14,8 @@ on:
         type: choice
         options: [all, unit, integration]
         default: all
+env:
+  WORKFLOW_LEVEL: "w"
 permissions:
   contents: read
 jobs:
@@ -64,3 +66,33 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: python -m pytest tests/smoke
+  named-matrix:
+    name: nm (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - run: echo hi
+  misc:
+    runs-on: ubuntu-latest
+    env:
+      JOB_LEVEL: "1"
+    defaults:
+      run:
+        working-directory: svc
+        shell: bash
+    steps:
+      - run: |
+          set -e
+          sudo apt-get install -y libfoo
+      - run: curl -fsSL https://example.com/install.sh | sh
+      - run: curl -f http://localhost:8080/health
+      - run: npm ci
+      - run: pip install -e .
+      - if: github.event_name == 'push'
+        run: ./scripts/only-on-push.sh
+      - continue-on-error: true
+        run: ./scripts/flaky.sh
+      - shell: python
+        run: print("hi")

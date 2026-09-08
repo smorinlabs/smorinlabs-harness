@@ -61,33 +61,46 @@ profile's `steps`) is under the threshold, or when it is over and the user
 accepted the stated time. A 25-minute suite the user declined makes rung 1
 unavailable for a recorded reason; the next rung is 2, push and watch the job.
 
-## The sweep (rung 1s) — every other job, locally, before any push
+## The sweep (rung 1s) — every other job, locally, before every push
 
 A fix that makes the failed step green can break a neighbor job. The sweep
 finds that locally, where it costs the neighbors' measured medians, instead of
-in CI, where it costs a full push cycle.
+in CI, where it costs a full push cycle. It runs before **every** push, not
+only the first.
 
-Candidates come from the inventory (`workflow_inventory.py --json`) joined to
-the profile:
+**Join inventory to profile** by the API display name: the job's `name` if
+set, else its `id`, else the matrix cell's `display_name`. An inventory job
+with no profile row has never been green on the sampled runs: treat it as
+`unmeasured`.
 
 | Include a job when | Because |
 |---|---|
-| its class is `fast` (or `slow` and the user accepted the stated time) | the sweep's bound is the sum of the swept medians |
+| its class is `fast`, or `slow`/`unmeasured` and the user accepted the stated time | the sweep's bound is the sum of the swept medians |
 | it has no `container` and no `services` | those need a Linux runner, not the host |
-| its `os_family` is this host's, or `linux` on a macOS host | toolchain commands (`pytest`, `ruff`, `npm test`, `cargo test`) are portable; a step that is not will fail with a clear "command not found", which is a *not reproducible locally* signal, not a red |
+| its `os_family` is this host's; or `linux` when the host is macOS | toolchain commands (`pytest`, `ruff`, `npm test`, `cargo test`) are portable between the two; a Windows host sweeps Windows jobs only |
+| its family is not `matrix`, `unknown`, or `self-hosted` — a matrix job contributes one cell whose family and toolchain match the host, named in the report | the other cells are rung 3's job |
 | it is not `external` | GitHub-managed jobs cannot be changed here |
+| no step downloads an artifact (`actions/download-artifact`) or depends on a `needs:` output | it would fail locally for a reason that is not the code |
 
-For each included job run, in order, every step with `kind: run` and
-`setup: false`, honoring its `working-directory` and `env`. Skip `uses:` steps
-(they are actions, not commands) and `setup` steps (`apt-get`, `brew`,
-`npm install -g`, `pip install`, `curl` installers) — they mutate the host.
-A step that references `secrets.*` or `${{ inputs.* }}` is run with the
-expression removed only when the command is still meaningful; otherwise the
-job is skipped with the reason recorded.
+**Toolchain pre-check, before running anything.** For every sweepable step
+(`kind: run`, `setup: false`, no `if:` that names an event the local run is
+not, `shell` unset or a shell), take the first token of each line after
+stripping `sudo` and `NAME=value` prefixes, and `command -v` it; check the
+matrix cell's version with `<tool> --version` where the cell pins one. Any
+token absent → skip the **job** with reason `toolchain: <tool>` (later steps
+depend on it); it is listed as skipped in the report and first verified at
+rung 3. The same holds for exit 127 mid-run.
 
-Matrix jobs: sweep one cell, the one whose toolchain matches the host, and say
-which. Sweeping every cell is rung 3's job.
+**Run** each included job's sweepable steps in order, from the job's
+`defaults_run.working_directory` or the step's own, with the merged workflow,
+job, and step `env`, `${{ matrix.* }}` substituted from the chosen cell, and
+`${{ inputs.* }}` / `${{ secrets.* }}` removed only when the command stays
+meaningful (else skip the job, reason recorded). Skip `uses:` steps (actions,
+not commands) and `setup` steps (installers that write outside the repo). A
+`continue-on-error: true` step's red is not a red. Capture every job's output
+to `$SCRATCH/sweep-<job>.log`, so a red yields rung-0 IDs through
+`extract_failures.py`.
 
-Outcome: all green → rung 2. Any red → it is a new red job: stop, triage it,
-fix it at rungs 0–1, then sweep again. Several red jobs are fixed locally and
-pushed once.
+**Outcome.** All green → rung 2. Any red → a new red job: stop, triage it, fix
+it at rungs 0–1, sweep again. Several red jobs are fixed locally and pushed
+once. Attempt counting for a neighbor red is in `fix-loop.md`, *Attempts*.

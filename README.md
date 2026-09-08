@@ -41,7 +41,7 @@ Repo & release-readiness skills.
 
 | Skill | Does | Details |
 |---|---|---|
-| `ci-fix` | Measures job durations, then fixes red CI by triaging each failure, reproducing it locally with targeted tests, and verifying up an escalation ladder before full CI — `--audit` reports only, `--optimize` analyzes why slow jobs are slow. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
+| `ci-fix` | Measures job durations, then fixes red CI by triaging each failure, reproducing it locally with targeted tests, sweeping the other fast jobs locally, and dispatching only the failing workflow in CI before the full run — then offers the failed check as a hook. `--audit` reports only, `--optimize` analyzes why slow jobs are slow. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
 | `version-check` | Reports the project version across manifest, git tag, main branch, and (with `--full`) the registry, flagging mismatches. | [docs/skills/version-check.md](docs/skills/version-check.md) |
 | `readme-sync` | Audits README.md against the codebase (install steps, CLI usage, code examples, structure, links) and applies fixes with `--fix`. | [docs/skills/readme-sync.md](docs/skills/readme-sync.md) |
 | `manual-test-guide` | Generates a copy-pasteable manual testing guide, prioritizing recently changed areas. | [docs/skills/manual-test-guide.md](docs/skills/manual-test-guide.md) |

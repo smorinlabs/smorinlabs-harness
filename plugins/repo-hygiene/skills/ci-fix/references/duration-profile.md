@@ -59,6 +59,14 @@ overlooked.
 - **Fewer than 3 successful runs on the branch** → add the default branch's
   runs and state the sample size in the report. One sample is a measurement;
   zero is not.
+- **Zero successful runs anywhere** → skip the script (an empty glob aborts
+  under zsh and the script refuses no input): every job is `unmeasured`, rung 1
+  needs the user's acceptance, and a CI wait is bounded by 1.5 × the failed
+  run's own duration for that job.
+- **A job that has never been green is absent, not `unmeasured`** — success-only
+  sampling never sees it. The inventory is the complete job list; an
+  inventory job with no profile row is `unmeasured` (`targeted-repro.md`,
+  *Join inventory to profile*).
 - **`unmeasured` is `slow`.** A job with no successful sample (always
   cancelled or skipped, new in this branch, only in-progress) gets the slow
   treatment: rung 0 and 1 locally before any CI run, and the longest measured

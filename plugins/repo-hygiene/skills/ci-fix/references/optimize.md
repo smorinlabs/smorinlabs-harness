@@ -62,12 +62,13 @@ the report as already under threshold.
 | 8 | **Setup dominates** | setup + install > 50% of the job's median | a cached toolchain, a prebuilt container image, `actions/checkout` with `fetch-depth: 1`, drop unneeded `submodules`/`lfs` |
 | 9 | **No `timeout-minutes`** | absent on the job; the default is 360 | `timeout-minutes:` at roughly 2 × `max_s` |
 | 10 | **Runner or matrix oversized** | a macOS or large runner for a job that is pure CPU-light; matrix dimensions that never differ in outcome | `ubuntu-latest`; prune cells that have been green in lockstep across the sampled runs |
-| 11 | **No `workflow_dispatch` on a slow workflow** | the workflow's `on:` lacks `workflow_dispatch`; a fix iteration therefore runs every workflow | `on: workflow_dispatch: inputs: filter: {description: test filter, required: false, default: ""}` and the test step reading it (`pytest ${{ inputs.filter }}`), so ci-fix's rung 2d can run this workflow alone, and only the failing tests within it |
+| 11 | **No `workflow_dispatch` on a slow workflow** | the workflow's `on:` lacks `workflow_dispatch`; every fix iteration therefore runs every workflow | block form: `on:` / `  workflow_dispatch:` / `    inputs:` / `      filter: {description: test filter, required: false, default: ""}`, and the test step reading it (`pytest ${{ inputs.filter }}`), so ci-fix's rung 2d runs this workflow alone and, with the filter, only the failing tests |
 
 Estimated savings are derived, never invented: item 1's saving is the install
 step's median; item 3's is the long job's median multiplied by the fraction
 of sampled runs where a fast job was red; item 6's is the main step's median
-times `1 − 1/shards`. When a number cannot be derived from the inputs, say
+times `1 − 1/shards`; item 11's saving per fix iteration is the sum of the
+*other* repo-owned workflows' longest-job medians. When a number cannot be derived from the inputs, say
 "not measurable from these runs" instead of guessing.
 
 ## Output handling

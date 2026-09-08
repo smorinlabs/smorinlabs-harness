@@ -160,3 +160,42 @@ def test_missing_pyyaml_names_the_runner_line(tmp_path):
     assert result.returncode == 2
     assert "uv run --no-project --with pyyaml" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+# ------------------------------------------- review round 2: sweep needs these
+
+
+def test_setup_detection_covers_every_line_and_installers_only():
+    _, jobs = jobs_of(inventory(SYNTH), "synthetic.yml")
+    steps = jobs["misc"]["steps"]
+    by_run = {s["run"].strip().splitlines()[-1]: s for s in steps if s["run"]}
+    assert by_run["sudo apt-get install -y libfoo"]["setup"] is True  # second line of a multi-line run
+    assert by_run["curl -fsSL https://example.com/install.sh | sh"]["setup"] is True  # piped installer
+    assert by_run["curl -f http://localhost:8080/health"]["setup"] is False  # a smoke check, not setup
+    assert by_run["npm ci"]["setup"] is False  # project-local install stays a job step
+    assert by_run["pip install -e ."]["setup"] is True  # writes outside the repo
+
+
+def test_job_env_defaults_and_step_conditions_are_emitted():
+    _, jobs = jobs_of(inventory(SYNTH), "synthetic.yml")
+    misc = jobs["misc"]
+    assert misc["env"] == {"WORKFLOW_LEVEL": "w", "JOB_LEVEL": "1"}  # workflow env, then job env
+    assert misc["defaults_run"] == {"working_directory": "svc", "shell": "bash"}
+    steps = misc["steps"]
+    cond = next(s for s in steps if s["run"] and "only-on-push" in s["run"])
+    assert cond["if"] == "github.event_name == 'push'"
+    flaky = next(s for s in steps if s["run"] and "flaky" in s["run"])
+    assert flaky["continue_on_error"] is True
+    py = next(s for s in steps if s["shell"] == "python")
+    assert py["run"].strip() == 'print("hi")'
+    plain = next(s for s in steps if s["run"] and s["run"].strip() == "npm ci")
+    assert plain["if"] is None and plain["continue_on_error"] is False and plain["shell"] is None
+
+
+def test_matrix_job_with_name_uses_the_substituted_name_as_display():
+    """The jobs API names a matrix job by its `name:` with expressions
+    evaluated, not by `<id> (<values>)`; the join to the profile depends on it."""
+    _, jobs = jobs_of(inventory(SYNTH), "synthetic.yml")
+    cells = jobs["named-matrix"]["matrix_cells"]
+    assert sorted(c["display_name"] for c in cells) == ["nm (ubuntu-latest)", "nm (windows-latest)"]
+    assert {c["os_family"] for c in cells} == {"linux", "windows"}

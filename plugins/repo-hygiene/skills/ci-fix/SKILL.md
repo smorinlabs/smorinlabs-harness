@@ -2,7 +2,7 @@
 name: ci-fix
 description: Fix failing GitHub Actions and git hooks (lefthook, pre-commit) by measuring job durations, triaging each red job, reproducing the failing tests locally, and verifying up a ladder before full CI. --audit reports only; --optimize proposes speed changes without applying them. Use when the user says "fix CI", "CI is red", "actions broken", "audit CI", "why is CI slow", "make CI faster", or "are my hooks running?". Not for merging a PR (pr-merge-flow).
 argument-hint: "[--audit] [--optimize] [--actions-only|--hooks-only] [--slow-threshold <dur>] [--update-versions]"
-allowed-tools: Bash, Read, Grep, Glob, Edit, AskUserQuestion, Task
+allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Task
 ---
 
 # CI fix
@@ -28,7 +28,7 @@ loaded; the working directory is the user's repository.
 
 | Mode | Invocation | Does | Mutates |
 |---|---|---|---|
-| **Fix** (default) | `/ci-fix` | Steps 1–6 and 8: measure, audit, triage every red job, localize, reproduce, fix, sweep the other jobs locally, verify up the ladder with a targeted CI run when the workflow allows one, offer to shift the failed check left, report | Repo files and commits (shown first), pushes, one on-demand workflow run per iteration |
+| **Fix** (default) | `/ci-fix` | Steps 1–6, 6b, 8: measure → triage → local repro and sweep → targeted CI run → full run → offer a hook → report | Repo files and commits (shown first), pushes, one dispatched workflow per iteration plus one full run |
 | **Audit** | `--audit` | Steps 1–3 and 8: measure and audit, then stop | Nothing |
 | **Optimize** | `--optimize` | Steps 1–2 and 7–8: measure, then a dedicated sub-agent analyzes each slow job and proposes what would make it faster | Nothing |
 
@@ -61,7 +61,7 @@ Fix-mode flag:
   inventory — jobs, runner families, matrix cells with their API display
   names, containers, services, each step's display name and whether the local
   sweep may run it, and the triggers with any `workflow_dispatch` inputs:
-  `uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py --json .github/workflows/*.yml`
+  `uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py --json .github/workflows/*`
   (`--no-project` keeps uv away from the user's own project).
 - Hooks: `ls lefthook.yml .pre-commit-config.yaml 2>/dev/null`.
 - Recent runs on this branch:
@@ -131,10 +131,10 @@ Classify before fixing anything. `references/fix-loop.md` has the signals.
 
 | Class | Looks like | Handling |
 |---|---|---|
-| **Workflow or config** | actionlint finding, bad `uses:`, missing permission, YAML typo, a secret name that does not exist | Edit the workflow; `actionlint <file>` locally is its rung 1; then push (rung 2) |
+| **Workflow or config** | actionlint finding, bad `uses:`, missing permission, YAML typo, a secret name that does not exist | Edit the workflow; `actionlint <file>` locally is its rung 1. Sweep (1s) unless the edit changed no `run:` line; then push (rung 2) |
 | **Code or test** | a test ID or compile error in the failed step's log | Steps 5–6, the targeted loop |
 | **Flake or infrastructure** | runner lost, network timeout, the same commit green on another attempt | Rerun the failed job once on the same commit (`references/fix-loop.md`). Green → record it as a flake; do not "fix" it. Red again → treat as code or test |
-| **Not reproducible locally** | needs secrets, a service container, or a matrix OS this machine lacks | No local rung is available; fix from the log evidence and enter at rung 2 |
+| **Not reproducible locally** | needs secrets, a service container, or a matrix OS this machine lacks | No local rung **for this job**; fix from the log evidence. The sweep (1s) still runs on the neighbors; then enter CI at rung 2 |
 
 A red **commit status** with no failing check-run (a reviewer bot reporting its
 own rate limit, for example) is not CI. Say so and leave it to `pr-merge-flow`.
@@ -162,17 +162,17 @@ Red → the failure reproduces; proceed. Green → the failure depends on
 environment, ordering, or toolchain: reclassify per
 `references/targeted-repro.md` (matrix toolchain, `env:`, `services:`, flake)
 and never edit on a hypothesis that does not reproduce. A job with no local
-rung (not reproducible locally) is reproduced by the existing failed run plus
-its single flake rerun from step 4. Root-causing between reproduction and
+rung (not reproducible locally) is reproduced by the existing failed run, plus
+its rerun when step 4 did one. Root-causing between reproduction and
 edit is `superpowers:systematic-debugging`'s discipline.
 
 | Rung | Runs | Where | Wait bound | Available when |
 |---|---|---|---|---|
 | 0 | the extracted test IDs only | local | seconds | IDs were extracted and the toolchain exists here |
 | 1 | the failed step's full `run:` command | local | the step's measured median | the step runs here, and its median is under the threshold or the user accepted the stated time |
-| 1s | **the sweep**: every other job's sweepable `run:` steps (inventory: `kind: run`, not `setup`), for jobs that are `fast`, have no `container` or `services`, and run on this host's family or on Linux | local | the sum of those jobs' medians | rung 1 green (or unavailable); always before the first push |
-| 2 | push, then **dispatch only the failing workflow** when it has `workflow_dispatch` (rung 2d, `references/fix-loop.md`); otherwise watch the target job on the run the push started | CI | that job's `wait_bound_s` | rung 1s green |
-| 3 | every job on the pushed commit: the run the push started, or after 2d an empty `ci: full run` commit | CI | the longest job's `wait_bound_s` | rung 2 green |
+| 1s | **the sweep**: every other host-runnable job's sweepable `run:` steps (candidate rules, toolchain pre-check, and skips: `references/targeted-repro.md`, *The sweep*) | local | the sum of the swept jobs' medians | rung 1 green (or unavailable); before **every** push |
+| 2 | push; when the push would start more than one repo-owned workflow and the failing one has `workflow_dispatch`, the commit carries `[skip ci]` and only that workflow is dispatched (rung 2d, `references/fix-loop.md`); otherwise watch the target job on the run the push started | CI | that job's `wait_bound_s` (the largest, when several workflows are watched) | rung 1s green |
+| 3 | every job on the last pushed commit: the run the push started, or after 2d the first marker-free commit — the step-6b hook commit, the `--update-versions` commit, or an empty `ci: full run` commit | CI | the longest job's `wait_bound_s` | rung 2 green |
 
 Rules:
 
@@ -184,11 +184,11 @@ Rules:
 - A red in the sweep is a new red job: stop before any push, triage it, and
   fix it at rungs 0–1 before sweeping again. Several red jobs are fixed
   locally and pushed once, not once per job.
-- Rung 2d commits with `[skip ci]` in the subject line so the push starts no
-  workflow, dispatches the failing workflow on the branch, and finds the run
-  by event, head SHA, and creation time. A 422 from the dispatch means the
-  workflow has no `workflow_dispatch` trigger on this branch: fall back to
-  push-and-watch and note lever 11 of `--optimize`.
+- Rung 2d is decided before the commit, from the inventory's `triggers` for
+  the failing workflow: the marker goes on its own body line only when
+  `workflow_dispatch` is listed. A dispatch that still fails is recovered by
+  making the rung-3 commit at once and watching the target job on the run it
+  starts. Mechanics and failure cases: `references/fix-loop.md`, *Rung 2d*.
 - Same-commit reruns are not a rung. They serve two cases only: the flake
   check in step 4, and a neighbor job that went red at rung 3 with no code
   change of its own. Commands in `references/fix-loop.md`.
@@ -199,20 +199,25 @@ Rules:
   Pre-validate the check command once before arming any monitor.
 - Three attempts per red job, counted across rungs. An attempt is one edit
   followed by a red at any rung; the original CI failure, the reproduction
-  run, and the single flake rerun are not attempts. The third red stops the
+  run, the single flake rerun, and the rung-3 empty commit are not attempts.
+  A neighbor that goes red in the sweep or at rung 3 keeps its own counter
+  when it was already red in step 4, and counts as one attempt on the job
+  being fixed when it was green before the edit. The third red stops the
   loop: report what was tried, the evidence, and the best hypothesis.
-- **Done** means every job on the pushed commit is green (rung 3). A local
-  green is not a fix; a rung-2 green beside a red neighbor is not done.
+- **Done** means every job on the last pushed commit is green (rung 3). A
+  local green is not a fix; a rung-2 green beside a red neighbor is not done.
 
-## 6b. Shift the failed check left (fix mode, after done)
+## 6b. Shift the failed check left (fix mode, between rung 2 and rung 3)
 
 For a code, test, or lint failure whose check has no hook equivalent in the
 step-3 parity list, offer once, with AskUserQuestion, to add it:
 `references/shift-left.md` renders the hook for lefthook or pre-commit from
 the failed step's command, staged as `pre-commit` when the step's median is
-under the threshold and `pre-push` when it is over. On yes: show the diff,
-commit as `chore(hooks): …`, push, and confirm the hook runs once locally. On
-no: record the declined gap in the report. Never add a hook silently.
+under the threshold and `pre-push` when it is over. On yes: show the diff (a
+repo with no hook manager gets a new `lefthook.yml`), commit as
+`chore(hooks): …` with no skip marker, install and run the hook once locally,
+and push — that push is rung 3. On no: record the declined gap in the report;
+the empty `ci: full run` commit carries rung 3. Never add a hook silently.
 
 Then return to whatever called this skill (`pr-merge-flow` resumes its own
 flow). This skill never merges.
@@ -224,7 +229,7 @@ using the brief in `references/optimize.md`; its first paragraph is the
 read-only constraint. Pass the step-2 profile JSON inline, and the workflow
 files and the latest log of every `slow` or `unmeasured` job by path under
 `$SCRATCH`. The sub-agent attributes each job's time to setup, main command,
-and teardown, runs a eleven-lever checklist, and returns a ranked table:
+and teardown, runs an eleven-lever checklist, and returns a ranked table:
 recommendation, evidence line, estimated saving derived from the measured
 step durations, effort, and a before/after sketch.
 
@@ -249,7 +254,7 @@ later run, and the change is shown as a diff before commit like any fix.
 - Hooks: ✅/❌ installed · tools resolve · parity gaps: <list>
 
 ### Fixes                          (fix mode)
-- <job> — <class> — reproduced at rung <n> — <what changed> — sweep: <jobs run locally> — CI: dispatched <workflow> / push-and-watch — ✅ green on <sha> (rung 3) / ❌ stopped after 3 attempts: <evidence>
+- <job> — <class> — reproduced at rung <n> — <what changed> — sweep: <jobs run>, skipped <job (reason)> — CI: dispatched <workflow> / push-and-watch — ✅ every job green on <rung-3 sha> / ❌ stopped after 3 attempts: <evidence>
 - Shift left: hook added for <check> (<stage>) / declined / not applicable
 
 ### Speed analysis                 (optimize mode)
@@ -268,7 +273,7 @@ later run, and the change is shown as a diff before commit like any fix.
 | "The failed step is green, push" | The sweep is what catches the neighbor the fix broke. One local sweep costs less than one extra CI cycle. |
 | "This job was never measured, so just run it" | Unmeasured is slow until a successful sample says otherwise. |
 | "CI is red — fix the workflow" | Triage first. A flake is rerun, not fixed; a reviewer-bot status is not CI at all. |
-| "Slow job — I'll add a cache while I'm here" | `--optimize` proposes. Nothing lands without an explicit request and a shown diff. |
+| "The dispatched run is green — done" | 2d ran one workflow. Done is every workflow green on the rung-3 commit. |
 | "It's green locally, so it's fixed" | Done is every job green in CI on the pushed commit. Rung 3 exists for exactly this. |
 
 ## See also

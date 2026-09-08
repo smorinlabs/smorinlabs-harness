@@ -6,9 +6,12 @@ per job, the runner family, matrix cells with the display names the jobs API
 uses (`unit (ubuntu-latest, 3.12)`), `needs`, `container`, `services`,
 `timeout-minutes`, and every step with its display name (`Run <uses>` /
 `Run <first run line>`, exactly as the jobs API names unnamed steps), its
-`run:` text, `working-directory`, `env`, and two flags the local sweep keys on:
-`kind` (`run` or `uses`) and `setup` (package-manager or installer commands
-that must not be executed on the host).
+`run:` text, `working-directory`, `env`, `if`, `continue-on-error`, `shell`,
+and two flags the local sweep keys on: `kind` (`run` or `uses`) and `setup`
+(installers that write outside the repository, on any line of the step, and
+must not run on the host). Jobs carry merged workflow+job `env` and
+`defaults_run`; a matrix job named with `name:` gets that name with
+`${{ matrix.* }}` substituted as its cell display name, as the jobs API does.
 
 Needs PyYAML. Run as:
     uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py [--json] <workflow.yml> ...
@@ -32,14 +35,27 @@ try:
 except ImportError:  # pragma: no cover - exercised by the -S test
     yaml = None
 
+# Installers that write outside the repository are `setup` and never run on
+# the host. Project-local installs (`npm ci`, `uv sync`, `pnpm install`) are
+# the job's own steps and stay sweepable.
 SETUP_RE = re.compile(
-    r"^\s*(sudo\s+)?("
+    r"^\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*(?:sudo\s+)?("
     r"apt-get|apt|brew|choco|winget|yum|dnf|apk|pacman|zypper"
-    r"|pip3?\s+install|pipx\s+install|npm\s+(install|i)\s+-g|npm\s+(install|i)\s+--global"
+    r"|pip3?\s+install|pipx\s+install|npm\s+(?:install|i)\s+(?:-g|--global)"
     r"|yarn\s+global\s+add|pnpm\s+add\s+-g|cargo\s+install|go\s+install|gem\s+install"
-    r"|curl|wget|rustup|nvm|pyenv"
+    r"|rustup|nvm|pyenv"
     r")\b"
 )
+PIPED_INSTALLER_RE = re.compile(r"^\s*(?:curl|wget)\b.*\|\s*(?:sudo\s+)?(?:ba)?sh\b")
+
+
+def is_setup(run) -> bool:
+    if run is None:
+        return False
+    for line in str(run).splitlines():
+        if SETUP_RE.match(line) or PIPED_INSTALLER_RE.match(line):
+            return True
+    return False
 
 
 def os_family(runs_on) -> str:
@@ -78,7 +94,15 @@ def scalar(value) -> str:
     return str(value)
 
 
-def expand_matrix(job_id: str, runs_on, matrix) -> list[dict]:
+def substitute_matrix(text: str, cell: dict) -> str:
+    return re.sub(
+        r"\$\{\{\s*matrix\.([A-Za-z0-9_-]+)\s*\}\}",
+        lambda m: scalar(cell.get(m.group(1), m.group(0))),
+        text,
+    )
+
+
+def expand_matrix(job_id: str, runs_on, matrix, job_name: str | None = None) -> list[dict]:
     if not isinstance(matrix, dict):
         return []
     include = matrix.get("include") or []
@@ -105,8 +129,11 @@ def expand_matrix(job_id: str, runs_on, matrix) -> list[dict]:
             cells = [c for c in cells if not all(c.get(k) == v for k, v in exc.items())]
     out = []
     for cell in cells:
-        values = ", ".join(scalar(v) for v in cell.values())
-        out.append({**cell, "display_name": f"{job_id} ({values})", "os_family": family_for_cell(runs_on, cell)})
+        if job_name:
+            display = substitute_matrix(str(job_name), cell)
+        else:
+            display = f"{job_id} ({', '.join(scalar(v) for v in cell.values())})"
+        out.append({**cell, "display_name": display, "os_family": family_for_cell(runs_on, cell)})
     return out
 
 
@@ -129,7 +156,10 @@ def step_record(index: int, step: dict) -> dict:
         "run": run,
         "working_directory": step.get("working-directory"),
         "env": step.get("env") or {},
-        "setup": bool(run is not None and SETUP_RE.match(str(run).strip())),
+        "if": step.get("if"),
+        "continue_on_error": bool(step.get("continue-on-error", False)),
+        "shell": step.get("shell"),
+        "setup": is_setup(run),
     }
 
 
@@ -174,10 +204,13 @@ def inventory_file(path: str) -> dict:
     if not isinstance(doc, dict):
         raise SystemExit(f"error: {path} is not a workflow mapping")
     triggers, dispatch = triggers_of(doc)
+    workflow_env = doc.get("env") or {}
+    workflow_defaults = ((doc.get("defaults") or {}).get("run")) or {}
     jobs = []
     for job_id, job in (doc.get("jobs") or {}).items():
         job = job or {}
         runs_on = job.get("runs-on")
+        job_defaults = {**workflow_defaults, **(((job.get("defaults") or {}).get("run")) or {})}
         strategy = job.get("strategy") or {}
         container = job.get("container")
         if isinstance(container, dict):
@@ -193,7 +226,9 @@ def inventory_file(path: str) -> dict:
                 "os_family": os_family(runs_on),
                 "needs": needs or [],
                 "matrix": strategy.get("matrix") if isinstance(strategy, dict) else None,
-                "matrix_cells": expand_matrix(str(job_id), runs_on, strategy.get("matrix") if isinstance(strategy, dict) else None),
+                "matrix_cells": expand_matrix(str(job_id), runs_on, strategy.get("matrix") if isinstance(strategy, dict) else None, job.get("name")),
+                "env": {**{str(k): v for k, v in workflow_env.items()}, **{str(k): v for k, v in (job.get("env") or {}).items()}},
+                "defaults_run": {"working_directory": job_defaults.get("working-directory"), "shell": job_defaults.get("shell")},
                 "container": container,
                 "services": sorted((job.get("services") or {}).keys()),
                 "timeout_minutes": job.get("timeout-minutes"),
