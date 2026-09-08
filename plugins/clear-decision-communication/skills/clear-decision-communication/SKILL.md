@@ -130,8 +130,11 @@ the output is the brief for that target.
    consequences and evidence; exact next action. Reorder only when a definition
    must precede the recommendation. Combine fields naturally; a T1 satisfies
    several in one sentence. The template in the next section is the canonical
-   text form, and `references/clarity.md` holds the sentence, term, and error
-   rules applied while drafting.
+   text form. `references/clarity.md` holds the sentence, term, and error
+   rules applied while drafting, and `references/standards.md` holds the two
+   standards behind them: ISO 24495-1's four reader outcomes, relevant,
+   findable, understandable, usable, judged on the brief as a whole, and
+   selected ASD-STE100 mechanics for its sentences and terms.
 
    | Question | What the reader must be able to state afterwards |
    |---|---|
@@ -194,6 +197,8 @@ the output is the brief for that target.
    - Every question and option carries its ID; the recommended option is listed
      first; every option label is a verb phrase naming its outcome; alternatives,
      conditions, and the next action are explicit.
+   - The brief passes the four ISO 24495-1 outcomes: relevant, findable,
+     understandable, usable.
    - The text is ASCII only, with no HTML and no rendered-diagram notation.
 
 ## The brief: canonical text form

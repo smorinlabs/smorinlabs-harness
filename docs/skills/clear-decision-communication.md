@@ -30,8 +30,9 @@ reader who says "I don't get this" gets a concrete example, not a rephrase; and
 a decision that is hard to reverse, surprising without context, or the result
 of a real tradeoff is retained as a record keyed by its question ID. The skill
 is self-contained by design: it synthesizes a decision-communication framework
-with the clarity rules of `clear-technical-communication` and the text forms of
-`show-me` inside its own files, names no other skill in its body, and never
+with the clarity rules of `clear-technical-communication`, the two standards
+behind them (ISO 24495-1 for the brief as a whole, ASD-STE100 for its
+sentences), and the text forms of `show-me` inside its own files, names no other skill in its body, and never
 produces HTML or rendered diagrams, so a downstream tool can render its text.
 
 **Triggers on:** the moment an agent is about to ask the user to choose,
@@ -82,6 +83,7 @@ canonical plain-text form and reads the next message as the answer.
 | `references/axes-and-tiers.md` | the seven axes verbatim, level tests, the tier rule, stage-of-work guidance |
 | `references/representation.md` | the ASCII forms catalog and the diagram rules |
 | `references/clarity.md` | reader gates, sentence and term controls, the error catalog |
+| `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
 | `references/delivery.md` | the two-turn gate, the dialog mapping, batching, the silence default, reply handling |
 | `references/decision-record.md` | when a record is due and its template |
 | `references/worked-examples.md` | eight fictional situations rendered at every tier; also the test suite |
