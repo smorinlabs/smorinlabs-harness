@@ -1541,3 +1541,43 @@ An agent about to ask for a merge sends: `Q1. Merge PR #142, the keyboard-focus 
 
 ## [?] Project P44: question-walkthrough delegates per-question framing to clear-decision-communication
 **Idea**: Keep `question-walkthrough` as the walk (intake, pile confirmation, sequencing, re-planning, recording) and hand the context and communication of each individual question to `clear-decision-communication`: one ID space (the pile's numbers become the skill's Q numbers), the two-turn gate stated in one place, and the walk's pre-read rendered as the skill's brief. Same round: align the owner's CLAUDE.md question-dialog guard (smorin-bootstrap) to the two-turn gate, and add an always-on digest of the new skill beside the existing clear-technical-communication digest.
+
+---
+
+## [~] Project P45: Fusion Windows runner setup and operation skills
+
+**Goal**: Publish a reusable `fusion-runner` plugin with `fusion-runner-setup`
+for installing Fusion, Windows, workflow tools, and a GitHub runner service, and
+`fusion-runner-run` for operating the configured VM on demand.
+
+**Scope**: Windows 11 Arm64 on Apple Silicon and Windows 11 x64 on Intel Macs.
+The skills preserve the distinction between local Windows CI and a specific
+GitHub-hosted image. Authoring does not install Fusion or Windows on the author's
+Mac, register a live runner, or dispatch a workflow.
+
+**Design**: New plugin and distinct setup/operation triggers. Existing CI audit
+skills diagnose workflows; this plugin owns Fusion VM provisioning and lifecycle.
+Linux sandbox provisioning is a separate capability. A local secret-free handoff
+binds the chosen VM to its GitHub runner and Windows service. The public package
+contains instructions, helpers, and an optional manual smoke workflow; vendor
+software and Windows images are downloaded from their official sources.
+
+### Tests & Tasks
+
+- [x] [P45-T01] Check installed/source skill names and adjacent triggers; select the public harness and a new plugin
+- [x] [P45-T02] Author setup and operation skills, references, and helper scripts
+- [x] [P45-T03] Add both install guides, README entries, metadata, and manual smoke workflow
+- [x] [P45-TS01] `just all`: manifest check passed and 69 tests passed, including 29 helper fixtures; Python lint and both skill validators passed; source/links/public-content checks passed; independent review findings fixed and rechecked
+- [x] [P45-TS03] Both skills load in fresh Claude Code and Codex verification sessions; four development placements resolve to this worktree and their placement records agree
+- [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
+- [ ] [P45-T04] Merge and release the public plugin after review
+
+**Validation boundary**: Helper fixtures do not validate vendor installation,
+encrypted headless startup, Windows service behavior, or a GitHub Actions job.
+The host probe has run on macOS. Live runner setup remains an explicit,
+unperformed verification task.
+
+Loader note: Claude reports the generator's existing `_generated` manifest
+field as an ignored unknown field. Both skill load checks passed. Additional
+provider-backed scenario simulations are unrun; independent content review and
+local helper fixtures are the behavioral evidence in this change.

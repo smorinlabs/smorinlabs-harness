@@ -1,0 +1,35 @@
+# Copy into .github/workflows/ only when the repository change is authorized.
+# Replace ARM64 with X64 for an Intel Mac. Match fusion-ci to the saved label.
+name: Fusion runner smoke
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  identity:
+    runs-on: [self-hosted, Windows, ARM64, fusion-ci]
+    timeout-minutes: 5
+    steps:
+      - name: Confirm Windows runner identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $cpuArchitectures = @(Get-CimInstance Win32_Processor | Select-Object -ExpandProperty Architecture -Unique)
+          if ($cpuArchitectures.Count -ne 1) { throw 'Guest processor architecture is ambiguous' }
+          $osArch = switch ($cpuArchitectures[0]) {
+            9 { 'X64' }
+            12 { 'ARM64' }
+            default { throw 'Unsupported guest processor architecture' }
+          }
+          if ($env:RUNNER_OS -ne 'Windows') { throw 'Expected a Windows runner' }
+          if ($env:RUNNER_ARCH -ne $osArch) { throw 'Runner and guest OS architectures differ' }
+          [ordered]@{
+            runnerName = $env:RUNNER_NAME
+            runnerOS = $env:RUNNER_OS
+            runnerArchitecture = $env:RUNNER_ARCH
+            guestOSArchitecture = $osArch
+            runtimeReportedOSArchitecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+            processArchitecture = [System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()
+            windowsVersion = [System.Environment]::OSVersion.VersionString
+            powerShellVersion = $PSVersionTable.PSVersion.ToString()
+          } | ConvertTo-Json

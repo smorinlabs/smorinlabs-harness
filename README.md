@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Fourteen
-plugins, thirty-one skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Fifteen
+plugins, thirty-three skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -34,6 +34,17 @@ ln -s "$(pwd)/smorinlabs-harness/plugins/<plugin>/skills/<skill>" ~/.claude/skil
 
 Codex users: dev-symlink the same skill into `~/.agents/skills` (Codex's current
 skills location) as well.
+
+### fusion-runner
+
+Windows GitHub Actions runners in VMware Fusion on Apple Silicon or Intel Macs.
+Install both skills with `/plugin install fusion-runner@smorinlabs-harness`.
+For local development or direct copies, see the setup skill's install guide.
+
+| Skill | Does | Details |
+|---|---|---|
+| `fusion-runner-setup` | Installs Fusion and Windows, prepares workflow tools, registers a Windows runner service, and records the VM and runner identity. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
+| `fusion-runner-run` | Starts, checks, and gracefully stops the configured VM, verifying GitHub readiness separately from VM power. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
 
 ### repo-hygiene
 
