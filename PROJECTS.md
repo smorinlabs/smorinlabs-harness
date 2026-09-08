@@ -1593,3 +1593,44 @@ An agent about to ask for a merge sends: `Q1. Merge PR #142, the keyboard-focus 
 
 ## [?] Project P44: question-walkthrough delegates per-question framing to clear-decision-communication
 **Idea**: Keep `question-walkthrough` as the walk (intake, pile confirmation, sequencing, re-planning, recording) and hand the context and communication of each individual question to `clear-decision-communication`: one ID space (the pile's numbers become the skill's Q numbers), the two-turn gate stated in one place, and the walk's pre-read rendered as the skill's brief. Same round: align the owner's CLAUDE.md question-dialog guard (smorin-bootstrap) to the two-turn gate, and add an always-on digest of the new skill beside the existing clear-technical-communication digest.
+
+---
+
+## [~] Project P45: ci-fix local-first verification — sweep, targeted CI, shift left, Linux runner (v0.26.0)
+**Goal**: Make `ci-fix` resolve CI faster by doing more before any push and less in CI per push. Four additions to the verification order (today: failing test locally → failing step locally → push watching one job → full run): a **local sweep** that runs every other fast job's commands locally after the failing step passes; a **targeted CI run** that pushes with `[skip ci]` and starts only the failing workflow through `workflow_dispatch`, with one full run at the end; a **shift-left offer** that, after every job is green, asks to add the failed check as a pre-commit hook; and a **Linux runner step** that runs the failing job locally via `act`, Docker, Podman, or Lima, chosen from a per-machine config written by a detection script. Origin: the P42 architecture critique (2026-09-07) and the owner's ranking on 2026-09-08.
+
+**Decision Q1 (2026-09-08): A** — two PRs. PR-1 (repo-hygiene 0.10.0): sweep, targeted CI run, shift left. PR-2 (repo-hygiene 0.11.0): Linux runner step with runner detection. Chosen because the first three need no new machine infrastructure; B (one PR) would have gated them on `act`/Lima verification.
+
+**Design defaults** (override by saying so): `[skip ci]` fix commits and an empty `ci: full run` commit are acceptable on feature branches, never force-pushed, never on main; the runner config is machine-level at `~/.config/ci-fix/runners.toml`, repo-level override out of scope; the hook offer always asks; PyYAML runs via `uv run --with pyyaml`.
+
+**Out of Scope**
+- Applying speed-analysis items automatically; a repo-level runner config; macOS or Windows runner emulation.
+- PR #49 (P42) itself. This branch is stacked on `feat/ci-fix` and merges into main after it.
+
+### Tests & Tasks
+PR-1 — sweep, targeted CI run, shift left
+- [ ] [P45-TS01] `tests/test_workflow_inventory.py`: from workflow YAML fixtures, list jobs with `runs-on`, matrix, `container`, `services`, each step's `run:`, and the workflow triggers including `workflow_dispatch` inputs
+- [ ] [P45-TS02] `tests/test_ci_profile.py`: `--runs <listing.json>` marks jobs from runs whose `path` starts with `dynamic/` as `external` and sorts them last (the Copilot-reviewer finding from P42-TS04)
+- [ ] [P45-TS03] Headless E2E on this repo after T06: fix mode on a deliberately broken test in a scratch branch — reproduce red locally, fix, local step green, sweep runs the other jobs' commands, `[skip ci]` push, dispatch of CI only, target job watched, empty trigger commit, full run green, hook offer shown and declined; proves `[skip ci]` + `workflow_dispatch` semantics
+- [ ] [P45-T01] `scripts/workflow_inventory.py` (jobs, steps, runs-on, container, services, triggers, dispatch inputs; PyYAML via `uv run --with pyyaml`)
+- [ ] [P45-T02] Local sweep in SKILL.md step 6 + `references/targeted-repro.md`: after the failing step is green, run every other job's step commands that map locally and are `fast`; slow ones only when the user accepts the stated time; bound = sum of their medians; always before the first push
+- [ ] [P45-T03] Targeted CI run in SKILL.md step 6 + `references/fix-loop.md`: when the failing workflow has `workflow_dispatch`: commit with `[skip ci]`, push, `POST repos/{owner}/{repo}/actions/workflows/<file>/dispatches` with `ref=<branch>` (+ inputs when declared), find the run by `event=workflow_dispatch` + `head_sha` + `created_at` after dispatch (bounded poll), watch the target job; full run = `git commit --allow-empty -m "ci: full run"` + push. Without the trigger: push and watch as today
+- [ ] [P45-T04] Shift left: SKILL.md step 6b + `references/shift-left.md`: after every job is green, for a code/test/lint failure whose check has no hook (step-3 parity), AskUserQuestion to add it — lefthook or pre-commit rendered from the failing step's command on staged files; `chore(hooks):` commit; only on yes. Speed-analysis lever 11: a slow workflow without `workflow_dispatch` gets a sketch adding it plus an optional filter input
+- [ ] [P45-T05] `ci_profile.py --runs`; the fetch recipe saves the runs listing
+- [ ] [P45-T06] Add `workflow_dispatch:` to this repo's `.github/workflows/ci.yml` (needed for TS03; lever 11 applied here)
+- [ ] [P45-T07] Docs page, README row, repo-hygiene 0.10.0, `just gen`, `skill-quality`, closeout, PR
+PR-2 — Linux runner step
+- [ ] [P45-TS04] `tests/test_detect_runners.py`: with shim binaries on a temp PATH and fixtures for `docker info`, `podman info`, `limactl list --json`, the script renders `runners.toml` with host os/arch, each runner's availability, and the preference order; `--refresh` re-detects; a machine with nothing renders an empty preference
+- [ ] [P45-TS05] Headless E2E on this repo: `act -j pytest -W .github/workflows/ci.yml` through Docker Desktop (arm64), then with `--container-architecture linux/amd64`; durations recorded against the CI median; Lima path: start `ubuntu`, copy the repo in, run the pytest step
+- [ ] [P45-T08] `scripts/detect_runners.py` → `~/.config/ci-fix/runners.toml` (act, docker socket + arch, podman, Lima VMs, devcontainer CLI, host os/arch; default preference act → docker → podman → lima; arch note when it differs from CI's amd64; `--refresh`)
+- [ ] [P45-T09] Linux runner step in SKILL.md + `references/local-runners.md`: for `runs-on: ubuntu-*` jobs when the job cannot run on the host; act / docker run / limactl shell recipes; wait bound 2 × the CI median the first time, observed duration recorded for next time; macOS and Windows jobs stay not reproducible unless the host matches
+- [ ] [P45-T10] `act` absent but Docker present → offer `brew install act` once, else fall through to docker run
+- [ ] [P45-T11] Docs, PROJECTS, repo-hygiene 0.11.0, gen, skill-quality, closeout, PR
+- [ ] Regression Test Status
+
+### Automated Verification
+- `just all` green after each PR; new tests listed above pass with real fixtures
+- No `{{`, `TBD`, `<TODO`, personal paths, or private-tooling references in shipped files
+
+### Manual Verification
+- Fresh session on a repo with a slow dispatchable workflow: one fix iteration runs only that workflow in CI, and the full run happens once at the end
