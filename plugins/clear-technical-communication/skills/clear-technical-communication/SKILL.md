@@ -1,6 +1,6 @@
 ---
 name: clear-technical-communication
-description: "Review, rewrite, or compose technical communication so the reader can understand it and act. Use when the user asks to clarify a draft, rewrite a technical message, review clarity, or make a decision request actionable; also when drafting plans, status reports, handoffs, or comparisons that need explicit context, terms, evidence, and next actions. Not for teaching the underlying subject (explain) or walking through decisions (question-walkthrough)."
+description: "Review, rewrite, or compose technical communication so the reader can understand it and act. Use when the user asks to clarify a draft, rewrite a technical message, or review clarity; also when drafting plans, status reports, handoffs, or comparisons that need explicit context, terms, evidence, and next actions. Not for teaching the underlying subject (explain), walking through decisions (question-walkthrough), or an agent's own decision request during a run (clear-decision-communication)."
 arguments: [target]
 argument-hint: "[target]"
 allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git diff:*), Bash(git log:*), Bash(git show:*)
@@ -287,4 +287,6 @@ three-decision owner request, read `references/worked-examples.md`.
 - `design-by-elements` — iteratively prototype the visual or textual form of
   an artifact.
 - `question-walkthrough` — conduct a pile of open decisions one at a time.
+- `clear-decision-communication` — an agent's own decision request during a
+  run: gate, tier, representation, and the brief, self-contained.
 - `reader-steps` — render actions only the reader can perform.

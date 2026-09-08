@@ -1492,3 +1492,50 @@ The owner skipped changing the shared numeric character-limit rules on 2026-09-0
 ---
 
 - [x] Regression Test Status — P41: 40 tests passed in P41-TS02; post-merge discovery verified in P41-TS03.
+
+---
+
+## [~] Project P43: clear-decision-communication — decision requests from an agent to a human during a run (v0.25.0)
+**Goal**: New single-skill plugin. When an agent mid-run needs a human decision, it composes and delivers the shortest self-contained ask the reader can answer in a word: a gate that refuses to ask for facts or for anything already authorized, seven diagnostic axes sized into three tiers (T1 Confirm, T2 Compact brief, T3 Full brief) where the highest single axis sets the tier and only elevated axes expand, a representation chosen from the change type (same-input table, worked example, event sequence, coded ASCII system diagram), a six-question brief rendered decision-first with inspectable evidence, numbered questions and lettered options (`Q1.A`) with the recommended option always A and a runner-up condition, a silence default that is always the most reversible option, canonical plain text with a derived dialog rendering behind the two-turn gate, reply handling for conditions, skips, redirects, and ask-backs, and a decision record keyed by the question ID. Basis: the owner's decision-communication framework (2026-09-07), synthesized with the clarity rules of `clear-technical-communication` and the text forms of `show-me`, plus accepted additions from `grilling`, `wayfinder`, `system-atlas`, and NN/g guidance (design record: `docs/superpowers/specs/2026-09-07-clear-decision-communication-design.md`). Self-contained by instruction: names no other skill, produces ASCII text only, never HTML.
+
+**Decisions (2026-09-07)**: scope is decision asks only, no report branch; three tiers; Q numbers continue across the run and key the record; verdict 4 with a description-only re-carve of `clear-technical-communication` (0.2.1 → 0.2.2); home is this harness as its own plugin; tools grant is permissive for information gathering (`Bash`, `Agent`, `WebFetch`, `WebSearch`) and text-only for output.
+
+**Out of Scope**
+- Upgrading `question-walkthrough` to delegate per-question framing to this skill (P44)
+- Aligning the owner's CLAUDE.md question-dialog guard to the two-turn gate, and an always-on digest of this skill (smorin-bootstrap; P44)
+- Any HTML, page, or rendered-diagram output; a downstream skill may render this skill's text
+- The report branch (work already authorized); the gate exits and the run reports in ordinary form
+
+### Tests & Tasks
+- [x] [P43-T01] Research pass: inventory of every installed communication prompt (first- and third-party), candidate aspects with for/against and recommendation, `system-atlas` visualization addendum; provenance from `~/.agents/.skill-lock.json` and upstream licenses (all MIT)
+- [x] [P43-T02] SKILL.md (description 864 chars; gate, tier table, change-type table, six questions, canonical brief, IDs and reply grammar, confidence statuses, pre-send check, Red Flags; no See also by instruction)
+- [x] [P43-T03] references: axes-and-tiers, representation (ASCII forms catalog), clarity (CTC digest), delivery (two-turn gate, dialog mapping, batching, silence default, replies), decision-record, worked-examples (eight fictional situations), framework (verbatim source + attribution table)
+- [x] [P43-T04] plugin.meta.toml 0.1.0; `just gen` + `gen-check` clean; marketplace lists 14 plugins
+- [x] [P43-T05] Neighbor re-carve: `clear-technical-communication` description drops "make a decision request actionable", gains a Not-for clause naming this skill, See also line, docs trigger line; plugin 0.2.1 → 0.2.2
+- [x] [P43-T06] Docs: `docs/skills/clear-decision-communication.md` (files table, provenance, deliberate deviations), README section and row, counts fourteen plugins / thirty-one skills
+- [x] [P43-T07] Dev placement on both tools from the worktree (symlinks resolve, ledger rows match); re-point to the main checkout after the fast-forward (post-merge step)
+- [x] [P43-TS01] Eight fictional scenarios written before the skill (scenario text mirrors `references/worked-examples.md`), each checked for tier tag, Q and option IDs, recommendation, evidence line, consequence-named options, ASCII only, no HTML, no Mermaid; scenario 1 must produce no ask. Six run headlessly on the final text, all checks pass: 1 no-ask (61 words), 2 T1 (97), 3 T2 (409), 4 T3 race with event table (696), 5 T3 architecture with fenced coded diagram and record line (725), 8 T2 identifiers (447, over the 375 cap because every identifier is defined inline). Scenarios 6 and 7 pass in a later run (TS04). Lessons: a scenario prompt must say "load the skill with the Skill tool first; no other tools", since "do not call any tools" stops the Skill tool too and the session improvises from the description; the first-draft outputs over-tiered and ran 2-3x the intended length, which produced the level-test sharpening, the domain and reversibility floors, the per-tier length signals with 1.5x caps, and the per-part sizes
+- [x] [P43-TS02] `skill-quality` against the worktree path: layers 2-4 green on both artifacts (static verify pass on claude-code and codex); layer 1 deep review by the skill-reviewer agent returned 1 critical (worked example 6 recommended B; reordered so A is always the recommendation), 4 majors and 17 minors, all fixed in the same branch; the owner-instructed deviations are recorded on the docs page as accepted
+- [x] [P43-TS03] `just all` green in the worktree (gen-check clean, 40 tests passed)
+- [x] [P43-TS04] Headless E2E on Claude Code via the dev placement plus `--add-dir <worktree>`: all eight scenarios pass on the final text (6: T3 with record line, 653 words; 7: T3 algorithm with worked-example table, 762 words, 12 over its cap). Deep load verification passes on both tools in live sessions. A Codex `exec` run of scenario 3 was attempted at close-out and blocked by Codex connectivity (five reconnect attempts, model-refresh timeout), so the Codex plain-text form is verified only by the deep load, not by a generated brief
+- [ ] Regression Test Status
+
+### Deliverable
+```
+$ ls plugins/clear-decision-communication/skills/clear-decision-communication
+SKILL.md  references/
+```
+An agent about to ask for a merge sends: `Q1. Merge PR #142, the keyboard-focus fix for the search dialog? [T1] ... Q1.A Merge (Recommended) -- ... Q1.B Hold -- ...`
+
+### Automated Verification
+- `just all` — gen-check clean, tests pass
+- `e2e/check.sh` passes on every scenario output that was run
+- `LC_ALL=C grep -P '[^\x00-\x7F]'` finds nothing in SKILL.md or the references except the verbatim framework
+
+### Manual Verification
+- In a fresh session, trigger a mid-run decision and confirm the ask arrives decision-first with IDs, a recommendation, and consequence-named options, and that the dialog opens in the turn after the brief
+
+---
+
+## [?] Project P44: question-walkthrough delegates per-question framing to clear-decision-communication
+**Idea**: Keep `question-walkthrough` as the walk (intake, pile confirmation, sequencing, re-planning, recording) and hand the context and communication of each individual question to `clear-decision-communication`: one ID space (the pile's numbers become the skill's Q numbers), the two-turn gate stated in one place, and the walk's pre-read rendered as the skill's brief. Same round: align the owner's CLAUDE.md question-dialog guard (smorin-bootstrap) to the two-turn gate, and add an always-on digest of the new skill beside the existing clear-technical-communication digest.
