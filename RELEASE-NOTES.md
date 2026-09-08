@@ -1,5 +1,46 @@
 # Release Notes
 
+## v0.22.0 — 2026-09-08
+
+### Added
+
+- **`clear-decision-communication` plugin (0.1.2).** Decision requests from an
+  agent to a human during a run, as inline ASCII text: a gate that refuses to
+  ask for facts or for anything already authorized; seven diagnostic axes sized
+  into three tiers (Confirm, Compact brief, Full brief) with length signals and
+  caps; representation chosen from the change type out of a 21-form ASCII
+  catalog (F1–F21, including the span chart, layer stack, containment boxes,
+  decision tree, threshold on a scale, and a general tree); a six-question
+  brief rendered decision-first with verified, inferred, assumed, and
+  not-verified evidence told apart; numbered questions and lettered options
+  (`Q1.A`) with the recommended option always A and a runner-up condition; a
+  silence default that is always the most reversible option; plain text
+  canonical with a derived dialog rendering behind the two-turn gate; decision
+  records keyed by question ID. Self-contained: synthesizes the owner's
+  decision-communication framework with the clarity rules and the two
+  standards (ISO 24495-1, ASD-STE100) behind `clear-technical-communication`
+  and the text forms of `show-me`; names no other skill; never produces HTML.
+  Marketplace goes from 13 plugins / 30 skills to 14 / 31. (PRs #50, #51, #52;
+  PROJECTS P43)
+
+### Changed
+
+- **Every skill description rewritten to an action-scoped trigger** (P41):
+  what it does, "use when" a concrete action or event, "not for" at most one or
+  two sibling collisions; `when_to_use` folded into `description`. Claude Code
+  caps the skill listing and drops long descriptions first, and Codex
+  truncates them, so a description that is invisible cannot route. Thirteen
+  plugins patch-bumped: design-by-elements 0.1.1, document-merge 0.1.2,
+  explain 0.3.3, factor-harness 0.1.2, guided-research 0.1.1, project-harness
+  0.1.4, question-walkthrough 0.2.2, reader-steps 0.3.2, repo-finder 0.2.2,
+  repo-hygiene 0.8.1, session 0.11.1, use-html-theme 0.11.1,
+  clear-technical-communication 0.2.1. (PR #47)
+- **`clear-technical-communication` 0.2.2.** The description no longer claims
+  "make a decision request actionable"; a Not-for clause routes an agent's own
+  in-run decision request to `clear-decision-communication`. The
+  decision-request template in the body stays for human-authored drafts.
+  (PR #50)
+
 ## v0.21.0 — 2026-08-12
 
 ### Added
