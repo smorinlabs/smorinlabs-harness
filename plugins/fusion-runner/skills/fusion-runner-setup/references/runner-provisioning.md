@@ -48,6 +48,12 @@ Use a new, empty installation directory. Set `$RunnerDir` to its actual path; `C
 
 If a reusable baseline is wanted, take it after Windows and tools are ready and **before GitHub registration**. This baseline can contain Windows account and license state and must remain local. Never publish the installed Windows image as part of this skill. Never clone a VM containing an active runner registration: each independent VM needs a unique runner identity and a fresh registration.
 
+Normal startup reuses the existing VM and registration. Independent clones also
+need Windows image preparation with Sysprep; a snapshot alone does not supply
+new Windows identities. Follow [reuse and compatibility](reuse-and-compatibility.md)
+for the two procedures and a workflow comparing identical tests on hosted
+Windows and Fusion.
+
 ## 4. Configure a dedicated Windows service account
 
 Use a non-administrator account dedicated to this runner unless a demonstrated workflow requirement needs additional permissions. Do not casually select `LocalSystem` or add the runner account to Administrators to fix missing tools. Install privileged prerequisites with the setup administrator instead.

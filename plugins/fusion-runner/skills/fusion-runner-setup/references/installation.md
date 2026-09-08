@@ -39,6 +39,11 @@ Use the downloaded media's actual edition and language. Verify its checksum agai
 
 ## 4. Create and boot the VM
 
+For ordinary CI use, prepare one persistent VM. If the user requests independent
+clones, read [reuse and compatibility](reuse-and-compatibility.md) before Windows
+first-run setup; a cloneable reference image needs Microsoft's image-preparation
+workflow. An installer ISO is not an already prepared runner image.
+
 Follow the installed Fusion wizard with the selected media. Give the VM a recognizable name and record its storage location. Use UEFI firmware and the supported Windows 11 configuration, including the virtual Trusted Platform Module (TPM). Fusion may require encryption for the TPM. Have the user retain the encryption password through their chosen credential store; never place it in a command, transcript, or profile JSON. Broadcom documents the [Windows 11 installation flow and VMware Tools installation](https://knowledge.broadcom.com/external/article/375069/powering-on-windows-11-vm-on-vmware-fusi.html).
 
 Use NAT networking unless the task requires a different network arrangement. A runner initiates outbound connections; registration does not require exposing a listener on the Mac's network. Keep host home folders, credential directories, and unrelated project trees out of the guest. A Mac shared folder is not the runner's Windows work directory.

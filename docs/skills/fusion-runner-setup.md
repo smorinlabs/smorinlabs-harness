@@ -22,6 +22,12 @@ Windows Server x64 GitHub-hosted runner. The skill records that distinction and
 installs dependencies from the chosen workflow instead of claiming to supply
 GitHub's entire hosted image.
 
+Windows is installed once and the prepared VM is reused for later jobs. The
+skill distinguishes recovery snapshots from independent clones, which need
+Windows image preparation and fresh runner identities. An optional comparison
+workflow runs identical tests on Fusion, `windows-11-arm`, and `windows-latest`
+and records the actual Windows builds and tool versions.
+
 The setup covers official downloads, available disk space, Windows installation,
 VMware Tools, Windows updates, Git and PowerShell as needed, workflow-specific
 SDKs, a dedicated runner account, runner registration, service startup, and
@@ -91,11 +97,14 @@ label selects the machine; repository permissions and runner-group access
 control who can use it.
 
 The host probe has been exercised on macOS. Automated VM-control tests use a
-simulated `vmrun` executable. A complete Fusion installation, Windows boot, and
-GitHub job have **not yet been validated with this plugin**. The entrypoints
-require those checks during actual setup and preserve incomplete status.
+simulated `vmrun` executable. On 2026-09-08, the included compatibility workflow
+passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 runners.
+Its local Fusion job was skipped. A complete Fusion installation, Windows boot,
+runner service, and local CI job remain **unverified**. Hosted success does not
+validate the VM. The entrypoints preserve that distinction during actual setup.
 
 Implementation details and current primary sources:
 [installation](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md),
 [runner provisioning](../../plugins/fusion-runner/skills/fusion-runner-setup/references/runner-provisioning.md),
+[reuse and compatibility](../../plugins/fusion-runner/skills/fusion-runner-setup/references/reuse-and-compatibility.md),
 [handoff](../../plugins/fusion-runner/skills/fusion-runner-setup/references/handoff.md).

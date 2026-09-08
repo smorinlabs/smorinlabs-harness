@@ -22,3 +22,4 @@ Prepare a Windows virtual machine (VM) in VMware Fusion that accepts authorized 
 
 - [fusion-runner-run](../fusion-runner-run/SKILL.md) — operate the configured VM without reinstalling it.
 - [Operations reference](../fusion-runner-run/references/operations.md) — readiness checks, graceful shutdown, and recovery.
+- [Reuse and compatibility](references/reuse-and-compatibility.md) — reuse one VM, prepare independent clones, and compare identical tests with GitHub-hosted Windows.

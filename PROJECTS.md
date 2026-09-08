@@ -1552,8 +1552,8 @@ for installing Fusion, Windows, workflow tools, and a GitHub runner service, and
 
 **Scope**: Windows 11 Arm64 on Apple Silicon and Windows 11 x64 on Intel Macs.
 The skills preserve the distinction between local Windows CI and a specific
-GitHub-hosted image. Authoring does not install Fusion or Windows on the author's
-Mac, register a live runner, or dispatch a workflow.
+GitHub-hosted image. The subsequent live-validation request authorizes an actual
+installation and smoke tests on a chosen Mac and private validation repository.
 
 **Design**: New plugin and distinct setup/operation triggers. Existing CI audit
 skills diagnose workflows; this plugin owns Fusion VM provisioning and lifecycle.
@@ -1570,12 +1570,15 @@ software and Windows images are downloaded from their official sources.
 - [x] [P45-TS01] `just all`: manifest check passed and 69 tests passed, including 29 helper fixtures; Python lint and both skill validators passed; source/links/public-content checks passed; independent review findings fixed and rechecked
 - [x] [P45-TS03] Both skills load in fresh Claude Code and Codex verification sessions; four development placements resolve to this worktree and their placement records agree
 - [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
+- [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
 - [ ] [P45-T04] Merge and release the public plugin after review
 
 **Validation boundary**: Helper fixtures do not validate vendor installation,
 encrypted headless startup, Windows service behavior, or a GitHub Actions job.
-The host probe has run on macOS. Live runner setup remains an explicit,
-unperformed verification task.
+The host probe has run on macOS. Live runner setup is in progress: official
+Windows Arm64 ISO downloaded and verified against Microsoft's SHA-256; Fusion download access awaits Broadcom
+sign-in. Windows boot, runner service registration, local smoke tests, reboot
+recovery, and reusable-baseline recovery remain unverified.
 
 Loader note: Claude reports the generator's existing `_generated` manifest
 field as an ignored unknown field. Both skill load checks passed. Additional
