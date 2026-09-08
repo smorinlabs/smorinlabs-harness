@@ -68,7 +68,11 @@ Fix-mode flag:
   `uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py --json .github/workflows/*`
   (`--no-project` keeps uv away from the user's own project).
 - Hooks: `ls lefthook.yml .pre-commit-config.yaml 2>/dev/null`.
-- Recent runs on this branch:
+- Runs on this commit, the fix-target set — listed by `head_sha`, not by
+  branch, so every workflow's run on HEAD is present however many the branch
+  has:
+  `gh api "repos/{owner}/{repo}/actions/runs?head_sha=$(git rev-parse HEAD)&per_page=100" --jq '.workflow_runs[] | {id, name, conclusion, status, created_at}'`.
+  Recent runs on the branch, audit history only:
   `gh api "repos/{owner}/{repo}/actions/runs?per_page=10&branch=$(git branch --show-current)" --jq '.workflow_runs[] | {id, name, conclusion, status, head_sha, created_at}'`.
 
 ## 2. Measure — the duration profile (all modes)
@@ -111,8 +115,8 @@ Skip parts excluded by `--actions-only` / `--hooks-only`.
 
 - **Run status** — every failed or cancelled run in step 1's list, with its
   red jobs and their class from step 2. Fix mode targets only the latest run
-  per workflow whose `head_sha` is `git rev-parse HEAD`; if the local
-  checkout is behind the branch head, say so and stop. Older runs are audit
+  per workflow in step 1's `head_sha` listing (every run on HEAD, paged at
+  100); if the local checkout is behind the branch head, say so and stop. Older runs are audit
   history, never fix targets: a failure from a superseded commit must not
   drive an edit.
 - **Workflow lint** — `actionlint` from the repo root (it finds

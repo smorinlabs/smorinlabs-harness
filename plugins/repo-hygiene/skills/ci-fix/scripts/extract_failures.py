@@ -34,10 +34,37 @@ import sys
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s?")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
-# IDs may contain whitespace inside `[param ids]`; they end at the ` - reason`
-# delimiter (summary lines) or before ` FAILED`/` ERROR` (verbose lines).
-PYTEST_SUMMARY_RE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+::.+?)(?:\s+-\s.*)?$")
-PYTEST_VERBOSE_RE = re.compile(r"^(\S+::.+?)\s+(?:FAILED|ERROR)\b")
+# pytest node IDs may contain whitespace, ` - `, or even ` FAILED` inside
+# `[param ids]`, so the delimiter that ends an ID (` - reason` on summary
+# lines, ` FAILED`/` ERROR` on verbose lines) counts only at bracket depth 0.
+PYTEST_SUMMARY_PREFIX_RE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+::.*)$")
+PYTEST_VERBOSE_LINE_RE = re.compile(r"^(\S+::.*?)\s+(?:FAILED|ERROR)\b")
+
+
+def _cut_at_depth0(text: str, delimiters: tuple[str, ...]) -> str | None:
+    """`text` up to the first delimiter that sits outside any [...] pair."""
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth = max(0, depth - 1)
+        elif depth == 0 and any(text.startswith(d, i) for d in delimiters):
+            return text[:i]
+    return None
+
+
+def _pytest_id(line: str) -> str | None:
+    m = PYTEST_SUMMARY_PREFIX_RE.match(line)
+    if m:
+        rest = m.group(1)
+        cut = _cut_at_depth0(rest, (" - ",))
+        return (cut if cut is not None else rest).rstrip()
+    if PYTEST_VERBOSE_LINE_RE.match(line) and "::" in line:
+        cut = _cut_at_depth0(line, (" FAILED", " ERROR"))
+        if cut and "::" in cut:
+            return cut.rstrip()
+    return None
 JEST_BLOCK_RE = re.compile(r"^●\s+(.+?)\s*$")
 JEST_MARK_RE = re.compile(r"^✕\s+(.+?)(?:\s+\(\d+\s*m?s\))?\s*$")
 CARGO_HEADER_RE = re.compile(r"^----\s+(\S+)\s+stdout\s+----$")
@@ -64,9 +91,9 @@ def dedup(items: list[str]) -> list[str]:
 def detect_pytest(lines: list[str]) -> list[str]:
     ids = []
     for line in lines:
-        m = PYTEST_SUMMARY_RE.match(line) or PYTEST_VERBOSE_RE.match(line)
-        if m:
-            ids.append(m.group(1))
+        node_id = _pytest_id(line)
+        if node_id:
+            ids.append(node_id)
     return dedup(ids)
 
 
