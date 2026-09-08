@@ -2,4 +2,4 @@
 
 
 def test_rollup_total():
-    assert sum([1, 2]) == 4
+    assert sum([1, 2]) == 3
