@@ -1,6 +1,6 @@
 ---
 name: pr-merge-flow
-description: Drive an open GitHub PR to merge by waiting for reviewer bots, triaging and answering every review thread, fixing in-scope findings, and merging per the chosen mode. Use when asked to merge, babysit, or close out a PR, or to address review feedback. Not for the initial review (code-review) or failing CI (ci-audit).
+description: Drive an open GitHub PR to merge by waiting for reviewer bots, triaging and answering every review thread, fixing in-scope findings, and merging per the chosen mode. Use when asked to merge, babysit, or close out a PR, or to address review feedback. Not for the initial review (code-review) or failing CI (ci-fix).
 argument-hint: "[--auto|--confirm|--ready] [--one-pass] [--deep]"
 allowed-tools: Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Skill, Task, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__find
 ---
@@ -243,14 +243,15 @@ not work to do.
 
 - Checks: `gh pr checks` (or REST check-runs). Red → **classify before
   routing**, because not every red mark is a build:
-  - **A build or test failed** → hand to **ci-audit**; this skill never debugs
-    CI. Resume here after.
+  - **A check-run failed** — build, test, lint, coverage, workflow config,
+    anything CI itself ran → hand to **ci-fix**; this skill never debugs CI.
+    Resume here after.
   - **A reviewer could not review** — e.g. a commit status like
     `CodeRabbit: failure — "Review rate limited"` — is the reviewer's own
-    quota, not your code. `ci-audit` has nothing to fix. Treat it as a
+    quota, not your code. `ci-fix` has nothing to fix. Treat it as a
     *reviewer-unavailable* signal: say so plainly, note that the PR is
     correspondingly less reviewed, and let the mode gate decide. Never route
-    it to ci-audit, and never call it a passing check either.
+    it to ci-fix, and never call it a passing check either.
   - **Distinguishing them**: read the status `description`, and note that
     check-runs and commit statuses are separate APIs — `…/check-runs` versus
     `…/commits/{sha}/status`. A red that appears only in the latter, with no
@@ -365,8 +366,8 @@ this skill's.
 | "This bot comment is obviously wrong, skip the reply" | Refute in writing, then resolve. Silent dismissal leaves an open thread and no audit trail. |
 | "I'll poll every 5 seconds, it's just a few minutes" | Quota is shared. 20–30s floor, rate-limit preflight, bounded total — always. |
 | "The monitor script will exit eventually" | Untested monitors hang. Fixed 5–10 min lifetime, then one manual recheck. Pre-validate the check once before arming. |
-| "Checks are red — I'll just fix the workflow here" | CI debugging is ci-audit's job. Hand off, resume after. |
-| "A red check means CI failed — route it to ci-audit" | Classify first. A reviewer bot reporting its own rate limit posts a red *commit status* with no failing check-run; ci-audit has nothing to fix there. |
+| "Checks are red — I'll just fix the workflow here" | CI debugging is ci-fix's job. Hand off, resume after. |
+| "A red check means CI failed — route it to ci-fix" | Classify first. A reviewer bot reporting its own rate limit posts a red *commit status* with no failing check-run; ci-fix has nothing to fix there. |
 | "The suggestion looks right, implement it" | Verify by running first where possible. Plausible ≠ true. |
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
 | "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
@@ -407,7 +408,7 @@ this skill's.
   fallback's browser entry points, one per harness. Both ship with the harness,
   not with this plugin; the availability table in `browser-fallback.md` picks
   between them, and where neither exists the run degrades to a ready-report.
-- `ci-audit` — failing checks and workflow debugging belong there.
+- `ci-fix` — failing checks and workflow debugging belong there.
 - superpowers `receiving-code-review` — the discipline step 4 applies.
 - `/code-review` · pr-review-toolkit · Codex — deep-mode engines
   (availability varies by tool).
