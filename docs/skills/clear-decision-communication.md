@@ -81,7 +81,7 @@ canonical plain-text form and reads the next message as the answer.
 |---|---|
 | `SKILL.md` | the gate, the tier table, the change-type table, the six questions, the canonical brief template, IDs and reply grammar, confidence statuses, the pre-send check |
 | `references/axes-and-tiers.md` | the seven axes verbatim, level tests, the tier rule, stage-of-work guidance |
-| `references/representation.md` | the ASCII forms catalog and the diagram rules |
+| `references/representation.md` | the ASCII forms catalog, F1 to F21, and the diagram rules; F16 to F21 add the span chart, layer stack, containment boxes, decision tree, threshold on a scale, and a general tree |
 | `references/clarity.md` | reader gates, sentence and term controls, the error catalog |
 | `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
 | `references/delivery.md` | the two-turn gate, the dialog mapping, batching, the silence default, reply handling |

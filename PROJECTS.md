@@ -1416,7 +1416,7 @@ arrivals are reported open.
 
 ---
 
-## [~] Project P40: Fix the 12 surviving PR-42 review findings (v0.22.0)
+## [~] Project P40: Fix the 12 surviving PR-42 review findings (v0.23.0)
 **Goal**: Fix the 12 findings that survived triage of the 21 AI-reviewer findings inherited from PR #42, as one PR with one commit per finding. Every behavioral fix ships with a regression test that fails before it, and every fix plan gets an adversarial check as it is written.
 
 **References**: `docs/reviews/2026-08-13-pr42-finding-triage.md` — per-finding evidence, verdicts, and the settled shape of each fix.
@@ -1459,7 +1459,7 @@ arrivals are reported open.
 
 ---
 
-## [x] Project P41: Shorten skill descriptions to action-scoped triggers (v0.23.0)
+## [x] Project P41: Shorten skill descriptions to action-scoped triggers (shipped in v0.22.0)
 **Goal**: Rewrite every skill description in this harness to one shape — what it does, "use when" a specific action or event, "not for" at most one or two sibling collisions — using the approved per-skill text, and fold every `when_to_use` field into `description`. Motivation: Claude Code caps the skill listing at 1% of the context window and drops descriptions from the least-used skills first (31 of 58 fleet skills were name-only in one session), and Codex truncates long descriptions; a description that is invisible cannot route.
 
 **References**: Eric Provencher, "Rethinking skills and prompts for GPT-6 Astra" (https://x.com/i/article/2095989703967125509); Claude Code docs, Skills → skill listing budget (`skillListingBudgetFraction`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
@@ -1548,7 +1548,7 @@ tests/test_sample.py::test_error_in_setup
 
 ---
 
-## [~] Project P43: clear-decision-communication — decision requests from an agent to a human during a run (v0.25.0)
+## [x] Project P43: clear-decision-communication — decision requests from an agent to a human during a run (shipped in v0.22.0)
 **Goal**: New single-skill plugin. When an agent mid-run needs a human decision, it composes and delivers the shortest self-contained ask the reader can answer in a word: a gate that refuses to ask for facts or for anything already authorized, seven diagnostic axes sized into three tiers (T1 Confirm, T2 Compact brief, T3 Full brief) where the highest single axis sets the tier and only elevated axes expand, a representation chosen from the change type (same-input table, worked example, event sequence, coded ASCII system diagram), a six-question brief rendered decision-first with inspectable evidence, numbered questions and lettered options (`Q1.A`) with the recommended option always A and a runner-up condition, a silence default that is always the most reversible option, canonical plain text with a derived dialog rendering behind the two-turn gate, reply handling for conditions, skips, redirects, and ask-backs, and a decision record keyed by the question ID. Basis: the owner's decision-communication framework (2026-09-07), synthesized with the clarity rules of `clear-technical-communication` and the text forms of `show-me`, plus accepted additions from `grilling`, `wayfinder`, `system-atlas`, and NN/g guidance (design record: `docs/superpowers/specs/2026-09-07-clear-decision-communication-design.md`). Self-contained by instruction: names no other skill, produces ASCII text only, never HTML.
 
 **Decisions (2026-09-07)**: scope is decision asks only, no report branch; three tiers; Q numbers continue across the run and key the record; verdict 4 with a description-only re-carve of `clear-technical-communication` (0.2.1 → 0.2.2); home is this harness as its own plugin; tools grant is permissive for information gathering (`Bash`, `Agent`, `WebFetch`, `WebSearch`) and text-only for output.
@@ -1568,11 +1568,12 @@ tests/test_sample.py::test_error_in_setup
 - [x] [P43-T06] Docs: `docs/skills/clear-decision-communication.md` (files table, provenance, deliberate deviations), README section and row, counts fourteen plugins / thirty-one skills
 - [x] [P43-T07] Dev placement on both tools from the worktree (symlinks resolve, ledger rows match); re-pointed to the main checkout after the fast-forward on 2026-09-08
 - [x] [P43-T08] `references/standards.md`: ISO 24495-1's four outcomes mapped to the brief and the selected ASD-STE100 mechanics, sources, limits, and rubric, adapted from the owner's standards reference; SKILL.md step 5 and the pre-send check name both standards; plugin 0.1.0 -> 0.1.1 (2026-09-08)
+- [x] [P43-T09] `references/representation.md`: IDs F1 to F15 on the existing forms; six new forms F16 span chart, F17 layer stack, F18 containment boxes, F19 decision tree, F20 threshold on a scale, F21 general tree, each with a fictional example; change-type table in SKILL.md and the reference point at forms by ID; plugin 0.1.1 -> 0.1.2 (2026-09-08)
 - [x] [P43-TS01] Eight fictional scenarios written before the skill (scenario text mirrors `references/worked-examples.md`), each checked for tier tag, Q and option IDs, recommendation, evidence line, consequence-named options, ASCII only, no HTML, no Mermaid; scenario 1 must produce no ask. Six run headlessly on the final text, all checks pass: 1 no-ask (61 words), 2 T1 (97), 3 T2 (409), 4 T3 race with event table (696), 5 T3 architecture with fenced coded diagram and record line (725), 8 T2 identifiers (447, over the 375 cap because every identifier is defined inline). Scenarios 6 and 7 pass in a later run (TS04). Lessons: a scenario prompt must say "load the skill with the Skill tool first; no other tools", since "do not call any tools" stops the Skill tool too and the session improvises from the description; the first-draft outputs over-tiered and ran 2-3x the intended length, which produced the level-test sharpening, the domain and reversibility floors, the per-tier length signals with 1.5x caps, and the per-part sizes
 - [x] [P43-TS02] `skill-quality` against the worktree path: layers 2-4 green on both artifacts (static verify pass on claude-code and codex); layer 1 deep review by the skill-reviewer agent returned 1 critical (worked example 6 recommended B; reordered so A is always the recommendation), 4 majors and 17 minors, all fixed in the same branch; the owner-instructed deviations are recorded on the docs page as accepted
 - [x] [P43-TS03] `just all` green in the worktree (gen-check clean, 40 tests passed)
 - [x] [P43-TS04] Headless E2E on Claude Code via the dev placement plus `--add-dir <worktree>`: all eight scenarios pass on the final text (6: T3 with record line, 653 words; 7: T3 algorithm with worked-example table, 762 words, 12 over its cap). Deep load verification passes on both tools in live sessions. A Codex `exec` run of scenario 3 was attempted at close-out and blocked by Codex connectivity (five reconnect attempts, model-refresh timeout), so the Codex plain-text form is verified only by the deep load, not by a generated brief
-- [ ] Regression Test Status
+- [x] Regression Test Status — P43: 40 tests passed; 31 skills static-verified at the v0.22.0 release preflight (2026-09-08)
 
 ### Deliverable
 ```
