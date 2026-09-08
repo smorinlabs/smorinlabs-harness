@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Thirteen
-plugins, thirty skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Fourteen
+plugins, thirty-one skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -142,6 +142,18 @@ Reader-centered technical communication — review, rewrite, and compose.
 | Skill | Does | Details |
 |---|---|---|
 | `clear-technical-communication` | Makes technical communication reader-centered and actionable by minimizing what the reader must infer. Detects missing purpose or context, undefined terms and identifiers, hidden logic, mixed status, false choices, absent option consequences, the wrong presentation form, stripped or unexplained names, and unframed code, diagrams, or examples — then rewrites without inventing facts. Audits against the four ISO 24495-1 reader outcomes and uses selected ASD-STE100 mechanics for sentence control. | [docs/skills/clear-technical-communication.md](docs/skills/clear-technical-communication.md) |
+
+### clear-decision-communication
+
+Decision requests from an agent to a human during a run, as inline ASCII text.
+A self-contained synthesis of a decision-communication framework with the
+clarity rules of `clear-technical-communication` and the text forms of
+`show-me`; it names no other skill and produces no HTML, so a downstream tool
+can render its output.
+
+| Skill | Does | Details |
+|---|---|---|
+| `clear-decision-communication` | Gates whether a new decision is needed at all (facts are looked up, authorization persists, the question must be sharp, the agent never answers for the human), sizes the ask by seven diagnostic axes into three tiers so preparation and depth follow the highest single axis, picks the representation from the change type (same-input table, worked example with boundary case, event sequence, coded ASCII system diagram shown baseline-first with the change as ghosts), and renders a six-question brief in a fixed order: the decision and recommendation first, context, comparison, consequences with verified-versus-unverified evidence, and the exact action approval authorizes. Questions are numbered and options lettered (`Q1.A`) so a reply is one word; the recommended option is always A and says when the runner-up wins; every option names its consequence; a silence default is always the most reversible option. Plain text is canonical, the dialog rendering is derived from it, and the brief ends its turn before any dialog opens; conditions, skips, redirects, and ask-backs are handled, and significant decisions get a record keyed by the question ID. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
 
 ### design-by-elements
 

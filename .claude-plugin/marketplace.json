@@ -10,10 +10,29 @@
   },
   "plugins": [
     {
+      "name": "clear-decision-communication",
+      "source": "./plugins/clear-decision-communication",
+      "description": "Decision requests from an agent to a human during a run, as inline ASCII text. Gates whether a new decision is needed at all (facts are looked up, authorization persists, the question must be sharp), sizes the ask by seven diagnostic axes into three tiers so preparation and depth match the highest single axis, picks the representation from the change type (same-input table, worked example, event sequence, coded ASCII system diagram), and renders a six-question brief: the decision and recommendation first, then context, comparison, consequences with inspectable evidence, and the exact action approval authorizes. Questions are numbered and options lettered so replies can be one word; the recommended option is always A and says when the runner-up would win; every option names its consequence; a silence default is always the most reversible option. Delivered as canonical plain text with a derived dialog rendering, the brief ending its turn before any dialog opens; conditions, skips, redirects, and ask-backs are handled; significant decisions get a record keyed by the question ID. Self-contained: synthesizes a decision-communication framework with clear-technical-communication rules and show-me forms; never produces HTML.",
+      "version": "0.1.1",
+      "author": {
+        "name": "Steve Morin"
+      },
+      "keywords": [
+        "decisions",
+        "communication",
+        "agentic",
+        "approval",
+        "decision-brief",
+        "progressive-disclosure",
+        "askuserquestion",
+        "plain-text"
+      ]
+    },
+    {
       "name": "clear-technical-communication",
       "source": "./plugins/clear-technical-communication",
       "description": "Aggressively review, rewrite, and compose technical explanations, comparisons, status, handoffs, and decision requests so readers get the necessary context, explicit relationships, clear status, option effects, recommendations, and exact actions without reconstructing the author's mental model; restores stripped precision by keeping exact names paired with descriptions and frames every embedded code block, diagram, and example",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "Steve Morin"
       },
