@@ -37,16 +37,20 @@ speed change is not a fix, and is applied only on a later explicit request.
 
 Scoping flags, valid in every mode:
 
-- `--actions-only` / `--hooks-only` — skip the other half.
+- `--actions-only` / `--hooks-only` — skip the other half. `--hooks-only`
+  skips the run listing, the duration profile, and every CI rung: it audits
+  and fixes hooks only, with nothing to wait for.
 - `--slow-threshold <dur>` — the slow-job line, default `2m` (`90s`, `1h`,
   `1h30m`, or bare seconds).
 
 Fix-mode flag:
 
 - `--update-versions` — after the fix, bump every `uses:` pin the audit found
-  stale to its latest tag, in its own `chore(ci):` commit, verified at rung 3.
-  Ignored under `--audit` and `--optimize`, where stale pins are reported. A
-  pin that is itself the red cause is fixed in step 4 without this flag.
+  stale, in its own `chore(ci):` commit, verified at rung 3. A tag pin moves
+  to the latest tag; a commit-SHA pin moves to the SHA of the latest release
+  and never to a mutable tag unless the user asks for that. Ignored under
+  `--audit` and `--optimize`, where stale pins are reported. A pin that is
+  itself the red cause is fixed in step 4 without this flag.
 
 ## 1. Gather context (all modes)
 
@@ -77,7 +81,7 @@ mkdir -p "$SCRATCH/profile"
 gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10&branch=$(git branch --show-current)" \
   > "$SCRATCH/profile/runs.json"
 for id in $(python3 -c 'import json,sys; print(*[r["id"] for r in json.load(open(sys.argv[1]))["workflow_runs"]])' "$SCRATCH/profile/runs.json"); do
-  gh api "repos/{owner}/{repo}/actions/runs/$id/jobs" > "$SCRATCH/profile/jobs-$id.json"
+  gh api "repos/{owner}/{repo}/actions/runs/$id/jobs?per_page=100" > "$SCRATCH/profile/jobs-$id.json"
 done
 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" "$SCRATCH/profile"/jobs-*.json
 ```
@@ -97,13 +101,20 @@ Profile rules:
   fixed, swept, or optimized: the repo cannot change them.
 - Matrix cells are separate jobs (`pytest (3.12)`); profile them as such.
 - Never estimate a duration from the workflow file. Runtimes come from runs.
+- `unmeasured` jobs have no `wait_bound_s`. A CI wait on one uses the longest
+  measured job's bound; with no measured job at all, 1.5 × the failed run's
+  own duration for that job, stated in the report.
 
 ## 3. Audit (audit mode, and fix mode's first pass)
 
 Skip parts excluded by `--actions-only` / `--hooks-only`.
 
 - **Run status** — every failed or cancelled run in step 1's list, with its
-  red jobs and their class from step 2.
+  red jobs and their class from step 2. Fix mode targets only the latest run
+  per workflow whose `head_sha` is `git rev-parse HEAD`; if the local
+  checkout is behind the branch head, say so and stop. Older runs are audit
+  history, never fix targets: a failure from a superseded commit must not
+  drive an edit.
 - **Workflow lint** — `actionlint` from the repo root (it finds
   `.github/workflows` itself); if absent, a finding plus the platform install
   (`brew install actionlint` on macOS).

@@ -14,7 +14,16 @@ python3 <skill-dir>/scripts/extract_failures.py --json "$SCRATCH/job-<job_id>.lo
 ```
 
 `<run_id>` is the failed run from SKILL.md step 1; the first call yields the
-failed job's `id` and its failed step names. The script strips GitHub's per-line timestamps
+failed job's `id` and its failed step names.
+
+**IDs are data, never shell text.** A contributor controls test names and
+parameter IDs, and `$(…)` inside double quotes executes on the maintainer's
+machine. Every local command below takes the ID from the script's
+`failures_quoted` list verbatim — single-quoted by `shlex.quote` when it
+contains anything outside `[A-Za-z0-9_@%+=:,./-]`, bare otherwise — and never
+re-interpolates the bare `failures` entry into a shell string. An ID that
+still looks like shell syntax after quoting is shown to the user before it
+runs. The script strips GitHub's per-line timestamps
 and ANSI color, detects the runner, and returns
 `{"format": "pytest", "failures": [...], "packages": [...]}`. Exit 1 means no
 IDs were recognized — go to *No IDs* below. Force a runner with
@@ -27,8 +36,8 @@ Read the failed step's `run:` line in the workflow. Keep its wrapper (`uv run`,
 
 | Runner | CI step looks like | Rung 0 — targeted | Rung 1 — full step |
 |---|---|---|---|
-| pytest | `uv run pytest` / `pytest tests` | `uv run pytest -x <id> [<id> …]` — IDs are node IDs, quote ones with `[params]` | the `run:` line verbatim |
-| jest / vitest | `npm test` / `npx jest` | `npx jest -t "<suite> <name>"` — Jest matches the full name with describe and test joined by single spaces, so replace the ID's ` › ` with a space (vitest: `npx vitest run -t "<name>"`) | the `run:` line verbatim |
+| pytest | `uv run pytest` / `pytest tests` | `uv run pytest -x <id> [<id> …]` — IDs are node IDs, taken from `failures_quoted` | the `run:` line verbatim |
+| jest / vitest | `npm test` / `npx jest` | `npx jest -t <quoted name>` (vitest: `npx vitest run -t <quoted name>`) — the name from `failures_quoted`, with ` › ` replaced by a space (Jest joins describe and test names with spaces) | the `run:` line verbatim |
 | cargo | `cargo test` | `cargo test <module::tests::name> -- --exact` (nextest: `cargo nextest run -E 'test(=<name>)'`) | the `run:` line verbatim |
 | go | `go test ./...` | `go test <package> -run '^<TestName>$'` — for an ID with `/`, split on it and anchor each segment: `TestParent/sub` → `-run '^TestParent$/^sub$'`; `<package>` from `packages` when present, else the package of the failing file | the `run:` line verbatim |
 | just / make wrapper | `just test`, `make test` | open the recipe and narrow its inner command as above; run the inner command directly at rung 0, the recipe at rung 1 | the recipe |

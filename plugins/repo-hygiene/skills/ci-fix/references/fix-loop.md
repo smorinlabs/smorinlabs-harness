@@ -135,9 +135,12 @@ The check, REST. The new run's id comes from the runs listing filtered by the
 pushed `head_sha`:
 
 ```bash
-gh api "repos/{owner}/{repo}/actions/runs?head_sha=<sha>&per_page=5" \
-  --jq '.workflow_runs[] | {id, name, status, conclusion}'
-gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs" \
+# the target run, through the workflow-specific listing: a push that starts
+# several workflows cannot hide it, and a same-named job from another
+# workflow cannot be mistaken for it; keep this run_id for every later check
+gh api "repos/{owner}/{repo}/actions/workflows/<file>.yml/runs?head_sha=<sha>&per_page=5" \
+  --jq '.workflow_runs[0] | {id, status, conclusion}'
+gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs?per_page=100" \
   --jq '.jobs[] | select(.name == "<job>") | {status, conclusion, run_attempt}'
 ```
 
