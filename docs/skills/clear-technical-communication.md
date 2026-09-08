@@ -26,12 +26,12 @@ reference scale; two full worked examples cover coverage-matrix prose and
 owner-decision requests.
 
 **Triggers on:** "make this draft clearer", "this message is not
-understandable", "rewrite this technical message", "review this for clarity", "make this decision
-request actionable"; and proactively before dense artifacts such as design
+understandable", "rewrite this technical message", "review this for clarity"; and proactively before dense artifacts such as design
 summaries, plans, status reports, handoffs, comparisons, or owner-decision
 requests are sent. It does not teach the underlying subject (`explain`),
 prototype artifact form (`design-by-elements`), conduct decisions
-(`question-walkthrough`), or render reader-only actions (`reader-steps`).
+(`question-walkthrough`), compose an agent's own decision request during a run
+(`clear-decision-communication`), or render reader-only actions (`reader-steps`).
 **Arguments:** optional `[target]` identifying the text, file, diff, commit, or
 report to review or rewrite.
 
