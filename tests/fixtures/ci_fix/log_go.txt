@@ -1,0 +1,12 @@
+2026-09-07T10:00:01.0000000Z === RUN   TestRollup
+2026-09-07T10:00:01.1000000Z === RUN   TestRollup/empty
+2026-09-07T10:00:01.2000000Z === RUN   TestRollup/nested
+2026-09-07T10:00:01.3000000Z     rollup_test.go:42: expected 4, got 3
+2026-09-07T10:00:01.4000000Z --- FAIL: TestRollup (0.01s)
+2026-09-07T10:00:01.5000000Z     --- PASS: TestRollup/empty (0.00s)
+2026-09-07T10:00:01.6000000Z     --- FAIL: TestRollup/nested (0.00s)
+2026-09-07T10:00:01.7000000Z === RUN   TestLogin
+2026-09-07T10:00:01.8000000Z --- FAIL: TestLogin (0.00s)
+2026-09-07T10:00:01.9000000Z FAIL
+2026-09-07T10:00:02.0000000Z FAIL	github.com/acme/api/internal/rollup	0.031s
+2026-09-07T10:00:02.1000000Z ok  	github.com/acme/api/internal/util	0.004s

@@ -1,0 +1,2 @@
+2026-09-07T10:00:01.0000000Z [31mFAILED[0m tests/test_color.py::test_ansi - assert False
+2026-09-07T10:00:01.1000000Z [1m1 failed[0m in 0.01s

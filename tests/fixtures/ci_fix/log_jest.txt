@@ -1,0 +1,17 @@
+2026-09-07T10:00:01.0000000Z PASS src/utils.test.ts
+2026-09-07T10:00:02.0000000Z FAIL src/auth/login.test.ts
+2026-09-07T10:00:02.1000000Z   login flow
+2026-09-07T10:00:02.2000000Z     ✓ renders the form (12 ms)
+2026-09-07T10:00:02.3000000Z     ✕ rejects a bad password (31 ms)
+2026-09-07T10:00:02.4000000Z     ✕ locks after five attempts (44 ms)
+2026-09-07T10:00:02.5000000Z 
+2026-09-07T10:00:02.6000000Z   ● login flow › rejects a bad password
+2026-09-07T10:00:02.7000000Z 
+2026-09-07T10:00:02.8000000Z     expect(received).toBe(expected) // Object.is equality
+2026-09-07T10:00:02.9000000Z 
+2026-09-07T10:00:03.0000000Z   ● login flow › locks after five attempts
+2026-09-07T10:00:03.1000000Z 
+2026-09-07T10:00:03.2000000Z     TypeError: Cannot read properties of undefined
+2026-09-07T10:00:03.3000000Z 
+2026-09-07T10:00:03.4000000Z Test Suites: 1 failed, 1 passed, 2 total
+2026-09-07T10:00:03.5000000Z Tests:       2 failed, 1 passed, 3 total

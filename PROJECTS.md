@@ -1492,3 +1492,56 @@ The owner skipped changing the shared numeric character-limit rules on 2026-09-0
 ---
 
 - [x] Regression Test Status — P41: 40 tests passed in P41-TS02; post-merge discovery verified in P41-TS03.
+
+---
+
+## [~] Project P42: ci-audit → ci-fix — measured, targeted, escalating CI fixes + speed analysis (v0.24.0)
+**Goal**: Rename `ci-audit` to `ci-fix` and make it fix CI, not just report on it, in the least CI time possible. Every run measures job durations first (REST jobs endpoint, last 5 completed runs, per-job median/queue/slowest step against a `--slow-threshold`, default 2m). Fix mode triages each red job by class, extracts failing test IDs from the job log, and verifies up a ladder — targeted tests locally, full step locally, only the failed job rerun in CI, then full CI — entering each rung only after the one below is green, with CI waits bounded by the measured duration. `--audit` measures and reports without changes. `--optimize` is a dedicated mode: a read-only sub-agent analyzes each slow job and returns ranked, evidence-backed changes that would make it faster; nothing is applied. Motivation (2026-09-07): jobs that run 10–30 minutes made every fix iteration cost a full suite run to learn whether one test still failed.
+
+**Decisions**: rename over a new skill (the name should carry the primary verb; audit is phase 1 of every run, so `--audit` is an early exit, not a separate flow); optimize runs only on request — the audit always measures and points to `--optimize` when any job is slow or unmeasured; `--optimize` proposes only, applying is a later explicit request; unmeasured jobs are treated as slow.
+
+**Out of Scope**
+- Applying speed changes from `--optimize` (a later explicit request, shown as a diff).
+- Merging or review-thread work (`pr-merge-flow` hands failures here and resumes).
+- The `smorin-harness` neighbors that name `ci-audit` (`repo-please-setup` description and see-also; `_routing.md` naming example) — a second PR in that repo after this one merges. The `release-publishing-setup` description in the unmerged `feat/release-publishing-setup` worktree stays stale until that branch merges.
+
+### Tests & Tasks
+- [x] [P42-TS01] `tests/test_ci_profile.py` (13): real run fixture `tests/fixtures/ci_fix/jobs_fast_run.json` (run 34088065449) profiles 4 jobs `fast` at 2m and reclassifies at `--threshold 10s`; median across runs, in-progress jobs excluded from samples, `unmeasured` class, queue wait separate, `wait_bound_s = ceil(1.5 × (median + queue))` with a 60s floor, slowest step from step timestamps, skipped (0s) and cancelled (truncated) jobs excluded from samples, duration spellings (`2m`, `90s`, `1h30m`, bare seconds), usage errors exit 2
+- [x] [P42-TS02] `tests/test_extract_failures.py` (11): real pytest log (3 FAILED + 1 ERROR incl. a parametrized ID and a class method) → node IDs without reasons; jest `●` blocks deduplicated; cargo `---- X stdout ----` once each; go leaf subtests with packages; ANSI and GitHub timestamps stripped; stdin; explicit `--format`; no failures → exit 1 with an empty list; usage errors exit 2
+- [x] [P42-T01] `scripts/ci_profile.py` — stdlib, no network; table or `--json`; slowest first, unmeasured on top
+- [x] [P42-T02] `scripts/extract_failures.py` — pytest/jest/cargo/go, auto-detect by match count
+- [x] [P42-T03] `git mv` `ci-audit` → `ci-fix`; new SKILL.md: Iron Law (measure before you run; never verify wider than the failure requires), three modes, triage table, four-rung ladder, three-attempt bound, definition of done, Red Flags; `allowed-tools` Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Task; description 460 chars, no `refactor` vocabulary (factor-* collision)
+- [x] [P42-T04] `references/duration-profile.md`, `targeted-repro.md`, `fix-loop.md`, `optimize.md` (sub-agent brief + 10-lever checklist with derived savings)
+- [x] [P42-T05] Neighbors: `pr-merge-flow` (description + 6 body mentions) and `session-recap` (prompt line) → `ci-fix`; `repo-hygiene` 0.8.1 → 0.9.0 (description + `fix` keyword), `session` 0.11.1 → 0.11.2; `just gen` + `gen-check` clean
+- [x] [P42-T06] Docs: `docs/skills/ci-fix.md` rendered, `docs/skills/ci-audit.md` left as a redirect stub, README row replaced
+- [x] [P42-TS03] `just all` green (64); `skill-quality` on `ci-fix`, `pr-merge-flow`, `session-recap` at the worktree path — static verify pass on claude-code and codex for all three; the `skill-reviewer` pass returned 7 contradictions and 12 unrunnable commands, all applied (rung 2 = push and watch the target job, done = rung 3, available-rung wording instead of skips, attempt = edit-then-red, successful-run sampling, `$SCRATCH` defined, `<skill-dir>` script paths, REST rerun endpoints, zsh-safe globs, worktree-safe hooks path, block-form `concurrency`, Jest space-joined names, reproduce-before-edit, `--update-versions` pinned to fix mode, `Write` dropped from `allowed-tools`, Red Flags trimmed to 6); trigger re-scan: no installed description claims any of the seven new phrases; docs and README placeholder gate clean
+- [x] [P42-TS04] Deep verify (`--deep`) pass on claude-code and codex, no findings. Headless E2E (`claude -p --plugin-dir <worktree>/plugins/repo-hygiene`, prompt `/ci-fix --audit --slow-threshold 10s`): the unpushed branch had no runs, the fallback to repo-wide successful runs fired and was stated; 10 runs sampled; `pytest` (12s), `plugin-validate` (12s), and GitHub's dynamic `copilot-pull-request-reviewer` (2m02s) classed slow; the `--optimize` pointer printed; actionlint, pins, lefthook, and parity all reported; worktree unchanged (`git status` identical before and after). Finding for a follow-up: jobs from GitHub-managed dynamic workflows (run `path` under `dynamic/`) are profiled like repo jobs and should be annotated as outside the repo's control. The `--optimize` E2E was not run (the sub-agent path is exercised only on request; deferred to first real use)
+- [ ] [P42-T07] Post-merge: `git pull --ff-only` in the main checkout; re-point both placements (`uninstall ci-audit --force`, `dev ci-fix --source …`) for claude-code and codex; worktree removed
+- [ ] [P42-T08] Second PR in `smorin-harness`: `repo-please-setup` description/see-also and the `_routing.md` naming example → `ci-fix`; `repo-secrets` patch bump; re-scan
+- [ ] Regression Test Status
+
+### Deliverable
+```bash
+$ python3 plugins/repo-hygiene/skills/ci-fix/scripts/ci_profile.py --threshold 10s tests/fixtures/ci_fix/jobs_fast_run.json
+CI duration profile — 1 run(s) sampled, threshold 10s (slow = median above it)
+
+class      job                                median      max   queue   n  slowest step
+slow       plugin-validate                       13s      13s      3s   1  Run actions/setup-node@v4 (4s)
+slow       pytest                                12s      12s      2s   1  Run uv run pytest (5s)
+fast       static-checks                          7s       7s      2s   1  Set up job (1s)
+fast       gen-check                              6s       6s      2s   1  Run astral-sh/setup-uv@v5 (2s)
+
+2 job(s) at or above threshold or unmeasured: plugin-validate, pytest
+$ python3 plugins/repo-hygiene/skills/ci-fix/scripts/extract_failures.py tests/fixtures/ci_fix/log_pytest.txt
+tests/test_sample.py::test_rollup_total
+tests/test_sample.py::TestAuth::test_login
+tests/test_sample.py::test_param[2]
+tests/test_sample.py::test_error_in_setup
+```
+
+### Automated Verification
+- `just all` — gen-check clean, 64 tests pass (40 + 24 new)
+- No `ci-audit` reference remains in `plugins/`, `README.md`, or `docs/` except the redirect stub
+
+### Manual Verification
+- Fresh session: `/ci-fix --audit --slow-threshold 10s` in this repo prints the profile with two slow jobs and the `--optimize` pointer, and changes nothing (`git status` clean)

@@ -618,7 +618,7 @@ grammar `▶ Prompt — paste this to <outcome>:` on each.
 | 🧹 Cleanup `C#` | `/session-loose-ends` | `▶ Prompt — paste this to clear C1: /session-loose-ends "C1 — remove merged worktree acme-api-hotfix"  ·  or just: git worktree remove acme-api-hotfix` |
 | 📌 Committed `W#` | `/writing-plans` | `▶ Prompt — paste this to plan W1: /writing-plans "W1 — build the P09 metering rollup per D1's shape; target ~/c/acme-api"` |
 | 🔧 Open `O#` (resume) | continue-prompt | `▶ Prompt — paste this to resume O1: "finish O1 rollup job jobs/rollup.py:40; resolve D1 first; test_rollup red"` |
-| ✗ Red CI | `/ci-audit` | `▶ Prompt — paste this to fix CI: /ci-audit "test_rollup failing on PR #212 (acme-api)"` |
+| ✗ Red CI | `/ci-fix` | `▶ Prompt — paste this to fix CI: /ci-fix "test_rollup failing on PR #212 (acme-api)"` |
 | ✅ PR ready / comments | `/pr-merge-flow` | `▶ Prompt — paste this to merge PR #212: /pr-merge-flow "resolve review comments then merge PR #212 (acme-api)"` |
 
 Prefer a `/skill` when the class maps to one; otherwise a quoted continue-prompt.
