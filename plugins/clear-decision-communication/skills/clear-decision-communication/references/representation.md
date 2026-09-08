@@ -31,10 +31,10 @@ This table mirrors the one in SKILL.md step 4; edit both together.
 | Type of change | Show |
 |---|---|
 | Mechanical, such as a rename | one descriptive sentence naming the change and its purpose |
-| Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome, as a table |
-| Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode, a whole block, or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
-| Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior |
-| Architectural, such as moving responsibilities | a small system diagram with coded nodes, the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
+| Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome, as a table (F1) |
+| Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode (F2), a whole block (F7), or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
+| Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
+| Architectural, such as moving responsibilities | a small system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
 
 For a non-obvious change, the prose around the artifact covers, in order:
 
@@ -57,19 +57,25 @@ was performed or is proposed.
 
 | Relationship to show | Form |
 |---|---|
-| Same input, different outcome | Same-input table |
-| Logic or an algorithm | Pseudocode |
-| Runtime control flow | Call tree |
-| UI structure, state, and module boundaries | Component tree |
-| File responsibility, or a broad refactor | File tree |
-| What changes when the surrounding shape already exists | Diff-shaped delta |
-| A copyable target shape, or mostly new code | Whole block |
-| Components and how data moves between them | Box-and-arrow |
-| Ordered interaction over time | Sequence ladder, or an event table |
-| States and what triggers each transition | State diagram |
-| Two variants compared line by line | Side-by-side columns |
-| The same request under each option | Route per option, or a trace table |
-| Rough magnitude on one axis | Bar |
+| Same input, different outcome | F1 Same-input table |
+| Logic or an algorithm | F2 Pseudocode |
+| Runtime control flow | F3 Call tree |
+| UI structure, state, and module boundaries | F4 Component tree |
+| File responsibility, or a broad refactor | F5 File tree |
+| What changes when the surrounding shape already exists | F6 Diff-shaped delta |
+| A copyable target shape, or mostly new code | F7 Whole block |
+| Components and how data moves between them | F8 Box-and-arrow |
+| Ordered interaction over time | F9 Sequence ladder, or F10 Event table |
+| States and what triggers each transition | F11 State diagram |
+| Two variants compared line by line | F12 Side-by-side columns |
+| The same request under each option | F13 Route per option, or F14 Trace table |
+| Rough magnitude on one axis | F15 Bar |
+| Duration and overlap on a time axis | F16 Span chart |
+| Where something sits in a vertical stack, and where a limit cuts it | F17 Layer stack |
+| Ownership, boundaries, and what is shared between paths | F18 Containment boxes |
+| Branching conditions in evaluation order | F19 Decision tree |
+| One measured value against its limit | F20 Threshold on a scale |
+| Any hierarchy that is not files: a design space, a plan, ownership, configuration | F21 Tree |
 
 ## Rules every diagram follows
 
@@ -104,7 +110,7 @@ was performed or is proposed.
 
 ## The forms
 
-### Same-input table
+### F1 Same-input table
 
 ```
 | Input                              | Today                          | With the fix                        |
@@ -113,7 +119,7 @@ was performed or is proposed.
 | 2024-02-30 through API upload      | corrected to 2024-03-01 silently | rejected with the same message     |
 ```
 
-### Pseudocode
+### F2 Pseudocode
 
 ```text
 on(save)
@@ -123,7 +129,7 @@ on(save)
   return fresh result
 ```
 
-### Call tree
+### F3 Call tree
 
 ```text
 submitForm
@@ -133,7 +139,7 @@ submitForm
   navigateToSession
 ```
 
-### Component tree
+### F4 Component tree
 
 ```text
 <SessionPage> (apps/example/src/routes/session.tsx)
@@ -142,7 +148,7 @@ submitForm
     <RunSkillButton> (packages/ui)
 ```
 
-### File tree
+### F5 File tree
 
 ```text
 src/
@@ -151,7 +157,7 @@ src/
 `-- transport/      # sends API requests
 ```
 
-### Diff-shaped delta
+### F6 Diff-shaped delta
 
 Use a diff when the point is what changes and the surrounding shape already
 exists. Match the diff shape to the topic.
@@ -204,7 +210,7 @@ For a state or control-flow change:
 +  invalidate cache
 ```
 
-### Whole block
+### F7 Whole block
 
 Show the whole block when most of it is new, when omitted context would hide
 ownership or order, or when the reader needs a copyable target shape.
@@ -216,7 +222,7 @@ function expandSkill(command: string): string {
 }
 ```
 
-### Box-and-arrow
+### F8 Box-and-arrow
 
 ```
 [C] client --HTTP--> [A] api --SQL--> [P] primary db (store)
@@ -233,7 +239,7 @@ With the change as ghosts on the same map:
                        `--SQL--> [P] primary   `- - > [W] export worker (proposed)
 ```
 
-### Sequence ladder
+### F9 Sequence ladder
 
 ```
 client          api           worker
@@ -245,7 +251,7 @@ client          api           worker
   |              |<-- done ------|
 ```
 
-### Event table
+### F10 Event table
 
 Use when the same event order must be compared under two behaviors.
 
@@ -257,7 +263,7 @@ Use when the same event order must be compared under two behaviors.
 | "cat" results arrive later              | overwrites the display with stale "cat"   | seq 1 < 2, response ignored, display kept           |
 ```
 
-### State diagram
+### F11 State diagram
 
 ```
 idle --start--> running --complete--> done
@@ -265,7 +271,7 @@ idle --start--> running --complete--> done
                   `--error--> failed --retry--> running
 ```
 
-### Side-by-side columns
+### F12 Side-by-side columns
 
 Align the two variants so the differing line sits at the same height.
 
@@ -276,7 +282,7 @@ git pull                      git pull --ff-only
   merges on divergence          fails on divergence
 ```
 
-### Route per option
+### F13 Route per option
 
 Identical node set, one route per option, letters on the routes.
 
@@ -286,7 +292,7 @@ Identical node set, one route per option, letters on the routes.
                   [V] shared validator unchanged
 ```
 
-### Trace table
+### F14 Trace table
 
 One representative input, one row per hop, the payload shown at the hop that
 changes.
@@ -299,7 +305,7 @@ changes.
 | newer request pending  | stale results overwrite         | stale response dropped                    |
 ```
 
-### Bar
+### F15 Bar
 
 Rough magnitude only; give the value in text beside the bar.
 
@@ -307,6 +313,116 @@ Rough magnitude only; give the value in text beside the bar.
 p50  ####                 40 ms
 p95  ############        120 ms
 p99  ####################  340 ms  (about 8x the p50)
+```
+
+### F16 Span chart
+
+Duration and overlap on a time axis. Use when overlap is the fact: a race, a
+dual-write window, two phases that must not coincide. Unit on the axis, the
+same events under current and proposed behavior, the moment the outcomes
+diverge marked.
+
+```
+time (s)       0    2    4    6    8   10
+request 1      |---------------------->|        "ca"
+request 2           |-------->|                 "cat", newer
+current shown                cat       ca   <-- (1) stale result overwrites
+proposed shown               cat       cat  <-- (2) seq 1 < 2, response dropped
+(1) the bug; (2) the fix. Illustrative order; the new test forces it.
+```
+
+### F17 Layer stack
+
+Where something sits in a vertical stack and where a limit cuts it. Draw the
+limit as a line between layers, code the layers so options can point at them,
+mark moved or new work with `(new)`, and show today and proposed side by side.
+
+```
+today                              proposed (Q1.A)
++-------------------+              +-------------------+
+| [U] browser       |              | [U] browser       |
++-------------------+              +-------------------+
+| [G] gateway       |              | [G] gateway       |
+=== 30 s cap =======               === 30 s cap =======
+| [W] web process   |              | [W] web process   |
+|   runs the export |              |   enqueues only   |
++-------------------+              +-------------------+
+| [D] database      |              | [D] database      |
++-------------------+              | [J] jobs (new)    |
+                                   +-------------------+
+                                   | [X] worker (new)  |  <-- the 48 s runs here, below the cap
+                                   +-------------------+
+Unchanged, not shown: auth, billing, the report renderer.
+```
+
+### F18 Containment boxes
+
+Ownership, boundaries, and what is shared between paths. A shared component is
+one box that spans the paths, never a box drawn twice; the changed element is
+marked; nesting stops at two levels so edges never cross. Also the form for
+layout and proportion of a screen or a page region.
+
+```
++-- [C] CSV import path --------++-- [A] API upload path --------+
+|  parse rows                   ||  parse body                   |
++-------------------------------++-------------------------------+
+|  [V] shared validator: date check   <-- (1) the fix changes this line |
++-------------------------------++-------------------------------+
+|  store rows                   ||  store record                 |
++-------------------------------++-------------------------------+
+(1) one function; both paths above it reach it, which is why Q1.A changes A too.
+```
+
+### F19 Decision tree
+
+Branching conditions in evaluation order, for a recommendation that depends on
+more than one condition. The root is a fact the reader can check, every leaf is
+an option ID with its consequence, the recommended leaf is marked, and depth
+stops at two questions. One condition needs only the sensitivity sentence.
+
+```
+Q: does any API caller rely on silent date correction?   (checkable: API request logs, one day)
+|-- yes --> Q1.B keep the fix to CSV        callers unaffected; validator logic duplicated
+`-- no  --> Q: must API changes carry a notice period?
+            |-- yes --> Q1.A with a changelog entry   both paths fixed after the notice
+            `-- no  --> Q1.A  (Recommended)         both paths fixed now
+```
+
+### F20 Threshold on a scale
+
+One measured value against its limit, when the gap is the deciding fact. The
+axis carries its unit and round ticks, the limit and the measurement each carry
+a source, and the proposed value sits on the same line so the reader sees the
+gap close.
+
+```
+export p95 (s)   0        10        20        30        40        50
+                 |---------|---------|---------|---------|---------|
+limit                                          ^ 30 s gateway (config, gateway.yaml)
+today                                                        ^ 48 s (production logs, 2026-09-01)
+proposed Q1.A         ^ under 1 s to enqueue; the 48 s runs off-request
+```
+
+### F21 Tree
+
+The file-tree connectors for any hierarchy that is not files: a design space
+with its pruned branches, a plan's phases and tasks, ownership, configuration
+keys, an option and its sub-options. One item per line; annotate only the lines
+the reader must act on; mark pruned, proposed, blocked, or done branches in
+words at the end of the line.
+
+```
+queue backend
+|-- database table            <-- Q1.A, one migration, no new service
+|-- Redis list                (pruned: no persistence guarantee, constraint 2)
+`-- managed queue service     (pruned: needs a vendor contract, out of scope)
+```
+
+```
+Phase 2: exports to background workers
+|-- Task 3: worker skeleton          done, commit 2c1d0e9
+|-- Task 4: health check endpoint    blocked on the jobs_status index (Q1)
+`-- Task 5: retire the sync path     not started
 ```
 
 ## Placement
