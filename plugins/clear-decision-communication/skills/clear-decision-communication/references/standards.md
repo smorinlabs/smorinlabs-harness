@@ -15,8 +15,8 @@ Use its four governing outcomes at the level of the whole brief:
    evidence, and the next action, and
    nothing about drafting, queuing, or agent coordination.
 2. **Findable**: readers can easily find what they need. For a brief: the
-   question line is first, the recommendation is second, every section carries
-   its label, and the options are a list with IDs.
+   question line is first, the recommendation or explicit neutrality is second,
+   every section carries its label, and the options are a list with IDs.
 3. **Understandable**: readers can easily understand what they find. For a
    brief: every identifier is described at first use, every claim carries its
    status, every artifact is framed, and the reader's own vocabulary is used.

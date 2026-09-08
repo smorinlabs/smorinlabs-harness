@@ -87,7 +87,7 @@ This table mirrors the one in SKILL.md step 2; edit both together.
 
 | ID | Tier | Prepare | The initial view holds | Length signal |
 |---|---|---|---|---|
-| T1 | Confirm | the prepared result and its verification, nothing more | the question line, the recommendation, two or three options with consequences; two or three sentences in all | about 80 words |
+| T1 | Confirm | the prepared result and its verification, nothing more | the question line, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
 | T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation or neutrality, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
 | T3 | Full brief | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
 

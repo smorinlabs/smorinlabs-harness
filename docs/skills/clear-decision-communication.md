@@ -107,8 +107,9 @@ Preselection and tool completion without an answer do not count as consent.
 
 The evaluation runner starts a fresh scratch session for each scenario and
 tool. It stages the skill, its references, and raw scenario inputs, keeping the
-grading expectations separate. Outputs, process status, and tool versions are
-retained for review. Process completion is not a behavioral pass: a reviewer
+grading expectations separate. Every mode retains inputs and process status.
+Runs that invoke a CLI also retain its output and version. Process completion
+is not a behavioral pass: a reviewer
 must judge the actual response against the expectations, including positive
 and negative controls for approval, silence, skip, and superseded replies.
 

@@ -1560,10 +1560,17 @@ records each correction and its rationale.
   limitations are recorded in the validation document below.
 - [x] [P43-TS05] Run the update's tests, generated-manifest check, static and deep
   loading checks, and independent content review against the worktree.
-  Evidence: 53 tests passed; manifests are current; both tools load the skill;
+  Evidence: 61 tests passed after PR review; manifests are current; both tools
+  loaded the reply-handler revision;
   the independent review found no remaining material issues. The existing
   generated-metadata warning is documented in
   `docs/validation/clear-decision-communication-0.2.0.md`.
+- [x] [P43-T13] Address PR #56 findings: stop signaling reaped process groups,
+  reject Windows-specific fixture paths, qualify prepare-mode artifacts, and
+  make the Findable gates and tier rules consistent for neutral choices.
+  Eight added regression cases failed before their fixes; 61 tests now pass.
+  The targeted neutral-choice scenario passes on Codex; source snapshots and
+  the original Claude results remain recorded in the validation document.
 
 ---
 

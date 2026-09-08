@@ -88,8 +88,8 @@ the output is the brief for that target.
 
    | ID | Tier | Fires when | Prepare | The initial view holds | Length signal |
    |---|---|---|---|---|---|
-   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | the question line, the recommendation, two or three options with consequences; two or three sentences in all | about 80 words |
-   | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
+   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | the question line, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
+   | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation or explicit neutrality, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
    | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
 
    The length signals are review targets, not caps. Past them, re-run the
@@ -145,7 +145,7 @@ the output is the brief for that target.
    proposed.
 
 5. **Draft the brief.** Answer the six questions, then render in the default
-   order: decision and recommendation; necessary context; comparison or example;
+   order: decision and recommendation or explicit neutrality; necessary context; comparison or example;
    consequences and evidence; exact next action. Reorder only when a definition
    must precede the recommendation. Combine fields naturally; a T1 satisfies
    several in one sentence. The template in the next section is the canonical
@@ -157,7 +157,7 @@ the output is the brief for that target.
 
    | Question | What the reader must be able to state afterwards |
    |---|---|
-   | What am I deciding? | the exact choice, the recommended option, the main justification |
+   | What am I deciding? | the exact choice, the supported recommendation or neutrality, the main justification |
    | Why does this need my input? | the original goal, the discovery, the judgment or authorization needed |
    | What changes? | current or agreed behavior against proposed behavior, including any deviation |
    | What am I accepting? | benefit, main downside, who and what is affected, how reversal actually works |
@@ -279,8 +279,8 @@ authorizes. Options may be concise clauses but must retain material conditions.
 
 Rendering by tier:
 
-- **T1** keeps the question line, the reason for the gate, the recommendation,
-  and the options with their consequences. Two or three sentences. Example:
+- **T1** keeps the question line, the reason for the gate, the recommendation
+  or explicit neutrality, and the options with their consequences. Two or three sentences. Example:
   `Q1. Merge PR #142, the keyboard-focus fix for the search dialog? [T1] It
   implements the approved change; the keyboard-interaction test and required
   checks passed on revision 9c8d7e6; CONTRIBUTING.md requires a human merge
@@ -293,8 +293,8 @@ Rendering by tier:
   remains the user's choice.
 - **T2** renders the question line, the recommendation with its runner-up
   clause or explicit neutrality, the sections its elevated axes call for,
-  the options, what would
-  change the recommendation, and the next action; the comparison table when the
+  the options, what would change a supported recommendation, and the next
+  action; the comparison table when the
   change is conditional.
 - **T3** renders every applicable section, the representation from step 4, and the
   details pointer when supporting material exists.

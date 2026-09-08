@@ -13,8 +13,8 @@ A brief passes only when it is all four:
 
 - **Relevant:** it contains what this reader needs to decide and excludes
   process chatter about drafting, queuing, or agent coordination.
-- **Findable:** the decision, the recommendation, and the requested action are
-  easy to locate; the question line is first.
+- **Findable:** the decision, the recommendation or explicit neutrality, and
+  the requested action are easy to locate; the question line is first.
 - **Understandable:** terms, references, relationships, and the status of every
   claim are explicit.
 - **Usable:** the reader can reach the decision and the next action from the

@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import selectors
 import shutil
 import signal
@@ -54,7 +54,10 @@ def write_json(path: Path, value: object) -> None:
 
 def safe_relative(value: str) -> Path:
     path = PurePosixPath(value)
-    if not value or path.is_absolute() or any(p in {".", ".."} for p in value.split("/")):
+    if (
+        not value or "\\" in value or PureWindowsPath(value).drive
+        or path.is_absolute() or any(p in {".", ".."} for p in value.split("/"))
+    ):
         raise ValueError(f"Expected a nonempty relative input path: {value!r}")
     return Path(*path.parts)
 
@@ -190,11 +193,13 @@ def run_bounded(
         result["status"] = "interrupted"
     finally:
         if process is not None:
-            # Descendants can retain pipes after the CLI exits; kill the whole new group.
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+            # poll() reaps normal completion; that PID may then be reused.
+            # An unreaped leader still reserves its PID while we stop its group.
+            if process.returncode is None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
             result["exit_code"] = process.wait()
             for stream in (process.stdout, process.stderr):
                 if stream is not None:

@@ -57,7 +57,11 @@ def test_staged_context_excludes_grader_and_other_skill_files(source, tmp_path):
     assert set(hashes) == {"SKILL.md", "references/delivery.md"}
 
 
-@pytest.mark.parametrize("path", ["../review.json", "/tmp/escape", "a/../../escape", "./file", ""])
+@pytest.mark.parametrize("path", [
+    "../review.json", "/tmp/escape", "a/../../escape", "./file", "",
+    r"..\review.json", r"C:\escape", "C:/escape", "D:escape",
+    r"\escape", r"\\server\share\escape",
+])
 def test_input_paths_cannot_escape_the_scenario(path):
     with pytest.raises(ValueError):
         runner.safe_relative(path)
@@ -129,6 +133,19 @@ def test_nonzero_exit_and_both_output_streams_are_preserved(tmp_path):
     assert result["exit_code"] == 7
     assert stdout.read_text() == "partial answer\n"
     assert stderr.read_text() == "failure\n"
+
+
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_completed_process_does_not_signal_a_reaped_group(tmp_path, monkeypatch, exit_code):
+    signals = []
+    monkeypatch.setattr(runner.os, "killpg", lambda pid, signal: signals.append((pid, signal)))
+    result, stdout, _ = capture(
+        tmp_path, f"import sys; print('finished'); sys.exit({exit_code})"
+    )
+    assert result["status"] == "completed"
+    assert result["exit_code"] == exit_code
+    assert stdout.read_text() == "finished\n"
+    assert signals == []
 
 
 def test_output_limit_bounds_captured_bytes_and_terminates_the_process(tmp_path):

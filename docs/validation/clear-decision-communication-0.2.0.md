@@ -9,12 +9,12 @@ activation through the main checkout are separate from these checks.
 
 | Check | Result | Evidence and limits |
 |---|---|---|
-| Repository tests | Pass | `uv run pytest -q`: 53 passed, including 13 runner tests. |
+| Repository tests | Pass | `uv run pytest -q`: 61 passed, including 21 runner tests after the PR-review corrections. |
 | Generated manifests | Pass | `uv run harness-kit gen` followed by `uv run harness-kit gen --check`; only the affected plugin's metadata changed. |
 | Marketplace parity | Pass | Plugin directories and unique marketplace entries match. |
 | Public-content checks | Pass | No personal paths, private-tool references, or unfilled documentation placeholders. |
 | Claude Code validation | Pass with warning | `claude plugin validate .`: the existing generated `_generated` field is ignored at load time. The same warning occurs across the marketplace. |
-| Isolated plugin loading | Pass | Claude Code 2.1.263 and Codex 0.145.0 both loaded the final skill. Static Codex validation alone covers the manifest; the separate loading check covers skill discovery. |
+| Isolated plugin loading | Pass | Claude Code 2.1.263 and Codex 0.145.0 both loaded the reply-handler revision. Static Codex validation alone covers the manifest; the separate loading check covers skill discovery. |
 | Independent content review | Pass | Conditional replies and ask-backs now preserve old option meanings, use new IDs for changed decisions, and avoid redundant approval. Tool-schema documentation is explicitly illustrative. |
 | Trigger and documentation review | Pass | The revised description is 805 characters. Neighboring skill boundaries and documented scope exceptions remain intact. |
 | Placement check | Pass | Existing development symlinks still resolve to the main checkout; none points at the temporary worktree. |
@@ -26,14 +26,16 @@ fake model exits successfully with an incorrect answer.
 
 ## Behavioral scenarios
 
-The suite contains 13 scenarios. An independent reviewer reads the complete
+The 13-scenario suite validates CDC-12, the requirement for isolated runs and
+separate semantic grading. An independent reviewer reads the complete
 visible response and relevant tool events, then records a verdict and evidence
 for every expectation. A successful process exit never supplies that verdict.
 
 All 13 scenarios have a passing response against their written criteria on
 each tool, for 26 passing responses. Three earlier Claude attempts remain
-inconclusive timeouts. These results accumulate across the two candidate
-snapshots below; they are not 26 runs of one final snapshot.
+inconclusive timeouts. These original results accumulate across the first two
+candidate snapshots below; they are not 26 runs of one final snapshot. The
+merge-review revision has a separate targeted check of the neutral-choice case.
 
 | Case | Reviewed behavior | Claude | Codex |
 |---|---|---|---|
@@ -67,12 +69,36 @@ map serialized as sorted JSON without whitespace.
 | Snapshot | Source-set fingerprint | Used for |
 |---|---|---|
 | First candidate | `d9bc26f1322232bfa416b9bae6edfa10352472697cc12ac07bb8e2cae3503a98` | Initial cases 1-10 on both tools. |
-| Final candidate | `bb81ccaca48aaf39afdcba3cbe05eb3e052805efcfa6dda2e601fca8343b6924` | Cases 11-13 and the longer-bound Claude retries of cases 9-10. |
+| Reply-handler revision | `bb81ccaca48aaf39afdcba3cbe05eb3e052805efcfa6dda2e601fca8343b6924` | Cases 11-13 and the longer-bound Claude retries of cases 9-10. |
+| Merge-review revision | `65dd87250cfb770c1221d207709def9f7a4ee857b6657b704c4d2ce9d1bc24b3` | Targeted neutral-choice regression after the PR review. |
 
 Only the conditional-answer and ask-back handlers in `SKILL.md` and
-`references/delivery.md` changed between those snapshots. The final handlers
+`references/delivery.md` changed between the first two snapshots. The revised handlers
 are exercised by cases 11-12. Earlier scenario results are retained rather
-than represented as runs of the final snapshot.
+than represented as runs of the final snapshot. The merge-review revision
+clarifies neutrality in the Findable gates and their mirrored tier rules.
+
+## PR-review corrections
+
+Two process-cleanup regressions, for exit codes 0 and 7, failed before the fix:
+normal completion still attempted to signal the reaped process group. Cleanup
+now signals only while the leader remains unreaped. The existing timeout and
+output-limit controls still pass.
+
+Six additional path cases failed before correction. Input validation now
+rejects Windows drives and backslashes on every platform. A separate
+`PureWindowsPath` probe confirmed that previously accepted absolute and
+backslash-traversal paths could resolve outside the input directory; this was
+a path-semantics probe, not a native Windows execution test.
+
+The documentation now distinguishes preparation records from CLI outputs and
+versions. An actual preparation run produced 26 `not_run` records and no CLI
+version, stdout, or stderr files. The runner's existing POSIX execution
+requirement and inherited-pipe capture semantics are explicit.
+
+The neutral-choice gates now accept explicit neutrality consistently. The
+targeted Codex response preserves Q6.A/Q6.B, states the unresolved visual
+preference, and marks neither option recommended. All three criteria pass.
 
 ## Inverse controls and process limitations
 

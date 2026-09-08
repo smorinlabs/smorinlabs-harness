@@ -7,8 +7,11 @@ assigning a behavioral verdict.
 
 ## Run the scenarios
 
-Requirements: Python 3.12 or later, `uv`, and an installed, authenticated
-`claude` or `codex` CLI. Run these commands from the repository's root directory.
+Requirements: macOS or Linux, Python 3.12 or later, `uv`, and an installed,
+authenticated `claude` or `codex` CLI. Run these commands from the repository's
+root directory. Process capture uses POSIX process groups and selectable pipes;
+native Windows execution is not supported. Scenario input paths use relative,
+forward-slash paths; Windows drives and backslashes are rejected on every host.
 The runner uses Python's standard library and selects no model, effort, or
 provider. CLI compatibility is based on the installed tools' help; an unsupported
 flag is a process error, not a skill failure.
@@ -43,9 +46,10 @@ directory is periodically cleared.
 ## Review the results
 
 The output directory contains a hashed snapshot of `SKILL.md` and `references/`,
-plus a manifest of the selected cases. Each tool gets recorded version output.
-Each case has its exact prompt, raw input files, stdout events, stderr, process
-result, and a separate `review.json` containing its expectations.
+plus a manifest of the selected cases. Every mode retains each case's exact
+prompt, raw input files, process record, and separate `review.json` expectations.
+Prepare mode records `status: not_run` and makes no CLI call. With `--run`, the
+runner also retains tool-version output, stdout events, and stderr.
 
 Read the entire response and relevant tool events. In `review.json`, set
 `semantic_verdict` to `pass`, `fail`, or `inconclusive`; identify the reviewer;
@@ -58,6 +62,13 @@ means its selected processes completed successfully, or preparation completed;
 it does not mean the skill passed. Neither keyword matching nor a CLI success
 message establishes correct behavior. When a behavior fails, revise the skill
 and run that case again in a new output directory.
+
+Process status also covers completion of stdout/stderr capture. A descendant
+that keeps an inherited pipe open can exhaust the capture timeout after the CLI
+exits; that record retains the CLI's exit code alongside `status: timeout`.
+Output that arrives from descendants within the bound is retained. Review any
+completed response even when process capture times out; an incomplete capture
+does not by itself establish incorrect skill behavior.
 
 ## Scope and limitations
 
