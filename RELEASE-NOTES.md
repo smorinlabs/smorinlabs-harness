@@ -1,5 +1,20 @@
 # Release Notes
 
+## Unreleased
+
+### Changed
+
+- **`clear-decision-communication` 0.2.0.** Addresses review CDC-01 through
+  CDC-12: silence and skip preserve existing authorization; changed options
+  receive a new question ID; decision-relevant checks finish before approval;
+  missing human-supplied facts have an information-request path; delivery adapts
+  to the available tool; resolved uncertainty can lower the final tier;
+  length targets preserve material caveats; verbatim Unicode stays exact;
+  neutral choices carry no recommendation marker; retry waiting is separated
+  from total runtime; the pre-send check precedes delivery; reusable behavioral
+  scenarios accompany a runner that separates process results from semantic
+  grading. The original design record remains historical context. (PROJECTS P43)
+
 ## v0.22.0 — 2026-09-08
 
 ### Added

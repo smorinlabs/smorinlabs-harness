@@ -1,8 +1,9 @@
 # Representation: showing the change in ASCII text
 
 Which form makes the relevant behavior easiest to judge, and how to draw each
-one in plain ASCII. Read this at workflow step 4. Every form here is text: a
-downstream tool may render it, this skill never does.
+one with ASCII diagram syntax. Preserve verbatim labels, code, inputs, and
+outputs exactly, including non-ASCII characters. Read this at workflow step 4.
+Every form here is text: a downstream tool may render it, this skill never does.
 
 Forms are adapted from three sources and converted to ASCII: the show-me skill
 (humanlayer/skills, MIT), the clear-technical-communication artifact catalog
@@ -98,15 +99,15 @@ was performed or is proposed.
 - **One representative payload.** When behavior is the point, trace one input
   through the flow and show its data at the hop that changes.
 - **Frame.** A lead-in that says what question the artifact answers, the
-  artifact exact and unedited, then a reading of one sentence that says what to
-  take from it. An artifact never ships alone, and a reading never grows into a
-  second explanation.
+  artifact exact and unedited, then a concise reading that says what to take
+  from it. Usually one sentence suffices; retain a material condition even when
+  it needs another. An artifact never ships alone.
 - **Labels on arrows.** An unlabeled arrow says that something flows without
   saying what.
 - **Two components and one arrow is a sentence.** Write the sentence.
-- **Fencing.** Code and pseudocode sit inside fences. A diagram of about ten
-  lines or fewer may sit inline in the message; a longer one goes in a fence.
-  Tables always use pipes.
+- **Fencing.** Code and pseudocode sit inside fences. Fence a diagram whenever
+  its meaning depends on aligned spaces or preserved line breaks, regardless
+  of length. Tables always use pipes.
 
 ## The forms
 

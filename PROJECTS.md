@@ -1539,5 +1539,40 @@ An agent about to ask for a merge sends: `Q1. Merge PR #142, the keyboard-focus 
 
 ---
 
+### P43 review update: clear-decision-communication 0.2.0 (2026-09-08)
+
+The owner approved CDC-01 through CDC-12 after reviewing version 0.1.2.
+The original shipped tasks and evidence above remain historical; the following
+tasks track this update. The addendum in
+`docs/superpowers/specs/2026-09-07-clear-decision-communication-design.md`
+records each correction and its rationale.
+
+- [x] [P43-T10] Correct authorization, skip, stable reply IDs, unavailable facts,
+  host adaptation, final sizing, length targets, Unicode literals, neutrality,
+  and workflow order; correct race and retry examples (CDC-01 through CDC-11).
+- [x] [P43-T11] Refresh the skill page, README row, design addendum, release notes,
+  and plugin version 0.1.2 -> 0.2.0; preserve the historical source framework.
+- [x] [P43-T12] Add and exercise isolated behavioral scenarios on Claude Code
+  and Codex, keeping process status separate from semantic grading (CDC-12).
+  Evidence: all 13 scenarios have a response passing their written criteria on
+  each tool; three timeout attempts remain inconclusive. Original-source
+  controls expose three failures. Source versions and observed model-output
+  limitations are recorded in the validation document below.
+- [x] [P43-TS05] Run the update's tests, generated-manifest check, static and deep
+  loading checks, and independent content review against the worktree.
+  Evidence: 61 tests passed after PR review; manifests are current; both tools
+  loaded the reply-handler revision;
+  the independent review found no remaining material issues. The existing
+  generated-metadata warning is documented in
+  `docs/validation/clear-decision-communication-0.2.0.md`.
+- [x] [P43-T13] Address PR #56 findings: stop signaling reaped process groups,
+  reject Windows-specific fixture paths, qualify prepare-mode artifacts, and
+  make the Findable gates and tier rules consistent for neutral choices.
+  Eight added regression cases failed before their fixes; 61 tests now pass.
+  The targeted neutral-choice scenario passes on Codex; source snapshots and
+  the original Claude results remain recorded in the validation document.
+
+---
+
 ## [?] Project P44: question-walkthrough delegates per-question framing to clear-decision-communication
 **Idea**: Keep `question-walkthrough` as the walk (intake, pile confirmation, sequencing, re-planning, recording) and hand the context and communication of each individual question to `clear-decision-communication`: one ID space (the pile's numbers become the skill's Q numbers), the two-turn gate stated in one place, and the walk's pre-read rendered as the skill's brief. Same round: align the owner's CLAUDE.md question-dialog guard (smorin-bootstrap) to the two-turn gate, and add an always-on digest of the new skill beside the existing clear-technical-communication digest.

@@ -63,10 +63,15 @@ rules apply at every tier and the axis never sets the tier by itself.
   is always high on reversibility.
 - Only the elevated or high axes expand. Each adds exactly the information in
   its "additional information" column above, and nothing else.
-- The tier ratchets up only. Preparation that reveals a higher axis raises the
-  tier mid-draft; nothing lowers it.
-- Preparation stops at the tier. A T1 does not get a prototype; a T3 does not
-  skip the correctness argument.
+- Initial sizing is provisional. Preparation that reveals a higher issue
+  raises the tier; completed verification can lower uncertainty and therefore
+  the final tier if it resolved the only elevated or high issue.
+- Passing tests alone does not lower impact, reversibility, departure,
+  tradeoff, or domain complexity. Keep a timing fix high on domain even after
+  its tests pass. Size the delivered brief from the issues that remain.
+- Prepare what the decision needs. A routine change needs no prototype merely
+  because its initial checks had not run; a remaining T3 domain issue still
+  needs its correctness argument.
 - Representation is not set by the tier. A low-impact race condition still gets
   its ordered sequence because its change type requires one.
 - A decision record is not set by the tier. It is retained when at least two of
@@ -82,19 +87,17 @@ This table mirrors the one in SKILL.md step 2; edit both together.
 
 | ID | Tier | Prepare | The initial view holds | Length signal |
 |---|---|---|---|---|
-| T1 | Confirm | the prepared result and its verification, nothing more | the question line, the recommendation, two or three options with consequences; two or three sentences in all | about 80 words |
-| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | the six-question brief, plus one comparison when the change is conditional | about 250 words |
-| T3 | Full brief | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | T2 plus the representation the change type requires, and a details pointer | about 500 words |
+| T1 | Confirm | the prepared result and its verification, nothing more | the question line, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
+| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation or neutrality, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
+| T3 | Full brief | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
 
-The length signals are review signals, in the same way a 25-word sentence is a
-signal: past them, re-run the removal test on every sentence and keep every
-clause that could change the answer. One and a half times the signal is the
-cap (T1 120, T2 375, T3 750 words): a brief past its cap is not sent until
-every reading after an artifact is one sentence, each option consequence and
-each evidence label is one clause, the sensitivity line is one sentence, and
-everything else is behind Details. A brief that is long because an elevated
-axis needs the words is right; one that is long because every section was
-filled to its maximum is wrong.
+The word counts are review targets, never caps. Past them, remove repetition,
+shorten artifact readings and option consequences, and move supporting detail
+behind Details. Do not compress away a material condition to meet a sentence
+or clause count. Keep every material consequence, uncertainty, definition,
+and approval boundary in the initial view even when it exceeds the target.
+Neutral questions explain the unresolved preference without inventing a
+recommendation or runner-up condition.
 
 ## Stage of work: what kind of explanation
 
@@ -110,10 +113,11 @@ one.
 | Rollout or deployment | the target environment, the expected effects, the readiness evidence, and the recovery options | the exact rollout or deployment action, to a named environment |
 
 State which of these approval performs, in the "On Q1.A I will" line, which is
-required whenever tradeoff complexity is above low: selects an
+required whenever tradeoff complexity is above low and a recommendation exists: selects an
 approach, authorizes a prototype or experiment, expands implementation scope,
 approves completed work, merges a particular revision, or deploys to a named
-environment. Approval never expands the agent's authority beyond that line.
+environment. A neutral question states the exact action for each choice.
+Approval never expands the agent's authority beyond its stated scope.
 
 ## Two shapes of ask
 
