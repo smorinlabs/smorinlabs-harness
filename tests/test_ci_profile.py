@@ -288,3 +288,17 @@ def test_unmeasured_wait_bound_is_documented_as_null():
     doc = SCRIPT.read_text()
     assert "wait_bound_s" in doc and "null" in doc.split('"""')[1].lower()  # the module docstring says it
     assert "UNITS" not in doc  # Copilot: dead constant removed
+
+
+def test_only_successful_jobs_are_duration_samples(tmp_path):
+    """A `continue-on-error: true` job keeps conclusion `failure` or
+    `timed_out` inside a green run; those measure time-to-failure, not the
+    job's shape (deep review, PR #49)."""
+    r = write_run(tmp_path / "r.json", [
+        job("flaky", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:01:00Z"),
+        job("flaky", "2026-01-01T01:00:00Z", "2026-01-01T01:00:10Z", "2026-01-01T01:05:10Z", conclusion="failure"),
+        job("flaky", "2026-01-01T02:00:00Z", "2026-01-01T02:00:10Z", "2026-01-01T02:05:10Z", conclusion="timed_out"),
+    ])
+    j = by_name(profile(r))["flaky"]
+    assert j["samples"] == 1 and j["median_s"] == 50 and j["class"] == "fast"
+    assert j["excluded"] == 2

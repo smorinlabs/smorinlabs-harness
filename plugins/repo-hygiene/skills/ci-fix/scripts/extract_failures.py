@@ -38,7 +38,6 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 # `[param ids]`, so the delimiter that ends an ID (` - reason` on summary
 # lines, ` FAILED`/` ERROR` on verbose lines) counts only at bracket depth 0.
 PYTEST_SUMMARY_PREFIX_RE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+::.*)$")
-PYTEST_VERBOSE_LINE_RE = re.compile(r"^(\S+::.*?)\s+(?:FAILED|ERROR)\b")
 
 
 def _cut_at_depth0(text: str, delimiters: tuple[str, ...]) -> str | None:
@@ -55,15 +54,21 @@ def _cut_at_depth0(text: str, delimiters: tuple[str, ...]) -> str | None:
 
 
 def _pytest_id(line: str) -> str | None:
+    """A node ID has no whitespace outside its [param] brackets, so it ends at
+    the first depth-0 whitespace. Summary lines carry a FAILED/ERROR prefix;
+    verbose lines must have the verdict as the very next token, so a SKIPPED
+    or PASSED line whose free text mentions ERROR is not a failure."""
     m = PYTEST_SUMMARY_PREFIX_RE.match(line)
     if m:
         rest = m.group(1)
-        cut = _cut_at_depth0(rest, (" - ",))
+        cut = _cut_at_depth0(rest, (" ",))
         return (cut if cut is not None else rest).rstrip()
-    if PYTEST_VERBOSE_LINE_RE.match(line) and "::" in line:
-        cut = _cut_at_depth0(line, (" FAILED", " ERROR"))
-        if cut and "::" in cut:
-            return cut.rstrip()
+    if "::" in line:
+        cut = _cut_at_depth0(line, (" ",))
+        if cut and "::" in cut and not cut.startswith(("FAILED", "ERROR")):
+            verdict = line[len(cut):].split(None, 1)
+            if verdict and verdict[0] in ("FAILED", "ERROR"):
+                return cut.rstrip()
     return None
 JEST_BLOCK_RE = re.compile(r"^●\s+(.+?)\s*$")
 JEST_MARK_RE = re.compile(r"^✕\s+(.+?)(?:\s+\(\d+\s*m?s\))?\s*$")
@@ -109,7 +114,20 @@ def detect_jest(lines: list[str]) -> list[str]:
 
 
 def detect_cargo(lines: list[str]) -> list[str]:
-    return dedup([m.group(1) for line in lines if (m := CARGO_HEADER_RE.match(line))])
+    """`---- X stdout ----` headers count only after a `failures:` marker:
+    `cargo test -- --show-output` prints the same headers under `successes:`."""
+    ids = []
+    in_failures = False
+    for line in lines:
+        if line == "failures:":
+            in_failures = True
+            continue
+        if line == "successes:":
+            in_failures = False
+            continue
+        if in_failures and (m := CARGO_HEADER_RE.match(line)):
+            ids.append(m.group(1))
+    return dedup(ids)
 
 
 def detect_go(lines: list[str]) -> tuple[list[str], list[str]]:
@@ -162,7 +180,7 @@ def read_lines(paths: list[str]) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--format", default="auto", help="auto|pytest|jest|cargo|go (default auto)")
-    parser.add_argument("--json", action="store_true", help="emit {format, failures, packages}")
+    parser.add_argument("--json", action="store_true", help="emit {format, failures, failures_quoted, packages}")
     parser.add_argument("logs", nargs="*", metavar="LOG", help="job log file(s); stdin when omitted")
     args = parser.parse_args(argv)
     if args.format not in FORMATS:

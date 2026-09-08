@@ -178,3 +178,40 @@ def test_pytest_ids_are_parsed_bracket_aware(tmp_path):
         "tests/test_x.py::test_setup[p - q - r]",
         "tests/test_x.py::test_nested[a[1] - b[2]]",
     ]
+
+
+# ------------------------------------------------- deep-review findings (PR #49)
+
+
+def test_verbose_non_failure_lines_containing_verdict_words_are_ignored(tmp_path):
+    """A `-v` SKIPPED/PASSED line whose free text contains ERROR or FAILED is
+    not a failure: the node ID ends at the first whitespace outside brackets
+    and the very next token must be the verdict."""
+    log = tmp_path / "v.log"
+    log.write_text(
+        "2026-09-08T10:00:00.0000000Z test_a1.py::test_a SKIPPED (waiting on upstream ERROR to be fixed)  [ 50%]\n"
+        "2026-09-08T10:00:01.0000000Z test_a1.py::test_b PASSED  [ 75%]\n"
+        "2026-09-08T10:00:02.0000000Z test_a1.py::test_c[x y] FAILED  [100%]\n"
+    )
+    assert extract(log)["failures"] == ["test_a1.py::test_c[x y]"]
+
+
+def test_cargo_show_output_headers_for_passing_tests_are_not_failures(tmp_path):
+    """`cargo test -- --show-output` prints `---- X stdout ----` under a
+    `successes:` section too; only headers after the `failures:` marker count."""
+    log = tmp_path / "cargo.log"
+    log.write_text(
+        "2026-09-08T10:00:00.0000000Z successes:\n"
+        "2026-09-08T10:00:01.0000000Z \n"
+        "2026-09-08T10:00:02.0000000Z ---- tests::passing_with_output stdout ----\n"
+        "2026-09-08T10:00:03.0000000Z hello\n"
+        "2026-09-08T10:00:04.0000000Z \n"
+        "2026-09-08T10:00:05.0000000Z failures:\n"
+        "2026-09-08T10:00:06.0000000Z \n"
+        "2026-09-08T10:00:07.0000000Z ---- tests::failing_test stdout ----\n"
+        "2026-09-08T10:00:08.0000000Z thread 'tests::failing_test' panicked\n"
+        "2026-09-08T10:00:09.0000000Z test result: FAILED. 1 passed; 1 failed\n"
+    )
+    data = extract(log)
+    assert data["format"] == "cargo"
+    assert data["failures"] == ["tests::failing_test"]

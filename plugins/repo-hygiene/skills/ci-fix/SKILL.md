@@ -72,7 +72,8 @@ Fix-mode flag:
   branch, so every workflow's run on HEAD is present however many the branch
   has:
   `gh api "repos/{owner}/{repo}/actions/runs?head_sha=$(git rev-parse HEAD)&per_page=100" --jq '.workflow_runs[] | {id, name, conclusion, status, created_at}'`.
-  Recent runs on the branch, audit history only:
+  Recent runs on the branch, audit history only (omit `&branch=` on a
+  detached HEAD, where the branch name is empty and would filter to nothing):
   `gh api "repos/{owner}/{repo}/actions/runs?per_page=10&branch=$(git branch --show-current)" --jq '.workflow_runs[] | {id, name, conclusion, status, head_sha, created_at}'`.
 
 ## 2. Measure — the duration profile (all modes)
@@ -82,13 +83,18 @@ time-to-failure, not the job's shape), fetch each run's jobs, and profile them:
 
 ```bash
 mkdir -p "$SCRATCH/profile"
-gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10&branch=$(git branch --show-current)" \
+b=$(git branch --show-current)                        # empty on a detached HEAD: then no branch filter
+gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10${b:+&branch=$b}" \
   > "$SCRATCH/profile/runs.json"
 for id in $(python3 -c 'import json,sys; print(*[r["id"] for r in json.load(open(sys.argv[1]))["workflow_runs"]])' "$SCRATCH/profile/runs.json"); do
   gh api "repos/{owner}/{repo}/actions/runs/$id/jobs?per_page=100" > "$SCRATCH/profile/jobs-$id.json"
 done
-python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" "$SCRATCH/profile"/jobs-*.json
+# find, not a glob: zero fetched runs must not abort the shell (zsh: "no matches found")
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"
 ```
+
+Zero files found → skip the script: every job is `unmeasured` and the rules
+below apply.
 
 Fewer than 3 successful runs on the branch → add the default branch's (drop
 `&branch=`), and say so in the report. The script reports, per job, the
@@ -123,9 +129,13 @@ Skip parts excluded by `--actions-only` / `--hooks-only`.
   `.github/workflows` itself); if absent, a finding plus the platform install
   (`brew install actionlint` on macOS).
 - **Action pins** — every `uses:` line against
-  `gh api "repos/<owner>/<action>/releases/latest" --jq .tag_name` (one call
-  per distinct action, counted in the quota check; fall back to
-  `.../tags?per_page=1`). Flag an old major, and SHA-pinned vs tag-pinned.
+  `gh api "repos/<owner>/<repo>/releases/latest" --jq .tag_name`, where
+  `<owner>/<repo>` is the first two path segments of the `uses:` value
+  (`github/codeql-action/init@v4` → `github/codeql-action`); one call per
+  distinct repo, counted in the quota check; fall back to
+  `.../tags?per_page=1`. Skip local actions (`./…`), `docker://` images, and
+  reusable workflows (`….yml@…`), which have no release to compare. Flag an
+  old major, and SHA-pinned vs tag-pinned.
   Report only unless fix mode with `--update-versions`.
 - **Hooks** — lefthook: installed (`lefthook --version`), the hook file
   present at `"$(git rev-parse --git-path hooks)/pre-commit"` (worktree-safe;
@@ -157,13 +167,14 @@ own rate limit, for example) is not CI. Say so and leave it to `pr-merge-flow`.
 ## 5. Localize (fix mode, code or test class)
 
 1. The failed run's jobs and steps (`<run_id>` from step 1's list):
-   `gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs" --jq '.jobs[] | select(.conclusion=="failure") | {id, name, failed_steps: [.steps[] | select(.conclusion=="failure") | .name]}'`
+   `gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs?per_page=100" --jq '.jobs[] | select(.conclusion=="failure") | {id, name, failed_steps: [.steps[] | select(.conclusion=="failure") | .name]}'`
 2. The failed job's log (the flag is required: `gh api` refuses a body that
    contains ANSI color codes, which most test runners emit):
    `gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`
 3. The failing test IDs:
    `python3 <skill-dir>/scripts/extract_failures.py --json "$SCRATCH/job-<job_id>.log"`
-   → `{format, failures, packages}` for pytest, jest, cargo, or go. Exit 1
+   → `{format, failures, failures_quoted, packages}` for pytest, jest, cargo,
+   or go; local commands take IDs from `failures_quoted` only. Exit 1
    means no test IDs were recognized: Grep the log for the failed step's name
    and read its last 50 lines for the actual error; the step's whole `run:`
    command is then the narrowest target.
@@ -188,7 +199,7 @@ edit is `superpowers:systematic-debugging`'s discipline.
 | 1 | the failed step's full `run:` command | local | the step's measured median | the step runs here, and its median is under the threshold or the user accepted the stated time |
 | 1s | **the sweep**: every other host-runnable job's sweepable `run:` steps (candidate rules, toolchain pre-check, and skips: `references/targeted-repro.md`, *The sweep*) | local | the sum of the swept jobs' medians | rung 1 green (or unavailable); before **every** push |
 | 2 | push; when the push would start more than one repo-owned workflow and the failing one has `workflow_dispatch`, the commit carries `[skip ci]` and only that workflow is dispatched (rung 2d, `references/fix-loop.md`); otherwise watch the target job on the run the push started | CI | that job's `wait_bound_s` (the largest, when several workflows are watched) | rung 1s green |
-| 3 | every job on the last pushed commit: the run the push started, or after 2d the first marker-free commit — the step-6b hook commit, the `--update-versions` commit, or an empty `ci: full run` commit | CI | the longest job's `wait_bound_s` | rung 2 green |
+| 3 | every run on the pushed commit (step 1's `head_sha` listing), every job: the run the push started, or after 2d the first marker-free commit — the step-6b hook commit, the `--update-versions` commit, or an empty `ci: full run` commit | CI | the largest `wait_bound_s` across those runs | rung 2 green |
 
 Rules:
 
@@ -210,9 +221,13 @@ Rules:
   change of its own. Commands in `references/fix-loop.md`.
 - Show the diff and confirm with AskUserQuestion before every commit and push.
 - Every CI wait is bounded by the profile's `wait_bound_s` for the job being
-  watched; poll REST no more often than every 20–30 seconds; an API error is
-  "no data", not a state change; on expiry do one manual recheck and report.
-  Pre-validate the check command once before arming any monitor.
+  watched, counted from the moment that job leaves `queued` (a `needs:`-gated
+  job is created only when its dependencies finish, so its own queue time
+  excludes them); until then the wait is bounded by the largest bound on the
+  commit. Poll REST no more often than every 20–30 seconds; an API error, an
+  empty body, or a null run id is "no data", not a state change; on expiry do
+  one manual recheck and report. Pre-validate the check command once before
+  arming any monitor.
 - Three attempts per red job, counted across rungs. An attempt is one edit
   followed by a red at any rung; the original CI failure, the reproduction
   run, the single flake rerun, and the rung-3 empty commit are not attempts.
@@ -220,9 +235,9 @@ Rules:
   when it was already red in step 4, and counts as one attempt on the job
   being fixed when it was green before the edit. The third red stops the
   loop: report what was tried, the evidence, and the best hypothesis.
-- **Done** means every job on the last pushed commit is green (rung 3). A
-  local green is not a fix; a rung-2 green beside a red neighbor is not done.
-
+- **Done** means every job on every run of the pushed commit is green (rung
+  3), checked against the `head_sha` listing, not one workflow's run. A local
+  green is not a fix; a rung-2 green beside a red neighbor is not done.
 ## 6b. Shift the failed check left (fix mode, between rung 2 and rung 3)
 
 For a code, test, or lint failure whose check has no hook equivalent in the

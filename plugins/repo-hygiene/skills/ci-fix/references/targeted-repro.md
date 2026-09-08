@@ -7,7 +7,7 @@ cases where the narrowest target is the whole step.
 ## Extract the failing IDs
 
 ```bash
-gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs" \
+gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs?per_page=100" \
   --jq '.jobs[] | select(.conclusion=="failure") | {id, name, failed_steps: [.steps[] | select(.conclusion=="failure") | .name]}'
 gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"
 python3 <skill-dir>/scripts/extract_failures.py --json "$SCRATCH/job-<job_id>.log"
@@ -25,8 +25,8 @@ re-interpolates the bare `failures` entry into a shell string. An ID that
 still looks like shell syntax after quoting is shown to the user before it
 runs. The script strips GitHub's per-line timestamps
 and ANSI color, detects the runner, and returns
-`{"format": "pytest", "failures": [...], "packages": [...]}`. Exit 1 means no
-IDs were recognized — go to *No IDs* below. Force a runner with
+`{"format": "pytest", "failures": [...], "failures_quoted": [...], "packages": [...]}`;
+commands take IDs from `failures_quoted`. Exit 1 means no IDs were recognized — go to *No IDs* below. Force a runner with
 `--format pytest|jest|cargo|go` when a log mixes tools.
 
 ## Map the CI step to a local command
@@ -37,7 +37,7 @@ Read the failed step's `run:` line in the workflow. Keep its wrapper (`uv run`,
 | Runner | CI step looks like | Rung 0 — targeted | Rung 1 — full step |
 |---|---|---|---|
 | pytest | `uv run pytest` / `pytest tests` | `uv run pytest -x <id> [<id> …]` — IDs are node IDs, taken from `failures_quoted` | the `run:` line verbatim |
-| jest / vitest | `npm test` / `npx jest` | `npx jest -t <quoted name>` (vitest: `npx vitest run -t <quoted name>`) — the name from `failures_quoted`, with ` › ` replaced by a space (Jest joins describe and test names with spaces) | the `run:` line verbatim |
+| jest / vitest | `npm test` / `npx jest` | `npx jest -t <quoted pattern>` — `-t` is a **regex**, so escape every metacharacter in the name first (`(`, `)`, `[`, `.`, `+`, `*`, `?`, `$`, `^`, `|`) or a name like `parses (float)` matches nothing and Jest exits 0, a false green; then quote as `failures_quoted` does, with ` › ` replaced by a space. vitest: `npx vitest run -t <quoted pattern>`, same rule; note the extractor reads Jest's log shape, so vitest and cargo-nextest IDs are read from the log by hand until their shapes are added | the `run:` line verbatim |
 | cargo | `cargo test` | `cargo test <module::tests::name> -- --exact` (nextest: `cargo nextest run -E 'test(=<name>)'`) | the `run:` line verbatim |
 | go | `go test ./...` | `go test <package> -run '^<TestName>$'` — for an ID with `/`, split on it and anchor each segment: `TestParent/sub` → `-run '^TestParent$/^sub$'`; `<package>` from `packages` when present, else the package of the failing file | the `run:` line verbatim |
 | just / make wrapper | `just test`, `make test` | open the recipe and narrow its inner command as above; run the inner command directly at rung 0, the recipe at rung 1 | the recipe |
