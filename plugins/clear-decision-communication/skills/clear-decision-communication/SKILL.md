@@ -106,15 +106,16 @@ the output is the brief for that target.
 4. **Choose the representation by change type.** First ask one question: would
    the reader understand this better by seeing it than by reading it? Then take
    the row that matches. All forms are ASCII text and live in
-   `references/representation.md`.
+   `references/representation.md`, numbered F1 to F21 so a form can be named by
+   ID.
 
    | Type of change | Show |
    |---|---|
    | Mechanical, such as a rename | one descriptive sentence naming the change and its purpose |
-   | Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome, as a table |
-   | Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode, a whole block, or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
-   | Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior |
-   | Architectural, such as moving responsibilities | a small ASCII system diagram with coded nodes, the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
+   | Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome, as a table (F1) |
+   | Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode (F2), a whole block (F7), or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
+   | Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
+   | Architectural, such as moving responsibilities | a small ASCII system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
 
    Keep inputs and event order identical across comparisons. Choose the smallest
    example that exposes the actual difficulty, and include ordinary behavior plus
