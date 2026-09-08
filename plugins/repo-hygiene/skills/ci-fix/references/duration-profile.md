@@ -17,11 +17,16 @@ SCRATCH="${SCRATCH:-$(mktemp -d "${TMPDIR:-/tmp}/ci-fix.XXXXXX")}"
 mkdir -p "$SCRATCH/profile"
 # last 10 successful runs on this branch — a failed run measures time-to-failure,
 # not the job's shape; drop &branch= to fall back to the whole repo
-for id in $(gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10&branch=$(git branch --show-current)" \
-              --jq '.workflow_runs[].id'); do
+gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10&branch=$(git branch --show-current)" \
+  > "$SCRATCH/profile/runs.json"
+for id in $(python3 -c 'import json,sys; print(*[r["id"] for r in json.load(open(sys.argv[1]))["workflow_runs"]])' "$SCRATCH/profile/runs.json"); do
   gh api "repos/{owner}/{repo}/actions/runs/$id/jobs" > "$SCRATCH/profile/jobs-$id.json"
 done
 ```
+
+The listing is kept: `--runs` joins each job to its workflow `path`, which is
+how GitHub-managed workflows (`dynamic/…`, such as the Copilot reviewer) are
+told apart from the repo's own.
 
 One request per sampled run: eleven calls including the listing. A repo with
 several workflows shares the ten among them; scope to one workflow with
@@ -30,8 +35,8 @@ several workflows shares the ten among them; scope to one workflow with
 ## Profile
 
 ```bash
-python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> "$SCRATCH/profile"/jobs-*.json          # table
-python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --json "$SCRATCH/profile"/jobs-*.json   # for --optimize
+python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" "$SCRATCH/profile"/jobs-*.json          # table
+python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" --json "$SCRATCH/profile"/jobs-*.json   # for --optimize
 ```
 
 Per job the script reports:
@@ -43,6 +48,7 @@ Per job the script reports:
 | `class` | `slow` when `median_s` exceeds the threshold, `fast` otherwise, `unmeasured` when no sample completed |
 | `slowest_step` | the step with the highest median across samples — where the time goes |
 | `wait_bound_s` | `ceil(1.5 × (median + queue))`, floor 60s: the lifetime of any CI wait on this job |
+| `external`, `workflow_path` | `true` when the run's `path` is under `dynamic/`: a GitHub-managed job, listed last, never fixed, swept, or optimized |
 | `samples`, `in_progress`, `excluded` | successful samples counted; still-running jobs are listed, not measured; skipped (0s) and cancelled (truncated) jobs are excluded |
 
 Jobs sort slowest first; `unmeasured` rows sort to the top so they are never
@@ -72,6 +78,7 @@ overlooked.
 
 | Consumer | Reads |
 |---|---|
+| Fix mode, the sweep (rung 1s) | `class` per job: `fast` jobs are swept; `slow` only when the user accepts; `external` never |
 | Fix mode, rung 1 availability | the failed step's own median in `steps`: under the threshold → rung 1 is available at no stated cost; over it → available only when the user accepts the stated time |
 | Fix mode, CI waits | `wait_bound_s` of the job being watched (rung 2) or of the longest job (rung 3) |
 | Audit report | the whole table, plus the `--optimize` pointer when any job is not `fast` |

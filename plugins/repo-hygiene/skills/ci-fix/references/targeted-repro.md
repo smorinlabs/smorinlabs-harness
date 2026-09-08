@@ -60,3 +60,34 @@ Rung 0 green does not mean the step is green: a fix can break a neighbor. Rung
 profile's `steps`) is under the threshold, or when it is over and the user
 accepted the stated time. A 25-minute suite the user declined makes rung 1
 unavailable for a recorded reason; the next rung is 2, push and watch the job.
+
+## The sweep (rung 1s) — every other job, locally, before any push
+
+A fix that makes the failed step green can break a neighbor job. The sweep
+finds that locally, where it costs the neighbors' measured medians, instead of
+in CI, where it costs a full push cycle.
+
+Candidates come from the inventory (`workflow_inventory.py --json`) joined to
+the profile:
+
+| Include a job when | Because |
+|---|---|
+| its class is `fast` (or `slow` and the user accepted the stated time) | the sweep's bound is the sum of the swept medians |
+| it has no `container` and no `services` | those need a Linux runner, not the host |
+| its `os_family` is this host's, or `linux` on a macOS host | toolchain commands (`pytest`, `ruff`, `npm test`, `cargo test`) are portable; a step that is not will fail with a clear "command not found", which is a *not reproducible locally* signal, not a red |
+| it is not `external` | GitHub-managed jobs cannot be changed here |
+
+For each included job run, in order, every step with `kind: run` and
+`setup: false`, honoring its `working-directory` and `env`. Skip `uses:` steps
+(they are actions, not commands) and `setup` steps (`apt-get`, `brew`,
+`npm install -g`, `pip install`, `curl` installers) — they mutate the host.
+A step that references `secrets.*` or `${{ inputs.* }}` is run with the
+expression removed only when the command is still meaningful; otherwise the
+job is skipped with the reason recorded.
+
+Matrix jobs: sweep one cell, the one whose toolchain matches the host, and say
+which. Sweeping every cell is rung 3's job.
+
+Outcome: all green → rung 2. Any red → it is a new red job: stop, triage it,
+fix it at rungs 0–1, then sweep again. Several red jobs are fixed locally and
+pushed once.

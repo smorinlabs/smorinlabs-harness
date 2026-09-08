@@ -39,15 +39,50 @@ and `gh run rerun <run_id> --failed`. A rerun keeps the `run_id`, increments
 `run_attempt`, and assigns **new job ids** — re-fetch the run's jobs before
 pulling a rerun's log.
 
-## Why CI cannot run a subset on a new commit
+## Rung 2d — the targeted CI run through `workflow_dispatch`
 
-A push runs every workflow whose trigger matches. GitHub has no way to run one
-job of a workflow on a fresh commit, which is why rung 2 is "push and watch the
-target job" rather than "run the target job": CI compute is the same as rung
-3; only the feedback latency differs, and a red target job ends the wait early.
-The structural way to make fast jobs run *before* long ones on every push is
-`needs:` gating, which is lever 3 of `--optimize`, not something this loop
-does on the side.
+A push starts every workflow whose trigger matches, and GitHub cannot run one
+job of a workflow on a fresh commit. It can run one **workflow** on demand,
+when that workflow declares `on: workflow_dispatch`. Rung 2d uses that so a
+fix iteration costs one workflow in CI, not all of them; the full run happens
+once, at rung 3.
+
+`[skip ci]` in the commit subject makes GitHub skip every workflow triggered
+by `push` or `pull_request` for that commit; the other accepted markers are
+`[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`. Dispatched runs
+are unaffected (GitHub docs, "Skipping workflow runs", verified 2026-09-08).
+Use `[skip ci]` in the subject, consistently.
+
+```bash
+# 1. commit the fix so the push starts nothing, and push
+git commit -m "fix(<scope>): <what> [skip ci]"
+git push -u origin "$(git branch --show-current)"
+SHA=$(git rev-parse HEAD); T0=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# 2. dispatch only the failing workflow on this branch (204 = accepted, no body)
+gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>.yml/dispatches" \
+  -f ref="$(git branch --show-current)"            # -f "inputs[filter]=<expr>" when the workflow declares inputs
+
+# 3. find the run it created: same event, same commit, created after the dispatch
+gh api "repos/{owner}/{repo}/actions/runs?event=workflow_dispatch&head_sha=$SHA&per_page=5" \
+  --jq --arg t0 "$T0" '.workflow_runs[] | select(.created_at >= $t0) | {id, status, conclusion, created_at}'
+```
+
+The run appears a few seconds after the 204; poll step 3 under the four laws
+below until one run matches, then watch the target job on it with the jobs
+check. A `422` from step 2 saying the workflow does not have a
+`workflow_dispatch` trigger means the trigger is absent on this branch: fall
+back to push-and-watch (rung 2 without `d`) and record `--optimize` lever 11.
+Always attempt the POST rather than reading the local file — the copy GitHub
+evaluates is the one on the ref you pass, and only the API answers for it.
+
+Rung 3 after 2d: `git commit --allow-empty -m "ci: full run"` and push. The
+empty commit carries no marker, so every workflow runs on it. Done is judged
+on that commit.
+
+When the failing workflow declares a filter input (lever 11's sketch adds
+`inputs.filter` wired into the test command), pass the extracted IDs through
+it so even the dispatched run is targeted.
 
 ## Waiting on CI — the four laws
 

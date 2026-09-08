@@ -62,6 +62,7 @@ the report as already under threshold.
 | 8 | **Setup dominates** | setup + install > 50% of the job's median | a cached toolchain, a prebuilt container image, `actions/checkout` with `fetch-depth: 1`, drop unneeded `submodules`/`lfs` |
 | 9 | **No `timeout-minutes`** | absent on the job; the default is 360 | `timeout-minutes:` at roughly 2 × `max_s` |
 | 10 | **Runner or matrix oversized** | a macOS or large runner for a job that is pure CPU-light; matrix dimensions that never differ in outcome | `ubuntu-latest`; prune cells that have been green in lockstep across the sampled runs |
+| 11 | **No `workflow_dispatch` on a slow workflow** | the workflow's `on:` lacks `workflow_dispatch`; a fix iteration therefore runs every workflow | `on: workflow_dispatch: inputs: filter: {description: test filter, required: false, default: ""}` and the test step reading it (`pytest ${{ inputs.filter }}`), so ci-fix's rung 2d can run this workflow alone, and only the failing tests within it |
 
 Estimated savings are derived, never invented: item 1's saving is the install
 step's median; item 3's is the long job's median multiplied by the fraction

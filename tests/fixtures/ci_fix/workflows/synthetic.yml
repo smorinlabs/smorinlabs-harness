@@ -1,0 +1,66 @@
+name: Synthetic
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: pytest -k expression
+        required: false
+        default: ""
+      job:
+        description: which job to run
+        type: choice
+        options: [all, unit, integration]
+        default: all
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: ruff check .
+  unit:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            python: "3.14"
+            experimental: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - name: Tests
+        working-directory: packages/core
+        env:
+          PYTHONHASHSEED: "0"
+        run: |
+          uv run pytest -x ${{ inputs.filter }}
+  integration:
+    needs: [lint, unit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: python:3.13-slim
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+    steps:
+      - uses: actions/checkout@v6
+      - run: apt-get update && apt-get install -y libpq-dev
+      - run: pip install -e .
+      - run: pytest tests/integration
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python -m pytest tests/smoke

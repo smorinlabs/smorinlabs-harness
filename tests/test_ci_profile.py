@@ -196,6 +196,39 @@ def test_accepts_bare_job_list(tmp_path):
     assert by_name(profile(p))["x"]["median_s"] == 30
 
 
+# ------------------------------------------------------ external workflows
+
+
+def test_runs_listing_marks_dynamic_workflow_jobs_external_and_sorts_them_last():
+    """GitHub-managed workflows (run `path` under `dynamic/`, e.g. the Copilot
+    reviewer) show up as jobs the repo cannot change. Real fixtures: the runs
+    listing plus the jobs of one dynamic run and one CI run from it."""
+    data = profile(
+        "--runs", FIXTURES / "runs_listing.json",
+        FIXTURES / "jobs_dynamic_run.json", FIXTURES / "jobs_ci_run.json",
+    )
+    jobs = by_name(data)
+    assert jobs["copilot-pull-request-reviewer"]["external"] is True
+    assert jobs["copilot-pull-request-reviewer"]["workflow_path"] == "dynamic/agents/copilot-pull-request-reviewer"
+    assert jobs["pytest"]["external"] is False
+    assert jobs["pytest"]["workflow_path"] == ".github/workflows/ci.yml"
+    assert data["jobs"][-1]["name"] == "copilot-pull-request-reviewer"  # last, whatever its duration
+    assert data["external_jobs"] == ["copilot-pull-request-reviewer"]
+
+
+def test_without_runs_listing_external_is_false_and_path_unknown():
+    jobs = by_name(profile(FIXTURES / "jobs_dynamic_run.json"))
+    assert jobs["copilot-pull-request-reviewer"]["external"] is False
+    assert jobs["copilot-pull-request-reviewer"]["workflow_path"] is None
+
+
+def test_text_output_flags_external_jobs():
+    result = run("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_dynamic_run.json", FIXTURES / "jobs_ci_run.json")
+    assert result.returncode == 0, result.stderr
+    assert "external" in result.stdout
+    assert "copilot-pull-request-reviewer" in result.stdout.splitlines()[-2] or "copilot" in result.stdout.splitlines()[-1]
+
+
 # --------------------------------------------------------- threshold parsing
 
 
