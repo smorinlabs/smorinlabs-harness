@@ -143,8 +143,9 @@ own rate limit, for example) is not CI. Say so and leave it to `pr-merge-flow`.
 
 1. The failed run's jobs and steps (`<run_id>` from step 1's list):
    `gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs" --jq '.jobs[] | select(.conclusion=="failure") | {id, name, failed_steps: [.steps[] | select(.conclusion=="failure") | .name]}'`
-2. The failed job's log:
-   `gh api "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`
+2. The failed job's log (the flag is required: `gh api` refuses a body that
+   contains ANSI color codes, which most test runners emit):
+   `gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`
 3. The failing test IDs:
    `python3 <skill-dir>/scripts/extract_failures.py --json "$SCRATCH/job-<job_id>.log"`
    → `{format, failures, packages}` for pytest, jest, cargo, or go. Exit 1

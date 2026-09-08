@@ -9,7 +9,7 @@ cases where the narrowest target is the whole step.
 ```bash
 gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs" \
   --jq '.jobs[] | select(.conclusion=="failure") | {id, name, failed_steps: [.steps[] | select(.conclusion=="failure") | .name]}'
-gh api "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"
+gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"
 python3 <skill-dir>/scripts/extract_failures.py --json "$SCRATCH/job-<job_id>.log"
 ```
 

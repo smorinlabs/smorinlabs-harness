@@ -17,7 +17,7 @@ because logs run to thousands of lines:
    `python3 <skill-dir>/scripts/ci_profile.py` (step 2);
 2. every file under `.github/workflows/`, by path;
 3. the latest log of each `slow` or `unmeasured` job, by path:
-   `gh api "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`.
+   `gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`.
 
 Only jobs classed `slow` or `unmeasured` are analyzed. Fast jobs are listed in
 the report as already under threshold.
