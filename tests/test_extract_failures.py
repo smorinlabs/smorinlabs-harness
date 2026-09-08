@@ -159,3 +159,22 @@ def test_json_carries_shell_quoted_ids(tmp_path):
     assert data["failures_quoted"] == ["'tests/test_x.py::test_case[$(touch /tmp/pwned)]'"]
     plain = extract(FIXTURES / "log_pytest.txt")
     assert plain["failures_quoted"][0] == "tests/test_sample.py::test_rollup_total"  # safe IDs stay bare
+
+
+def test_pytest_ids_are_parsed_bracket_aware(tmp_path):
+    """CodeRabbit (wave 2): a ` - ` or ` FAILED` inside `[param ids]` must not
+    end the ID; only a delimiter at bracket depth 0 does."""
+    log = tmp_path / "brackets.log"
+    log.write_text(
+        "2026-09-08T10:00:00.0000000Z FAILED tests/test_x.py::test_range[a - b] - AssertionError\n"
+        "2026-09-08T10:00:01.0000000Z tests/test_x.py::test_words[x FAILED y] FAILED [ 50%]\n"
+        "2026-09-08T10:00:02.0000000Z ERROR tests/test_x.py::test_setup[p - q - r]\n"
+        "2026-09-08T10:00:03.0000000Z FAILED tests/test_x.py::test_nested[a[1] - b[2]] - boom\n"
+    )
+    data = extract(log)
+    assert data["failures"] == [
+        "tests/test_x.py::test_range[a - b]",
+        "tests/test_x.py::test_words[x FAILED y]",
+        "tests/test_x.py::test_setup[p - q - r]",
+        "tests/test_x.py::test_nested[a[1] - b[2]]",
+    ]
