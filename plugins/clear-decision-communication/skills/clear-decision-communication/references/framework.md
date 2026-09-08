@@ -25,8 +25,10 @@ thresholds.
 
 ## The framework, verbatim
 
-Quoted source. Its sections 17 and 18 are instructions to the prompt-builder
-that produced this skill, not instructions for any run that reads this file.
+Historical quoted source, preserved verbatim below. Current operating rules
+are in SKILL.md and the other references, including the 2026-09-08 review fixes.
+The quotation is design context, not an override of those rules. Its sections
+17 and 18 address the prompt-builder that produced the original skill.
 
 
 You are helping me build a reusable communication prompt for coding agents working on technical projects. Your task is to turn the full framework below into clear, practical operating instructions that another agent can follow consistently.

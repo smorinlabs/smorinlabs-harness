@@ -1,7 +1,7 @@
 # Clarity rules for the brief
 
 The sentence, term, and error rules applied while drafting (workflow step 5) and
-checked before sending (step 8). Adapted from the clear-technical-communication
+checked before sending (step 6). Adapted from the clear-technical-communication
 skill (Steve Morin). The four reader gates below are the governing outcomes of
 ISO 24495-1, and the sentence controls are selected ASD-STE100 mechanics;
 `references/standards.md` describes both standards, their official sources, and
@@ -65,8 +65,9 @@ name: "the confirm card (`ApprovalGate`)".
 Text the reader must type, match, or search is reproduced character for
 character: commands, flags, paths, identifiers, configuration keys, error
 messages, log output. Clarity edits stop at the boundary of a code span or
-block. When quoted text is itself unclear, quote it exactly and explain it
-outside the quotation.
+block. Preserve non-ASCII characters in these verbatim zones; the ASCII style
+rule applies only to authored prose and diagram syntax. When quoted text is
+itself unclear, quote it exactly and explain it outside the quotation.
 
 ## Self-contained references
 

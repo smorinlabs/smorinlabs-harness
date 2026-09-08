@@ -5,8 +5,10 @@ skill must handle. Every fact, revision, test result, and repository detail
 below is invented for illustration and is not a claim about any real project.
 Read the one closest to the situation at hand before drafting; the shape is the
 point, not the wording.
-The code fences in this file only quote each rendered message; the message
-itself is sent as ordinary text with pipe tables, never inside a fence.
+The outer code fences in this file quote each rendered message; the message
+itself is sent as ordinary text with pipe tables. Alignment-dependent diagrams
+retain their own inner fences. Behavioral edge cases and grading expectations
+live separately in `../evals/evals.json`; examples alone are not validation.
 
 ## 1. Routine authorized work: the gate says no ask
 
@@ -93,8 +95,9 @@ Details: diff at src/validate/date.ts; test output in ci/run-4412.log.
 ## 4. Race condition: T3 by domain complexity, no record
 
 Situation: stale search results overwrite newer ones; fix is a sequence number
-check, 14 lines in `src/search/handler.ts`, with a test that forces
-out-of-order responses passing on commit `5e4f3a2`; impact limited to the
+check, 14 lines in `src/search/handler.ts`. Before drafting, the agent ran
+tests that force out-of-order success responses and an older error arriving
+after a newer success; both pass on commit `6f5e4d3`. Impact is limited to the
 search box; the project requires approval for user-visible behavior changes.
 
 Sizing: domain complexity high (timing); impact elevated because the behavior
@@ -126,12 +129,12 @@ results. Limit: older requests still consume network until they finish.
 What you would be accepting: no visible change except that stale results stop
 appearing. Reversal is one commit with no lasting effect.
 
-Evidence: Verified: a unit test that forces out-of-order responses passes on
-commit 5e4f3a2. Inferred, from reading the handler rather than a test: the
+Evidence: Verified: the out-of-order success test and the older-error-after-newer-success
+test both pass on commit 6f5e4d3. Inferred, from reading the handler rather than a test: the
 latest number and the response number are read on the same thread, so no
-interleaving can update the display with an older response. Not verified: behavior under a request that
-errors after a newer one succeeded; the error handler is unchanged and I
-propose a second test for it.
+interleaving can update the display with an older response. Not verified:
+production traffic; the controlled tests establish the two specified response
+orders, not every browser or network condition.
 
 Options:
   Q1.A  Approve the sequence-number fix (Recommended)  -- ships on the next deploy; 14 lines in src/search/handler.ts
@@ -140,10 +143,10 @@ Options:
 Would change my recommendation: a requirement to show every response, or a
 failing error-path test.
 
-On Q1.A I will: merge commit 5e4f3a2 into the release branch and add the
-error-path test before the deploy.
+On Q1.A I will: merge the verified commit 6f5e4d3 into the release branch.
+Deployment remains outside this approval.
 
-Details: diff at src/search/handler.ts; test in test/search/order.test.ts.
+Details: diff at src/search/handler.ts; both tests in test/search/order.test.ts.
 ```
 
 ## 5. Architectural direction during planning: T3 with a record
@@ -215,7 +218,8 @@ answer, because it is hard to reverse and the result of a real tradeoff.
 Situation: a one-line change lowers log retention from 90 days to 30 days,
 saving an estimated 1,800 USD per month; the compliance page requires audit
 logs to be kept 90 days and the setting governs both log kinds; deleted logs
-cannot be recovered.
+cannot be recovered. The user requested unattended analysis through the end of
+the day, with retention changes still requiring approval.
 
 Sizing: impact high (a compliance contract), reversibility high (deleted logs
 are gone). One line changed is not one axis low. Change type: conditional, one
@@ -245,15 +249,16 @@ policy is still in force; docs/policies.md was last edited 2025-11-03.
 Options:
   Q1.A  Split the setting: application logs 30 days, audit logs 90 (Recommended)  -- most of the saving; policy kept; one extra config key
   Q1.B  Lower retention for all logs to 30 days                                  -- full saving; audit logs breach the written policy; deleted logs are gone
-  Q1.C  Confirm the policy with its owner first                                  -- no change this week
+  Q1.C  Defer changes pending clarification of the policy                        -- existing retention stays in place
 
 Would change my recommendation: confirmation that the 90-day policy is retired.
 
 On Q1.A I will: add a separate audit-retention key, keep it at 90 days, and
 lower the application-log key to 30 days, then rerun the config tests.
 
-If I hear nothing by the end of the day: Q1.C, because deleted logs cannot be
-restored.
+If I hear nothing by the end of the day: leave the retention change pending
+and the existing settings intact, because deleted logs cannot be restored.
+This fallback changes no retention setting and grants no approval.
 
 Record: retained as Decision Q1 in docs/adr/ once you answer.
 
@@ -282,8 +287,9 @@ between attempts.
 
 What changes. Backoff is the wait between retries. Fixed backoff waits the same
 200 ms every time; exponential backoff doubles the wait each time, and jitter
-adds a small random amount so many warmers do not retry in lockstep. One run
-with five attempts, illustrative timings:
+adds a small random amount so many warmers do not retry in lockstep. This
+illustrative schedule waits once before each of five attempts; there is no
+immediate first attempt in this example:
 | Attempt | Fixed (today) | Exponential with jitter (proposed) |
 |---------|---------------|------------------------------------|
 | 1       | wait 200 ms   | wait 100 ms plus 0 to 50 ms        |
@@ -292,22 +298,25 @@ with five attempts, illustrative timings:
 | 4       | wait 200 ms   | wait 800 ms plus 0 to 400 ms       |
 | 5       | wait 200 ms   | wait 1,600 ms plus 0 to 800 ms, capped at 2 s |
 Rule preserved: never more than five attempts, never a wait above 2 s.
-Boundary case: attempt 5 hits the cap, so the longest possible run is about
-4.3 s (150 + 300 + 600 + 1,200 + 2,000 ms) instead of 1 s today.
+Boundary case: the fifth wait can reach the cap. Maximum cumulative waiting is
+4.25 s (150 + 300 + 600 + 1,200 + 2,000 ms), versus 1 s today. These totals
+exclude request execution and network timeouts; they do not bound total runtime.
 
-What you would be accepting: a cold start for one internal dashboard can take
-up to about 3.3 s longer when the cache source is down. Reversal is one commit.
+What you would be accepting: the schedule can add up to 3.25 s of backoff
+waiting for one internal dashboard. Total cold-start time also depends on how
+long each request takes. Reversal is one commit.
 
 Evidence: Verified: tests on commit 7b6c5d4 assert every attempt's wait falls
 inside its window, and the attempt cap. The timing table above is illustrative,
-computed from the parameters, not recorded from a run.
+computed from the parameters, not recorded from a run. Not verified: maximum
+request duration; an end-to-end runtime bound needs a bound on each attempt.
 
 Options:
-  Q1.A  Approve exponential backoff with jitter (Recommended)  -- fewer retry storms; slightly slower worst case
+  Q1.A  Approve exponential backoff with jitter (Recommended)  -- spreads retries; adds up to 3.25 s of scheduled waiting
   Q1.B  Keep fixed 200 ms                                       -- no change; the incident review's concern stays open
 
-Would change my recommendation: a requirement that the dashboard cold start
-never exceeds today's worst case.
+Would change my recommendation: a strict total cold-start deadline; measure or
+bound request duration before approving a schedule against that deadline.
 
 On Q1.A I will: merge commit 7b6c5d4.
 

@@ -1,42 +1,43 @@
 # clear-decision-communication
 
-Composes and delivers a decision request from an agent to a human during a run,
-as inline ASCII text. It first decides whether a new decision is needed at all:
-facts are read, run, fetched, or delegated and never reach the human as a
-question; existing authorization persists; the question must be sharp enough to
-state in one sentence; and the agent never fills in the human's answer. It then
-sizes the ask by seven diagnostic axes (impact, reversibility, departure from
-agreement, uncertainty, tradeoff complexity, domain complexity, context gap)
-into three tiers, where the highest single axis sets the tier and only the
-elevated axes expand: T1 Confirm in two or three sentences, T2 Compact brief,
-T3 Full brief with the representation the change type requires. Representation
-is chosen from the change type, not the tier: a same-input table for
-conditional behavior, a worked example with its boundary case and invariant for
-an algorithm, an event sequence with identical event order for a race, and a
-small ASCII system diagram with coded nodes, shown baseline-first with the
-change as ghosts, for an architectural move. The brief answers six questions in
-a fixed order: the decision and recommendation first, then context, the
-comparison or example, consequences with verified, inferred, assumed, and
-unknown told apart, and the exact action approval authorizes. Questions are
-numbered `Q1`, `Q2` across the whole run and options lettered `Q1.A`, `Q1.B`,
-so a reply is one word; the recommended option is listed first and is always A,
-and the recommendation line says when the runner-up would win; every option is
-a verb phrase naming its consequence; when the run cannot wait, a silence
-default names the most reversible option, never the recommended one. Plain text
-is canonical and a question-dialog rendering is derived from it, with the brief
-ending its turn before the dialog opens because same-turn prose may never
-render. Replies with conditions, skips, redirects, and ask-backs are handled; a
-reader who says "I don't get this" gets a concrete example, not a rephrase; and
-a decision that is hard to reverse, surprising without context, or the result
-of a real tradeoff is retained as a record keyed by its question ID. The skill
-is self-contained by design: it synthesizes a decision-communication framework
-with the clarity rules of `clear-technical-communication`, the two standards
-behind them (ISO 24495-1 for the brief as a whole, ASD-STE100 for its
-sentences), and the text forms of `show-me` inside its own files, names no other skill in its body, and never
-produces HTML or rendered diagrams, so a downstream tool can render its text.
+Composes and delivers a self-contained decision request during an agent run.
+It checks existing authorization, investigates discoverable facts, and asks
+for necessary human-supplied information without turning it into an approval
+decision. Silence and skip never grant permission to act.
+
+Seven diagnostic axes determine preparation and explanation: impact,
+reversibility, departure from agreement, uncertainty, tradeoff complexity,
+domain complexity, and context gap. The highest of the first six sets T1
+(Confirm), T2 (Compact brief), or T3 (Full brief); context is restored at every
+tier. Verification can lower uncertainty before final sizing. Length targets
+prompt editing but never hide material consequences or approval boundaries.
+
+The brief puts the decision first, then the evidence-based recommendation or
+explicit neutrality, necessary context, a focused comparison, consequences,
+and the exact action each choice authorizes. Representation follows the change:
+same-input tables, worked examples, event sequences, or small ASCII diagrams.
+Verbatim paths, identifiers, and captured output keep their exact characters,
+including Unicode.
+
+Questions use IDs such as `Q1`; options use `Q1.A` and `Q1.B`. A supported
+recommendation is A and appears first. Neutral questions mark no recommendation.
+Options keep their meanings under their IDs; revised choices supersede the old
+question, and stale replies authorize no action. Conditions, redirects, skips,
+and requests for explanation have explicit handling.
+
+The host's available tools determine whether the brief uses a dialog,
+asynchronous question, or ordinary text. Independent authorized work can
+continue while required input remains pending. A separate delivering turn is
+used only on surfaces that need it. Significant decisions retain their
+rationale, alternatives, and approval scope when at least two apply: hard to
+reverse, surprising without context, or the result of a real tradeoff.
+
+The skill is self-contained. Its references synthesize the owner's framework,
+the clarity rules and standards behind `clear-technical-communication`, and
+text forms from `show-me`. It produces no HTML artifacts or rendered diagrams.
 
 **Triggers on:** the moment an agent is about to ask the user to choose,
-approve, merge, deploy, or accept a deviation, before any question dialog is
+approve, merge, deploy, or accept a deviation, before a decision dialog is
 raised; "ask me properly", "frame this decision", "what do you need me to
 decide", "turn this into a decision". It does not review someone else's draft
 (`clear-technical-communication`), walk a whole pile of questions
@@ -52,11 +53,20 @@ request, or a diff to turn into a decision request.
 | Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/clear-decision-communication/skills/clear-decision-communication" ~/.claude/skills/clear-decision-communication` |
 | Direct copy | No marketplace access | copy `plugins/clear-decision-communication/skills/clear-decision-communication/` into `~/.claude/skills/` |
 
-**Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
-dev-symlink path, also linking into `~/.agents/skills` (Codex's current
-skills location). On Codex there is no question dialog; the skill sends its
-canonical plain-text form and reads the next message as the answer.
+**Codex:** install from a terminal with a Codex CLI that supports plugins:
+
+```sh
+codex plugin marketplace add smorinlabs/smorinlabs-harness
+codex plugin add clear-decision-communication@smorinlabs-harness
+```
+
+For development, link the cloned skill into `~/.agents/skills`. Dialog support
+depends on the surface and mode. Inspect the actual tool schema:
+`request_user_input_async` has exposed `title` and string `options` on one
+surface, but that is an example, not a contract for every tool with that name.
+`request_user_input` likewise follows its current limits and mode restrictions.
+Use ordinary text when no suitable question tool is available or permitted.
+Preselection and tool completion without an answer do not count as consent.
 
 ## Example session
 
@@ -72,22 +82,41 @@ canonical plain-text form and reads the next message as the answer.
 > on commit 3f2a9c1. Not verified: third-party caller compatibility", three
 > lettered options each naming its consequence, what would change the
 > recommendation, and the exact action on approval. The user replies "A, but
-> behind a flag for the API"; the agent restates "Q1: decided A with the
-> condition: API path flag-gated, default off" and proceeds.
+> behind a flag for the API". Because that changes the action's scope, the agent
+> records "Q2: decided A, supersedes Q1; API path flag-gated, default off" and
+> proceeds under that explicit conditional approval without asking again.
 
 ## Files
 
 | File | Role |
 |---|---|
-| `SKILL.md` | the gate, the tier table, the change-type table, the six questions, the canonical brief template, IDs and reply grammar, confidence statuses, the pre-send check |
+| `SKILL.md` | the gate, preparation and final sizing, representations, the brief template, pre-send check, host-aware delivery, stable IDs, and reply handling |
 | `references/axes-and-tiers.md` | the seven axes verbatim, level tests, the tier rule, stage-of-work guidance |
 | `references/representation.md` | the ASCII forms catalog, F1 to F21, and the diagram rules; F16 to F21 add the span chart, layer stack, containment boxes, decision tree, threshold on a scale, and a general tree |
 | `references/clarity.md` | reader gates, sentence and term controls, the error catalog |
 | `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
-| `references/delivery.md` | the two-turn gate, the dialog mapping, batching, the silence default, reply handling |
+| `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, and reply handling |
 | `references/decision-record.md` | when a record is due and its template |
-| `references/worked-examples.md` | eight fictional situations rendered at every tier; also the test suite |
-| `references/framework.md` | the source framework verbatim and the provenance of every borrowed passage |
+| `references/worked-examples.md` | eight fictional situations rendered at every tier; illustrations, not behavioral validation |
+| `references/framework.md` | historical source framework preserved verbatim and provenance |
+| `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
+| `evals/run_evals.py` | bounded CLI runner that preserves inputs, source hashes, process evidence, and ungraded review records |
+| `evals/README.md` | runner usage, process evidence, semantic grading, and simulation limits |
+
+## Behavioral validation
+
+The evaluation runner starts a fresh scratch session for each scenario and
+tool. It stages the skill, its references, and raw scenario inputs, keeping the
+grading expectations separate. Outputs, process status, and tool versions are
+retained for review. Process completion is not a behavioral pass: a reviewer
+must judge the actual response against the expectations, including positive
+and negative controls for approval, silence, skip, and superseded replies.
+
+See [the evaluation guide](../../plugins/clear-decision-communication/skills/clear-decision-communication/evals/README.md)
+for commands. The scenarios simulate decision communication and intended next
+actions; they do not perform real merges or validate native dialog rendering.
+The [0.2.0 validation record](../validation/clear-decision-communication-0.2.0.md)
+records the tested source snapshots, reviewed outcomes, and inverse controls.
 
 ## Provenance
 

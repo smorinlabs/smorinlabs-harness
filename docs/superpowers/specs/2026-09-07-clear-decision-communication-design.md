@@ -1,5 +1,9 @@
 # clear-decision-communication: design record (2026-09-07)
 
+**Status:** the original decisions below are historical. The approved
+2026-09-08 review addendum at the end of this file supersedes the affected
+authorization, reply, sizing, delivery, and evaluation rules for plugin 0.2.0.
+
 The research and decisions behind the `clear-decision-communication` skill
 (PROJECTS P43). Part 1 is the inventory of every installed communication prompt
 and the first candidate list. Part 2 is the per-candidate research with the
@@ -269,3 +273,32 @@ ordered, labeled views. Transferable items:
 
 Out: isometric rendering, packet animation, palette and fonts, build pipeline, docs
 folder policy.
+
+## Review addendum: CDC-01 through CDC-12 (2026-09-08)
+
+The owner approved implementing all twelve findings from the review of plugin
+0.1.2. These decisions amend the original rules; the quoted framework and the
+earlier research remain preserved as historical evidence. Plugin 0.2.0 adds
+host-adapted delivery, an explicit superseded-question state, and reusable
+behavioral evaluation, so it receives a minor version bump. No release or merge
+is authorized by this implementation decision.
+
+| Finding | Accepted correction | Reason |
+|---|---|---|
+| CDC-01 | Silence may only pause, defer, or perform already-authorized work; skip selects no fallback and changes no deadline. | A stated default cannot satisfy an approval gate. |
+| CDC-02 | Material changes to options, recommendation, or approval scope supersede the old question ID; stale replies execute no choice. | Preserve what each option ID authorizes while retaining supported recommendations as A. |
+| CDC-03 | Run a decision-relevant check before requesting approval when authorized; correct the race example accordingly. | A test capable of reversing the recommendation belongs before the merge decision. |
+| CDC-04 | Request exact necessary facts when authorized investigation cannot obtain them and the user can supply them. | Information requests must not become avoidable blockers or artificial approval choices. |
+| CDC-05 | Inspect available question tools and host restrictions; use self-contained payloads and conditional two-turn delivery. | Tool availability and schemas vary by surface and mode. |
+| CDC-06 | Re-rate uncertainty after preparation and derive the final tier from remaining issues. | Completed verification can resolve the reason for a full brief. |
+| CDC-07 | Keep word counts as review targets; preserve material caveats beyond them. | A shorter brief must not conceal information that could change the answer. |
+| CDC-08 | Use ASCII for authored prose and diagram syntax while preserving exact verbatim characters. | A non-ASCII path or error must not identify a different artifact after rewriting. |
+| CDC-09 | Render neutrality without a recommendation marker when established criteria select no winner. | Do not bias a choice whose deciding preference belongs to the user. |
+| CDC-10 | Name cumulative retry waiting separately from total runtime and define the attempt schedule. | Backoff calculations alone exclude request duration and timeouts. |
+| CDC-11 | Order the workflow as draft, pre-send check, deliver, then handle the answer. | The checklist must run before the message it validates is sent. |
+| CDC-12 | Add reusable raw scenarios, isolated fresh-session runs, and separate semantic grading. | Examples and successful process exits do not establish behavioral correctness. |
+
+The trigger remains an agent's own decision request during a run; no sibling
+skill is re-carved. Information requests leave the decision-brief workflow.
+The independent scenario runner tests communication and intended next actions,
+not actual external mutations or native dialog rendering.
