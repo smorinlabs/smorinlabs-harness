@@ -66,8 +66,9 @@ triggered by `push` or `pull_request` for that commit (accepted markers:
 dispatched runs are unaffected — GitHub docs, "Skipping workflow runs",
 verified 2026-09-08). Put it on its own body line, not in the subject, so
 conventional-commit tooling (release-please lifts `fix(...)` subjects into
-changelogs) reads a clean subject. That the body placement is honored is a
-verify-once item for the first real 2d run.
+changelogs) reads a clean subject. The body placement is honored: verified
+2026-09-08 on a draft PR, where the fix commit with `[skip ci]` in the body
+started no `pull_request` run and carried only the dispatched run.
 
 ```bash
 T0=$(date -u +%Y-%m-%dT%H:%M:%SZ)                   # before the commit: a fast local clock must not miss the run
