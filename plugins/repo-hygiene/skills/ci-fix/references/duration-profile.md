@@ -39,9 +39,10 @@ several workflows shares the ten among them; scope to one workflow with
 ## Profile
 
 ```bash
-# find + xargs, not a bare glob: zero fetched runs must not abort the shell under zsh
-find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"          # table
-find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" --json   # for --optimize
+# find | xargs -r, not a bare glob: zero fetched runs must neither abort the shell under zsh
+# nor invoke the profiler with no input (-r: GNU stops, BSD/macOS never ran it anyway)
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"          # table
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" --json   # for --optimize
 ```
 
 Per job the script reports:

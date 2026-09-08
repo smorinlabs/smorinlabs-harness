@@ -47,11 +47,15 @@ when that workflow declares `on: workflow_dispatch`. Rung 2d uses that so a
 fix iteration costs one workflow in CI, not all of them.
 
 **When 2d applies.** Only when the push would start more than one
-non-external workflow (inventory `triggers` containing `push` or
-`pull_request`, minus the profile's `external` jobs' workflows). With a single
-repo-owned workflow, plain push-and-watch is rung 2 and that same run, all
-green, is rung 3; 2d there would add a marker commit, a dispatch, and a second
-full run for nothing.
+non-external workflow. Count from the inventory's `triggers` **and**
+`trigger_filters`, conservatively: a workflow counts when its `push` or
+`pull_request` trigger has no filter that excludes this event — `branches` /
+`branches-ignore` against the branch, `paths` / `paths-ignore` against the
+files the fix changed, `types` against the event (a plain push is not a
+`pull_request` unless a PR is open). When a filter cannot be evaluated, do
+not count the workflow: a needless 2d costs two commits and a dispatch, a
+missed one costs nothing. With a single counted workflow, plain
+push-and-watch is rung 2 and that same run, all green, is rung 3.
 
 **Decide the marker before committing, from the inventory.** The working tree
 you are about to push *is* the copy GitHub will evaluate (verified 2026-09-08:

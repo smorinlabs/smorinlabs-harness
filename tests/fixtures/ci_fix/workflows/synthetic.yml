@@ -2,7 +2,9 @@ name: Synthetic
 on:
   push:
     branches: [main]
+    paths-ignore: ["docs/**", "*.md"]
   pull_request:
+    types: [opened, synchronize]
   workflow_dispatch:
     inputs:
       filter:
@@ -96,3 +98,21 @@ jobs:
         run: ./scripts/flaky.sh
       - shell: python
         run: print("hi")
+  odd-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: only a name, no uses and no run
+      - run: echo real
+  seq-include:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [18, 20]
+        include:
+          - node: 18
+            coverage: "no"
+          - node: 18
+            coverage: "yes"
+          - os: ubuntu-latest
+            node: 22

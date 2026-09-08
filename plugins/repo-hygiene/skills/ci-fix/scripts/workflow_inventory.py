@@ -7,6 +7,7 @@ uses (`unit (ubuntu-latest, 3.12)`), `needs`, `container`, `services`,
 `timeout-minutes`, and every step with its display name (`Run <uses>` /
 `Run <first run line>`, exactly as the jobs API names unnamed steps), its
 `run:` text, `working-directory`, `env`, `if`, `continue-on-error`, `shell`,
+the workflow's `trigger_filters` (branches, paths, types per push/pull_request),
 and two flags the local sweep keys on: `kind` (`run` or `uses`) and `setup`
 (installers that write outside the repository, on any line of the step, and
 must not run on the host). Jobs carry merged workflow+job `env` and
@@ -108,27 +109,35 @@ def expand_matrix(job_id: str, runs_on, matrix, job_name: str | None = None) -> 
     include = matrix.get("include") or []
     exclude = matrix.get("exclude") or []
     axes = {k: v for k, v in matrix.items() if k not in ("include", "exclude") and isinstance(v, list)}
+    axis_keys = set(axes)
     cells: list[dict] = []
     if axes:
         keys = list(axes)
         for combo in itertools.product(*(axes[k] for k in keys)):
             cells.append(dict(zip(keys, combo)))
+    # GitHub semantics: an include is matched against the ORIGINAL axis values
+    # only; on a match its non-axis values are added, and a later include may
+    # overwrite a value an earlier include added — axis values are never
+    # overwritten. An include that matches no cell becomes a new cell.
     for inc in include:
         if not isinstance(inc, dict):
             continue
+        inc_axes = {k: v for k, v in inc.items() if k in axis_keys}
         matched = False
         for cell in cells:
-            shared = {k for k in inc if k in cell}
-            if shared and all(cell[k] == inc[k] for k in shared):
-                cell.update({k: v for k, v in inc.items() if k not in cell})
+            if cell.get("_from_include"):
+                continue
+            if all(cell.get(k) == v for k, v in inc_axes.items()):
+                cell.update({k: v for k, v in inc.items() if k not in axis_keys})
                 matched = True
         if not matched:
-            cells.append(dict(inc))
+            cells.append({**inc, "_from_include": True})
     for exc in exclude:
         if isinstance(exc, dict):
             cells = [c for c in cells if not all(c.get(k) == v for k, v in exc.items())]
     out = []
     for cell in cells:
+        cell.pop("_from_include", None)
         if job_name:
             display = substitute_matrix(str(job_name), cell)
         else:
@@ -151,7 +160,7 @@ def step_record(index: int, step: dict) -> dict:
     return {
         "index": index,
         "display_name": display,
-        "kind": "uses" if uses else "run",
+        "kind": "uses" if uses else ("run" if run is not None else "other"),
         "uses": uses,
         "run": run,
         "working_directory": step.get("working-directory"),
@@ -161,6 +170,23 @@ def step_record(index: int, step: dict) -> dict:
         "shell": step.get("shell"),
         "setup": is_setup(run),
     }
+
+
+FILTER_KEYS = {"branches": "branches", "branches-ignore": "branches_ignore", "paths": "paths", "paths-ignore": "paths_ignore", "types": "types"}
+
+
+def trigger_filters_of(doc: dict) -> dict:
+    """Per `push`/`pull_request`(-target) trigger: its branch, path, and event-type
+    filters, so a caller can tell whether the pending event would start it."""
+    on = doc.get("on", doc.get(True))
+    out = {}
+    if not isinstance(on, dict):
+        return out
+    for name in ("push", "pull_request", "pull_request_target"):
+        if name in on:
+            spec = on.get(name) or {}
+            out[name] = {v: (spec.get(k) if isinstance(spec, dict) else None) for k, v in FILTER_KEYS.items()}
+    return out
 
 
 def triggers_of(doc: dict) -> tuple[list[str], dict | None]:
@@ -235,7 +261,14 @@ def inventory_file(path: str) -> dict:
                 "steps": [step_record(i, s or {}) for i, s in enumerate(job.get("steps") or [])],
             }
         )
-    return {"path": path, "name": doc.get("name"), "triggers": triggers, "dispatch_inputs": dispatch, "jobs": jobs}
+    return {
+        "path": path,
+        "name": doc.get("name"),
+        "triggers": triggers,
+        "trigger_filters": trigger_filters_of(doc),
+        "dispatch_inputs": dispatch,
+        "jobs": jobs,
+    }
 
 
 def render_text(data: dict) -> str:

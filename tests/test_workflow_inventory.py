@@ -16,7 +16,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "plugins/repo-hygiene/skills/ci-fix/scripts/workflow_inventory.py"
 WF = REPO_ROOT / "tests/fixtures/ci_fix/workflows"
-REAL = WF / "ci_real.yml"  # this repo's CI workflow, verbatim
+REAL = WF / "ci_real.yml"  # this repo's CI workflow, copied verbatim (kept in sync by hand)
 SYNTH = WF / "synthetic.yml"
 
 assert SCRIPT.is_file(), f"workflow_inventory.py not found at {SCRIPT}"
@@ -47,8 +47,8 @@ def jobs_of(data, path):
 def test_real_workflow_triggers_and_jobs():
     wf, jobs = jobs_of(inventory(REAL), "ci_real.yml")
     # PyYAML parses a bare `on:` key as boolean True; the script must still find it
-    assert wf["triggers"] == ["pull_request", "push"]
-    assert wf["dispatch_inputs"] is None
+    assert wf["triggers"] == ["pull_request", "push", "workflow_dispatch"]
+    assert wf["dispatch_inputs"] == {}  # the trigger is declared with no inputs
     assert set(jobs) == {"plugin-validate", "static-checks", "pytest", "gen-check"}
     assert all(j["os_family"] == "linux" for j in jobs.values())
 
@@ -199,3 +199,36 @@ def test_matrix_job_with_name_uses_the_substituted_name_as_display():
     cells = jobs["named-matrix"]["matrix_cells"]
     assert sorted(c["display_name"] for c in cells) == ["nm (ubuntu-latest)", "nm (windows-latest)"]
     assert {c["os_family"] for c in cells} == {"linux", "windows"}
+
+
+# ------------------------------------------------- PR #55 review findings
+
+
+def test_step_with_neither_uses_nor_run_is_not_runnable():
+    _, jobs = jobs_of(inventory(SYNTH), "synthetic.yml")
+    steps = jobs["odd-steps"]["steps"]
+    assert steps[0]["kind"] == "other" and steps[0]["run"] is None
+    assert steps[1]["kind"] == "run"
+    text = run(SYNTH).stdout
+    assert any(l.strip().startswith("odd-steps ") and "sweepable=1" in l for l in text.splitlines())
+
+
+def test_later_include_overwrites_earlier_include_values_but_never_axes():
+    """GitHub: an include matches on the ORIGINAL axis values; values it adds
+    can be overwritten by a later include; axis values never are."""
+    _, jobs = jobs_of(inventory(SYNTH), "synthetic.yml")
+    cells = {c["display_name"]: c for c in jobs["seq-include"]["matrix_cells"]}
+    assert cells["seq-include (ubuntu-latest, 18, yes)"]["coverage"] == "yes"  # second include won
+    assert "seq-include (ubuntu-latest, 20)" in cells  # untouched axis cell
+    assert "seq-include (ubuntu-latest, 22)" in cells  # include that matched no cell: new cell
+    assert len(cells) == 3
+
+
+def test_trigger_filters_are_exposed():
+    wf, _ = jobs_of(inventory(SYNTH), "synthetic.yml")
+    f = wf["trigger_filters"]
+    assert f["push"] == {"branches": ["main"], "branches_ignore": None, "paths": None, "paths_ignore": ["docs/**", "*.md"], "types": None}
+    assert f["pull_request"]["types"] == ["opened", "synchronize"] and f["pull_request"]["branches"] is None
+    real, _ = jobs_of(inventory(REAL), "ci_real.yml")
+    assert real["trigger_filters"]["push"]["branches"] == ["main"]
+    assert real["trigger_filters"]["pull_request"] == {"branches": None, "branches_ignore": None, "paths": None, "paths_ignore": None, "types": None}

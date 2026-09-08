@@ -89,8 +89,9 @@ gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10${b:+&branch
 for id in $(python3 -c 'import json,sys; print(*[r["id"] for r in json.load(open(sys.argv[1]))["workflow_runs"]])' "$SCRATCH/profile/runs.json"); do
   gh api "repos/{owner}/{repo}/actions/runs/$id/jobs?per_page=100" > "$SCRATCH/profile/jobs-$id.json"
 done
-# find, not a glob: zero fetched runs must not abort the shell (zsh: "no matches found")
-find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"
+# find | xargs -r, not a glob: zero fetched runs must neither abort the shell (zsh: "no matches
+# found") nor invoke the profiler with no input (GNU xargs would; -r stops it, a no-op on BSD)
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"
 ```
 
 Zero files found → skip the script: every job is `unmeasured` and the rules
