@@ -13,8 +13,12 @@ test identifiers in the form each runner accepts back as a filter:
                                                          subtests are dropped)
 
 `--format auto` (default) picks the runner with the most matches. Output is
-one ID per line, or with `--json` an object {format, failures, packages}
-(`packages` is populated for go from `FAIL <pkg>` lines).
+one ID per line, or with `--json` an object {format, failures,
+failures_quoted, packages}. `failures_quoted` is each ID passed through
+`shlex.quote`: a contributor controls test names and parameter IDs, and
+`$(...)` inside double quotes executes, so local commands take the quoted
+form verbatim and never re-interpolate the bare one. `packages` is populated
+for go from `FAIL <pkg>` lines.
 
 Exit 0 when at least one failure was recognized, 1 when none, 2 on usage error.
 """
@@ -24,13 +28,16 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import sys
 
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s?")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
-PYTEST_SUMMARY_RE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+::\S+?)(?:\s+-\s.*)?$")
-PYTEST_VERBOSE_RE = re.compile(r"^(\S+::\S+)\s+(?:FAILED|ERROR)\b")
+# IDs may contain whitespace inside `[param ids]`; they end at the ` - reason`
+# delimiter (summary lines) or before ` FAILED`/` ERROR` (verbose lines).
+PYTEST_SUMMARY_RE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+::.+?)(?:\s+-\s.*)?$")
+PYTEST_VERBOSE_RE = re.compile(r"^(\S+::.+?)\s+(?:FAILED|ERROR)\b")
 JEST_BLOCK_RE = re.compile(r"^●\s+(.+?)\s*$")
 JEST_MARK_RE = re.compile(r"^✕\s+(.+?)(?:\s+\(\d+\s*m?s\))?\s*$")
 CARGO_HEADER_RE = re.compile(r"^----\s+(\S+)\s+stdout\s+----$")
@@ -95,12 +102,21 @@ def extract(lines: list[str], fmt: str) -> dict:
     }
     if fmt != "auto":
         failures, packages = results[fmt]
-        return {"format": fmt if failures else None, "failures": failures, "packages": packages}
+        return _result(fmt if failures else None, failures, packages)
     best = max(results, key=lambda k: len(results[k][0]))  # ties keep dict order
     failures, packages = results[best]
     if not failures:
-        return {"format": None, "failures": [], "packages": []}
-    return {"format": best, "failures": failures, "packages": packages}
+        return _result(None, [], [])
+    return _result(best, failures, packages)
+
+
+def _result(fmt, failures, packages) -> dict:
+    return {
+        "format": fmt,
+        "failures": failures,
+        "failures_quoted": [shlex.quote(f) for f in failures],
+        "packages": packages,
+    }
 
 
 def read_lines(paths: list[str]) -> list[str]:

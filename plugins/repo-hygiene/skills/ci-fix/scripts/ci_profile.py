@@ -11,7 +11,16 @@ median and max duration (completed_at − started_at), median queue wait
 median exceeds it, `fast` otherwise, `unmeasured` when no sample completed; skipped and cancelled jobs are never
 samples — a skipped job is 0s and a cancelled one is truncated),
 the slowest step by median, and `wait_bound_s`, a data-derived lifetime for a
-CI-wait monitor: ceil(1.5 × (median + queue)) with a 60s floor.
+CI-wait monitor: ceil(1.5 × (median + queue)) with a 60s floor. An
+`unmeasured` job has no samples, so its `median_s`, `max_s`, and
+`wait_bound_s` are null: callers fall back to the longest measured job's bound
+(or, with no measured job at all, to 1.5 × the failed run's own duration).
+
+Jobs are keyed by (`workflow_name`, `name`): two workflows that both run a
+job called `test` stay two rows, shown as `<workflow> / <job>` only when the
+bare name collides. A run whose `total_count` exceeds the jobs delivered is
+listed under `truncated_runs` and warned about on stderr — fetch with
+`per_page=100` (or paginate).
 
 Exit 0 on success, 2 on a usage error (bad threshold, unreadable file).
 No network: the fetch recipe lives in the skill body.
@@ -28,7 +37,6 @@ import sys
 from datetime import datetime, timezone
 
 DURATION_RE = re.compile(r"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")
-UNITS = {"h": 3600, "m": 60, "s": 1}
 EXCLUDED_CONCLUSIONS = {"skipped", "cancelled"}
 
 
@@ -57,7 +65,8 @@ def seconds_between(start: str | None, end: str | None) -> float | None:
     return (b - a).total_seconds()
 
 
-def load_jobs(path: str) -> list[dict]:
+def load_jobs(path: str) -> tuple[list[dict], bool]:
+    """Jobs from one run's response, and whether the page was truncated."""
     try:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
@@ -68,7 +77,15 @@ def load_jobs(path: str) -> list[dict]:
     jobs = data.get("jobs") if isinstance(data, dict) else data
     if not isinstance(jobs, list):
         raise SystemExit(f"error: {path} has no `jobs` list")
-    return jobs
+    total = data.get("total_count") if isinstance(data, dict) else None
+    truncated = isinstance(total, int) and total > len(jobs)
+    if truncated:
+        print(
+            f"warning: {path} holds {len(jobs)} of {total} jobs — the jobs endpoint pages; "
+            f"fetch with per_page=100 or paginate",
+            file=sys.stderr,
+        )
+    return jobs, truncated
 
 
 def fmt_secs(value: float | None) -> str:
@@ -83,16 +100,21 @@ def fmt_secs(value: float | None) -> str:
 
 
 def profile(files: list[str], threshold_s: int) -> dict:
-    durations: dict[str, list[float]] = {}
-    queues: dict[str, list[float]] = {}
-    in_progress: dict[str, int] = {}
-    excluded: dict[str, int] = {}
-    steps: dict[str, dict[str, list[float]]] = {}
-    order: list[str] = []
+    Key = tuple  # (workflow_name, job name)
+    durations: dict[Key, list[float]] = {}
+    queues: dict[Key, list[float]] = {}
+    in_progress: dict[Key, int] = {}
+    excluded: dict[Key, int] = {}
+    steps: dict[Key, dict[str, list[float]]] = {}
+    order: list[Key] = []
+    truncated_runs: list[str] = []
 
     for path in files:
-        for job in load_jobs(path):
-            name = job.get("name", "<unnamed>")
+        jobs, truncated = load_jobs(path)
+        if truncated:
+            truncated_runs.append(path)
+        for job in jobs:
+            name = (job.get("workflow_name") or "", job.get("name", "<unnamed>"))
             if name not in durations:
                 order.append(name)
                 durations[name], queues[name], in_progress[name], excluded[name], steps[name] = [], [], 0, 0, {}
@@ -112,8 +134,14 @@ def profile(files: list[str], threshold_s: int) -> dict:
                 if sdur is not None:
                     steps[name].setdefault(step.get("name", "<unnamed>"), []).append(sdur)
 
+    bare_counts: dict[str, int] = {}
+    for _, bare in order:
+        bare_counts[bare] = bare_counts.get(bare, 0) + 1
+
     rows = []
     for name in order:
+        wf, bare = name
+        display = f"{wf} / {bare}" if bare_counts[bare] > 1 and wf else bare
         samples = durations[name]
         step_rows = sorted(
             ({"name": s, "median_s": statistics.median(v)} for s, v in steps[name].items()),
@@ -124,7 +152,9 @@ def profile(files: list[str], threshold_s: int) -> dict:
             median = statistics.median(samples)
             queue_median = statistics.median(queues[name]) if queues[name] else 0.0
             row = {
-                "name": name,
+                "name": display,
+                "job": bare,
+                "workflow_name": wf or None,
                 "class": "slow" if median > threshold_s else "fast",
                 "samples": len(samples),
                 "in_progress": in_progress[name],
@@ -138,7 +168,9 @@ def profile(files: list[str], threshold_s: int) -> dict:
             }
         else:
             row = {
-                "name": name,
+                "name": display,
+                "job": bare,
+                "workflow_name": wf or None,
                 "class": "unmeasured",
                 "samples": 0,
                 "in_progress": in_progress[name],
@@ -154,7 +186,12 @@ def profile(files: list[str], threshold_s: int) -> dict:
 
     # slowest first; unmeasured jobs sort to the top so they are never overlooked
     rows.sort(key=lambda r: (r["median_s"] is not None, -(r["median_s"] or 0)))
-    return {"threshold_s": threshold_s, "runs_sampled": len(files), "jobs": rows}
+    return {
+        "threshold_s": threshold_s,
+        "runs_sampled": len(files),
+        "truncated_runs": truncated_runs,
+        "jobs": rows,
+    }
 
 
 def render_text(data: dict) -> str:

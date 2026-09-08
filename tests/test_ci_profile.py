@@ -218,3 +218,40 @@ def test_missing_file_is_a_usage_error(tmp_path):
     result = run(tmp_path / "nope.json")
     assert result.returncode == 2
     assert "nope.json" in result.stderr
+
+
+# ------------------------------------------------- PR #49 review findings
+
+
+def test_same_job_name_in_two_workflows_is_two_rows(tmp_path):
+    """Greptile: keying by display name alone merged `test` from two workflows
+    into one median. The jobs API carries `workflow_name`; key on both."""
+    r1 = write_run(tmp_path / "r1.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI"},
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:20:10Z"), "workflow_name": "Nightly"},
+    ])
+    data = profile(r1)
+    rows = {(j["workflow_name"], j["job"]): j for j in data["jobs"]}
+    assert set(rows) == {("CI", "test"), ("Nightly", "test")}
+    assert rows[("CI", "test")]["median_s"] == 30 and rows[("CI", "test")]["class"] == "fast"
+    assert rows[("Nightly", "test")]["median_s"] == 1200 and rows[("Nightly", "test")]["class"] == "slow"
+    text = run(r1).stdout
+    assert "Nightly / test" in text and "CI / test" in text  # disambiguated only when names collide
+
+
+def test_truncated_jobs_page_is_reported(tmp_path):
+    """Greptile: the jobs endpoint pages at 30 by default; a run with more jobs
+    than the page silently loses matrix cells unless total_count is checked."""
+    p = tmp_path / "r.json"
+    p.write_text(json.dumps({"total_count": 45, "jobs": [job("a", "2026-01-01T00:00:00Z", "2026-01-01T00:00:01Z", "2026-01-01T00:00:31Z")]}))
+    result = run("--json", p)
+    assert result.returncode == 0
+    data = json.loads(result.stdout)
+    assert data["truncated_runs"] == [str(p)]
+    assert "45" in result.stderr and "per_page=100" in result.stderr
+
+
+def test_unmeasured_wait_bound_is_documented_as_null():
+    doc = SCRIPT.read_text()
+    assert "wait_bound_s" in doc and "null" in doc.split('"""')[1].lower()  # the module docstring says it
+    assert "UNITS" not in doc  # Copilot: dead constant removed

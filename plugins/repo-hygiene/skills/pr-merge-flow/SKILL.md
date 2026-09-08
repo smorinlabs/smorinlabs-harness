@@ -243,8 +243,9 @@ not work to do.
 
 - Checks: `gh pr checks` (or REST check-runs). Red → **classify before
   routing**, because not every red mark is a build:
-  - **A build or test failed** → hand to **ci-fix**; this skill never debugs
-    CI. Resume here after.
+  - **A check-run failed** — build, test, lint, coverage, workflow config,
+    anything CI itself ran → hand to **ci-fix**; this skill never debugs CI.
+    Resume here after.
   - **A reviewer could not review** — e.g. a commit status like
     `CodeRabbit: failure — "Review rate limited"` — is the reviewer's own
     quota, not your code. `ci-fix` has nothing to fix. Treat it as a

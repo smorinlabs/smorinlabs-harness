@@ -19,11 +19,14 @@ mkdir -p "$SCRATCH/profile"
 # not the job's shape; drop &branch= to fall back to the whole repo
 for id in $(gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10&branch=$(git branch --show-current)" \
               --jq '.workflow_runs[].id'); do
-  gh api "repos/{owner}/{repo}/actions/runs/$id/jobs" > "$SCRATCH/profile/jobs-$id.json"
+  gh api "repos/{owner}/{repo}/actions/runs/$id/jobs?per_page=100" > "$SCRATCH/profile/jobs-$id.json"
 done
 ```
 
-One request per sampled run: eleven calls including the listing. A repo with
+One request per sampled run: eleven calls including the listing.
+`per_page=100` matters: the jobs endpoint pages at 30 by default, and a
+matrix larger than that would lose cells silently; the script warns when a
+run's `total_count` exceeds the jobs it holds. A repo with
 several workflows shares the ten among them; scope to one workflow with
 `repos/{owner}/{repo}/actions/workflows/<file>.yml/runs?status=success&per_page=10`.
 
@@ -42,7 +45,8 @@ Per job the script reports:
 | `queue_median_s` | `started_at − created_at`: time waiting for a runner, kept separate from run time |
 | `class` | `slow` when `median_s` exceeds the threshold, `fast` otherwise, `unmeasured` when no sample completed |
 | `slowest_step` | the step with the highest median across samples — where the time goes |
-| `wait_bound_s` | `ceil(1.5 × (median + queue))`, floor 60s: the lifetime of any CI wait on this job |
+| `wait_bound_s` | `ceil(1.5 × (median + queue))`, floor 60s: the lifetime of any CI wait on this job; `null` for `unmeasured` |
+| `job`, `workflow_name` | jobs are keyed by both, so `test` in two workflows stays two rows; `name` shows `<workflow> / <job>` only when bare names collide |
 | `samples`, `in_progress`, `excluded` | successful samples counted; still-running jobs are listed, not measured; skipped (0s) and cancelled (truncated) jobs are excluded |
 
 Jobs sort slowest first; `unmeasured` rows sort to the top so they are never
@@ -57,6 +61,10 @@ overlooked.
   cancelled or skipped, new in this branch, only in-progress) gets the slow
   treatment: rung 0 and 1 locally before any CI run, and the longest measured
   job's `wait_bound_s` as its wait.
+- **Every job unmeasured** (no successful run anywhere) → there is no measured
+  bound. Rung 2 still runs, bounded by 1.5 × the failed run's own duration for
+  the job being watched, and the report says the bound is not from a
+  successful sample. Never wait unbounded.
 - **Matrix cells are jobs.** `pytest (3.12)` and `pytest (3.13)` profile
   separately. When only one cell is red, target that cell's toolchain locally.
 - **A cache hit and a cache miss are both samples.** The median absorbs one

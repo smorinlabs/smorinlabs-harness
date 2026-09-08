@@ -113,7 +113,7 @@ def test_explicit_format_overrides_detection():
 def test_no_failures_recognized_exits_one_with_empty_list():
     result = run("--json", FIXTURES / "log_no_failures.txt")
     assert result.returncode == 1
-    assert json.loads(result.stdout) == {"format": None, "failures": [], "packages": []}
+    assert json.loads(result.stdout) == {"format": None, "failures": [], "failures_quoted": [], "packages": []}
     assert "no failures recognized" in result.stderr.lower()
 
 
@@ -126,3 +126,36 @@ def test_missing_file_is_a_usage_error(tmp_path):
     result = run(tmp_path / "nope.log")
     assert result.returncode == 2
     assert "nope.log" in result.stderr
+
+
+# ------------------------------------------------- PR #49 review findings
+
+
+def test_pytest_ids_with_whitespace_in_param_brackets_are_kept(tmp_path):
+    """CodeRabbit: `\\S+` dropped `test_case[case one]`; the ID runs to the
+    ` - reason` delimiter (summary) or to ` FAILED` (verbose)."""
+    log = tmp_path / "ws.log"
+    log.write_text(
+        "2026-09-08T10:00:00.0000000Z FAILED tests/test_x.py::test_case[case one] - AssertionError\n"
+        "2026-09-08T10:00:01.0000000Z tests/test_x.py::test_case[two words here] FAILED [ 50%]\n"
+        "2026-09-08T10:00:02.0000000Z ERROR tests/test_x.py::test_setup[a b]\n"
+    )
+    data = extract(log)
+    assert data["failures"] == [
+        "tests/test_x.py::test_case[case one]",
+        "tests/test_x.py::test_case[two words here]",
+        "tests/test_x.py::test_setup[a b]",
+    ]
+
+
+def test_json_carries_shell_quoted_ids(tmp_path):
+    """Greptile + CodeRabbit: a contributor-controlled test name can carry
+    shell syntax; `$(...)` inside double quotes executes. The JSON carries a
+    shell-safe form the skill must use verbatim in local commands."""
+    log = tmp_path / "evil.log"
+    log.write_text("2026-09-08T10:00:00.0000000Z FAILED tests/test_x.py::test_case[$(touch /tmp/pwned)] - boom\n")
+    data = extract(log)
+    assert data["failures"] == ["tests/test_x.py::test_case[$(touch /tmp/pwned)]"]
+    assert data["failures_quoted"] == ["'tests/test_x.py::test_case[$(touch /tmp/pwned)]'"]
+    plain = extract(FIXTURES / "log_pytest.txt")
+    assert plain["failures_quoted"][0] == "tests/test_sample.py::test_rollup_total"  # safe IDs stay bare
