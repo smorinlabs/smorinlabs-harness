@@ -8,8 +8,9 @@ list, or a bare list of jobs). One file per sampled run.
 Output (text, or `--json`): for every job name seen across the samples —
 median and max duration (completed_at − started_at), median queue wait
 (started_at − created_at), a class against the threshold (`slow` when the
-median exceeds it, `fast` otherwise, `unmeasured` when no sample completed; skipped and cancelled jobs are never
-samples — a skipped job is 0s and a cancelled one is truncated),
+median exceeds it, `fast` otherwise, `unmeasured` when no sample completed; only jobs with conclusion `success`
+are samples — a failed or timed-out job measures time-to-failure, a skipped
+job is 0s, a cancelled one is truncated),
 the slowest step by median, and `wait_bound_s`, a data-derived lifetime for a
 CI-wait monitor: ceil(1.5 × (median + queue)) with a 60s floor. An
 `unmeasured` job has no samples, so its `median_s`, `max_s`, and
@@ -37,7 +38,7 @@ import sys
 from datetime import datetime, timezone
 
 DURATION_RE = re.compile(r"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")
-EXCLUDED_CONCLUSIONS = {"skipped", "cancelled"}
+SAMPLE_CONCLUSION = "success"  # a failed, timed-out, skipped, or cancelled job is not the job's shape
 
 
 def parse_duration(text: str) -> int:
@@ -118,12 +119,12 @@ def profile(files: list[str], threshold_s: int) -> dict:
             if name not in durations:
                 order.append(name)
                 durations[name], queues[name], in_progress[name], excluded[name], steps[name] = [], [], 0, 0, {}
-            if job.get("conclusion") in EXCLUDED_CONCLUSIONS:
-                excluded[name] += 1  # a skipped job is 0s, a cancelled one truncated: not a shape
-                continue
             dur = seconds_between(job.get("started_at"), job.get("completed_at"))
             if dur is None:
                 in_progress[name] += 1
+                continue
+            if job.get("conclusion") != SAMPLE_CONCLUSION:
+                excluded[name] += 1  # failure/timed_out = time-to-failure; skipped = 0s; cancelled = truncated
                 continue
             durations[name].append(dur)
             queue = seconds_between(job.get("created_at"), job.get("started_at"))

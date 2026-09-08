@@ -59,10 +59,14 @@ has the fuller treatment.
    watched (rung 2) or the longest job (rung 3). On expiry: one manual
    recheck, then report. Never re-arm silently.
 3. **Pre-validate**: run the check command once by hand and confirm its output
-   matches every terminal state the loop keys on (`success`, `failure`,
-   `cancelled`, and `queued`/`in_progress` for a job that has not started).
-4. **Errors are no data**: an API error or empty body is not a state change
-   and does not reset the bound.
+   matches every terminal state the loop keys on — every job conclusion GitHub
+   can return: `success`, `failure`, `cancelled`, `skipped`, `timed_out`,
+   `action_required`, `neutral`, `stale` — plus `queued`/`in_progress` for a
+   job that has not finished. Anything other than `success` on the watched job
+   ends the wait as red.
+4. **Errors are no data**: an API error, an empty body, or a listing whose
+   first run has a null `id` (the run is not registered yet) is not a state
+   change and does not reset the bound.
 
 The check, REST. The new run's id comes from the runs listing filtered by the
 pushed `head_sha`:

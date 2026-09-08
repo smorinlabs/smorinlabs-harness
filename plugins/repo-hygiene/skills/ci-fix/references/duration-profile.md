@@ -17,7 +17,8 @@ SCRATCH="${SCRATCH:-$(mktemp -d "${TMPDIR:-/tmp}/ci-fix.XXXXXX")}"
 mkdir -p "$SCRATCH/profile"
 # last 10 successful runs on this branch — a failed run measures time-to-failure,
 # not the job's shape; drop &branch= to fall back to the whole repo
-for id in $(gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10&branch=$(git branch --show-current)" \
+b=$(git branch --show-current)                        # empty on a detached HEAD: then no branch filter
+for id in $(gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10${b:+&branch=$b}" \
               --jq '.workflow_runs[].id'); do
   gh api "repos/{owner}/{repo}/actions/runs/$id/jobs?per_page=100" > "$SCRATCH/profile/jobs-$id.json"
 done
@@ -33,8 +34,9 @@ several workflows shares the ten among them; scope to one workflow with
 ## Profile
 
 ```bash
-python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> "$SCRATCH/profile"/jobs-*.json          # table
-python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --json "$SCRATCH/profile"/jobs-*.json   # for --optimize
+# find + xargs, not a bare glob: zero fetched runs must not abort the shell under zsh
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold>          # table
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --json   # for --optimize
 ```
 
 Per job the script reports:
@@ -47,7 +49,7 @@ Per job the script reports:
 | `slowest_step` | the step with the highest median across samples — where the time goes |
 | `wait_bound_s` | `ceil(1.5 × (median + queue))`, floor 60s: the lifetime of any CI wait on this job; `null` for `unmeasured` |
 | `job`, `workflow_name` | jobs are keyed by both, so `test` in two workflows stays two rows; `name` shows `<workflow> / <job>` only when bare names collide |
-| `samples`, `in_progress`, `excluded` | successful samples counted; still-running jobs are listed, not measured; skipped (0s) and cancelled (truncated) jobs are excluded |
+| `samples`, `in_progress`, `excluded` | only jobs with conclusion `success` are samples; still-running jobs are listed, not measured; failed and timed-out jobs (time-to-failure, e.g. under `continue-on-error`), skipped (0s), and cancelled (truncated) are excluded |
 
 Jobs sort slowest first; `unmeasured` rows sort to the top so they are never
 overlooked.
