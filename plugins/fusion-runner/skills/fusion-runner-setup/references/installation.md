@@ -364,14 +364,30 @@ language and keyboard choices.
    assuming a fixed number of Tab presses.
 10. **Select the intended account setup.** The next observed screen was **How
     would you like to set up this device?**, offering **Set up for personal
-    use** and **Set up for work or school**. The first describes a personal
-    Microsoft account; the second describes organizational resources and
-    control of an enrolled device. Neither option was selected at this
-    checkpoint. Use the account setup authorized for the CI VM. If looking for
-    a local-account route, inspect the options actually offered by that Pro
-    build; this run had not yet verified that route. Do not equate selecting
-    a setup route with permission to associate an account or enroll the machine
-    with an organization. Do not bypass account or network requirements.
+    use** and **Set up for work or school**. Use the account setup authorized
+    for the CI VM. **Personal use** suits a standalone VM: Microsoft requires
+    internet access and a personal Microsoft account during Windows 11 Pro's
+    [initial personal setup](https://www.microsoft.com/en-us/windows/windows-11-specifications).
+    **Work or school** provides a route to
+    [organizational sign-in and device management](https://support.microsoft.com/en-us/accounts-billing/work-school/join-your-work-device-to-your-work-or-school-network).
+    This is a choice about Windows sign-in and management. GitHub lists
+    Windows 11 among its [supported runner operating systems](https://docs.github.com/en/actions/reference/runners/self-hosted-runners)
+    without requiring organizational enrollment, so personal setup is suitable
+    for running CI jobs. The dedicated Windows account that will run the
+    GitHub Actions service is configured separately during runner provisioning.
+
+    For an authorized personal setup, select **Set up for personal use**, then
+    **Next**, and verify that Windows advances. Let the user complete protected
+    Microsoft-account sign-in and any new password or PIN entry and submission
+    directly in Windows. Record the completed stage without copying credentials
+    into the progress record. In this validation run, the user chose personal
+    use, but its UI selection and subsequent sign-in were not yet verified.
+
+    If a different deployment needs a local-account setup route, inspect the
+    options actually offered by that Pro build; this run had not verified such
+    a route. Selecting a route does not authorize associating an account or
+    enrolling the VM with an organization. Do not bypass account or network
+    requirements.
 11. **Complete the remaining Windows screens.** Use the user's authorized account
    and preference choices; the user handles protected credential entry. The
    Windows desktop and remaining first-run screens were still pending at this

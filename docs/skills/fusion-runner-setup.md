@@ -62,6 +62,11 @@ records the region and keyboard choices, the missing network adapter, and
 VMware Tools installation. It includes the verified `Ctrl+Alt+Tab` recovery for
 a Tools wizard hidden behind Windows setup, followed by **Typical** installation,
 network connectivity, and the required restart.
+The account setup step explains personal Microsoft-account setup versus
+organizational sign-in and management. Personal setup is suitable for a
+standalone runner VM; the runner's dedicated Windows service account is
+configured separately. Protected sign-in and new credential entry stay with
+the user.
 During setup, the agent saves each completed stage and pending prompt in a local
 progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
