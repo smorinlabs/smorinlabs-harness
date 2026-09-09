@@ -133,8 +133,10 @@ workflow. An installer ISO is not an already prepared runner image.
 ### Windows 11 Arm64 wizard in Fusion 26H1u1
 
 The following screens were observed on Apple Silicon with Fusion `26H1u1` on
-2026-09-08, through saving the VM and configuring its hardware. Windows
-installation and local CI validation were still pending at this checkpoint.
+2026-09-08, through saving the VM, configuring its hardware, and opening Windows
+Setup's language and setup-option screens. The intervening keyboard prompt was
+reported by the user. Installed Windows and local CI validation were still
+pending at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -185,8 +187,11 @@ On another release or an Intel Mac, use the actual labels and matching media.
 9. **Start the installer.** Close the settings window to return to the VM
    console, then use **Start Up**. Click inside the console so it receives
    keyboard input. When **Press any key to boot from CD or DVD.** appears,
-   press `Space` promptly. Confirm that Windows Setup actually appears. A
-   powered-on VM or a firmware screen alone is not a successful installer boot.
+   press `Space` immediately. This is a plain-text message on the guest screen;
+   there is no button, selected control, or focus highlight to wait for. Do not
+   wait for an additional visual cue before pressing `Space`. Confirm that
+   Windows Setup actually appears. A powered-on VM or a firmware screen alone
+   is not a successful installer boot.
 
 If the initial boot falls through to **EFI Network** and Fusion reports **No
 operating system was found**, verify that the correct ISO is still attached in
@@ -197,9 +202,9 @@ select **EFI VMware Virtual SATA CDROM Drive (1.0)**, and press `Return`. Press
 actions: the first selects the drive; the second tells the Windows installer
 to boot. If the prompt expires, the guest can return to Boot Manager. Broadcom
 documents the [need to focus the console and answer the boot prompt promptly](https://knowledge.broadcom.com/external/article/375069/powering-on-windows-11-vm-on-vmware-fusi.html).
-The drive label may differ
-with another virtual device configuration; select the attached installer drive,
-not the empty virtual hard disk or network boot. Record whether Windows Setup
+The drive label may differ with another virtual device configuration; select
+the attached installer drive, not the empty virtual hard disk or network boot.
+Record whether Windows Setup
 then opens; do not infer that it did from selecting the drive.
 
 If UI automation cannot reliably answer this brief boot prompt, hand off only
@@ -208,9 +213,37 @@ the two keystrokes to the user: `Return` on the selected installer drive, then
 Setup appearing as the completion check. Resume automation after observing that
 screen, and preserve the attempted recovery in the progress record.
 
-Record the actual subsequent configuration and installation screens as they
+### Continue Windows Setup
+
+The user confirmed that pressing `Space` immediately succeeded. The following
+checkpoint records distinguish observed screens from user-reported actions:
+
+1. **Select language and regional format.** The observed **Windows 11 Setup ▸
+   Select language settings** screen had **Language to install** and **Time and
+   currency format** both set to **English (United States)**. Select the intended
+   values and use **Next**. Reaching this screen verifies installer boot, not an
+   installed Windows system.
+2. **Select the keyboard layout.** Choose the layout that matches the keyboard
+   the user intends to use, then advance. The validation user reported a **US**
+   keyboard decision; this screen was not captured directly. Record the actual
+   selection rather than inferring it from the language setting.
+3. **Choose Windows installation.** The next observed screen was **Select setup
+   option**, with **Install Windows 11** selected and the deletion
+   acknowledgement checked. For a new installation, verify that the intended
+   destination is the new VM's virtual disk before continuing with **Next**.
+   Recheck the exact destination if a later disk-selection screen appears.
+   Observing these selections does not establish that installation has begun.
+
+Guest controls may not appear in macOS accessibility data even when their pixels
+are visible in Fusion. In this run, automatic approval review rejected further
+guest input for that reason. If an action cannot be verified, hand off the
+specific current step and completion check to the user. Record who performed it
+and observe the resulting screen before marking it complete; do not bypass a
+rejected action through another input mechanism.
+
+Record subsequent edition, licensing, storage, and first-run screens as they
 occur. The remaining procedure below states the required setup and verification;
-do not report it as completed because the VM was created.
+it was not completed at the checkpoint above.
 
 Continue with the existing VM recorded above; do not create it again on resume.
 Verify its recorded location, UEFI firmware, and Windows 11 configuration,

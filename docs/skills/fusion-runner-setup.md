@@ -22,10 +22,13 @@ Windows Server x64 GitHub-hosted runner. The skill records that distinction and
 installs dependencies from the chosen workflow instead of claiming to supply
 GitHub's entire hosted image.
 
-Windows is installed once and the prepared VM is reused for later jobs. The
-skill distinguishes recovery snapshots from independent clones, which need
-Windows image preparation and fresh runner identities. An optional comparison
-workflow runs identical tests on Fusion, `windows-11-arm`, and `windows-latest`
+Windows is installed once and the working VM is reused for later jobs. A
+preserved, powered-off baseline keeps the prepared state for recovery; the
+working VM accumulates job changes and updates. Starting it does not reset it.
+The skill requires an actual restoration check before reporting a reusable
+baseline as verified. Independent clones need Windows image preparation and
+fresh runner identities. An optional comparison workflow runs identical tests
+on Fusion, `windows-11-arm`, and `windows-latest`
 and records the actual Windows builds and tool versions.
 
 The setup covers official downloads, available disk space, Windows installation,
@@ -48,8 +51,11 @@ current compatible release at setup time.
 The [VM creation walkthrough](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md#windows-11-arm64-wizard-in-fusion-26h1u1)
 records the observed ISO selection, firmware, encryption, VM save, and hardware
 settings screens. It also covers selecting the installer in the firmware boot
-menu when the first boot falls through to the network. During
-setup, the agent saves each completed stage and pending prompt in a local
+menu when the first boot falls through to the network. At **Press any key to
+boot from CD or DVD.**, press `Space` immediately: this is plain text with no
+button or focus highlight. The guide continues through the language, keyboard,
+and setup-option prompts, distinguishing observed screens from user reports.
+During setup, the agent saves each completed stage and pending prompt in a local
 progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
 It does not redistribute Fusion, Windows installation media, or a registered VM.
@@ -113,9 +119,10 @@ simulated `vmrun` executable. On 2026-09-08, the included compatibility workflow
 passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 runners.
 Its local Fusion job was skipped. Fusion `26H1u1` is installed on an Apple
 Silicon Mac. A VM has been created with 4 CPU cores, 8 GB memory, a 96 GB growable
-disk, UEFI Secure Boot, and NAT networking. The guest reached its firmware boot
-menu and the Windows ISO's CD/DVD boot prompt. Windows Setup, installed Windows
-boot, runner service registration, and a local CI job remain **unverified**.
+disk, UEFI Secure Boot, and NAT networking. Windows Setup boot is verified:
+the language and setup-option screens were observed. Installed Windows boot,
+runner service registration, a local CI job, and baseline restoration remain
+**unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that
 distinction during actual setup.
 
