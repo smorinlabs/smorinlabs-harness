@@ -1,5 +1,31 @@
 # Local runner handoff
 
+## Record partial setup as you work
+
+Keep an installation log and a current progress note in an ignored local
+directory, separate from the operational handoff below. Check ignore behavior
+before writing. Update the files after each completed stage and before handing
+an interactive prompt to the user; do not wait until installation finishes.
+
+Each entry records the UTC timestamp, actual installer or app version, screen
+title and control labels, action taken, observed result, and next action with
+its owner. Record selected ISO and VM paths locally. Distinguish actions observed
+directly from actions the user reports completing. Mark proposed settings,
+pending prompts, and unrun checks explicitly. On resume, inspect the current
+machine and screen before repeating an action from the log.
+
+Never record passwords, tokens, recovery keys, or screenshots containing those
+values. A password step can say "user completed the encryption prompt" without
+its value. A VM creation screen does not establish Windows boot or a CI pass.
+
+When the task includes improving this public skill, add reusable instructions
+to the installation reference as stages are observed. Include the release and
+architecture for version-specific screen labels. Remove personal paths and
+identities, and label vendor-documented steps that were not observed. Leave
+local machine evidence in the ignored record.
+
+## Final operational handoff
+
 Write a UTF-8 JSON file that identifies the installed VM and runner for future operation. Put it in a user-owned local configuration directory, or an ignored `.fusion-runner/` directory near the project. Choose the actual filename from the VM/profile name and report its absolute path. Check repository ignore behavior before writing project-local machine state; do not commit it into a public repository.
 
 Use `schema_version` equal to `1`. Populate fields from observed state, not proposed values. The following paths refer to nested JSON properties:

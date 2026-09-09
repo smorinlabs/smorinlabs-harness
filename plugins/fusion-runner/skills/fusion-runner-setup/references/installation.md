@@ -87,11 +87,26 @@ instructions.
    exists on the Mac, with its actual destination path and version recorded.
    A release page, an enabled icon, or a partial browser download is not the file.
 
-Verify the completed disk image and any vendor-provided digest, then open it and
-complete Fusion's documented installation and first launch. Have the user handle
-macOS administrator authentication in the system prompt. Record the installed
-Fusion version and confirm the app opens before continuing to Windows setup.
-The downloaded `.dmg` alone does not establish that Fusion is installed.
+### Install and confirm first launch
+
+Verify the completed disk image and any vendor-provided digest. Then follow
+Broadcom's [installation instructions](https://knowledge.broadcom.com/external/article/315638):
+
+1. In **Finder ▸ Downloads**, or the recorded download directory, double-click
+   the completed Fusion `.dmg`.
+2. In the mounted **VMware Fusion** disk window, double-click the **VMware
+   Fusion** icon to start installation.
+3. Complete first-launch prompts. Broadcom documents the ordinary downloaded-app
+   **Open** confirmation, administrator authentication, and the license
+   agreement. Have the user handle administrator credentials and agreement
+   acceptance directly. These documented prompts were not all observed in the
+   validation run; use the actual screen rather than assuming their order.
+4. Open **Finder ▸ Applications ▸ VMware Fusion**. Record the installed version
+   and confirm that its VM library or **New Virtual Machine** window opens.
+
+The downloaded `.dmg` alone does not establish that Fusion is installed. For
+`26H1u1`, the installed app's version metadata was `26.0.1`, build `25689522`;
+record the public release name and build as well as the app version.
 
 If download access is pending, report that exact state and continue work that does not depend on the installer. Do not substitute an unofficial mirror or describe a downloaded disk image as an installed application.
 
@@ -114,6 +129,41 @@ For ordinary CI use, prepare one persistent VM. If the user requests independent
 clones, read [reuse and compatibility](reuse-and-compatibility.md) before Windows
 first-run setup; a cloneable reference image needs Microsoft's image-preparation
 workflow. An installer ISO is not an already prepared runner image.
+
+### Windows 11 Arm64 wizard in Fusion 26H1u1
+
+The following screens were observed on Apple Silicon with Fusion `26H1u1` on
+2026-09-08, through **Choose Encryption**. This confirms the wizard sequence up
+to that screen; Windows installation and local CI validation were still pending.
+On another release or an Intel Mac, use the actual labels and matching media.
+
+1. **Choose the existing Windows installer.** From Fusion's **New Virtual
+   Machine** window, use **Use another disc or disc image...**. If needed, start
+   the wizard from **File ▸ New** and choose the disc or image installation
+   route. In the file chooser, press `Command+Shift+G`, enter the full ISO path
+   recorded in section 3, press `Return`, and click **Open**. This also works
+   when the ISO is inside a hidden local directory.
+2. **Verify the detected guest.** The selected ISO appears in the wizard. For
+   the Arm64 media used here, its detected system reads **Windows 11 64-bit
+   Arm**. Confirm that this matches the Mac and selected media, then click
+   **Continue**. Stop and correct a media mismatch before creating the VM.
+3. **Set the boot firmware.** At **Choose Firmware Type**, use **UEFI**, select
+   **UEFI Secure Boot**, and click **Continue**. In the observed run, UEFI was
+   selected already but its Secure Boot checkbox was initially clear.
+4. **Let the user create the VM encryption password.** At **Choose Encryption**,
+   Fusion requires a password for its virtual Trusted Platform Module (TPM),
+   the security device used by Windows 11. The user enters and confirms the
+   password and retains it securely. Explain **Remember password in the macOS
+   Keychain** before the user continues; this option was selected by default.
+   It stores the password for later unlocking, but does not prove unattended
+   startup will work. The observed default encrypts only files needed for the
+   TPM; the other option encrypts all VM files. Record the chosen options
+   without the password. **Done when:** the user completes this screen and the
+   next configuration screen is visible.
+
+Record the actual subsequent configuration and installation screens as they
+occur. The remaining procedure below states the required setup and verification;
+do not report it as completed because the wizard reached encryption.
 
 Follow the installed Fusion wizard with the selected media. Give the VM a recognizable name and record its storage location. Use UEFI firmware and the supported Windows 11 configuration, including the virtual Trusted Platform Module (TPM). Fusion may require encryption for the TPM. Have the user retain the encryption password through their chosen credential store; never place it in a command, transcript, or profile JSON. Broadcom documents the [Windows 11 installation flow and VMware Tools installation](https://knowledge.broadcom.com/external/article/375069/powering-on-windows-11-vm-on-vmware-fusi.html).
 

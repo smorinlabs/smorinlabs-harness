@@ -45,6 +45,10 @@ product URL, which release and Mac installer to select, and how to complete the
 terms and profile prompts. Its dated example is `26H1u1`, build `25689522`, with
 the filename `VMware-Fusion-26H1u1-25689522_universal.dmg`. The agent verifies the
 current compatible release at setup time.
+The [VM creation walkthrough](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md#windows-11-arm64-wizard-in-fusion-26h1u1)
+records the observed ISO selection, firmware, and encryption screens. During
+setup, the agent saves each completed stage and pending prompt in a local
+progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
 It does not redistribute Fusion, Windows installation media, or a registered VM.
 
@@ -105,9 +109,11 @@ control who can use it.
 The host probe has been exercised on macOS. Automated VM-control tests use a
 simulated `vmrun` executable. On 2026-09-08, the included compatibility workflow
 passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 runners.
-Its local Fusion job was skipped. A complete Fusion installation, Windows boot,
-runner service, and local CI job remain **unverified**. Hosted success does not
-validate the VM. The entrypoints preserve that distinction during actual setup.
+Its local Fusion job was skipped. Fusion `26H1u1` is installed and its VM
+creation wizard has been verified through the encryption screen on an Apple
+Silicon Mac. Windows boot, runner service registration, and a local CI job
+remain **unverified**. Hosted success does not validate the VM. The entrypoints
+preserve that distinction during actual setup.
 
 Implementation details and current primary sources:
 [installation](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md),
