@@ -54,10 +54,13 @@ settings screens. It also covers selecting the installer in the firmware boot
 menu when the first boot falls through to the network. At **Press any key to
 boot from CD or DVD.**, press `Space` immediately: this is plain text with no
 button or focus highlight. The guide continues through the language, keyboard,
-setup-option, product-key, edition, and license prompts, distinguishing observed
-screens from user reports. It records that Home was the initial edition default,
+setup-option, product-key, edition, license, disk, and first-run prompts,
+distinguishing observed screens from user reports. It records that Home was the initial edition default,
 followed by the user's deliberate choice of Pro, and requires a choice that
-matches the intended license.
+matches the intended license. Its [first-run walkthrough](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md#complete-first-run-setup-and-resolve-a-missing-network-driver)
+records the region and keyboard choices, the missing network adapter, and
+mounting and launching VMware Tools. Tools installation must be verified before
+that prerequisite is marked complete.
 During setup, the agent saves each completed stage and pending prompt in a local
 progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
@@ -122,11 +125,12 @@ simulated `vmrun` executable. On 2026-09-08, the included compatibility workflow
 passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 runners.
 Its local Fusion job was skipped. Fusion `26H1u1` is installed on an Apple
 Silicon Mac. A VM has been created with 4 CPU cores, 8 GB memory, a 96 GB growable
-disk, UEFI Secure Boot, and NAT networking. Windows Setup boot is verified:
-the language, setup-option, product-key, edition, and license screens were
-observed. Windows 11 Pro was selected with user authorization; agreement
-acceptance is pending. Installed Windows boot,
-runner service registration, a local CI job, and baseline restoration remain
+disk, UEFI Secure Boot, and NAT networking. On 2026-09-09, Windows 11 Pro was
+installed onto the virtual disk after the user approved its license and clean
+installation. Automatic restarts and first-run region and keyboard screens
+were observed. First-run setup is incomplete: its network page showed no
+adapter, and VMware Tools was launched but has not been verified as installed.
+The Windows desktop, runner service registration, a local CI job, and baseline restoration remain
 **unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that
 distinction during actual setup.

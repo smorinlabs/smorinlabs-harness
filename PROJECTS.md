@@ -1572,7 +1572,7 @@ software and Windows images are downloaded from their official sources.
 - [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
 - [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
 - [x] [P45-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
-- [~] [P45-T06] Record the real installation as it happens: walkthrough now includes the immediate Space boot prompt, observed Windows Setup language/setup-option/product-key/edition/license screens, and user-reported keyboard prompt; continue through Windows and runner setup
+- [~] [P45-T06] Record the real installation as it happens: walkthrough includes the immediate Space boot prompt, Pro selection, approved license, virtual disk installation and restarts, first-run region/keyboard choices, and missing-network-driver checkpoint; VMware Tools launched, completion pending
 - [x] [P45-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
 - [ ] [P45-T04] Merge and release the public plugin after review
 
@@ -1582,14 +1582,16 @@ The host probe has run on macOS. Live runner setup is in progress: official
 Windows Arm64 ISO downloaded and verified against Microsoft's SHA-256; Fusion
 26H1u1 installed and opens. Installer integrity, app signature, and notarization
 checks passed. The Windows 11 Arm64 VM has 4 CPU cores, 8 GB memory, a 96 GB
-growable disk, UEFI Secure Boot, and NAT networking. Windows Setup boot is
-verified: the language and setup-option screens were observed after the user
-answered the CD/DVD prompt with immediate Space. Some earlier guest UI inputs
-were rejected because macOS accessibility data did not expose Windows controls.
-The user completed that screen; the agent then used the official no-key option
-and selected Windows 11 Pro with explicit user authorization. Acceptance of the
-displayed Microsoft Windows license agreement is pending.
-Installed Windows boot, runner service registration,
+growable disk, UEFI Secure Boot, and NAT networking. The user answered the CD/DVD
+prompt with immediate Space. The agent used the official no-key option and
+selected Windows 11 Pro with explicit authorization. The user approved the
+displayed license and remaining installation; the agent accepted it, verified
+the intended empty 96 GB disk, and started installation. Automatic restarts led
+to first-run setup. United States, US keyboard, and Skip for a second layout
+were observed. The network page showed no adapter and disabled Next despite
+Fusion's connected NAT adapter. The matching Tools disc was mounted, and its
+installer process was verified running. Completed Tools installation and
+network connectivity remain pending. The Windows desktop, runner service registration,
 local smoke tests, reboot recovery, and reusable-baseline recovery remain
 unverified.
 

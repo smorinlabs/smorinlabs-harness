@@ -133,10 +133,12 @@ workflow. An installer ISO is not an already prepared runner image.
 ### Windows 11 Arm64 wizard in Fusion 26H1u1
 
 The following screens were observed on Apple Silicon with Fusion `26H1u1` on
-2026-09-08, through saving the VM, configuring its hardware, and opening Windows
-Setup's language, setup-option, product-key, image-selection, and license-term
-screens. The intervening keyboard prompt was reported by the user. Installed
-Windows and local CI validation were still pending at this checkpoint.
+2026-09-08 and 2026-09-09, through VM creation, Windows installation onto its
+virtual disk, automatic restarts, and Windows first-run setup. The installer's
+keyboard prompt was reported by the user; the later first-run keyboard screen
+was observed directly. First-run setup stopped at its network page because no
+adapter was available. VMware Tools was launched, but its completed installation,
+the Windows desktop, and local CI validation were still pending at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -254,9 +256,77 @@ checkpoint records distinguish observed screens from user-reported actions:
    agreement, last updated April 2024, with **Decline** and **Accept**. This is
    separate from the earlier acknowledgement that installing Windows will
    delete the selected destination's contents. Present the actual agreement
-   for the user's acceptance, then continue when authorized. Acceptance was
-   pending at this checkpoint; do not record it as completed merely because
-   the user chose an edition.
+   for the user's acceptance, then continue when authorized. Carry forward
+   explicit approval; do not ask again for an already approved agreement or
+   routine setup choices. In this run, the user approved the agreement and
+   remaining installation steps. The agent selected **Accept** and verified
+   that the disk-selection page appeared.
+7. **Select the intended virtual disk.** At **Select location to install
+   Windows 11**, the observed destination was **Disk 0 Unallocated Space**,
+   with **96.0 GB** total and free. This matched the new VM's configured disk.
+   Select the intended empty virtual disk and click **Next**; let Setup create
+   its required partitions. Stop and investigate a different capacity,
+   unexpected existing partitions, or an ambiguous destination before writing.
+8. **Start the installation.** At **Ready to install**, verify **Install Windows
+   11 Pro** and **Keep nothing**, or the edition and installation mode actually
+   authorized. Click **Install**. In this run, **Installing Windows 11** appeared
+   and advanced from **11% complete** to **34% complete**. This verifies that
+   installation started; it does not establish that Windows setup is complete.
+9. **Allow automatic restarts.** Setup warns that the PC will restart several
+   times. Leave the VM running. On subsequent restarts, do not press a key at
+   the CD/DVD prompt again: installation should continue from the virtual disk.
+   Observe the actual first-run screens before recording this stage complete.
+
+### Complete first-run setup and resolve a missing network driver
+
+The following region, keyboard, and network screens were observed after Windows
+installed onto the virtual disk. They are separate from the earlier installer
+language and keyboard choices.
+
+1. **Confirm the region.** At **Is this the right country or region?**, verify
+   the intended country and select **Yes**. The validation VM used **United
+   States** and advanced to the keyboard page.
+2. **Confirm the keyboard.** At **Is this the right keyboard layout or input
+   method?**, verify the intended layout and select **Yes**. The validation VM
+   used **US**. At the second-layout prompt, select **Skip** if no second layout
+   is needed; this was the observed choice.
+3. **Check the actual network state.** At **Let's connect you to a network**,
+   distinguish a connected adapter from a missing driver. In this run, no
+   adapter appeared, **Install driver** was available, and **Next** was disabled.
+   Fusion's adapter was connected using NAT. That host setting alone did not
+   establish that Windows had a working network driver. Keep the existing VM
+   and install the required vendor driver; do not bypass the network requirement.
+4. **Mount the matching VMware Tools disc.** In the Mac's installed **VMware
+   Fusion** application, use **Virtual Machine ▸ Install VMware Tools**, then
+   **Install** in the confirmation. Fusion connected its bundled Arm64 Tools
+   ISO in this run. This replaces the attached installer disc; it does not
+   reinstall Windows. Mounting the disc is not evidence that Tools is installed.
+5. **Launch the installer from the guest.** Focus the Windows guest and press
+   `Shift+F10` to open its Administrator command prompt. Confirm that the command
+   window is actually visible and focused before typing. Locate the mounted
+   **VMware Tools** volume; it was drive `D:` here. The following commands inspect
+   that drive and launch its installer. Substitute the verified drive letter if
+   another letter is assigned.
+
+   ```bat
+   dir D:\
+   D:\setup.exe
+   ```
+
+   In this run, `D:` contained `setup.exe`, and a subsequent process check
+   identified `D:\setup.exe` with the window title **VMware Tools Setup**. The
+   wizard had not yet been completed. Clipboard paste failed before Tools was
+   installed; typing into the focused console worked. Do not repeatedly launch
+   the installer when it is already running.
+6. **Finish Tools and verify connectivity.** Follow the actual VMware Tools
+   wizard and its restart prompt, as described in Broadcom's
+   [Fusion Tools installation instructions](https://knowledge.broadcom.com/external/article/315622/installing-vmware-tools-in-a-fusion-virt.html).
+   Then confirm that Windows detects the network adapter and can continue
+   first-run setup. Complete the remaining account and preference screens using
+   the user's authorized choices; the user handles protected credential entry.
+   This step remained unverified at the recorded checkpoint. A running installer
+   process, a mounted disc, or Fusion's **Cancel VMware Tools Installation** menu
+   label is not proof of a successful Tools installation.
 
 Without guest integration tools, the first click may only focus Fusion and
 capture the guest mouse. In the product-key step, a fresh check after the first
