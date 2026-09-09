@@ -18,11 +18,16 @@ mkdir -p "$SCRATCH/profile"
 # last 10 successful runs on this branch — a failed run measures time-to-failure,
 # not the job's shape; drop &branch= to fall back to the whole repo
 b=$(git branch --show-current)                        # empty on a detached HEAD: then no branch filter
-for id in $(gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10${b:+&branch=$b}" \
-              --jq '.workflow_runs[].id'); do
+gh api "repos/{owner}/{repo}/actions/runs?status=success&per_page=10${b:+&branch=$b}" \
+  > "$SCRATCH/profile/runs.json"
+for id in $(python3 -c 'import json,sys; print(*[r["id"] for r in json.load(open(sys.argv[1]))["workflow_runs"]])' "$SCRATCH/profile/runs.json"); do
   gh api "repos/{owner}/{repo}/actions/runs/$id/jobs?per_page=100" > "$SCRATCH/profile/jobs-$id.json"
 done
 ```
+
+The listing is kept: `--runs` joins each job to its workflow `path`, which is
+how GitHub-managed workflows (`dynamic/…`, such as the Copilot reviewer) are
+told apart from the repo's own.
 
 One request per sampled run: eleven calls including the listing.
 `per_page=100` matters: the jobs endpoint pages at 30 by default, and a
@@ -34,9 +39,10 @@ several workflows shares the ten among them; scope to one workflow with
 ## Profile
 
 ```bash
-# find + xargs, not a bare glob: zero fetched runs must not abort the shell under zsh
-find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold>          # table
-find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --json   # for --optimize
+# find | xargs -r, not a bare glob: zero fetched runs must neither abort the shell under zsh
+# nor invoke the profiler with no input (-r: GNU stops, BSD/macOS never ran it anyway)
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"          # table
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" --json   # for --optimize
 ```
 
 Per job the script reports:
@@ -49,6 +55,7 @@ Per job the script reports:
 | `slowest_step` | the step with the highest median across samples — where the time goes |
 | `wait_bound_s` | `ceil(1.5 × (median + queue))`, floor 60s: the lifetime of any CI wait on this job; `null` for `unmeasured` |
 | `job`, `workflow_name` | jobs are keyed by both, so `test` in two workflows stays two rows; `name` shows `<workflow> / <job>` only when bare names collide |
+| `external`, `workflow_path` | `true` when the run's `path` is under `dynamic/`: a GitHub-managed job, listed last, never fixed, swept, or optimized |
 | `samples`, `in_progress`, `excluded` | only jobs with conclusion `success` are samples; still-running jobs are listed, not measured; failed and timed-out jobs (time-to-failure, e.g. under `continue-on-error`), skipped (0s), and cancelled (truncated) are excluded |
 
 Jobs sort slowest first; `unmeasured` rows sort to the top so they are never
@@ -59,6 +66,14 @@ overlooked.
 - **Fewer than 3 successful runs on the branch** → add the default branch's
   runs and state the sample size in the report. One sample is a measurement;
   zero is not.
+- **Zero successful runs anywhere** → skip the script (an empty glob aborts
+  under zsh and the script refuses no input): every job is `unmeasured`, rung 1
+  needs the user's acceptance, and a CI wait is bounded by 1.5 × the failed
+  run's own duration for that job.
+- **A job that has never been green is absent, not `unmeasured`** — success-only
+  sampling never sees it. The inventory is the complete job list; an
+  inventory job with no profile row is `unmeasured` (`targeted-repro.md`,
+  *Join inventory to profile*).
 - **`unmeasured` is `slow`.** A job with no successful sample (always
   cancelled or skipped, new in this branch, only in-progress) gets the slow
   treatment: rung 0 and 1 locally before any CI run, and the longest measured
@@ -82,6 +97,7 @@ overlooked.
 
 | Consumer | Reads |
 |---|---|
+| Fix mode, the sweep (rung 1s) | `class` per job: `fast` jobs are swept; `slow` only when the user accepts; `external` never |
 | Fix mode, rung 1 availability | the failed step's own median in `steps`: under the threshold → rung 1 is available at no stated cost; over it → available only when the user accepts the stated time |
 | Fix mode, CI waits | `wait_bound_s` of the job being watched (rung 2) or of the longest job (rung 3) |
 | Audit report | the whole table, plus the `--optimize` pointer when any job is not `fast` |

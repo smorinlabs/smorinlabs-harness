@@ -1,0 +1,131 @@
+name: Synthetic
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "*.md"]
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: pytest -k expression
+        required: false
+        default: ""
+      job:
+        description: which job to run
+        type: choice
+        options: [all, unit, integration]
+        default: all
+env:
+  WORKFLOW_LEVEL: "w"
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: ruff check .
+  unit:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            python: "3.14"
+            experimental: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - name: Tests
+        working-directory: packages/core
+        env:
+          PYTHONHASHSEED: "0"
+        run: |
+          uv run pytest -x ${{ inputs.filter }}
+  integration:
+    needs: [lint, unit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: python:3.13-slim
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+    steps:
+      - uses: actions/checkout@v6
+      - run: apt-get update && apt-get install -y libpq-dev
+      - run: pip install -e .
+      - run: pytest tests/integration
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: python -m pytest tests/smoke
+  named-matrix:
+    name: nm (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - run: echo hi
+  misc:
+    runs-on: ubuntu-latest
+    env:
+      JOB_LEVEL: "1"
+    defaults:
+      run:
+        working-directory: svc
+        shell: bash
+    steps:
+      - run: |
+          set -e
+          sudo apt-get install -y libfoo
+      - run: curl -fsSL https://example.com/install.sh | sh
+      - run: curl -f http://localhost:8080/health
+      - run: npm ci
+      - run: pip install -e .
+      - if: github.event_name == 'push'
+        run: ./scripts/only-on-push.sh
+      - continue-on-error: true
+        run: ./scripts/flaky.sh
+      - shell: python
+        run: print("hi")
+  odd-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: only a name, no uses and no run
+      - run: echo real
+  seq-include:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node: [18, 20]
+        include:
+          - node: 18
+            coverage: "no"
+          - node: 18
+            coverage: "yes"
+          - os: ubuntu-latest
+            node: 22
+  excl-then-incl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [18, 20]
+        exclude:
+          - os: windows-latest
+            node: 18
+        include:
+          - os: windows-latest
+            node: 18
+            experimental: true

@@ -196,6 +196,43 @@ def test_accepts_bare_job_list(tmp_path):
     assert by_name(profile(p))["x"]["median_s"] == 30
 
 
+# ------------------------------------------------------ external workflows
+
+
+def test_runs_listing_marks_dynamic_workflow_jobs_external_and_sorts_them_last():
+    """GitHub-managed workflows (run `path` under `dynamic/`, e.g. the Copilot
+    reviewer) show up as jobs the repo cannot change. Real fixtures: the runs
+    listing plus the jobs of one dynamic run and one CI run from it."""
+    data = profile(
+        "--runs", FIXTURES / "runs_listing.json",
+        FIXTURES / "jobs_dynamic_run.json", FIXTURES / "jobs_ci_run.json",
+    )
+    jobs = by_name(data)
+    assert jobs["copilot-pull-request-reviewer"]["external"] is True
+    assert jobs["copilot-pull-request-reviewer"]["workflow_path"] == "dynamic/agents/copilot-pull-request-reviewer"
+    assert jobs["pytest"]["external"] is False
+    assert jobs["pytest"]["workflow_path"] == ".github/workflows/ci.yml"
+    assert data["jobs"][-1]["name"] == "copilot-pull-request-reviewer"  # last, whatever its duration
+    assert data["external_jobs"] == ["copilot-pull-request-reviewer"]
+
+
+def test_without_runs_listing_ownership_is_unknown_not_repo_owned():
+    """CodeRabbit (PR #55): missing metadata must not read as repo-owned.
+    `external` is tri-state: True, False, or None when the run's path is unknown."""
+    jobs = by_name(profile(FIXTURES / "jobs_dynamic_run.json"))
+    assert jobs["copilot-pull-request-reviewer"]["external"] is None
+    assert jobs["copilot-pull-request-reviewer"]["workflow_path"] is None
+    known = by_name(profile("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_ci_run.json"))
+    assert known["pytest"]["external"] is False
+
+
+def test_text_output_flags_external_jobs():
+    result = run("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_dynamic_run.json", FIXTURES / "jobs_ci_run.json")
+    assert result.returncode == 0, result.stderr
+    assert "external" in result.stdout
+    assert "copilot-pull-request-reviewer" in result.stdout.splitlines()[-2] or "copilot" in result.stdout.splitlines()[-1]
+
+
 # --------------------------------------------------------- threshold parsing
 
 
@@ -269,3 +306,12 @@ def test_only_successful_jobs_are_duration_samples(tmp_path):
     j = by_name(profile(r))["flaky"]
     assert j["samples"] == 1 and j["median_s"] == 50 and j["class"] == "fast"
     assert j["excluded"] == 2
+
+
+def test_unknown_ownership_jobs_are_listed_separately_not_as_actionable(tmp_path):
+    """Greptile (PR #55): a slow job of unknown ownership must not appear in
+    the actionable slow list; it gets its own non-actionable line."""
+    r = write_run(tmp_path / "r.json", [job("mystery", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:10:10Z")])
+    out = run(r).stdout
+    assert "ownership unknown (" in out and "mystery" in out.split("ownership unknown (")[1]
+    assert "at or above threshold or unmeasured: mystery" not in out

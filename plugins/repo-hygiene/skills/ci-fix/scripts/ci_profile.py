@@ -21,7 +21,15 @@ Jobs are keyed by (`workflow_name`, `name`): two workflows that both run a
 job called `test` stay two rows, shown as `<workflow> / <job>` only when the
 bare name collides. A run whose `total_count` exceeds the jobs delivered is
 listed under `truncated_runs` and warned about on stderr — fetch with
-`per_page=100` (or paginate).
+`per_page=100` (or paginate). `external` is tri-state: True for a
+GitHub-managed workflow, False for a repository-owned one, None when the run
+was not in the `--runs` listing (unknown ownership: never treated as
+repository-owned by the sweep or the optimizer).
+
+`--runs LISTING_JSON` (the `actions/runs` listing) joins each job to its run's
+workflow `path`; jobs from GitHub-managed workflows (`path` under `dynamic/`,
+e.g. the Copilot reviewer) are marked `external` and sorted last — the repo
+cannot change them.
 
 Exit 0 on success, 2 on a usage error (bad threshold, unreadable file).
 No network: the fetch recipe lives in the skill body.
@@ -89,6 +97,23 @@ def load_jobs(path: str) -> tuple[list[dict], bool]:
     return jobs, truncated
 
 
+def load_run_paths(path: str | None) -> dict[int, str]:
+    """run id → workflow path, from an `actions/runs` listing."""
+    if not path:
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except OSError as exc:
+        raise SystemExit(f"error: cannot read {path}: {exc.strerror}") from exc
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"error: {path} is not valid JSON: {exc}") from exc
+    runs = data.get("workflow_runs") if isinstance(data, dict) else data
+    if not isinstance(runs, list):
+        raise SystemExit(f"error: {path} has no `workflow_runs` list")
+    return {r["id"]: r.get("path") for r in runs if "id" in r}
+
+
 def fmt_secs(value: float | None) -> str:
     if value is None:
         return "—"
@@ -100,8 +125,10 @@ def fmt_secs(value: float | None) -> str:
     return f"{value}s"
 
 
-def profile(files: list[str], threshold_s: int) -> dict:
+def profile(files: list[str], threshold_s: int, runs_listing: str | None = None) -> dict:
+    run_paths = load_run_paths(runs_listing)
     Key = tuple  # (workflow_name, job name)
+    workflow_path: dict[Key, str | None] = {}
     durations: dict[Key, list[float]] = {}
     queues: dict[Key, list[float]] = {}
     in_progress: dict[Key, int] = {}
@@ -119,6 +146,7 @@ def profile(files: list[str], threshold_s: int) -> dict:
             if name not in durations:
                 order.append(name)
                 durations[name], queues[name], in_progress[name], excluded[name], steps[name] = [], [], 0, 0, {}
+                workflow_path[name] = run_paths.get(job.get("run_id"))
             dur = seconds_between(job.get("started_at"), job.get("completed_at"))
             if dur is None:
                 in_progress[name] += 1
@@ -156,6 +184,8 @@ def profile(files: list[str], threshold_s: int) -> dict:
                 "name": display,
                 "job": bare,
                 "workflow_name": wf or None,
+                "workflow_path": workflow_path[name],
+                "external": (workflow_path[name].startswith("dynamic/") if workflow_path[name] else None),
                 "class": "slow" if median > threshold_s else "fast",
                 "samples": len(samples),
                 "in_progress": in_progress[name],
@@ -172,6 +202,8 @@ def profile(files: list[str], threshold_s: int) -> dict:
                 "name": display,
                 "job": bare,
                 "workflow_name": wf or None,
+                "workflow_path": workflow_path[name],
+                "external": (workflow_path[name].startswith("dynamic/") if workflow_path[name] else None),
                 "class": "unmeasured",
                 "samples": 0,
                 "in_progress": in_progress[name],
@@ -185,11 +217,15 @@ def profile(files: list[str], threshold_s: int) -> dict:
             }
         rows.append(row)
 
-    # slowest first; unmeasured jobs sort to the top so they are never overlooked
-    rows.sort(key=lambda r: (r["median_s"] is not None, -(r["median_s"] or 0)))
+    # external (GitHub-managed) jobs last; then unmeasured on top so they are
+    # never overlooked; then slowest first
+    # external (GitHub-managed) jobs last, unknown ownership just before them
+    rows.sort(key=lambda r: ({False: 0, None: 1, True: 2}[r["external"]], r["median_s"] is not None, -(r["median_s"] or 0)))
     return {
         "threshold_s": threshold_s,
         "runs_sampled": len(files),
+        "external_jobs": [r["name"] for r in rows if r["external"]],
+        "unknown_ownership_jobs": [r["name"] for r in rows if r["external"] is None],
         "truncated_runs": truncated_runs,
         "jobs": rows,
     }
@@ -205,17 +241,26 @@ def render_text(data: dict) -> str:
     for j in data["jobs"]:
         step = f"{j['slowest_step']['name']} ({fmt_secs(j['slowest_step']['median_s'])})" if j["slowest_step"] else "—"
         n = f"{j['samples']}" + (f"+{j['in_progress']}r" if j["in_progress"] else "")
+        flag = "  [external]" if j["external"] else ("  [ownership unknown]" if j["external"] is None else "")
         lines.append(
             f"{j['class']:<10} {j['name'][:32]:<32} {fmt_secs(j['median_s']):>8} "
-            f"{fmt_secs(j['max_s']):>8} {fmt_secs(j['queue_median_s']):>7} {n:>3}  {step}"
+            f"{fmt_secs(j['max_s']):>8} {fmt_secs(j['queue_median_s']):>7} {n:>3}  {step}{flag}"
         )
-    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast"]
+    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast" and j["external"] is False]
     lines.append("")
     lines.append(
         f"{len(slow)} job(s) at or above threshold or unmeasured: {', '.join(slow)}"
         if slow
         else "All jobs below threshold."
     )
+    if data["unknown_ownership_jobs"]:
+        lines.append(
+            f"ownership unknown (not in the runs listing; not actionable here): {', '.join(data['unknown_ownership_jobs'])}"
+        )
+    if data["external_jobs"]:
+        lines.append(
+            f"external (GitHub-managed, not changeable here): {', '.join(data['external_jobs'])}"
+        )
     return "\n".join(lines)
 
 
@@ -223,6 +268,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--threshold", default="2m", help="slow-job threshold (default 2m)")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a table")
+    parser.add_argument("--runs", metavar="LISTING_JSON", help="actions/runs listing: joins jobs to workflow paths")
     parser.add_argument("files", nargs="+", metavar="JOBS_JSON", help="one jobs response per run")
     args = parser.parse_args(argv)
     try:
@@ -231,7 +277,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: --threshold: {exc}", file=sys.stderr)
         return 2
     try:
-        data = profile(args.files, threshold_s)
+        data = profile(args.files, threshold_s, args.runs)
     except SystemExit as exc:
         print(exc, file=sys.stderr)
         return 2
