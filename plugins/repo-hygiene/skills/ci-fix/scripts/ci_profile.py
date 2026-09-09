@@ -246,13 +246,17 @@ def render_text(data: dict) -> str:
             f"{j['class']:<10} {j['name'][:32]:<32} {fmt_secs(j['median_s']):>8} "
             f"{fmt_secs(j['max_s']):>8} {fmt_secs(j['queue_median_s']):>7} {n:>3}  {step}{flag}"
         )
-    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast" and j["external"] is not True]
+    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast" and j["external"] is False]
     lines.append("")
     lines.append(
         f"{len(slow)} job(s) at or above threshold or unmeasured: {', '.join(slow)}"
         if slow
         else "All jobs below threshold."
     )
+    if data["unknown_ownership_jobs"]:
+        lines.append(
+            f"ownership unknown (not in the runs listing; not actionable here): {', '.join(data['unknown_ownership_jobs'])}"
+        )
     if data["external_jobs"]:
         lines.append(
             f"external (GitHub-managed, not changeable here): {', '.join(data['external_jobs'])}"

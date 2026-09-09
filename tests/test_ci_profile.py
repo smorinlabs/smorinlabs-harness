@@ -306,3 +306,12 @@ def test_only_successful_jobs_are_duration_samples(tmp_path):
     j = by_name(profile(r))["flaky"]
     assert j["samples"] == 1 and j["median_s"] == 50 and j["class"] == "fast"
     assert j["excluded"] == 2
+
+
+def test_unknown_ownership_jobs_are_listed_separately_not_as_actionable(tmp_path):
+    """Greptile (PR #55): a slow job of unknown ownership must not appear in
+    the actionable slow list; it gets its own non-actionable line."""
+    r = write_run(tmp_path / "r.json", [job("mystery", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:10:10Z")])
+    out = run(r).stdout
+    assert "ownership unknown" in out and "mystery" in out.split("ownership unknown")[1]
+    assert "at or above threshold or unmeasured: mystery" not in out
