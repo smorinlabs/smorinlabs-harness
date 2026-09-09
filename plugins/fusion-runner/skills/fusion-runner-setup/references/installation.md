@@ -18,9 +18,80 @@ Before allocating storage, inspect the proposed VM destination. Reuse a known su
 
 ## 2. Obtain and install Fusion
 
-Check the current release's host requirements against the actual Mac and macOS version. Use Broadcom's [official download instructions](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html) to reach the Fusion download. Broadcom currently offers Fusion free for personal, educational, and commercial use; Windows licensing is separate. Refresh the terms during installation rather than embedding a price or license key in this skill.
+Download **VMware Fusion for macOS** as a `.dmg` disk image. Fusion is the Mac
+application; the Windows ISO in section 3 is a separate download. Check Downloads
+and any user-specified location first so an existing installer is not downloaded
+again. Broadcom offers Fusion free for personal, educational, and commercial
+use; Windows licensing is separate.
 
-Download the current compatible installer from Broadcom. Complete the documented installation and first launch. If Broadcom requires account registration, a profile, a compliance form, or terms acceptance, the user supplies their own information. If the Mac requests administrator authentication, have the user respond in the system prompt. Preserve the actual installer path and version for the handoff.
+**Release checked on 2026-09-08: `26H1u1`, build `25689522`.** The Mac installer
+is named `VMware-Fusion-26H1u1-25689522_universal.dmg`. The universal installer
+serves both Apple Silicon and Intel Macs; Windows media must still match the
+Mac's processor. Broadcom's [release advisory](https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/38288)
+identifies `26H1u1` as the updated release. Consult its
+[release notes](https://techdocs.broadcom.com/us/en/vmware-cis/desktop-hypervisors/fusion-pro/26H1/release-notes/vmware-fusion-26h1u1-release-notes.html)
+and the live download list during future setups. Select the newest compatible
+release and state its exact version and filename; do not leave the user with
+only the instruction "download the latest." Check its host requirements before
+installing. Treat the dated filename above as an example once a newer release
+is available.
+
+### Browser download walkthrough
+
+Give the user the account URL, the URL to reopen after sign-in, the selected
+release, the installer filename, and the completion check together. Delegate
+identity, password, verification, and agreement prompts to the user; never ask
+for their values in chat. These steps follow Broadcom's
+[account registration](https://knowledge.broadcom.com/external/article/145581/register-for-an-account-on-the-broadcom.html)
+and [free software download](https://knowledge.broadcom.com/external/article/397417/downloading-free-software-from-the-broad.html)
+instructions.
+
+1. **Create a free Broadcom account, if needed.** In the browser, open
+   <https://profile.broadcom.com/web/registration>. Complete registration with an
+   individual email address, the emailed verification code, and the account
+   prompts. An existing Broadcom account can be used instead. A basic account is
+   sufficient for free Fusion downloads; a paid subscription, corporate email,
+   and enterprise Site ID are not required. **Done when:** registration is
+   complete or the user already has an account they can sign into.
+2. **Sign into the support portal.** In the same browser, open
+   <https://support.broadcom.com/> and use **Support Portal** to sign in. Complete
+   any authentication prompts there. **Done when:** the support portal shows
+   the signed-in account or dashboard.
+3. **Reopen the Fusion download URL after signing in.** Open this URL explicitly
+   in the same browser, even if registration or login sent the user elsewhere:
+   <https://support.broadcom.com/group/ecx/productdownloads?freeDownloads=true&subfamily=VMware+Fusion>.
+   If the portal lands on a dashboard instead, navigate from
+   <https://support.broadcom.com/> through **My Downloads** and
+   **Free Software Downloads available HERE**, then search for **VMware Fusion**.
+   **Done when:** Fusion's available releases are visible.
+4. **Select the Fusion release for the Mac.** On that Fusion download page,
+   select **26H1u1** for this dated walkthrough. Expand the **VMware Fusion
+   26H1** family first if the portal groups updates under it. For a newer release,
+   use the exact version verified above. **Done when:** the selected release's
+   file list contains the macOS `.dmg` installer. VMware Workstation's `.exe`
+   and Linux `.bundle` installers are for other host operating systems.
+5. **Complete the download requirements.** On the selected release's file page,
+   open **Terms and Conditions**, read the agreement, and return to the file
+   page. Opening the link enables its acceptance checkbox; the user handles
+   acceptance. Use the download icon beside the Mac installer. If Broadcom asks
+   for additional verification, the user completes their basic profile and
+   Trade Compliance form with their actual details. **Done when:** the download
+   starts or the portal enables the file's download icon. If the portal reports
+   **Account verification is pending**, record that blocker and follow the
+   account-help link in Broadcom's download instructions; do not invent a Site ID
+   or promise that signing in again will approve the account.
+6. **Finish the Mac installer download.** On the same file page, use the download
+   icon again if verification only enabled it. Wait for the browser's download
+   to complete. For this release, confirm the completed file is
+   `VMware-Fusion-26H1u1-25689522_universal.dmg`. **Done when:** the full `.dmg`
+   exists on the Mac, with its actual destination path and version recorded.
+   A release page, an enabled icon, or a partial browser download is not the file.
+
+Verify the completed disk image and any vendor-provided digest, then open it and
+complete Fusion's documented installation and first launch. Have the user handle
+macOS administrator authentication in the system prompt. Record the installed
+Fusion version and confirm the app opens before continuing to Windows setup.
+The downloaded `.dmg` alone does not establish that Fusion is installed.
 
 If download access is pending, report that exact state and continue work that does not depend on the installer. Do not substitute an unofficial mirror or describe a downloaded disk image as an installed application.
 

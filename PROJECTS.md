@@ -1571,13 +1571,15 @@ software and Windows images are downloaded from their official sources.
 - [x] [P45-TS03] Both skills load in fresh Claude Code and Codex verification sessions; four development placements resolve to this worktree and their placement records agree
 - [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
 - [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
+- [x] [P45-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
 - [ ] [P45-T04] Merge and release the public plugin after review
 
 **Validation boundary**: Helper fixtures do not validate vendor installation,
 encrypted headless startup, Windows service behavior, or a GitHub Actions job.
 The host probe has run on macOS. Live runner setup is in progress: official
-Windows Arm64 ISO downloaded and verified against Microsoft's SHA-256; Fusion download access awaits Broadcom
-sign-in. Windows boot, runner service registration, local smoke tests, reboot
+Windows Arm64 ISO downloaded and verified against Microsoft's SHA-256; Fusion
+26H1u1 installer found locally and its disk-image integrity check passed.
+Windows boot, runner service registration, local smoke tests, reboot
 recovery, and reusable-baseline recovery remain unverified.
 
 Loader note: Claude reports the generator's existing `_generated` manifest

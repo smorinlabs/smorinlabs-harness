@@ -39,6 +39,12 @@ The agent performs the available operations and hands back individual interactiv
 steps when necessary. Broadcom account access, administrator prompts, Windows
 licensing, and initial Windows setup can require the user's participation.
 Fusion is free for personal and commercial use; Windows licensing is separate.
+The [Fusion download walkthrough](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md#browser-download-walkthrough)
+explains where to create a free Broadcom account, how to sign in and reopen the
+product URL, which release and Mac installer to select, and how to complete the
+terms and profile prompts. Its dated example is `26H1u1`, build `25689522`, with
+the filename `VMware-Fusion-26H1u1-25689522_universal.dmg`. The agent verifies the
+current compatible release at setup time.
 The plugin distributes instructions and helpers, with official download links.
 It does not redistribute Fusion, Windows installation media, or a registered VM.
 
