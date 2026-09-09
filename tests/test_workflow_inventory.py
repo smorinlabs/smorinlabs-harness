@@ -232,3 +232,26 @@ def test_trigger_filters_are_exposed():
     real, _ = jobs_of(inventory(REAL), "ci_real.yml")
     assert real["trigger_filters"]["push"]["branches"] == ["main"]
     assert real["trigger_filters"]["pull_request"] == {"branches": None, "branches_ignore": None, "paths": None, "paths_ignore": None, "types": None}
+
+
+def test_exclude_applies_before_include_so_include_can_add_back():
+    """GitHub processes `exclude` on the base matrix first; `include` runs after
+    and may add a combination back. Excluding then re-including must yield the
+    cell, marked with the include's extras."""
+    _, jobs = jobs_of(inventory(SYNTH), "synthetic.yml")
+    cells = {c["display_name"]: c for c in jobs["excl-then-incl"]["matrix_cells"]}
+    assert len(cells) == 4  # 2×2 minus one excluded plus one added back
+    assert cells["excl-then-incl (windows-latest, 18, true)"]["experimental"] is True
+    assert "excl-then-incl (windows-latest, 18)" not in cells
+
+
+def test_inventory_tolerates_non_workflow_files(tmp_path):
+    """`.github/workflows/` can hold a README or an action fragment; those are
+    skipped with a warning, never a usage error that hides every workflow."""
+    readme = tmp_path / "README.md"; readme.write_text("# notes\n")
+    frag = tmp_path / "fragment.yml"; frag.write_text("- just\n- a list\n")
+    result = run("--json", SYNTH, readme, frag)
+    assert result.returncode == 0, result.stderr
+    data = json.loads(result.stdout)
+    assert [w["path"] for w in data["workflows"]] == [str(SYNTH)]
+    assert "README.md" in result.stderr and "fragment.yml" in result.stderr

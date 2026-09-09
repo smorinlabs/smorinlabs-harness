@@ -115,10 +115,15 @@ def expand_matrix(job_id: str, runs_on, matrix, job_name: str | None = None) -> 
         keys = list(axes)
         for combo in itertools.product(*(axes[k] for k in keys)):
             cells.append(dict(zip(keys, combo)))
-    # GitHub semantics: an include is matched against the ORIGINAL axis values
-    # only; on a match its non-axis values are added, and a later include may
-    # overwrite a value an earlier include added — axis values are never
-    # overwritten. An include that matches no cell becomes a new cell.
+    # GitHub semantics: `exclude` is applied to the base matrix first; every
+    # include is processed after it, so an include can add a combination back.
+    for exc in exclude:
+        if isinstance(exc, dict):
+            cells = [c for c in cells if not all(c.get(k) == v for k, v in exc.items())]
+    # An include is matched against the ORIGINAL axis values only; on a match
+    # its non-axis values are added, and a later include may overwrite a value
+    # an earlier include added — axis values are never overwritten. An include
+    # that matches no cell becomes a new cell.
     for inc in include:
         if not isinstance(inc, dict):
             continue
@@ -132,9 +137,6 @@ def expand_matrix(job_id: str, runs_on, matrix, job_name: str | None = None) -> 
                 matched = True
         if not matched:
             cells.append({**inc, "_from_include": True})
-    for exc in exclude:
-        if isinstance(exc, dict):
-            cells = [c for c in cells if not all(c.get(k) == v for k, v in exc.items())]
     out = []
     for cell in cells:
         cell.pop("_from_include", None)
@@ -227,8 +229,9 @@ def inventory_file(path: str) -> dict:
         raise SystemExit(f"error: cannot read {path}: {exc.strerror}") from exc
     except yaml.YAMLError as exc:
         raise SystemExit(f"error: {path} is not valid YAML: {exc}") from exc
-    if not isinstance(doc, dict):
-        raise SystemExit(f"error: {path} is not a workflow mapping")
+    if not isinstance(doc, dict) or "jobs" not in doc:
+        print(f"warning: {path} is not a workflow (no top-level mapping with `jobs`); skipped", file=sys.stderr)
+        return None
     triggers, dispatch = triggers_of(doc)
     workflow_env = doc.get("env") or {}
     workflow_defaults = ((doc.get("defaults") or {}).get("run")) or {}
@@ -304,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: PyYAML is not importable here. Run:\n    {RUNNER_LINE} {' '.join(args.files)}", file=sys.stderr)
         return 2
     try:
-        data = {"workflows": [inventory_file(f) for f in args.files]}
+        data = {"workflows": [w for w in (inventory_file(f) for f in args.files) if w is not None]}
     except SystemExit as exc:
         print(exc, file=sys.stderr)
         return 2

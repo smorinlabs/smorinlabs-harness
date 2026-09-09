@@ -216,10 +216,14 @@ def test_runs_listing_marks_dynamic_workflow_jobs_external_and_sorts_them_last()
     assert data["external_jobs"] == ["copilot-pull-request-reviewer"]
 
 
-def test_without_runs_listing_external_is_false_and_path_unknown():
+def test_without_runs_listing_ownership_is_unknown_not_repo_owned():
+    """CodeRabbit (PR #55): missing metadata must not read as repo-owned.
+    `external` is tri-state: True, False, or None when the run's path is unknown."""
     jobs = by_name(profile(FIXTURES / "jobs_dynamic_run.json"))
-    assert jobs["copilot-pull-request-reviewer"]["external"] is False
+    assert jobs["copilot-pull-request-reviewer"]["external"] is None
     assert jobs["copilot-pull-request-reviewer"]["workflow_path"] is None
+    known = by_name(profile("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_ci_run.json"))
+    assert known["pytest"]["external"] is False
 
 
 def test_text_output_flags_external_jobs():

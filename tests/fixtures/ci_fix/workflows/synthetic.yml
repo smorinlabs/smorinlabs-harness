@@ -116,3 +116,16 @@ jobs:
             coverage: "yes"
           - os: ubuntu-latest
             node: 22
+  excl-then-incl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [18, 20]
+        exclude:
+          - os: windows-latest
+            node: 18
+        include:
+          - os: windows-latest
+            node: 18
+            experimental: true

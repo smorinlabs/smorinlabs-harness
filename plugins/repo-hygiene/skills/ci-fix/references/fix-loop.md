@@ -86,8 +86,9 @@ gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>.yml/dispatches" \
   -f ref="$(git branch --show-current)" \
   -f "inputs[<name>]=<value>"                           # one per required input; drop the line when there are none
 
-# find the run it created: same event, same commit, created after T0
-gh api "repos/{owner}/{repo}/actions/runs?event=workflow_dispatch&head_sha=$SHA&per_page=5" \
+# find the run it created: same workflow file, same event, same commit, created after T0
+# (the workflow-specific listing, so several dispatched workflows never hand back the wrong run id)
+gh api "repos/{owner}/{repo}/actions/workflows/<file>.yml/runs?event=workflow_dispatch&head_sha=$SHA&per_page=5" \
   --jq ".workflow_runs[] | select(.created_at >= \"$T0\") | {id, status, conclusion, created_at}"
 ```
 
@@ -115,10 +116,14 @@ names it, not the fix commit. Under a rebase-merge repository, confirm the
 empty commit survives the merge; if it would not, the marker must not sit on
 the branch's final code commit.
 
-When the failing workflow declares a filter input (lever 11's sketch adds
-`inputs.filter` wired into the test command), pass the extracted IDs through
-it only when rung 1 was unavailable — a filtered dispatch is rung 0 in CI,
-which pays only when the full step could not run locally.
+**The remote ladder mirrors the local one.** When the failing workflow
+declares a filter input (lever 11's sketch adds `inputs.filter`, read through
+an environment variable), rung 2d always passes the extracted IDs through it:
+the isolated tests run remotely first, the way rung 0 ran them locally, and
+their green earns the full run at rung 3. Feedback arrives after the isolated
+tests' duration, not the suite's. Without a filter input the dispatched run
+is the whole workflow, which is why the `--optimize` report and the
+shift-left offer both propose adding one to every slow workflow.
 
 ## Waiting on CI — the four laws
 

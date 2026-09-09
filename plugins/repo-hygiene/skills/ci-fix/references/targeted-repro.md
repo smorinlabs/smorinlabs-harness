@@ -77,10 +77,13 @@ finds that locally, where it costs the neighbors' measured medians, instead of
 in CI, where it costs a full push cycle. It runs before **every** push, not
 only the first.
 
-**Join inventory to profile** by the API display name: the job's `name` if
-set, else its `id`, else the matrix cell's `display_name`. An inventory job
-with no profile row has never been green on the sampled runs: treat it as
-`unmeasured`.
+**Join inventory to profile** on the pair (workflow name, job display name):
+the profile row's `workflow_name` and `job` fields against the workflow's
+`name` and the inventory job's `name` if set, else its `id`, else the matrix
+cell's `display_name`. Never join on the profile's `name` column, which
+becomes `<workflow> / <job>` when a job name repeats across workflows. An
+inventory job with no profile row has never been green on the sampled runs:
+treat it as `unmeasured`.
 
 | Include a job when | Because |
 |---|---|
@@ -93,8 +96,12 @@ with no profile row has never been green on the sampled runs: treat it as
 
 **Toolchain pre-check, before running anything.** For every sweepable step
 (`kind: run`, `setup: false`, no `if:` that names an event the local run is
-not, `shell` unset or a shell), take the first token of each line after
-stripping `sudo` and `NAME=value` prefixes, and `command -v` it; check the
+not, `shell` unset or a shell), take the first token of each simple command
+after stripping `sudo` and `NAME=value` prefixes — skipping shell keywords
+(`if`, `then`, `else`, `fi`, `for`, `do`, `done`, `case`, `esac`, `while`,
+`until`), builtins (`cd`, `export`, `set`, `echo`, `test`, `[`), comments,
+and operators, and looking past `&&`, `||`, `|`, and `;` for the commands
+they join — and `command -v` it; check the
 matrix cell's version with `<tool> --version` where the cell pins one. Any
 token absent → skip the **job** with reason `toolchain: <tool>` (later steps
 depend on it); it is listed as skipped in the report and first verified at

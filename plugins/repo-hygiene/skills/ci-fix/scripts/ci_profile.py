@@ -21,7 +21,10 @@ Jobs are keyed by (`workflow_name`, `name`): two workflows that both run a
 job called `test` stay two rows, shown as `<workflow> / <job>` only when the
 bare name collides. A run whose `total_count` exceeds the jobs delivered is
 listed under `truncated_runs` and warned about on stderr — fetch with
-`per_page=100` (or paginate).
+`per_page=100` (or paginate). `external` is tri-state: True for a
+GitHub-managed workflow, False for a repository-owned one, None when the run
+was not in the `--runs` listing (unknown ownership: never treated as
+repository-owned by the sweep or the optimizer).
 
 `--runs LISTING_JSON` (the `actions/runs` listing) joins each job to its run's
 workflow `path`; jobs from GitHub-managed workflows (`path` under `dynamic/`,
@@ -182,7 +185,7 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                 "job": bare,
                 "workflow_name": wf or None,
                 "workflow_path": workflow_path[name],
-                "external": bool(workflow_path[name] and workflow_path[name].startswith("dynamic/")),
+                "external": (workflow_path[name].startswith("dynamic/") if workflow_path[name] else None),
                 "class": "slow" if median > threshold_s else "fast",
                 "samples": len(samples),
                 "in_progress": in_progress[name],
@@ -200,7 +203,7 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                 "job": bare,
                 "workflow_name": wf or None,
                 "workflow_path": workflow_path[name],
-                "external": bool(workflow_path[name] and workflow_path[name].startswith("dynamic/")),
+                "external": (workflow_path[name].startswith("dynamic/") if workflow_path[name] else None),
                 "class": "unmeasured",
                 "samples": 0,
                 "in_progress": in_progress[name],
@@ -216,11 +219,13 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
 
     # external (GitHub-managed) jobs last; then unmeasured on top so they are
     # never overlooked; then slowest first
-    rows.sort(key=lambda r: (r["external"], r["median_s"] is not None, -(r["median_s"] or 0)))
+    # external (GitHub-managed) jobs last, unknown ownership just before them
+    rows.sort(key=lambda r: ({False: 0, None: 1, True: 2}[r["external"]], r["median_s"] is not None, -(r["median_s"] or 0)))
     return {
         "threshold_s": threshold_s,
         "runs_sampled": len(files),
         "external_jobs": [r["name"] for r in rows if r["external"]],
+        "unknown_ownership_jobs": [r["name"] for r in rows if r["external"] is None],
         "truncated_runs": truncated_runs,
         "jobs": rows,
     }
@@ -236,12 +241,12 @@ def render_text(data: dict) -> str:
     for j in data["jobs"]:
         step = f"{j['slowest_step']['name']} ({fmt_secs(j['slowest_step']['median_s'])})" if j["slowest_step"] else "—"
         n = f"{j['samples']}" + (f"+{j['in_progress']}r" if j["in_progress"] else "")
-        flag = "  [external]" if j["external"] else ""
+        flag = "  [external]" if j["external"] else ("  [ownership unknown]" if j["external"] is None else "")
         lines.append(
             f"{j['class']:<10} {j['name'][:32]:<32} {fmt_secs(j['median_s']):>8} "
             f"{fmt_secs(j['max_s']):>8} {fmt_secs(j['queue_median_s']):>7} {n:>3}  {step}{flag}"
         )
-    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast" and not j["external"]]
+    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast" and j["external"] is not True]
     lines.append("")
     lines.append(
         f"{len(slow)} job(s) at or above threshold or unmeasured: {', '.join(slow)}"

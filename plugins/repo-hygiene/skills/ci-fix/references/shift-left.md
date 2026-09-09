@@ -16,8 +16,11 @@ All of these, else skip with the reason in the report:
   flake has no check to shift);
 - the step-3 parity list shows no hook already running that step's tool;
 - the repo has a hook manager (`lefthook.yml` or `.pre-commit-config.yaml`).
-  With neither, the offer is to add lefthook with this one hook; a declined
-  offer is recorded, never re-asked in the same run.
+  With neither, the offer is to add lefthook with this one hook — only when
+  `command -v lefthook` resolves; otherwise the offer names the install
+  (`brew install lefthook`, or the platform equivalent) as its first step and
+  is made only if the user takes it. A declined offer is recorded, never
+  re-asked in the same run.
 
 ## Stage from the profile
 

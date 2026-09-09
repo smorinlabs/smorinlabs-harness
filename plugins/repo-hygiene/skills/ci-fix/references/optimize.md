@@ -19,8 +19,10 @@ because logs run to thousands of lines:
 3. the latest log of each `slow` or `unmeasured` job, by path:
    `gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`.
 
-Only jobs classed `slow` or `unmeasured` are analyzed. Fast jobs are listed in
-the report as already under threshold.
+Only jobs classed `slow` or `unmeasured` **with `external: false`** are
+analyzed. Fast jobs are listed in the report as already under threshold;
+`external` jobs (GitHub-managed workflows) and jobs of unknown ownership are
+listed as out of the repository's control and never receive a lever.
 
 ## The brief
 
@@ -64,7 +66,7 @@ the report as already under threshold.
 | 8 | **Setup dominates** | setup + install > 50% of the job's median | a cached toolchain, a prebuilt container image, `actions/checkout` with `fetch-depth: 1`, drop unneeded `submodules`/`lfs` |
 | 9 | **No `timeout-minutes`** | absent on the job; the default is 360 | `timeout-minutes: ceil(2 × max_s / 60)` — `max_s` is seconds, the key is minutes; no value for an `unmeasured` job (its `max_s` is null), say so instead |
 | 10 | **Runner or matrix oversized** | a macOS or large runner for a job that is pure CPU-light; matrix dimensions that never differ in outcome | `ubuntu-latest`; prune cells that have been green in lockstep across the sampled runs |
-| 11 | **No `workflow_dispatch` on a slow workflow** | the workflow's `on:` lacks `workflow_dispatch`; every fix iteration therefore runs every workflow | block form: `on:` / `  workflow_dispatch:` / `    inputs:` / `      filter: {description: test filter, required: false, default: ""}`, and the test step reading it (`pytest ${{ inputs.filter }}`), so ci-fix's rung 2d runs this workflow alone and, with the filter, only the failing tests |
+| 11 | **No `workflow_dispatch` on a slow workflow** (repository-owned only) | the workflow's `on:` lacks `workflow_dispatch`; every fix iteration therefore runs every workflow | block form: `on:` / `  workflow_dispatch:` / `    inputs:` / `      filter: {description: test filter, required: false, default: ""}`; the test step reads it through an environment variable, never by interpolation — `env:` / `  FILTER: ${{ inputs.filter }}` / `run: pytest -x $FILTER` with the value validated against the runner's filter syntax (a dispatch input is external input, and `${{ }}` is substituted into the script before the shell runs) — so ci-fix's rung 2d runs this workflow alone and, with the filter, only the failing tests |
 
 Estimated savings are derived, never invented: item 1's saving is the install
 step's median; item 3's is the long job's median multiplied by the fraction

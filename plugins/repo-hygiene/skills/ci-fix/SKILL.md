@@ -65,8 +65,10 @@ Fix-mode flag:
   inventory — jobs, runner families, matrix cells with their API display
   names, containers, services, each step's display name and whether the local
   sweep may run it, and the triggers with any `workflow_dispatch` inputs:
-  `uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py --json .github/workflows/*`
-  (`--no-project` keeps uv away from the user's own project).
+  `find .github/workflows -maxdepth 1 \( -name '*.yml' -o -name '*.yaml' \) -print0 | xargs -0 -r uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py --json`
+  (`--no-project` keeps uv away from the user's own project; the `find`
+  passes only YAML files, and the script skips any file that is not a
+  workflow with a warning rather than failing the whole inventory).
 - Hooks: `ls lefthook.yml .pre-commit-config.yaml 2>/dev/null`.
 - Runs on this commit, the fix-target set — listed by `head_sha`, not by
   branch, so every workflow's run on HEAD is present however many the branch
@@ -109,7 +111,10 @@ Profile rules:
 - `unmeasured` (no successful sample) is treated as `slow`.
 - `external` jobs come from GitHub-managed workflows (run path under
   `dynamic/`, such as the Copilot reviewer). They are listed last and never
-  fixed, swept, or optimized: the repo cannot change them.
+  fixed, swept, or optimized: the repo cannot change them. A job whose run
+  was not in the listing has unknown ownership (`external: null`) and is
+  treated the same way by the sweep and the optimizer; only `external:
+  false` is repository-owned.
 - Matrix cells are separate jobs (`pytest (3.12)`); profile them as such.
 - Never estimate a duration from the workflow file. Runtimes come from runs.
 - `unmeasured` jobs have no `wait_bound_s`. A CI wait on one uses the longest
@@ -199,7 +204,7 @@ edit is `superpowers:systematic-debugging`'s discipline.
 | 0 | the extracted test IDs only | local | seconds | IDs were extracted and the toolchain exists here |
 | 1 | the failed step's full `run:` command | local | the step's measured median | the step runs here, and its median is under the threshold or the user accepted the stated time |
 | 1s | **the sweep**: every other host-runnable job's sweepable `run:` steps (candidate rules, toolchain pre-check, and skips: `references/targeted-repro.md`, *The sweep*) | local | the sum of the swept jobs' medians | rung 1 green (or unavailable); before **every** push |
-| 2 | push; when the push would start more than one repo-owned workflow and the failing one has `workflow_dispatch`, the commit carries `[skip ci]` and only that workflow is dispatched (rung 2d, `references/fix-loop.md`); otherwise watch the target job on the run the push started | CI | that job's `wait_bound_s` (the largest, when several workflows are watched) | rung 1s green |
+| 2 | push; when the push would start more than one repo-owned workflow and the failing one has `workflow_dispatch`, the commit carries `[skip ci]` and only that workflow is dispatched — with only the failing tests when it declares a filter input, mirroring rung 0 remotely (rung 2d, `references/fix-loop.md`); otherwise watch the target job on the run the push started | CI | that job's `wait_bound_s` (the largest, when several workflows are watched) | rung 1s green |
 | 3 | every run on the pushed commit (step 1's `head_sha` listing), every job: the run the push started, or after 2d the first marker-free commit — the step-6b hook commit, the `--update-versions` commit, or an empty `ci: full run` commit | CI | the largest `wait_bound_s` across those runs | rung 2 green |
 
 Rules:
