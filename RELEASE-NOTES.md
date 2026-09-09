@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## v0.23.0 — 2026-09-09
+
+### Added
+
+- **`repo-hygiene` 0.10.0 — `ci-audit` is now `ci-fix`, and it fixes CI.**
+  Every run measures first: the last successful runs are profiled through the
+  REST jobs endpoint into per-job medians, queue wait, slowest step, a
+  slow/fast/unmeasured class against `--slow-threshold` (default 2m), and a
+  data-derived CI wait bound. Fix mode triages each red job, extracts the
+  failing test IDs from the job log (pytest, jest, cargo, go; shell-safe
+  quoted), reproduces before editing, and verifies up a ladder: the isolated
+  tests locally, the failed step locally, a local sweep of every other fast
+  job, then a push that dispatches only the failing workflow through
+  `workflow_dispatch` with the fix commit carrying `[skip ci]` (the isolated
+  tests again when the workflow declares a filter input), then every run on
+  the pushed commit. Done means every job green on the last pushed commit.
+  Then it offers once to add the failed check as a lefthook or pre-commit
+  hook, staged by its measured duration. `--audit` reports only; `--optimize`
+  dispatches a read-only sub-agent that returns ranked, evidence-backed speed
+  changes without applying them. Three stdlib scripts (`ci_profile.py`,
+  `extract_failures.py`, `workflow_inventory.py`), 55 tests with real
+  fixtures, an end-to-end run on a scratch PR. `docs/skills/ci-audit.md` is a
+  redirect stub. This repo's CI workflow now declares `workflow_dispatch`.
+  (PROJECTS P42, P45 PR-1; PRs #49, #55)
+
 ### Changed
 
 - **`clear-decision-communication` 0.2.0.** Addresses review CDC-01 through
@@ -14,6 +39,10 @@
   from total runtime; the pre-send check precedes delivery; reusable behavioral
   scenarios accompany a runner that separates process results from semantic
   grading. The original design record remains historical context. (PROJECTS P43)
+- **`repo-hygiene` `pr-merge-flow`.** Routes every failing check-run (build,
+  test, lint, coverage, workflow config) to `ci-fix`, not only build and test
+  failures; reviewer-unavailable commit statuses stay excluded.
+- **`session` 0.11.2.** `session-recap`'s red-CI prompt names `ci-fix`.
 
 ## v0.22.0 — 2026-09-08
 
