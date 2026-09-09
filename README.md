@@ -43,7 +43,7 @@ For local development or direct copies, see the setup skill's install guide.
 
 | Skill | Does | Details |
 |---|---|---|
-| `fusion-runner-setup` | Guides Broadcom downloads and Windows installation, records each setup stage, prepares a reusable VM and runner service, and compares CI with GitHub-hosted Windows. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
+| `fusion-runner-setup` | Guides Broadcom downloads, VM configuration and Windows installation, records each setup stage, prepares a reusable runner, and compares CI with GitHub-hosted Windows. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
 | `fusion-runner-run` | Starts, checks, and gracefully stops the configured VM, verifying GitHub readiness separately from VM power. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
 
 ### repo-hygiene

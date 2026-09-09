@@ -133,8 +133,8 @@ workflow. An installer ISO is not an already prepared runner image.
 ### Windows 11 Arm64 wizard in Fusion 26H1u1
 
 The following screens were observed on Apple Silicon with Fusion `26H1u1` on
-2026-09-08, through **Choose Encryption**. This confirms the wizard sequence up
-to that screen; Windows installation and local CI validation were still pending.
+2026-09-08, through saving the VM and configuring its hardware. Windows
+installation and local CI validation were still pending at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -160,12 +160,64 @@ On another release or an Intel Mac, use the actual labels and matching media.
    TPM; the other option encrypts all VM files. Record the chosen options
    without the password. **Done when:** the user completes this screen and the
    next configuration screen is visible.
+5. **Review the initial VM configuration.** At **Finish**, inspect the guest,
+   disk, memory, networking, and CPU summary. The observed defaults were a
+   64 GB disk, 4 GB memory, 2 CPU cores, and **Share with my Mac (NAT)**. Use
+   **Customize Settings** to adjust resources before booting. This opens a save
+   dialog first; it does not open hardware settings immediately.
+6. **Save the VM in its planned directory.** In the **Save** dialog, give the
+   `.vmwarevm` bundle a recognizable name. Use `Command+Shift+G` to navigate to
+   the actual VM directory selected during host inspection, then click
+   **Save**. Do not replace an existing bundle. **Done when:** the VM's
+   **Settings** window opens and its actual bundle and `.vmx` paths are recorded
+   in the local progress note.
+7. **Apply the chosen CPU and memory allocation.** Open **Processors & Memory**,
+   select the CPU count, enter memory in MB, and press `Tab` to apply the value.
+   The validation VM used 4 cores and `8192` MB on a Mac with 14 cores and
+   48 GB of memory. Size another VM for its host and workflow; these values are
+   an observed example, not requirements for every Mac.
+8. **Apply the chosen disk capacity.** Use **Show All ▸ Hard Disk (NVMe)**. Set
+   **Disk size**, expand **Advanced options**, and leave **Pre-allocate disk
+   space** clear for a disk that grows as needed. Click **Apply** and verify
+   the displayed capacity. The validation VM used 96 GB with **Split into
+   multiple files** selected. A growable disk still needs enough host storage
+   for actual guest data and any later recovery baseline.
+9. **Start the installer.** Close the settings window to return to the VM
+   console, then use **Start Up**. Click inside the console so it receives
+   keyboard input. When **Press any key to boot from CD or DVD.** appears,
+   press `Space` promptly. Confirm that Windows Setup actually appears. A
+   powered-on VM or a firmware screen alone is not a successful installer boot.
+
+If the initial boot falls through to **EFI Network** and Fusion reports **No
+operating system was found**, verify that the correct ISO is still attached in
+**CD/DVD (SATA)** settings. In the observed run, dismissing that notice exposed
+the firmware's **Boot Manager**. Click in the console, use the arrow keys to
+select **EFI VMware Virtual SATA CDROM Drive (1.0)**, and press `Return`. Press
+`Space` immediately when the CD/DVD boot prompt appears. These are two separate
+actions: the first selects the drive; the second tells the Windows installer
+to boot. If the prompt expires, the guest can return to Boot Manager. Broadcom
+documents the [need to focus the console and answer the boot prompt promptly](https://knowledge.broadcom.com/external/article/375069/powering-on-windows-11-vm-on-vmware-fusi.html).
+The drive label may differ
+with another virtual device configuration; select the attached installer drive,
+not the empty virtual hard disk or network boot. Record whether Windows Setup
+then opens; do not infer that it did from selecting the drive.
+
+If UI automation cannot reliably answer this brief boot prompt, hand off only
+the two keystrokes to the user: `Return` on the selected installer drive, then
+`Space` at the CD/DVD prompt. Give the exact VM window name and use Windows
+Setup appearing as the completion check. Resume automation after observing that
+screen, and preserve the attempted recovery in the progress record.
 
 Record the actual subsequent configuration and installation screens as they
 occur. The remaining procedure below states the required setup and verification;
-do not report it as completed because the wizard reached encryption.
+do not report it as completed because the VM was created.
 
-Follow the installed Fusion wizard with the selected media. Give the VM a recognizable name and record its storage location. Use UEFI firmware and the supported Windows 11 configuration, including the virtual Trusted Platform Module (TPM). Fusion may require encryption for the TPM. Have the user retain the encryption password through their chosen credential store; never place it in a command, transcript, or profile JSON. Broadcom documents the [Windows 11 installation flow and VMware Tools installation](https://knowledge.broadcom.com/external/article/375069/powering-on-windows-11-vm-on-vmware-fusi.html).
+Continue with the existing VM recorded above; do not create it again on resume.
+Verify its recorded location, UEFI firmware, and Windows 11 configuration,
+including the virtual Trusted Platform Module (TPM) and its encryption. The user
+retains the encryption password in their chosen credential store; never place
+it in a command, transcript, or profile JSON. Broadcom documents the
+[Windows 11 installation flow and VMware Tools installation](https://knowledge.broadcom.com/external/article/375069/powering-on-windows-11-vm-on-vmware-fusi.html).
 
 Use NAT networking unless the task requires a different network arrangement. A runner initiates outbound connections; registration does not require exposing a listener on the Mac's network. Keep host home folders, credential directories, and unrelated project trees out of the guest. A Mac shared folder is not the runner's Windows work directory.
 
