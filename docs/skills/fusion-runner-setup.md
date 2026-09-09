@@ -54,7 +54,10 @@ settings screens. It also covers selecting the installer in the firmware boot
 menu when the first boot falls through to the network. At **Press any key to
 boot from CD or DVD.**, press `Space` immediately: this is plain text with no
 button or focus highlight. The guide continues through the language, keyboard,
-and setup-option prompts, distinguishing observed screens from user reports.
+setup-option, product-key, edition, and license prompts, distinguishing observed
+screens from user reports. It records that Home was the initial edition default,
+followed by the user's deliberate choice of Pro, and requires a choice that
+matches the intended license.
 During setup, the agent saves each completed stage and pending prompt in a local
 progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
@@ -120,7 +123,9 @@ passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 runners.
 Its local Fusion job was skipped. Fusion `26H1u1` is installed on an Apple
 Silicon Mac. A VM has been created with 4 CPU cores, 8 GB memory, a 96 GB growable
 disk, UEFI Secure Boot, and NAT networking. Windows Setup boot is verified:
-the language and setup-option screens were observed. Installed Windows boot,
+the language, setup-option, product-key, edition, and license screens were
+observed. Windows 11 Pro was selected with user authorization; agreement
+acceptance is pending. Installed Windows boot,
 runner service registration, a local CI job, and baseline restoration remain
 **unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that

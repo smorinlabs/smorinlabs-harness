@@ -1572,7 +1572,7 @@ software and Windows images are downloaded from their official sources.
 - [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
 - [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
 - [x] [P45-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
-- [~] [P45-T06] Record the real installation as it happens: walkthrough now includes the immediate Space boot prompt, observed Windows Setup language/setup-option screens, and user-reported keyboard prompt; continue through Windows and runner setup
+- [~] [P45-T06] Record the real installation as it happens: walkthrough now includes the immediate Space boot prompt, observed Windows Setup language/setup-option/product-key/edition/license screens, and user-reported keyboard prompt; continue through Windows and runner setup
 - [x] [P45-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
 - [ ] [P45-T04] Merge and release the public plugin after review
 
@@ -1584,9 +1584,12 @@ Windows Arm64 ISO downloaded and verified against Microsoft's SHA-256; Fusion
 checks passed. The Windows 11 Arm64 VM has 4 CPU cores, 8 GB memory, a 96 GB
 growable disk, UEFI Secure Boot, and NAT networking. Windows Setup boot is
 verified: the language and setup-option screens were observed after the user
-answered the CD/DVD prompt with immediate Space. Further guest UI input was
-blocked by automatic approval review because macOS accessibility data did not
-expose Windows controls. Installed Windows boot, runner service registration,
+answered the CD/DVD prompt with immediate Space. Some earlier guest UI inputs
+were rejected because macOS accessibility data did not expose Windows controls.
+The user completed that screen; the agent then used the official no-key option
+and selected Windows 11 Pro with explicit user authorization. Acceptance of the
+displayed Microsoft Windows license agreement is pending.
+Installed Windows boot, runner service registration,
 local smoke tests, reboot recovery, and reusable-baseline recovery remain
 unverified.
 

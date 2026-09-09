@@ -134,9 +134,9 @@ workflow. An installer ISO is not an already prepared runner image.
 
 The following screens were observed on Apple Silicon with Fusion `26H1u1` on
 2026-09-08, through saving the VM, configuring its hardware, and opening Windows
-Setup's language and setup-option screens. The intervening keyboard prompt was
-reported by the user. Installed Windows and local CI validation were still
-pending at this checkpoint.
+Setup's language, setup-option, product-key, image-selection, and license-term
+screens. The intervening keyboard prompt was reported by the user. Installed
+Windows and local CI validation were still pending at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -233,11 +233,42 @@ checkpoint records distinguish observed screens from user-reported actions:
    destination is the new VM's virtual disk before continuing with **Next**.
    Recheck the exact destination if a later disk-selection screen appears.
    Observing these selections does not establish that installation has begun.
+4. **Continue past the product-key prompt.** At **Product key**, have the user
+   enter a key directly if that is their chosen activation route. Otherwise,
+   the installer offers **I don't have a product key**, which Microsoft
+   documents for [continuing installation before activation](https://support.microsoft.com/en-us/windows/activation/activate-windows).
+   In this run, the key field was empty and the agent used that link; **Select
+   Image** then appeared. Do not request or retain a product key in chat or
+   public records. Continuing without a key does not establish activation.
+5. **Choose the Windows edition.** The observed **Select Image** screen
+   offered **Windows 11 Home**, **Windows 11 Home Single Language**, and
+   **Windows 11 Pro**, with Home initially selected. Establish the intended
+   edition and matching license before continuing. Broadcom's installation
+   example uses Pro; that is not permission to override an existing Home license
+   or buy Windows. This media does not offer the Enterprise edition used by the
+   hosted Arm64 comparison job. Record the deliberate choice separately from
+   the initial default. The validation user chose **Windows 11 Pro**. The agent
+   selected it, verified the Pro row and description, and clicked **Next**.
+6. **Handle the Windows license agreement.** The next observed screen was
+   **Applicable notices and license terms**, displaying Microsoft's Windows
+   agreement, last updated April 2024, with **Decline** and **Accept**. This is
+   separate from the earlier acknowledgement that installing Windows will
+   delete the selected destination's contents. Present the actual agreement
+   for the user's acceptance, then continue when authorized. Acceptance was
+   pending at this checkpoint; do not record it as completed merely because
+   the user chose an edition.
+
+Without guest integration tools, the first click may only focus Fusion and
+capture the guest mouse. In the product-key step, a fresh check after the first
+click showed no verified page transition; a second click on the still-visible
+link advanced. Verify the current target and result before another click, and
+do not treat mouse capture as completion of a setup step.
 
 Guest controls may not appear in macOS accessibility data even when their pixels
-are visible in Fusion. In this run, automatic approval review rejected further
-guest input for that reason. If an action cannot be verified, hand off the
-specific current step and completion check to the user. Record who performed it
+are visible in Fusion. In this run, automatic approval review rejected some
+earlier guest inputs for that reason; later product-key input succeeded after
+the user completed the preceding screen. If an action cannot be verified, hand
+off the specific current step and completion check to the user. Record who performed it
 and observe the resulting screen before marking it complete; do not bypass a
 rejected action through another input mechanism.
 
