@@ -1593,8 +1593,10 @@ Fusion's connected NAT adapter. The matching Tools disc was mounted. Ctrl+Alt+Ta
 exposed its hidden wizard; Typical installation completed and Windows showed
 Network Connected. The required restart completed. Fusion reported Tools as
 installed and current. First-run setup reached its online update check, accepted
-a device name, and displayed the personal/work-or-school choice; account setup
-is pending.
+a device name, and displayed the personal/work-or-school choice. The user
+subsequently reported selecting personal use, and the agent observed the
+three-stage Windows update screen. Update completion and account sign-in are
+pending.
 The Windows desktop, runner service registration,
 local smoke tests, reboot recovery, and reusable-baseline recovery remain
 unverified.

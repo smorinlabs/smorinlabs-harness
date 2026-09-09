@@ -140,7 +140,11 @@ showed a connected network, and the required restart was completed. Fusion
 subsequently reported Tools as installed and current; Windows first-run setup
 repeated its region and keyboard prompts, reached its online update check,
 accepted a device name, and displayed the personal/work-or-school setup choice.
-The account type has not yet been selected.
+The user subsequently reported selecting personal use. The agent then observed
+the three-stage Windows update screen; update completion and Microsoft-account
+sign-in remain unverified. The walkthrough distinguishes the reported click
+from observed progress and records the automation input failure that required
+the manual click.
 The Windows desktop, runner service registration, a local CI job, and baseline restoration remain
 **unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that

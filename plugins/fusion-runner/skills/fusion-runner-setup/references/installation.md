@@ -141,9 +141,10 @@ because no adapter was available. The VMware Tools wizard was then completed,
 Windows showed a connected network, and its required restart completed. Fusion
 reported Tools as installed and current afterward. Windows first-run setup
 repeated its region and keyboard prompts, reached its online update check, and
-accepted a device name. The account-type screen was then observed with neither
-choice selected. The Windows desktop and local CI validation were still pending
-at this checkpoint.
+accepted a device name. The user later reported selecting personal-use setup;
+the agent then observed the three-stage Windows update screen. Update completion,
+Microsoft-account sign-in, the Windows desktop, and local CI validation were
+still pending at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -380,18 +381,28 @@ language and keyboard choices.
     **Next**, and verify that Windows advances. Let the user complete protected
     Microsoft-account sign-in and any new password or PIN entry and submission
     directly in Windows. Record the completed stage without copying credentials
-    into the progress record. In this validation run, the user chose personal
-    use, but its UI selection and subsequent sign-in were not yet verified.
+    into the progress record. In this validation run, the user authorized
+    personal use and later reported clicking it. The agent subsequently
+    observed Windows beyond the account-type screen, at the update stage below.
+    The click itself and subsequent Microsoft-account sign-in were not observed
+    by the agent.
 
     If a different deployment needs a local-account setup route, inspect the
     options actually offered by that Pro build; this run had not verified such
     a route. Selecting a route does not authorize associating an account or
     enrolling the VM with an organization. Do not bypass account or network
     requirements.
-11. **Complete the remaining Windows screens.** Use the user's authorized account
-   and preference choices; the user handles protected credential entry. The
-   Windows desktop and remaining first-run screens were still pending at this
-   checkpoint. Continue from the actual screen after the restart.
+11. **Allow first-run Windows updates to finish.** The next observed screen was
+    **Getting the latest features and security updates**, with **Step 1 of 3:
+    Starting update - 3%**. Windows said it would restart and then continue
+    setup. Leave the VM running through the update and automatic restart.
+    **Update later** was available but was not selected in this run. Observe
+    the next screen before marking updates or account setup complete; this
+    update stage was still in progress at the recorded checkpoint.
+12. **Complete the remaining Windows screens.** Use the user's authorized account
+    and preference choices; the user handles protected credential entry. The
+    Windows desktop and remaining first-run screens were still pending at this
+    checkpoint. Continue from the actual screen after the restart.
 
 When automation enters Windows commands through JavaScript, preserve literal
 backslashes with `String.raw` or correct string escaping. A path containing
@@ -412,6 +423,16 @@ the user completed the preceding screen. If an action cannot be verified, hand
 off the specific current step and completion check to the user. Record who performed it
 and observe the resulting screen before marking it complete; do not bypass a
 rejected action through another input mechanism.
+
+A tool error is a separate failure from an approval rejection. At the
+personal-use screen, automated coordinate clicks repeatedly returned
+`Computer Use server error -10005: noWindowsAvailable`, although screenshots
+and native Fusion menu actions still worked. Refreshing the automation session
+and bringing the installed Fusion app forward did not restore verified guest
+input. The user reported a successful manual click, and Windows then advanced.
+The precise cause of the tool failure was not established. Do not describe it
+as Windows rejecting the choice or as a missing user authorization. If recovery
+does not work, hand off the current click and verify the resulting screen.
 
 Record subsequent edition, licensing, storage, and first-run screens as they
 occur. The remaining procedure below states the required setup and verification;

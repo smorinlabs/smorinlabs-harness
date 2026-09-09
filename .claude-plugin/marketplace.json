@@ -122,7 +122,7 @@
       "name": "fusion-runner",
       "source": "./plugins/fusion-runner",
       "description": "Provision a Windows GitHub Actions runner in VMware Fusion on a Mac, then start, check, and stop its VM.",
-      "version": "0.2.8",
+      "version": "0.2.9",
       "author": {
         "name": "Steve Morin"
       },
