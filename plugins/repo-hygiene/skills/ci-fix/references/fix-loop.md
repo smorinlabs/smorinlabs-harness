@@ -57,12 +57,19 @@ not count the workflow: a needless 2d costs two commits and a dispatch, a
 missed one costs nothing. With a single counted workflow, plain
 push-and-watch is rung 2 and that same run, all green, is rung 3.
 
-**Decide the marker before committing, from the inventory.** The working tree
-you are about to push *is* the copy GitHub will evaluate (verified 2026-09-08:
-a dispatch against a branch carrying the trigger while `main` did not returned
-204, and the run appeared one second later). So: `workflow_dispatch` in the
-failing workflow's `triggers` → commit with the marker; absent → plain rung 2,
-and record `--optimize` lever 11. The POST executes; it does not decide.
+**Decide the marker before committing, from the inventory.** Two rules,
+both from GitHub's documentation and a live probe on 2026-09-08. The workflow
+*file* must already exist on the default branch, at any version: a workflow
+that is new on this branch cannot be dispatched (404). The *trigger* is read
+from the ref you dispatch against: a dispatch against a branch carrying
+`workflow_dispatch` while `main`'s copy lacked it returned 204 and the run
+appeared one second later. So: the file exists on the default branch
+(`git cat-file -e origin/<default>:.github/workflows/<file>`) and
+`workflow_dispatch` is in the failing workflow's `triggers` → commit with the
+marker; either condition fails → plain rung 2, and record `--optimize` lever
+11. `<file>` is the workflow's exact basename from the inventory, `.yml` or
+`.yaml`, used verbatim in both API paths. The POST executes; it does not
+decide.
 
 `[skip ci]` anywhere in the commit message makes GitHub skip every workflow
 triggered by `push` or `pull_request` for that commit (accepted markers:
@@ -82,13 +89,13 @@ SHA=$(git rev-parse HEAD)
 
 # dispatch only the failing workflow on this branch (204 = accepted, no body);
 # every dispatch_inputs entry marked required must be passed
-gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>.yml/dispatches" \
+gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>/dispatches" \
   -f ref="$(git branch --show-current)" \
   -f "inputs[<name>]=<value>"                           # one per required input; drop the line when there are none
 
 # find the run it created: same workflow file, same event, same commit, created after T0
 # (the workflow-specific listing, so several dispatched workflows never hand back the wrong run id)
-gh api "repos/{owner}/{repo}/actions/workflows/<file>.yml/runs?event=workflow_dispatch&head_sha=$SHA&per_page=5" \
+gh api "repos/{owner}/{repo}/actions/workflows/<file>/runs?event=workflow_dispatch&head_sha=$SHA&per_page=5" \
   --jq ".workflow_runs[] | select(.created_at >= \"$T0\") | {id, status, conclusion, created_at}"
 ```
 
@@ -151,7 +158,7 @@ pushed `head_sha`:
 # the target run, through the workflow-specific listing: a push that starts
 # several workflows cannot hide it, and a same-named job from another
 # workflow cannot be mistaken for it; keep this run_id for every later check
-gh api "repos/{owner}/{repo}/actions/workflows/<file>.yml/runs?head_sha=<sha>&per_page=5" \
+gh api "repos/{owner}/{repo}/actions/workflows/<file>/runs?head_sha=<sha>&per_page=5" \
   --jq '.workflow_runs[0] | {id, status, conclusion}'
 gh api "repos/{owner}/{repo}/actions/runs/<run_id>/jobs?per_page=100" \
   --jq '.jobs[] | select(.name == "<job>") | {status, conclusion, run_attempt}'

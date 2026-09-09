@@ -219,7 +219,9 @@ Rules:
   locally and pushed once, not once per job.
 - Rung 2d is decided before the commit, from the inventory's `triggers` for
   the failing workflow: the marker goes on its own body line only when
-  `workflow_dispatch` is listed. A dispatch that still fails is recovered by
+  `workflow_dispatch` is listed and the workflow file already exists on the
+  default branch (the trigger is read from this branch; the file must be known
+  to GitHub from the default branch). A dispatch that still fails is recovered by
   making the rung-3 commit at once and watching the target job on the run it
   starts. Mechanics and failure cases: `references/fix-loop.md`, *Rung 2d*.
 - Same-commit reruns are not a rung. They serve two cases only: the flake
