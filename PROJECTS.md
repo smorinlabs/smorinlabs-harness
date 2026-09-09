@@ -1572,7 +1572,7 @@ software and Windows images are downloaded from their official sources.
 - [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
 - [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
 - [x] [P45-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
-- [~] [P45-T06] Record the real installation as it happens: walkthrough includes the immediate Space boot prompt, Pro selection, approved license, virtual disk installation and restarts, first-run region/keyboard choices, and missing-network-driver checkpoint; VMware Tools launched, completion pending
+- [~] [P45-T06] Record the real installation as it happens: walkthrough includes the immediate Space boot prompt, Pro selection, approved license, disk installation and restarts, first-run region/keyboard choices, and successful VMware Tools/network-driver recovery; remaining Windows setup continues
 - [x] [P45-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
 - [ ] [P45-T04] Merge and release the public plugin after review
 
@@ -1589,9 +1589,13 @@ displayed license and remaining installation; the agent accepted it, verified
 the intended empty 96 GB disk, and started installation. Automatic restarts led
 to first-run setup. United States, US keyboard, and Skip for a second layout
 were observed. The network page showed no adapter and disabled Next despite
-Fusion's connected NAT adapter. The matching Tools disc was mounted, and its
-installer process was verified running. Completed Tools installation and
-network connectivity remain pending. The Windows desktop, runner service registration,
+Fusion's connected NAT adapter. The matching Tools disc was mounted. Ctrl+Alt+Tab
+exposed its hidden wizard; Typical installation completed and Windows showed
+Network Connected. The required restart completed. Fusion reported Tools as
+installed and current. First-run setup reached its online update check, accepted
+a device name, and displayed the personal/work-or-school choice; account setup
+is pending.
+The Windows desktop, runner service registration,
 local smoke tests, reboot recovery, and reusable-baseline recovery remain
 unverified.
 

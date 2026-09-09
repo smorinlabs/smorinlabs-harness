@@ -59,8 +59,9 @@ distinguishing observed screens from user reports. It records that Home was the 
 followed by the user's deliberate choice of Pro, and requires a choice that
 matches the intended license. Its [first-run walkthrough](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md#complete-first-run-setup-and-resolve-a-missing-network-driver)
 records the region and keyboard choices, the missing network adapter, and
-mounting and launching VMware Tools. Tools installation must be verified before
-that prerequisite is marked complete.
+VMware Tools installation. It includes the verified `Ctrl+Alt+Tab` recovery for
+a Tools wizard hidden behind Windows setup, followed by **Typical** installation,
+network connectivity, and the required restart.
 During setup, the agent saves each completed stage and pending prompt in a local
 progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
@@ -128,8 +129,13 @@ Silicon Mac. A VM has been created with 4 CPU cores, 8 GB memory, a 96 GB growab
 disk, UEFI Secure Boot, and NAT networking. On 2026-09-09, Windows 11 Pro was
 installed onto the virtual disk after the user approved its license and clean
 installation. Automatic restarts and first-run region and keyboard screens
-were observed. First-run setup is incomplete: its network page showed no
-adapter, and VMware Tools was launched but has not been verified as installed.
+were observed. The network page initially showed no adapter. VMware Tools
+`13.1.5.0.25544008` was then installed through its **Typical** wizard. Windows
+showed a connected network, and the required restart was completed. Fusion
+subsequently reported Tools as installed and current; Windows first-run setup
+repeated its region and keyboard prompts, reached its online update check,
+accepted a device name, and displayed the personal/work-or-school setup choice.
+The account type has not yet been selected.
 The Windows desktop, runner service registration, a local CI job, and baseline restoration remain
 **unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that

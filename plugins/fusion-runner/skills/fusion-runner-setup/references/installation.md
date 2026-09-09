@@ -136,9 +136,14 @@ The following screens were observed on Apple Silicon with Fusion `26H1u1` on
 2026-09-08 and 2026-09-09, through VM creation, Windows installation onto its
 virtual disk, automatic restarts, and Windows first-run setup. The installer's
 keyboard prompt was reported by the user; the later first-run keyboard screen
-was observed directly. First-run setup stopped at its network page because no
-adapter was available. VMware Tools was launched, but its completed installation,
-the Windows desktop, and local CI validation were still pending at this checkpoint.
+was observed directly. First-run setup initially stopped at its network page
+because no adapter was available. The VMware Tools wizard was then completed,
+Windows showed a connected network, and its required restart completed. Fusion
+reported Tools as installed and current afterward. Windows first-run setup
+repeated its region and keyboard prompts, reached its online update check, and
+accepted a device name. The account-type screen was then observed with neither
+choice selected. The Windows desktop and local CI validation were still pending
+at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -314,19 +319,69 @@ language and keyboard choices.
    ```
 
    In this run, `D:` contained `setup.exe`, and a subsequent process check
-   identified `D:\setup.exe` with the window title **VMware Tools Setup**. The
-   wizard had not yet been completed. Clipboard paste failed before Tools was
-   installed; typing into the focused console worked. Do not repeatedly launch
-   the installer when it is already running.
-6. **Finish Tools and verify connectivity.** Follow the actual VMware Tools
-   wizard and its restart prompt, as described in Broadcom's
+   identified `D:\setup.exe` with the window title **VMware Tools Setup**.
+   Clipboard paste failed before Tools was installed; typing into the focused
+   console worked. Verify the complete command before pressing `Return`. Do not
+   repeatedly launch the installer when it is already running.
+6. **Bring a hidden Tools wizard forward.** If Windows setup or a command
+   prompt covers the installer, focus the guest and press `Ctrl+Alt+Tab`.
+   On a Mac keyboard, use `Control+Option+Tab` inside the guest. This opens the
+   Windows window switcher and keeps it visible after the keys are released.
+   Use the arrow keys to select the **VMware Tools Setup** thumbnail, verify
+   its selection, and press `Return`. This recovered the running wizard in the
+   validation VM. Repeatedly opening `Shift+F10` creates additional command
+   windows; it does not bring the existing Tools wizard forward.
+7. **Finish Tools and verify connectivity.** Follow the actual VMware Tools
+   wizard, as described in Broadcom's
    [Fusion Tools installation instructions](https://knowledge.broadcom.com/external/article/315622/installing-vmware-tools-in-a-fusion-virt.html).
-   Then confirm that Windows detects the network adapter and can continue
-   first-run setup. Complete the remaining account and preference screens using
-   the user's authorized choices; the user handles protected credential entry.
-   This step remained unverified at the recorded checkpoint. A running installer
-   process, a mounted disc, or Fusion's **Cancel VMware Tools Installation** menu
-   label is not proof of a successful Tools installation.
+   The observed wizard identified version `13.1.5.0.25544008`. At **Welcome**,
+   select **Next**. At **Choose Setup Type**, keep **Typical** and select **Next**;
+   `Alt+N` worked when keyboard navigation was needed. At **Ready to install
+   VMware Tools**, select **Install**. Wait for **Completed the VMware Tools
+   Setup Wizard**, then select **Finish**. Accept the requested restart when
+   installation is authorized. These screens and choices were observed in this
+   run. Windows showed **Network — Connected** and enabled **Next** after the
+   drivers installed, before restarting. After the restart, verify that the
+   adapter still works and continue first-run setup. A running installer process,
+   a mounted disc, or Fusion's **Cancel VMware Tools Installation** menu label
+   alone does not establish a successful Tools installation.
+8. **Resume first-run setup after the restart.** If the region and keyboard
+   prompts reappear, reuse the user's recorded region, primary keyboard, and
+   second-layout choices. In this run, Windows repeated those prompts; the
+   recorded choices were **United States**, **US**, and **Skip** for a second
+   layout. After confirming them again, Windows advanced to
+   **Just a moment, checking for updates**, then announced another restart.
+   Fusion's post-restart log reported Tools as installed and current. These
+   observations confirm progress beyond the missing-driver screen; they do not
+   establish a completed Windows desktop or runner setup.
+9. **Give the guest a recognizable device name.** At **Name your device**, enter
+   a unique name suitable for the CI machine and follow the displayed character
+   restrictions. Record the actual name locally. The screen warns that Windows
+   will restart after naming. Select **Next** and verify that setup advances.
+   In this run, typing the name worked, but a click and `Return` did not advance
+   the page. Pressing `Tab` until **Next** had a visible focus outline, then
+   pressing `Space`, activated it. Use the current focus outline rather than
+   assuming a fixed number of Tab presses.
+10. **Select the intended account setup.** The next observed screen was **How
+    would you like to set up this device?**, offering **Set up for personal
+    use** and **Set up for work or school**. The first describes a personal
+    Microsoft account; the second describes organizational resources and
+    control of an enrolled device. Neither option was selected at this
+    checkpoint. Use the account setup authorized for the CI VM. If looking for
+    a local-account route, inspect the options actually offered by that Pro
+    build; this run had not yet verified that route. Do not equate selecting
+    a setup route with permission to associate an account or enroll the machine
+    with an organization. Do not bypass account or network requirements.
+11. **Complete the remaining Windows screens.** Use the user's authorized account
+   and preference choices; the user handles protected credential entry. The
+   Windows desktop and remaining first-run screens were still pending at this
+   checkpoint. Continue from the actual screen after the restart.
+
+When automation enters Windows commands through JavaScript, preserve literal
+backslashes with `String.raw` or correct string escaping. A path containing
+`\v` in an ordinary JavaScript string can become a control character. This
+caused a malformed diagnostic command during validation; it was corrected
+before further execution. Verify the displayed command before submitting it.
 
 Without guest integration tools, the first click may only focus Fusion and
 capture the guest mouse. In the product-key step, a fresh check after the first
