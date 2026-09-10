@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.24.0 — 2026-09-10
+
 ### Added
 
 - **`repo-hygiene` 0.11.0 — `ci-fix` isolates only where it pays, with a
