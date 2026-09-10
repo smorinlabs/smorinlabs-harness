@@ -9,13 +9,13 @@ only place a failure can be seen.
 
 Two rules shape the ranking:
 
-- **Readiness before fidelity.** Something already running costs nothing to
-  use, so it is recommended over a more faithful tool that first needs an
-  install, a machine, or a 1 GB image pull. Within one readiness tier the
-  fidelity order applies: act (replays the whole job, `uses:` steps included)
-  → podman → docker → lima. podman leads the two container runtimes because it
-  is rootless, needs no licence, and takes the same CLI as docker; lima is the
-  fallback, a full VM that is the most faithful Linux and the slowest to start.
+- **Installed before absent, and an image on disk before a download.**
+  Anything already on the machine outranks anything that is not: starting a
+  stopped runner is one command, installing is a download. Among the
+  installed, one that already holds an image or a VM outranks one that would
+  fetch it first. Only then does the preference order decide — podman, lima,
+  docker. `preference` is that ranking; `ready` is the subset usable with no
+  start at all.
 - **Recommend what is here; otherwise recommend the easiest thing to get.**
   A bare machine is told to install podman, not the "best" runner: one
   formula, rootless, no licence and no GUI, and on a Linux host no virtual
@@ -52,12 +52,12 @@ from pathlib import Path
 SCHEMA = 1
 CI_ARCH = "x86_64"  # GitHub's ubuntu-* runners
 FRESH_S = 24 * 60 * 60
-# Fidelity order, used only to break ties inside one readiness tier.
-# podman leads the runtimes: rootless, no licence, and CLI-compatible with
-# docker, so it is the cheapest thing to recommend installing as well as the
-# safest default. lima is the fallback — a full VM, most faithful and slowest.
-FIDELITY = ["act", "podman", "docker", "lima", "devcontainer"]
-READINESS_RANK = {"ready": 0, "needs_start": 1, "absent": 2}
+# Preference order among *installed* runners (owner, 2026-09-10): podman
+# first because it is the easiest — rootless, no licence, the same CLI as
+# docker; lima second, and the right answer whenever the job needs a full VM
+# rather than a shared kernel; docker after both. act is a driver on top of a
+# runtime, not a peer.
+FIDELITY = ["act", "podman", "lima", "docker", "devcontainer"]
 
 
 def host_os() -> str:
@@ -260,6 +260,17 @@ def detect_simple(name: str, args: list[str], timeout: float, needs: str) -> dic
     }
 
 
+def count_images(cmd: list[str], timeout: float) -> int:
+    """How many images are already on disk. This is the tiebreak between two
+    installed runners: the one holding an image can start work now, the other
+    downloads first. A stopped machine answers 0, which is the truth here —
+    its images are not reachable without starting it either."""
+    rc, out, _ = probe(cmd, timeout)
+    if rc != 0:
+        return 0
+    return len([ln for ln in out.splitlines() if ln.strip()])
+
+
 def survey(timeout: float) -> dict:
     runners = {
         "docker": detect_docker(timeout),
@@ -278,6 +289,22 @@ def survey(timeout: float) -> dict:
             "act drives a container runtime; none is ready",
         ),
     }
+    # what is already on disk, the tiebreak between two installed runners
+    for name, cmd in (
+        ("docker", ["docker", "images", "-q"]),
+        ("podman", ["podman", "images", "-q"]),
+    ):
+        r = runners[name]
+        r["images"] = count_images(cmd, timeout) if r["readiness"] == "ready" else 0
+    runners["lima"]["images"] = len(
+        runners["lima"].get("vms", [])
+    )  # a VM on disk is a fetched image
+    for name in ("act", "devcontainer"):
+        runners[name]["images"] = 0
+    for name in ("docker", "podman", "lima"):
+        if runners[name]["images"]:
+            runners[name]["detail"] += f"; {runners[name]['images']} image(s) on disk"
+
     # act replays the whole job, but only on top of a ready runtime
     runtime_ready = any(
         runners[r]["readiness"] == "ready" for r in ("docker", "podman")
@@ -289,13 +316,40 @@ def survey(timeout: float) -> dict:
 
 
 def rank(runners: dict) -> list[str]:
-    """Ready first; fidelity only breaks ties. devcontainer never leads alone."""
-    ready = [
+    """Installed before absent, and an image on disk before a download.
+
+    Anything already on the machine outranks anything that is not, because
+    starting a stopped runner is one command while installing it is a
+    download. Among the installed, one that already holds an image or a VM
+    outranks one that would fetch it first. Only then does the preference
+    order decide: podman, lima, docker.
+
+    devcontainer is surveyed but never leads; it drives another runtime.
+    """
+    candidates = [
         n
         for n in FIDELITY
-        if runners[n]["readiness"] == "ready" and n != "devcontainer"
+        if n != "devcontainer" and runners[n]["readiness"] != "absent"
     ]
-    return ready
+    return sorted(
+        candidates,
+        key=lambda n: (0 if runners[n].get("images", 0) > 0 else 1, FIDELITY.index(n)),
+    )
+
+
+def why(runners: dict, name: str) -> str:
+    r = runners[name]
+    if r["readiness"] == "ready":
+        return f"{r['detail']} — already running, so a Linux step can start now with no install and no boot"
+    have = (
+        "already holds an image"
+        if r.get("images", 0) > 0
+        else "would fetch its image first"
+    )
+    return (
+        f"{r['detail']} — installed and {have}; starting it is one command "
+        f"({r['start_command']}), which beats installing anything new"
+    )
 
 
 def recommend(runners: dict, order: list[str], os_name: str, pinned: str = "") -> dict:
@@ -304,14 +358,20 @@ def recommend(runners: dict, order: list[str], os_name: str, pinned: str = "") -
         if pinned in order:
             out["recommended"] = {
                 "runner": pinned,
-                "readiness": "ready",
+                "readiness": runners[pinned]["readiness"],
+                "start_command": runners[pinned]["start_command"],
                 "reason": f"pinned in runners.toml, and {runners[pinned]['detail']}",
             }
+            if runners[pinned]["readiness"] != "ready":
+                out["recommend_start"] = {
+                    "runner": pinned,
+                    "command": runners[pinned]["start_command"],
+                    "reason": why(runners, pinned),
+                }
             return out
-        state = runners.get(pinned, {}).get("readiness", "absent")
         out["pinned_unavailable"] = {
             "runner": pinned,
-            "readiness": state,
+            "readiness": runners.get(pinned, {}).get("readiness", "absent"),
             "detail": runners.get(pinned, {}).get("detail", f"{pinned} is unknown"),
             "start_command": runners.get(pinned, {}).get("start_command", ""),
         }
@@ -319,26 +379,16 @@ def recommend(runners: dict, order: list[str], os_name: str, pinned: str = "") -
         top = order[0]
         out["recommended"] = {
             "runner": top,
-            "readiness": "ready",
-            "reason": f"{runners[top]['detail']} — already running, so a Linux step can start now "
-            "with no install and no boot",
+            "readiness": runners[top]["readiness"],
+            "start_command": runners[top]["start_command"],
+            "reason": why(runners, top),
         }
-        return out
-    startable = [
-        n
-        for n in FIDELITY
-        if runners[n]["readiness"] == "needs_start" and runners[n]["start_command"]
-    ]
-    if startable:
-        # cheapest start first: a container runtime beats booting a VM
-        for pick in ("podman", "docker", "lima", "act"):
-            if pick in startable:
-                out["recommend_start"] = {
-                    "runner": pick,
-                    "command": runners[pick]["start_command"],
-                    "reason": f"{runners[pick]['detail']}; starting it is cheaper than installing anything new",
-                }
-                break
+        if runners[top]["readiness"] != "ready":
+            out["recommend_start"] = {
+                "runner": top,
+                "command": runners[top]["start_command"],
+                "reason": why(runners, top),
+            }
         return out
     if os_name == "linux":
         out["recommend_install"] = {
@@ -373,6 +423,7 @@ def build(timeout: float, pinned: str = "") -> dict:
         "schema": SCHEMA,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),  # noqa: UP017
         "preference": order,
+        "ready": [n for n in order if runners[n]["readiness"] == "ready"],
         "pinned": pinned,
         "host": {
             "os": os_name,
@@ -410,6 +461,7 @@ def render(data: dict) -> str:
         f"schema = {data['schema']}",
         f"generated_at = {_v(data['generated_at'])}",
         f"preference = {_v(data['preference'])}",
+        f"ready = {_v(data['ready'])}",
         "",
         "# Set pinned to a runner name to always prefer it; it survives --refresh.",
         f"pinned = {_v(data.get('pinned', ''))}",

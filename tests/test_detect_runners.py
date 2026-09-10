@@ -2,11 +2,12 @@
 
 detect_runners.py answers one question: when a `runs-on: ubuntu-*` job cannot
 run on this host, what is already here that could run it? It is read-only —
-it never starts a VM, pulls an image, or installs anything — and it ranks by
-**readiness before fidelity**, because something already running costs nothing
-to use, while the most faithful tool in the world is useless if it needs a
-1 GB download first. When nothing is available it names the easiest thing to
-install for this host rather than the best one.
+it never starts a VM, pulls an image, or installs anything — and it ranks
+**installed before absent, and an image on disk before a download** (owner,
+2026-09-10): starting a stopped runner is one command, installing one is a
+download, and a runner already holding an image can begin now. Only then does
+the preference order decide: podman, lima, docker. When nothing is installed
+it names the easiest thing to get for this host rather than the best one.
 
 Every probe runs against shim binaries on an isolated PATH, so the tests
 describe the machine rather than depending on this one.
@@ -32,11 +33,21 @@ LIMA_RUNNING = json.dumps(
 )
 
 
-def shim(bin_dir, name, stdout="", code=0, stderr="", sleep=0):
-    """An executable that fakes one tool's response."""
+def shim(bin_dir, name, stdout="", code=0, stderr="", sleep=0, images=0):
+    """An executable that fakes one tool's response.
+
+    Argument-aware: `docker images -q` and `podman images -q` answer with
+    `images` id lines, everything else with `stdout`. A shim that echoed the
+    same text for every subcommand would report one image for every tool and
+    silently defeat the image tiebreak.
+    """
     bin_dir.mkdir(parents=True, exist_ok=True)
     p = bin_dir / name
     body = "#!/bin/sh\n"
+    body += 'if [ "$1" = "images" ]; then\n'
+    for i in range(images):
+        body += f"  printf '%s\\n' 'img{i}'\n"
+    body += "  exit 0\nfi\n"
     if sleep:
         # absolute path: PATH is the shim dir only, so a bare `sleep` is not found
         body += f"/bin/sleep {sleep}\n"
@@ -147,22 +158,29 @@ def test_act_leads_only_when_a_runtime_is_ready_for_it(tmp_path):
     shim(bin_dir, "docker", "29.5.2|aarch64|linux")
     d = detect(bin_dir)
     assert d["runners"]["act"]["readiness"] == "ready"
-    assert d["preference"][:2] == ["act", "docker"]
+    assert d["preference"][:2] == ["act", "docker"]  # neither holds an image, so the order decides
     assert d["recommended"]["runner"] == "act"
 
 
 def test_act_without_a_runtime_cannot_be_ready(tmp_path):
-    """act drives a container runtime; alone it can run nothing."""
+    """act drives a container runtime; alone it can run nothing — but it is
+    installed, so it still ranks, with the cost of getting it going stated."""
     bin_dir = tmp_path / "bin"
     shim(bin_dir, "act", "act version 0.2.90")
     d = detect(bin_dir)
     assert d["runners"]["act"]["readiness"] == "needs_start"
     assert "runtime" in d["runners"]["act"]["detail"]
-    assert d["preference"] == []  # nothing is ready
-    assert d["recommended"] is None
+    assert d["preference"] == ["act"]  # installed, so ranked
+    assert d["ready"] == []  # but nothing can run without a start
+    assert d["recommended"]["runner"] == "act"
+    assert d["recommended"]["readiness"] == "needs_start"
 
 
-def test_a_ready_runner_outranks_a_stopped_one_whatever_the_fidelity_order(tmp_path):
+def test_a_stopped_runner_holding_an_image_outranks_a_running_empty_one(tmp_path):
+    """The sharp edge of the owner's rule: lima is stopped and podman is
+    running, but lima already has a VM on disk while podman would pull an
+    image first, so lima is recommended and its boot command is quoted. Both
+    pay roughly the same to become useful; the one holding the bytes wins."""
     bin_dir = tmp_path / "bin"
     shim(bin_dir, "podman", "5.6.0|aarch64")
     shim(bin_dir, "docker", "", code=1, stderr="Cannot connect to the Docker daemon")
@@ -171,19 +189,24 @@ def test_a_ready_runner_outranks_a_stopped_one_whatever_the_fidelity_order(tmp_p
     assert d["runners"]["podman"]["readiness"] == "ready"
     assert d["runners"]["docker"]["readiness"] == "needs_start"
     assert d["runners"]["lima"]["readiness"] == "needs_start"
-    assert d["preference"][0] == "podman"  # ready, though docker leads on fidelity
-    assert d["recommended"]["runner"] == "podman"
+    assert d["preference"] == ["lima", "podman", "docker"]
+    assert d["ready"] == ["podman"]
+    assert d["recommended"]["runner"] == "lima"
+    assert d["recommend_start"]["command"] == "limactl start agent-fork"
 
 
 def test_nothing_ready_but_something_installed_recommends_starting_it(tmp_path):
+    """Installed beats absent: a stopped lima is the recommendation, with the
+    one command that makes it usable — never an install of something new."""
     bin_dir = tmp_path / "bin"
     shim(bin_dir, "limactl", LIMA_STOPPED)
     d = detect(bin_dir)
-    assert d["preference"] == []
-    assert d["recommended"] is None
+    assert d["preference"] == ["lima"]
+    assert d["ready"] == []
+    assert d["recommended"]["runner"] == "lima"
     assert d["recommend_start"]["runner"] == "lima"
     assert "limactl start agent-fork" in d["recommend_start"]["command"]
-    assert "recommend_install" not in d or d["recommend_install"] is None
+    assert d["recommend_install"] is None
 
 
 # --------------------------------------------------------------- per-runner
@@ -271,9 +294,13 @@ def test_toml_is_valid_and_carries_the_survey(tmp_path):
     shim(bin_dir, "limactl", LIMA_STOPPED)
     cfg, dest = config(bin_dir, tmp_path)
     assert cfg["schema"] == 1
-    assert cfg["preference"] == ["docker"]
+    # lima holds a VM on disk and docker holds no image: the tiebreak puts
+    # lima first even though docker is the one already running
+    assert cfg["preference"] == ["lima", "docker"]
+    assert cfg["ready"] == ["docker"]
     assert cfg["host"]["os"] == "darwin" and cfg["host"]["arch"] == "arm64"
-    assert cfg["recommended"]["runner"] == "docker"
+    assert cfg["recommended"]["runner"] == "lima"
+    assert "limactl start agent-fork" in cfg["recommend_start"]["command"]
     assert cfg["runners"]["docker"]["readiness"] == "ready"
     assert cfg["runners"]["lima"]["readiness"] == "needs_start"
     assert dest.read_text().startswith("#")  # a header explains how to regenerate it
@@ -363,7 +390,9 @@ def test_a_pinned_runner_overrides_the_ranking_and_survives_refresh(tmp_path):
     assert "pinned in runners.toml" in cfg["recommended"]["reason"]
 
 
-def test_a_pin_on_something_not_ready_is_reported_not_silently_ignored(tmp_path):
+def test_a_pin_on_a_stopped_runner_is_honoured_with_its_start_command(tmp_path):
+    """Installed is enough to honour a pin; the start is quoted, not silently
+    swapped for whatever happens to be running."""
     bin_dir = tmp_path / "bin"
     shim(bin_dir, "docker", "29.5.2|aarch64|linux")
     shim(bin_dir, "podman", "", code=125, stderr="Cannot connect to Podman")
@@ -371,6 +400,57 @@ def test_a_pin_on_something_not_ready_is_reported_not_silently_ignored(tmp_path)
     dest.write_text(dest.read_text().replace('pinned = ""', 'pinned = "podman"'))
     run(bin_dir, "--out", dest, "--refresh")
     cfg = tomllib.loads(dest.read_text())
+    assert cfg["recommended"]["runner"] == "podman"
+    assert cfg["recommended"]["readiness"] == "needs_start"
+    assert "podman machine start" in cfg["recommend_start"]["command"]
+
+
+def test_a_pin_on_something_absent_falls_through_and_says_so(tmp_path):
+    bin_dir = tmp_path / "bin"
+    shim(bin_dir, "docker", "29.5.2|aarch64|linux")
+    _, dest = config(bin_dir, tmp_path)
+    dest.write_text(dest.read_text().replace('pinned = ""', 'pinned = "podman"'))
+    run(bin_dir, "--out", dest, "--refresh")
+    cfg = tomllib.loads(dest.read_text())
     assert cfg["pinned_unavailable"]["runner"] == "podman"
-    assert "podman machine start" in cfg["pinned_unavailable"]["start_command"]
-    assert cfg["recommended"]["runner"] == "docker"  # falls through to what is ready
+    assert cfg["pinned_unavailable"]["readiness"] == "absent"
+    assert cfg["recommended"]["runner"] == "docker"
+
+
+def test_an_image_on_disk_breaks_the_tie_between_two_installed_runners(tmp_path):
+    """The owner's rule: with podman and lima both installed, the one that
+    already has something on disk wins, because the other downloads first."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    # podman is running but empty; lima has a VM already on disk
+    (bin_dir / "podman").write_text(
+        '#!/bin/sh\ncase "$1" in info) printf "5.6.0|aarch64\\n" ;; images) : ;; esac\nexit 0\n'
+    )
+    (bin_dir / "podman").chmod(0o755)
+    shim(bin_dir, "limactl", LIMA_STOPPED)
+    d = detect(bin_dir)
+    assert d["runners"]["podman"]["images"] == 0
+    assert d["runners"]["lima"]["images"] == 1
+    assert d["preference"] == ["lima", "podman"], (
+        "an image on disk outranks the preference order"
+    )
+    assert d["recommended"]["runner"] == "lima"
+
+    # give podman an image and the preference order decides again
+    (bin_dir / "podman").write_text(
+        '#!/bin/sh\ncase "$1" in info) printf "5.6.0|aarch64\\n" ;; images) printf "abc123\\n" ;; esac\nexit 0\n'
+    )
+    (bin_dir / "podman").chmod(0o755)
+    d = detect(bin_dir)
+    assert d["runners"]["podman"]["images"] == 1
+    assert d["preference"] == ["podman", "lima"]
+
+
+def test_podman_leads_lima_leads_docker_when_all_are_equal(tmp_path):
+    bin_dir = tmp_path / "bin"
+    shim(bin_dir, "docker", "29.5.2|aarch64|linux")
+    shim(bin_dir, "podman", "5.6.0|aarch64")
+    shim(bin_dir, "limactl", "")  # installed, no VMs, so no image either
+    d = detect(bin_dir)
+    assert all(d["runners"][n]["images"] == 0 for n in ("docker", "podman", "lima"))
+    assert d["preference"] == ["podman", "lima", "docker"]
