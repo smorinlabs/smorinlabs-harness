@@ -21,24 +21,36 @@ python3 <skill-dir>/scripts/detect_runners.py --refresh  # survey again
 ```
 
 Read-only: it starts nothing, pulls nothing, installs nothing. The file ranks
-by **readiness before fidelity** — a runner that is already running is
-recommended over a more faithful one that needs an install, a machine, or a
-1 GB image, because the ready one can reproduce the failure now.
+by **what is on the machine, and what is already on disk**:
+
+1. **Installed beats absent.** Starting a stopped runner is one command;
+   installing one is a download. Anything present outranks anything not.
+2. **An image or VM on disk beats a fetch.** Between two installed runners,
+   the one already holding bytes can begin now while the other downloads
+   first — so a stopped lima with a VM outranks a running but empty podman.
+   Both pay about the same to become useful; the one holding the bytes wins.
+3. **Then the order: podman, lima, docker.** podman is the easiest — rootless,
+   no licence, the same CLI as docker. lima is next, and is the right answer
+   whenever the job needs a full VM rather than a shared kernel. docker
+   follows both.
+
+`preference` is that ranking. `ready` is the subset usable with no start at
+all, so the report can say whether the recommendation costs a boot.
 
 | Field | Use |
 |---|---|
-| `preference` | ready runners, best first; empty means nothing can run right now |
-| `recommended` | the one to use, with the reason to quote in the report |
-| `recommend_start` | nothing ready, something installed: the one command that would fix that |
-| `recommend_install` | nothing installed: the easiest thing to get for this host |
+| `preference` | installed runners, best first; empty means nothing is installed |
+| `ready` | the subset needing no start; empty means the recommendation costs a boot |
+| `recommended` | the one to use, its readiness, and the reason to quote in the report |
+| `recommend_start` | present when the recommendation is not running: the one command that makes it so |
+| `recommend_install` | nothing installed at all: the easiest thing to get for this host |
+| `runners.<name>.images` | images (or lima VMs) already on disk — the tiebreak above |
 | `pinned` | the owner's own choice, honoured over the ranking and kept across `--refresh` |
 | `pinned_unavailable` | a pin that is not ready, with the command that would start it |
 | `host.arch_note` | non-empty when this host is not CI's `x86_64` |
 
-Within one readiness tier the order is act → podman → docker → lima. podman
-leads the two runtimes because it is rootless, needs no licence, and takes the
-same CLI as docker; lima is the fallback — a full VM, the most faithful Linux
-and the slowest to start. **Never start, install, or pin anything without
+act sits above the runtimes in that order but is a driver, not a peer: it is
+only ready when a runtime is. **Never start, install, or pin anything without
 asking**: present `recommend_start` or `recommend_install` as one
 AskUserQuestion, and record a decline so it is not asked again.
 
@@ -116,8 +128,12 @@ VM (`limactl start --name ci-fix template://ubuntu`) rather than the owner's.
 
 ## 4. Bounds, and what to record
 
-- **First run in a container or VM**: bound at 2 × the CI step median, floor
+- **First run in an existing runner**: bound at 2 × the CI step median, floor
   5 minutes — the image pull dominates and is not in CI's number.
+- **Creating a VM that does not exist yet**: bound at 10 minutes. Measured
+  2026-09-10, a fresh `template://ubuntu` VM took 367s to download and boot
+  before running anything, so the 5-minute floor would have expired on a
+  healthy run. Say in the report that the wait was VM creation, not the step.
 - **After that**: the ledger decides, like any host run. Record every green
   with `local_ledger.py record`, so the second fix on this machine plans from
   a measurement instead of a doubled guess.
@@ -130,8 +146,16 @@ orders of magnitude to expect:
 | Run | Time | Against |
 |---|---|---|
 | first container run, image pull included | 30s | — |
-| whole pytest step, warm, native arm64 | 38s | 16s for the same job in CI |
+| whole pytest step in a container, warm, native arm64 | 38s | 16s for the same job in CI |
 | the same tests emulated to `linux/amd64` | 6× the native time | — |
+| creating a fresh lima VM: image download and boot | 367s | one-off, before any step runs |
+| whole pytest step inside that VM, once up | 27s | 38s in the container |
+
+The VM beat the container on the step itself (23s of test time against 34s),
+which is worth knowing before assuming a container is always the faster
+choice on Apple Silicon: the VM runs a native-arch kernel, while the
+container shares the host's through a translation layer. What the VM costs
+is the one-off creation, and a VM that already exists does not pay it.
 
 The container is roughly twice the CI job's own time before emulation, which
 is why an untested step is estimated at 2 × the CI median; the estimate is

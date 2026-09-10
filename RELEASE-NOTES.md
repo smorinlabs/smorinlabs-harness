@@ -8,13 +8,15 @@
   already on the machine.** A new `scripts/detect_runners.py` surveys podman,
   docker, lima, act and the devcontainer CLI and writes
   `~/.config/ci-fix/runners.toml`. The survey is read-only — it starts no VM,
-  pulls no image, installs nothing — and ranks by **readiness before
-  fidelity**: a runtime already running is recommended over a more faithful
-  one that first needs an install or a 1 GB image, because the ready one
-  reproduces the failure now. Within one tier the order is act → podman →
-  docker → lima; podman leads the runtimes as rootless, licence-free and
-  CLI-compatible with docker, and lima is the full-VM fallback. A machine
-  with nothing installed is told the easiest thing to get, not the best, and
+  pulls no image, installs nothing — and ranks by what the machine already
+  has: installed beats absent, since starting a stopped runner is one command
+  while installing is a download; an image or VM already on disk beats one
+  that must be fetched, so a stopped lima holding a VM outranks a running but
+  empty podman; and only then does the order podman → lima → docker decide,
+  with podman leading as the easiest (rootless, licence-free, docker's CLI)
+  and lima the right answer when a job needs a full VM. act sits above them
+  but is a driver, ready only when a runtime is. A machine with nothing
+  installed is told the easiest thing to get, not the best, and
   a hand-written `pinned` value overrides the ranking and survives
   `--refresh`. Architecturally this adds no rung: a Linux runner changes
   *where* rungs 0 and 1 execute, so every floor and cap from 0.11.0 holds,
