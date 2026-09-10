@@ -65,19 +65,32 @@ listed as out of the repository's control and never receive a lever.
 | 7 | **Redundant work** | the same checkout+install+check in several jobs; every matrix cell repeating a non-matrix step (lint, build) | hoist shared steps into one job and pass artifacts, or run the non-matrix step once |
 | 8 | **Setup dominates** | setup + install > 50% of the job's median | a cached toolchain, a prebuilt container image, `actions/checkout` with `fetch-depth: 1`, drop unneeded `submodules`/`lfs` |
 | 9 | **No `timeout-minutes`** | absent on the job; the default is 360 | `timeout-minutes: ceil(2 × max_s / 60)` — `max_s` is seconds, the key is minutes; no value for an `unmeasured` job (its `max_s` is null), say so instead |
-| 10 | **Runner or matrix oversized** | a macOS or large runner for a job that is pure CPU-light; matrix dimensions that never differ in outcome | `ubuntu-latest`; prune cells that have been green in lockstep across the sampled runs |
-| 11 | **No `workflow_dispatch`, or no filter input, on a slow workflow** (repository-owned only) | the workflow's `on:` lacks `workflow_dispatch`, or has it without an input that narrows the test step; every fix iteration therefore runs the whole job, or every workflow | the rendering in `filter-input.md`: `workflow_dispatch` with an optional `filter` input, read through `env:` and split on newlines into an array — never `${{ }}` inside `run:`, never `eval` — so an empty input runs the whole suite and ci-fix's rung 2d runs this workflow alone with only the failing tests |
+| 10 | **Runner or matrix oversized** | evidence that a larger runner is unnecessary, or work is duplicated without losing supported behavior | Change runner size after checking platform/toolchain requirements. Remove cells only with equivalent-coverage evidence or an explicit support-policy change; green-together outcomes are insufficient |
+| 11 | **No `workflow_dispatch`, or no filter input, on a slow workflow** (repository-owned only) | the workflow's `on:` lacks `workflow_dispatch`, or has it without an input that narrows the test step; every fix iteration therefore runs the whole job, or every workflow | the rendering in `filter-input.md`: `workflow_dispatch` with an optional `filter` input, read through `env:` in the runner-specific shape — never `${{ }}` inside `run:`, never `eval` — so an empty input preserves ordinary coverage and a supplemental diagnostic can isolate the intended tests |
 
-Estimated savings are derived, never invented: item 1's saving is the install
-step's median; item 3's is the long job's median multiplied by the fraction
-of sampled runs where a fast job was red; item 6's is the main step's median
-times `1 − 1/shards`; item 11's saving per fix iteration is the sum of the
-*other* repo-owned workflows' longest-job medians. When a number cannot be derived from the inputs, say
-"not measurable from these runs" instead of guessing.
+Separate elapsed feedback time from aggregate runner work. For a fast-job
+gate (item 3), estimating avoided work requires representative **failed and
+successful** outcomes to estimate how often the gate fails; the successful-run
+profile alone cannot supply that frequency. Mixed outcomes still do not prove
+that two supported matrix cells provide equivalent coverage.
+
+Cache/setup savings and parallelization formulas are estimates or upper bounds,
+not guaranteed reductions; account for cache misses, shard imbalance, setup and
+critical-path delays. A diagnostic filter (item 11) can reduce time to a useful
+failure signal, but ordinary CI remains enabled: do not claim that other
+workflows' minutes were eliminated. Use measured setup and selected-test costs
+when available. Otherwise report "not measurable from these runs".
+
+Path filters, dependency gates and fail-fast changes must preserve applicable
+required-check coverage (`ci-coverage.md`). Propose support-policy changes
+explicitly; never infer permission to drop supported operating systems or
+versions from an all-green sample.
 
 ## Output handling
 
-The main session prints the sub-agent's table under *Speed analysis* in the
-report (SKILL.md step 8), unchanged, and adds the *Next* line:
+The main session validates each proposed finding against the workflow, logs
+and measurement inputs before reporting it. Refute unsupported claims and
+qualify estimates; do not print an agent's table on trust. Include the surviving
+table under *Speed analysis* (SKILL.md step 8), then add the *Next* line:
 "To apply an item, ask for it by number; it will be shown as a diff before
 commit." Nothing in `--optimize` mode writes to the repository.

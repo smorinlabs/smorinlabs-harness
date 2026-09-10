@@ -1,0 +1,12 @@
+{
+  "command": "uv run pytest",
+  "scope": "complete test step",
+  "environment": {
+    "runner": "host",
+    "os": "linux",
+    "arch": "x86_64",
+    "shell": "bash",
+    "working_directory": ".",
+    "toolchain": "python3.12"
+  }
+}

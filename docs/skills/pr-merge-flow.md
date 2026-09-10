@@ -1,63 +1,82 @@
 # pr-merge-flow
 
-Drives an open GitHub PR to merge by resolving every review thread before the
-merge happens. It waits a bounded few minutes for AI reviewer bots (Claude,
-Codex, Greptile, Copilot, …) to finish commenting, then triages each unresolved
-thread with review-receiving rigor: restate the claim, verify it by running the
-code or a test where possible, scope-gate valid findings — small in-scope
-bugs above the value floor get a fix (commit, push, reply naming the fix,
-resolve); valid-but-out-of-scope
-work is deferred to the repo's tracker (PROJECTS.md rows, GitHub issues, or
-an external tracker, detected from repo evidence) with the reference in the
-reply; style-only or convention-conflicting asks are declined with a
-one-line reason; architectural redesigns are never absorbed into the PR —
-they become a design-question comment escalated to the user and hold the
-merge — and refute invalid claims with a reasoned reply before resolving —
-never a silent resolve. Because pushed fixes can trigger fresh bot
-reviews, it cycles with the trajectory measured per reviewer wave (findings
-received, never fixes chosen; the bar ratchets at cycle 3, on
-non-decreasing same-bot counts, or when a wave mostly targets review-added
-code), bounded at 4 cycles before a check-in offering three endings —
-continue under a 10-minute wall clock, merge and defer the residue, or
-pause for redesign — until a pass is clean, checks the PR
-title against repo conventions (repo `CLAUDE.md` first, Conventional Commits as
-the default — with squash merges the title becomes the commit subject), then
-ends per mode. All GitHub polling is quota-safe: rate-limit preflight, a
-20–30s interval floor, hard-bounded monitors with one manual recheck on
-expiry, and a `gh` → `gh api` REST → `curl` fallback ladder (GraphQL is used
-only to read thread resolution state and post the resolve mutation). For that case
-there is an escape hatch: a **gated Chrome fallback** (the `claude-in-chrome`
-skill on Claude Code, the `chrome@openai-bundled` plugin on Codex, a clean
-degrade to a ready-report on any harness with neither) that drives the PR's web
-UI, whose session-authenticated endpoints draw on a different quota pool. It
-works **one thread at a time**: REST supplies the authoritative thread list with
-each comment `id`, the browser anchors to that thread's own
-`#discussion_r<id>` so identity is never guessed, replies still post
-over REST first, and each resolve is verified by re-reading *that* thread rather
-than counting buttons. It confirms the page's owner/repo/PR identity before
-trusting a word of it, is gated in *every* mode including `--auto` because
-driving a logged-in browser is not something automation should assume, keeps
-screenshots ephemeral unless you consent to saving one, and degrades after 2–3
-failures to an honest report of which threads were resolved, replied-to, or
-untouched. Throughout, threads are tracked in a **ledger keyed by comment `id`**
-and re-merged every cycle — new reviewer comments arriving mid-run are the
-normal lifecycle, and the run is complete only when every ledger entry is
-resolved (under `--one-pass` the work set is fixed at the single pass's
-inventory; a final inventory refresh before the ready-report catches later
-arrivals, which are reported open — never triaged, never merged over, since
-one-pass never merges). After a successful merge it runs a read-only cleanup survey — local and remote PR
-branch, worktrees on the merged branch, stale merged branches, prunable
-worktree entries, dirty uncommitted state — and presents two lists:
-*needs cleanup* (each item a named action with its exact command) and
-*already clean*. Nothing runs without explicit multi-select confirmation;
-`--auto` mode reports the lists and touches nothing; dirty state is only
-ever reported, never deleted. The survey also offers — never assumes — a
-guarded sync of the local default branch: blocked if the checkout is dirty,
-the default branch is checked out in another worktree, local commits sit
-ahead of the remote, or a git operation is in progress; guards re-run at
-execution time, and the sync itself is fast-forward-only
-(`git fetch origin main:main` when main is not checked out,
-`git pull --ff-only` when it is).
+Drives an open GitHub PR through evidence-based review, verified repairs, and
+merge readiness. It waits a bounded few minutes for reviewer bots, collects
+all unresolved threads, and checks each claim locally where feasible. A bot
+comment is a claim to investigate; failure to reproduce alone does not refute
+it.
+
+`pr-merge-flow` owns review dispositions and merge mode. It delegates failing
+CI to `ci-fix` and uses the same
+[repair validation contract](../../plugins/repo-hygiene/skills/ci-fix/references/validation-contract.md).
+A confirmed, small in-scope bug above the value floor receives a minimal fix,
+post-edit verification, a commit and push, then a reply naming the actual fix
+commit and evidence before resolution. Targeted tests must run the intended
+tests; exit 0 with no matching tests is insufficient. When local execution is
+unavailable, the thread stays open until appropriate remote evidence supports
+the repair, and the reply states the local limitation.
+
+Verification starts with the failing scenario and affected checks. A complete
+appropriate local validation bundle measured at approximately 30 seconds or
+less can run directly. A single fast job does not establish that the bundle
+is fast. Compatible fixes can be batched, and passing results can be reused
+while the tested source and relevant execution inputs remain unchanged.
+Unrelated action-version and hook audits are not prerequisites for a bot fix.
+
+Scope and value remain separate from evidence. Valid work outside the PR's
+goal is deferred to a created tracker item, with its reference in the reply.
+Below-floor asks are declined with a reason. False or convention-conflicting
+claims are refuted with evidence. Architectural redesigns are escalated to
+the user and remain open, holding the merge. Human-authored refutations retain
+their user gate.
+
+The thread ledger is keyed by the top comment's `id`. It retains evidence and
+reply IDs for each **disposition round**, meaning one investigation through
+reply and confirmed resolution. A current authoritative reopen starts a new
+round, even when the same comment ID was previously marked resolved. Cosmetic
+edits, line movement, and unrelated pushes do not restart old investigations.
+A failed resolve retries resolution only; an older round's reply does not
+suppress a needed reply after a reopen.
+
+The transitions below prevent stale evidence from becoming merge readiness:
+
+| Event | Next action |
+|---|---|
+| A repair push changes the PR head, including a `ci-fix` repair | Wait for bots, refresh review collection, then return to merge preflight. |
+| A CI rerun leaves the head unchanged | Refresh relevant CI and authoritative review state. Handle new or reopened threads without repeating completed repairs. |
+| A required check is absent or pending | Report incomplete evidence; do not treat the observed green subset as complete CI. |
+| A head change occurs after preflight | Refresh affected evidence. `--match-head-commit`, the merge guard, rejects a request targeting a different commit. |
+| `--one-pass` finishes its one triage pass | Refresh for reporting only; name late or reopened findings as open and never merge. |
+
+Review cycles keep their existing limits: measure findings received per
+reviewer wave, with the bar ratcheting at cycle 3, non-decreasing same-bot
+counts, or a wave mostly targeting review-added code. Four cycles, or two
+successive ratchet waves, trigger the check-in. Its endings are continuation
+under a 10-minute wall clock, merge with tracked deferrals, or pause for
+redesign. Internal CI diagnostic pushes are not separate completed PR review
+cycles. Automatic mode honors existing commit/push authority and downgrades
+to a ready-report when a required owner decision or hold prevents progress.
+
+All polling remains quota-safe: rate-limit preflight, 20–30-second intervals,
+and bounded waits with one manual recheck on expiry. GraphQL reads thread
+resolution state at collection and the final merge gate, and performs resolve
+mutations; it is never polled. The gated browser fallback remains available
+when GraphQL is exhausted. REST supplies comment IDs, the browser confirms
+the PR identity and anchors to each `#discussion_r<id>`, and each resolution
+is verified on that thread. Its existing browser consent gate and ephemeral
+screenshot policy remain in effect, including in automatic mode.
+
+Before a permitted merge, the skill refreshes the current head and review
+state, verifies applicable CI coverage and owner holds, checks the title
+against repo conventions, and binds the merge to the reviewed commit. After
+a successful merge, it surveys branches, worktrees, dirty state, and possible
+local default-branch synchronization. Cleanup and synchronization execute only
+when specifically authorized. Dirty state is reported and preserved, and a
+permitted synchronization is guarded and fast-forward-only.
+
+The [validation scenarios](../../plugins/repo-hygiene/skills/pr-merge-flow/references/validation-scenarios.md)
+trace these instruction-level transitions without posting comments, dispatching
+CI, or merging a PR.
 
 **Triggers on:** "merge this PR", "get PR #N merged", "resolve the PR
 comments", "address review feedback and merge", "close out this PR", "babysit
@@ -86,7 +105,7 @@ a warning.
 |---|---|---|
 | Plugin (recommended) | You just want to use it | `/plugin install repo-hygiene@smorinlabs-harness` |
 | Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/repo-hygiene/skills/pr-merge-flow" ~/.claude/skills/pr-merge-flow` |
-| Direct copy | No marketplace access | copy `plugins/repo-hygiene/skills/pr-merge-flow/` into `~/.claude/skills/` |
+| Direct copy | No marketplace access | copy both `plugins/repo-hygiene/skills/pr-merge-flow/` and `plugins/repo-hygiene/skills/ci-fix/` into `~/.claude/skills/`; keep them as siblings for the shared validation references |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
 (`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
@@ -99,11 +118,16 @@ skills location).
 > → Reads `.claude/pr-merge-flow.local.md` (none → confirm mode), waits up to
 > ~5 minutes polling every 30s for pending bot reviews, collects 7 unresolved
 > threads, verifies each claim (running the failing case where feasible),
-> fixes 5 with conventional commits and replies naming the fix SHA, refutes 2
-> with concrete reasons, resolves all 7, waits out one re-review cycle,
-> confirms checks are green and the title is `feat(api): add rate limiter`,
+> fixes 5, reruns each reproducer with intended-test evidence, and checks the
+> affected behavior. It batches compatible repairs into verified commits,
+> pushes, replies with the fix SHAs and evidence, refutes 2 with concrete
+> reasons, and resolves all 7. It waits out one re-review cycle, confirms
+> required CI coverage for the current head and the title
+> `feat(api): add rate limiter`,
 > then presents the final gate: **Merge now (squash)** / Run deep review
-> first / Don't merge. After merging, the cleanup survey lists
+> first / Don't merge. After approval it refreshes the head and threads,
+> then merges with `--match-head-commit` bound to the reviewed SHA. The cleanup
+> survey lists
 > `git branch -d feat/rate-limiter` and one stale worktree as needs-cleanup
 > (the remote branch was auto-deleted — already clean); nothing runs until
 > selected.

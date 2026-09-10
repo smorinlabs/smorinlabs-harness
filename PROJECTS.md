@@ -1692,3 +1692,49 @@ PR-2 — Linux runner step (in progress 2026-09-10)
 
 ### Manual Verification
 - Fresh session on a repo with a slow dispatchable workflow: one fix iteration runs only that workflow in CI, and the full run happens once at the end
+
+
+---
+
+## [x] Project P46: Evidence-based PR repairs and targeted CI validation (repo-hygiene 0.13.0)
+
+**Goal**: Make `pr-merge-flow` use `ci-fix`'s shared validation discipline for
+bot findings, then preserve current-code CI and review evidence through merge
+preflight. The owner approved the eight-step fix plan after a read-only audit,
+local revalidation, adversarial review and an inline consequence/risk walkthrough.
+
+**Scope decision**: This update supersedes P45's mandatory fast-job sweep,
+unconditional local full-step gate, skip-marker/empty-commit strategy and repeated
+permission gates where current-session authority already exists. It preserves
+P45's Linux runner survey, ranking, pins, runner recipes and existing selector
+and workflow identity fixes. It does not authorize a release or live installation.
+
+- [x] [P46-T01] Shared repair validation contract: confirmed/refuted/unresolved,
+  pre/post-edit evidence, intended test selection and compact handoff records.
+- [x] [P46-T02] Conservative inventory: raw guards and tolerance expressions,
+  tags, effective shell/environment/directory and validation eligibility hints.
+- [x] [P46-T03] Compatible timing identity: workflow path, job/cell and hashed
+  command/scope/environment context; legacy samples retained but not reused.
+- [x] [P46-T04] Target failing and affected checks. A measured complete bundle
+  at or below approximately 30 seconds may run directly; a full step otherwise
+  needs an affected-behavior reason. Duration estimates alone do not widen scope.
+- [x] [P46-T05] Preserve ordinary required CI; distinguish supplemental filtered
+  diagnostics and reconcile expected coverage with complete current-code evidence.
+- [x] [P46-T06] Revalidate after editing, restart reviews after a CI repair push,
+  honor authoritative reopens, deduplicate replies by disposition round and bind
+  authorized merges to the reviewed head without resetting mode/cycle/owner gates.
+- [x] [P46-T07] Refresh optimization guidance, both skill pages, README, release
+  notes and generated plugin manifests for version 0.13.0.
+- [x] [P46-T08] Finish focused regression and instruction-scenario review,
+  adversarial implementation review and the four-layer skill quality gate.
+
+### Verification status
+
+The six relevant helper test modules pass: 153 tests in 16.80 seconds. Ruff
+passes on the edited Python files. Generated manifests are current. Claude and
+Codex static verification has no errors; Claude ignores generated metadata,
+and Codex static verification covers the manifest rather than skill execution.
+The implementation review returned five findings; all were locally confirmed
+and corrected. Command probes and instruction traces cover the final corrections.
+The complete evidence, reviewer provenance and limitations are recorded in
+`docs/validation/pr-ci-validation-0.13.0.md`.

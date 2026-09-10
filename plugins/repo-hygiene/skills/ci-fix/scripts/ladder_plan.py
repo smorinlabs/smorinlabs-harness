@@ -1,37 +1,18 @@
 #!/usr/bin/env python3
-"""ladder_plan.py — where a fix enters the ladder, and how it reaches CI.
+"""ladder_plan.py — choose measured, affected validation and supplemental CI diagnostics.
 
-The isolation heuristic as code. Isolating a failure pays only when the
-isolated run is much shorter than the whole thing, and the cost of isolating
-differs by level: locally it is one command (5–20 s of overhead), in CI it is
-a marked commit, a dispatch, and a second commit and run (2–4 min extra).
+A compatible measured complete local bundle at or below --isolate-local serves
+as both reproducer and post-edit check, without a separate ID-only pass.
+Otherwise start with extracted IDs, or localize a meaningful target.
+A full step requires --full-step-reason; its duration alone never requires it.
+Host and Linux-runner estimates remain visible, with compatible ledger samples
+preferred over CI proxies. Estimates never establish the measured-bundle shortcut.
 
-  local   (on this host, or in a Linux runner when --local-env container)
-          failed step expected under --isolate-local (30s) → rung 1 only
-          over it, or unmeasured                           → rung 0 (the IDs), then rung 1
-          rung 1 (the whole step) always runs when the step can run here and
-          its expected time is within the cap (10 min); above the cap the
-          user is asked once, and a "no" makes CI the lab
-  remote  plain push unless CI is the lab AND the target job is expected over
-          --isolate-remote (5m) AND the workflow is dispatchable: then only
-          that workflow is dispatched with the failing IDs in its filter
-          input (offering to add the input when the workflow lacks one). A
-          plain push is both rung 2 and rung 3. With one expected CI round,
-          which is the usual case after a local green, a dispatch loses time.
+An ordinary push supplies required CI. When CI is the lab and isolation pays,
+a filtered dispatch is supplemental evidence on the same commit; no skip marker
+or empty trigger commit is used. Match expected coverage before completion.
 
-"CI is the lab" (--ci-is-lab) means the failure can only be observed in CI:
-the job is not reproducible locally (implied by --no-local-step), the whole
-local step was declined at the cap, or CI went red again after a local
-green. Compute the plan before the local rungs, and again for the remote
-mode once the local outcome is known.
-
-Inputs: the ci_profile.py --json document, the failed job and step, the
-extracted-ID count, and facts the skill has established from the inventory
-(dispatchable, filter input, whether the step runs on this host). An optional
-local ledger (local_ledger.py) overrides the CI step median for the local
-decision.
-
-Exit 0 with the plan; exit 2 on a usage error (bad duration, ambiguous job).
+Exit 0 with the plan; exit 2 on invalid inputs or ambiguous job identity.
 """
 
 from __future__ import annotations
@@ -39,9 +20,11 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
-import statistics
+import math
 import sys
 from pathlib import Path
+
+from local_ledger import context_key, load, matching
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_ISOLATE_LOCAL = "30s"
@@ -49,7 +32,7 @@ DEFAULT_ISOLATE_REMOTE = "5m"
 CONTAINER_FIRST_RUN_FACTOR = (
     2  # image pull and start-up, until the ledger has a real sample
 )
-LOCAL_CAP_S = 600  # the harness's single-command limit; a longer whole-step run is asked about, then backgrounded
+LOCAL_CAP_S = 600  # foreground wait limit, never a reason to run or skip coverage
 LEDGER_KEEP = 10
 
 
@@ -86,31 +69,17 @@ def find_job(
     return (matches[0] if matches else None), []
 
 
-def ledger_median(
-    path: Path | None,
-    workflow: str | None,
-    workflow_path: str | None,
-    job: str,
-    step: str,
-) -> tuple[float | None, int]:
-    if path is None or not path.is_file():
+def ledger_median(path, workflow, workflow_path, job, step, context):
+    if path is None or context is None:
         return None, 0
-    try:
-        data = json.loads(path.read_text())
-    except (OSError, ValueError):
-        return None, 0
-    samples = [
-        s["seconds"]
-        for s in data.get("samples", [])
-        if s.get("job") == job
-        and s.get("workflow_path") == workflow_path
-        and s.get("step") == step
-        and (workflow is None or s.get("workflow") == workflow)
+    samples = matching(load(path), workflow, workflow_path, job, step, context)[
+        -LEDGER_KEEP:
     ]
-    samples = samples[-LEDGER_KEEP:]
     if not samples:
         return None, 0
-    return float(statistics.median(samples)), len(samples)
+    from statistics import median
+
+    return float(median(s["seconds"] for s in samples)), len(samples)
 
 
 def fmt(seconds: float | None) -> str:
@@ -126,95 +95,76 @@ def fmt(seconds: float | None) -> str:
     return f"{h}h{m:02d}m"
 
 
-def local_plan(
-    args,
-    floor_s: int,
-    job_entry: dict | None,
-    workflow: str | None,
-    workflow_path: str | None,
-) -> dict:
-    step_median = None
-    source = "none"
-    if job_entry is not None:
-        for st in job_entry.get("steps", []):
-            if st.get("name") == args.step:
-                step_median = st.get("median_s")
-                source = "profile" if step_median is not None else "none"
-                break
-    led, n = ledger_median(args.ledger, workflow, workflow_path, args.job, args.step)
+def local_plan(args, floor_s, job_entry, workflow, workflow_path):
+    step_median = next(
+        (
+            s.get("median_s")
+            for s in (job_entry or {}).get("steps", [])
+            if s.get("name") == args.step
+        ),
+        None,
+    )
+    source = "profile" if step_median is not None else "none"
+    led, n = ledger_median(
+        args.ledger, workflow, workflow_path, args.job, args.step, args.context_key
+    )
     if led is not None:
         step_median, source = led, "ledger"
     elif step_median is not None and args.local_env == "container":
-        # No local sample yet, and the step will run in a container or VM:
-        # CI's own number does not include the image pull and start-up this
-        # machine pays, so the first run is estimated at twice it. Once the
-        # ledger has a real sample the multiplier is gone.
         step_median *= CONTAINER_FIRST_RUN_FACTOR
         source = f"profile x{CONTAINER_FIRST_RUN_FACTOR} (container, first run)"
-    step_class = classify(step_median, floor_s)
-    where = (
-        f"{fmt(step_median)} ({source})" if step_median is not None else "unmeasured"
-    )
-    slow_text = (
-        f"over the local floor {fmt(floor_s)}"
-        if step_class == "slow"
-        else "unmeasured, treated as slow"
-    )
-
     plan = {
         "step": args.step,
-        "step_class": step_class,
+        "step_class": classify(step_median, floor_s),
         "step_expected_s": step_median,
         "source": source,
         "ledger_samples": n,
         "local_env": args.local_env,
         "floor_s": floor_s,
         "cap_s": LOCAL_CAP_S,
+        "bundle_measured_s": args.bundle_seconds,
+        "scope": "unavailable",
         "entry_rung": None,
         "rung_0": False,
         "rung_1": False,
-        "rung_1_gate": "unavailable",  # run | ask | unavailable
+        "rung_1_gate": "unavailable",
         "rung_1_background": False,
-        "reason": "",
+        "required_next": "rerun the chosen scope after each relevant edit; verify intended selection and affected behavior; reconcile required CI",
+        "reason": "not reproducible locally: preserve the limitation and use CI diagnostics",
     }
     if not args.local_step:
-        plan["reason"] = (
-            "not reproducible locally: no rung 0 or rung 1 for this job; fix from the log evidence, "
-            "run the sweep (rung 1s), then enter CI — CI is the lab"
-        )
         return plan
-
-    plan["rung_1"] = True
-    over_cap = step_median is not None and step_median > LOCAL_CAP_S
-    plan["rung_1_gate"] = "ask" if over_cap else "run"
-    plan["rung_1_background"] = over_cap or step_median is None
-    if step_class == "fast":
-        plan["entry_rung"] = 1
-        plan["reason"] = (
-            f"step expected {where} is under the local floor {fmt(floor_s)}: run the whole step (rung 1); "
-            "isolating one test would cost a run of its own and save nothing"
+    plan["rung_1_gate"] = "not-needed"
+    if args.bundle_seconds is not None and args.bundle_seconds <= floor_s:
+        plan.update(
+            scope="bundle",
+            entry_rung=1,
+            rung_1=True,
+            rung_1_gate="run",
+            rung_1_background=args.bundle_seconds > LOCAL_CAP_S,
+            reason=f"complete compatible local bundle measured at {fmt(args.bundle_seconds)}: use it before and after the edit; no separate ID-only pass",
         )
-    elif args.ids > 0:
-        plan["entry_rung"] = 0
-        plan["rung_0"] = True
-        plan["reason"] = (
-            f"step expected {where} is {slow_text}: run the {args.ids} extracted ID(s) first (rung 0), "
-            f"then the whole step (rung 1, expected {fmt(step_median)})"
+    elif args.full_step_reason:
+        plan.update(
+            scope="full-step",
+            entry_rung=0 if args.ids else 1,
+            rung_0=args.ids > 0,
+            rung_1=True,
+            rung_1_gate="run",
+            rung_1_background=step_median is None or step_median > LOCAL_CAP_S,
+            reason=f"full step justified by affected behavior: {args.full_step_reason}; reproduce extracted IDs first when available, then verify the affected full step",
+        )
+    elif args.ids:
+        plan.update(
+            scope="ids",
+            entry_rung=0,
+            rung_0=True,
+            reason=f"start with {args.ids} failing ID(s), then choose affected checks; no measured fast complete bundle or full-step justification",
         )
     else:
-        plan["entry_rung"] = 1
-        plan["reason"] = (
-            f"step expected {where} is {slow_text} but no test IDs were extracted, so rung 0 is unavailable: "
-            f"run the whole step (rung 1, expected {fmt(step_median)})"
-        )
-    if over_cap:
-        plan["reason"] += (
-            f"; rung 1 exceeds the {fmt(LOCAL_CAP_S)} cap: ask once (background run on yes; on no, CI is the lab "
-            "and the full run there is the gate)"
-        )
-    elif step_median is None:
-        plan["reason"] += (
-            "; rung 1 is unmeasured: run it in the background and record its duration"
+        plan.update(
+            scope="localize",
+            reason="no exact IDs: identify the smallest useful file, module, package or check; record --full-step-reason only if the full command is necessary",
         )
     return plan
 
@@ -235,6 +185,7 @@ def remote_plan(args, floor_s: int, job_entry: dict | None) -> dict:
         "ci_is_lab": ci_is_lab,
         "mode": "push",
         "marker": False,
+        "required_coverage": "ordinary unfiltered CI for the evaluated commit; see ci-coverage.md",
         "filter_input": args.filter_input if can_filter else None,
         "reason": "",
     }
@@ -265,21 +216,21 @@ def remote_plan(args, floor_s: int, job_entry: dict | None) -> dict:
         )
         return plan
     if can_filter:
-        plan.update(mode="dispatch-filtered", marker=True)
+        plan.update(mode="dispatch-filtered", marker=False)
         plan["reason"] = (
-            f"CI is the lab and the target job expected {fmt(job_median)} is {slow_text}: commit with [skip ci], "
+            f"CI is the lab and the target job expected {fmt(job_median)} is {slow_text}: use an ordinary push, then "
             f"dispatch only this workflow with inputs[{args.filter_input}] carrying the {args.ids} failing ID(s), "
-            "the remote mirror of rung 0; the full run follows on the marker-free commit"
+            "as supplemental diagnosis; ordinary unfiltered required CI on the evaluated commit still gates completion"
         )
         return plan
     if args.ids > 0:
         plan.update(mode="offer-filter", marker=False)
-        plan["on_accept"] = {"mode": "dispatch-filtered", "marker": True}
+        plan["on_accept"] = {"mode": "dispatch-filtered", "marker": False}
         plan["on_decline"] = {"mode": "push", "marker": False}
         plan["reason"] = (
             f"CI is the lab and the target job expected {fmt(job_median)} is {slow_text}, but the workflow declares "
-            "no filter input: offer once to add one (filter-input.md); accepted → filtered dispatch on the fix "
-            f"commit; declined → {same_run} (dispatching the whole job would save runner minutes, not time)"
+            "no filter input: offer once to add one (filter-input.md); accepted → supplemental filtered dispatch on the fix "
+            f"commit; declined → {same_run}; an extra unfiltered dispatch would duplicate ordinary CI"
         )
         return plan
     plan["reason"] = (
@@ -291,40 +242,17 @@ def remote_plan(args, floor_s: int, job_entry: dict | None) -> dict:
 
 def render(plan: dict) -> str:
     loc, rem = plan["local"], plan["remote"]
-    lines = [
-        f"ladder plan — local floor {fmt(loc['floor_s'])}, cap {fmt(loc['cap_s'])}; remote floor {fmt(rem['floor_s'])}",
-        "",
-    ]
-    if loc["entry_rung"] is None:
-        lines.append(f"local   no rung — {loc['reason']}")
-    else:
-        rungs = (
-            "rung 0 (IDs) then rung 1 (whole step)"
-            if loc["rung_0"]
-            else "rung 1 (whole step)"
-        )
-        gate = {"run": "runs", "ask": "asked once (over the cap)"}[loc["rung_1_gate"]]
-        bg = ", in the background" if loc["rung_1_background"] else ""
-        lines.append(
-            f"local   enter at rung {loc['entry_rung']}: {rungs}; rung 1 {gate}{bg}"
-        )
-        lines.append(
-            f"        step {loc['step_class']} · expected {fmt(loc['step_expected_s'])} ({loc['source']}) · {loc['reason']}"
-        )
-    marker = "[skip ci] on the fix commit" if rem["marker"] else "no marker"
-    bound = (
-        fmt(rem["wait_bound_s"]) if rem["wait_bound_s"] else "longest measured bound"
+    return "\n".join(
+        [
+            f"validation plan — measured-bundle shortcut {fmt(loc['floor_s'])}; remote isolation floor {fmt(rem['floor_s'])}",
+            f"local   {loc['scope']} on {loc['local_env']} — {loc['reason']}",
+            f"        step estimate {fmt(loc['step_expected_s'])} ({loc['source']}); foreground bound {fmt(loc['cap_s'])}",
+            f"next    {loc['required_next']}",
+            f"remote  {rem['mode']} — no skip marker; {'CI is the lab' if rem['ci_is_lab'] else 'local diagnosis available'}",
+            f"        {rem['reason']}",
+            f"done    {rem['required_coverage']}",
+        ]
     )
-    lab = "CI is the lab" if rem["ci_is_lab"] else "verified locally"
-    lines.append(f"remote  {rem['mode']} · {marker} · {lab} · wait bound {bound}")
-    lines.append(
-        f"        job {rem['job_class']} · expected {fmt(rem['job_expected_s'])} · {rem['reason']}"
-    )
-    if rem["mode"] == "offer-filter":
-        lines.append(
-            f"        accepted → {rem['on_accept']['mode']}; declined → {rem['on_decline']['mode']}"
-        )
-    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -336,9 +264,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--ledger", type=Path, help="local_ledger.py file (optional)")
     ap.add_argument(
+        "--context",
+        type=Path,
+        help="current non-secret command/scope/environment JSON; required to reuse ledger timings",
+    )
+    ap.add_argument(
+        "--bundle-seconds",
+        type=float,
+        help="compatible measured total local bundle seconds, including needed preparation; never a single step or CI proxy",
+    )
+    ap.add_argument(
+        "--full-step-reason",
+        help="why affected behavior requires the whole step; without this a slow/unknown bundle starts with failing IDs or localization",
+    )
+    ap.add_argument(
         "--isolate-local",
         default=DEFAULT_ISOLATE_LOCAL,
-        help=f"local floor: isolate (rung 0) when the step is expected to take longer (default {DEFAULT_ISOLATE_LOCAL})",
+        help=f"complete measured local bundle shortcut threshold (default {DEFAULT_ISOLATE_LOCAL})",
     )
     ap.add_argument(
         "--isolate-remote",
@@ -399,7 +341,7 @@ def main(argv: list[str] | None = None) -> int:
         "--ci-is-lab",
         dest="ci_is_lab",
         action="store_true",
-        help="the failure can only be observed in CI: whole local step declined at the cap, or CI red after a local green",
+        help="needed local validation is unavailable, or a discrepancy remains after local success",
     )
     g3.add_argument("--not-ci-is-lab", dest="ci_is_lab", action="store_false")
     ap.set_defaults(ci_is_lab=False)
@@ -410,6 +352,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
+    if args.ids < 0 or (
+        args.bundle_seconds is not None
+        and (not math.isfinite(args.bundle_seconds) or args.bundle_seconds < 0)
+    ):
+        ap.error("--ids and --bundle-seconds must be finite and non-negative")
+    if args.full_step_reason is not None and not args.full_step_reason.strip():
+        ap.error("--full-step-reason must state the affected behavior")
+    try:
+        args.context_key = context_key(args.context) if args.context else None
+    except (OSError, ValueError) as exc:
+        ap.error(f"cannot read execution context: {exc}")
     parse_duration = _load_parse_duration()
     try:
         local_floor = parse_duration(args.isolate_local)

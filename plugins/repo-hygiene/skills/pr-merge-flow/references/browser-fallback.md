@@ -258,10 +258,13 @@ Then, **for each thread, one at a time**:
    carries no `isResolved` and therefore lists resolved and unresolved threads
    identically. Replying first would post to threads someone else already
    closed — reviewers do auto-resolve their own findings once a fix lands.
-9. **Unresolved → reply over REST first**, then resolve (skip the reply if we
-   already posted one — see idempotency in `triage.md`). The reply is the audit
-   trail; a browser leg that then fails leaves a replied-but-open thread, which
-   is honest and recoverable, rather than a resolved-but-unexplained one.
+9. **Unresolved → reconcile the disposition round**, then reply over REST
+   before resolving. If the ledger previously confirmed resolution, this is a
+   reopen: return it to triage and obtain a current disposition before closing.
+   Skip the reply only if this round's matching reply already exists, per
+   `triage.md`; an older round's reply does not count. A failed resolve retries
+   only resolution. A browser leg that fails leaves a replied-but-open thread,
+   preserving the evidence and the operation still needed.
 10. **Click that thread's Resolve control by `ref`** with `computer`
     `left_click`. Prefer `ref` over `coordinate`: it names the element and
     cannot drift when the page reflows. Coordinates from a screenshot are a
@@ -283,7 +286,7 @@ new threads are step 5's re-review cycle, not a failure.
 `computer`'s `screenshot` and `zoom` are available when the text path cannot
 explain what is happening — a login wall, SSO or 2FA prompt, abuse
 interstitial, permissions banner, or a click that reported success while step
-10 says otherwise. One image beats three blind retries.
+11 says otherwise. One image beats three blind retries.
 
 **Do not persist them.** An authenticated PR screenshot can carry private code,
 usernames, and unreleased review context. Keep diagnostics in-session and
@@ -291,8 +294,8 @@ report sanitized metadata in words; use `save_to_disk: true` **only after
 asking the user and getting a yes**.
 
 A screenshot informs the decision to continue or degrade. It may supply
-coordinates only as step 9's last resort, and only for a thread whose identity
-step 8 already established — never as a way to skip that step.
+coordinates only as step 10's last resort, and only for a thread whose identity
+step 7 already established — never as a way to skip that step.
 
 ## Degrade path
 
@@ -316,7 +319,7 @@ a capability is absent. Report a blocked attempt as blocked, not as proof.
 - **Never closes a PR**, never edits the title, never pushes.
 - **Never replies.** Replies ride REST, which carries the comment `id` and the
   audit trail.
-- **Never resolves a thread it has not identified** by comment `id` at step 8.
+- **Never resolves a thread it has not identified** by comment `id` at step 7.
 - **Never uses `javascript_tool`.** Clicking a button does not need arbitrary
   page script; the grant is deliberately absent, as are `file_upload`,
   `gif_creator`, and `read_network_requests`.

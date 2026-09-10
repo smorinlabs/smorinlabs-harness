@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """local_ledger.py — how long a CI step's command takes on this machine.
 
-ci-fix's local decisions (ladder_plan.py) key on the failed step's duration.
-CI's median is only a proxy for local time, so after each full-step run on
-this host (rung 1 and rung 1s) the skill records the observed seconds here;
-the next fix on the same step uses the local median. Successes only, last 10
-per (workflow, job, step), the same sampling rule as the CI profile.
+CI's median is only a proxy for local time. Record verified successful
+runs with their command, selected scope and environment identity; the next
+compatible run can reuse their median. Keep the last 10 successes per
+workflow name/path, job/cell, step and context digest. Legacy samples without
+context remain stored but do not establish compatible timing evidence.
 
 The ledger is machine-level and never lives in the repo:
   ${XDG_CACHE_HOME:-~/.cache}/ci-fix/<owner>--<repo>.json   (from --repo)
 or any explicit --ledger path.
 
-  record  --repo o/r|--ledger F --workflow W [--workflow-path P] --job J --step S --seconds N --conclusion success|failure
-  median  --repo o/r|--ledger F --workflow W [--workflow-path P] --job J --step S → {"samples": n, "median_s": x|null}
+  record  --repo o/r|--ledger F --workflow W [--workflow-path P] --job J --step S --context C --seconds N --conclusion success|failure
+  median  --repo o/r|--ledger F --workflow W [--workflow-path P] --job J --step S --context C → {"samples": n, "median_s": x|null}
   path    --repo o/r                                              → prints the default path, writes nothing
 
 Exit 0 on success; exit 2 on a usage error.
@@ -21,6 +21,7 @@ Exit 0 on success; exit 2 on a usage error.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -33,7 +34,31 @@ from datetime import (  # timezone.utc, not UTC: the skill runs on any python3 >
 from pathlib import Path
 
 KEEP = 10
-VERSION = 1
+VERSION = 2
+
+
+def context_key(path: Path) -> str:
+    """Hash declared command/scope/environment without persisting their values.
+
+    The caller supplies a non-secret execution description, not environment
+    variable contents. Version-1 samples lack this identity and are not reused.
+    """
+    data = json.loads(path.read_text())
+    if (
+        not isinstance(data, dict)
+        or not all(
+            isinstance(data.get(k), str) and data[k].strip()
+            for k in ("command", "scope")
+        )
+        or not isinstance(data.get("environment"), dict)
+        or not data["environment"]
+    ):
+        raise ValueError(
+            "context needs nonempty command and scope strings and an environment object"
+        )
+    return hashlib.sha256(
+        json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 def default_path(repo: str) -> Path:
@@ -66,14 +91,32 @@ def key_of(s: dict) -> tuple:
     share a `name:`, and reusing one file's local median for the other would
     pick the wrong rung. A sample recorded without a path keys on None and so
     matches only a query that also supplies none."""
-    return (s.get("workflow"), s.get("workflow_path"), s.get("job"), s.get("step"))
+    return (
+        s.get("workflow"),
+        s.get("workflow_path"),
+        s.get("job"),
+        s.get("step"),
+        s.get("context"),
+    )
 
 
 def matching(
-    data: dict, workflow: str, workflow_path: str | None, job: str, step: str
+    data: dict,
+    workflow: str,
+    workflow_path: str | None,
+    job: str,
+    step: str,
+    context: str,
 ) -> list[dict]:
     return [
-        s for s in data["samples"] if key_of(s) == (workflow, workflow_path, job, step)
+        s
+        for s in data["samples"]
+        if isinstance(s, dict)
+        and key_of(s) == (workflow, workflow_path, job, step, context)
+        and isinstance(s.get("seconds"), (int, float))
+        and not isinstance(s["seconds"], bool)
+        and math.isfinite(s["seconds"])
+        and s["seconds"] >= 0
     ]
 
 
@@ -102,13 +145,18 @@ def cmd_record(args) -> int:
         "workflow_path": args.workflow_path,
         "job": args.job,
         "step": args.step,
+        "context": args.context_key,
         "seconds": float(args.seconds),
         "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),  # noqa: UP017
     }
-    others = [s for s in data["samples"] if key_of(s) != key_of(sample)]
-    mine = matching(data, args.workflow, args.workflow_path, args.job, args.step) + [
-        sample
+    others = [
+        s
+        for s in data["samples"]
+        if isinstance(s, dict) and key_of(s) != key_of(sample)
     ]
+    mine = matching(
+        data, args.workflow, args.workflow_path, args.job, args.step, args.context_key
+    ) + [sample]
     data = {"version": VERSION, "samples": others + mine[-KEEP:]}
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -133,9 +181,9 @@ def cmd_median(args) -> int:
     if path is None:
         return usage("median needs --ledger <file> or --repo <owner/repo>")
     data = load(path)
-    mine = matching(data, args.workflow, args.workflow_path, args.job, args.step)[
-        -KEEP:
-    ]
+    mine = matching(
+        data, args.workflow, args.workflow_path, args.job, args.step, args.context_key
+    )[-KEEP:]
     print(
         json.dumps(
             {
@@ -172,6 +220,12 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--repo", help="owner/repo, for the default machine-level path")
 
     def key(p):
+        p.add_argument(
+            "--context",
+            required=True,
+            type=Path,
+            help="non-secret JSON execution description: command, scope, environment; required for compatible timing reuse",
+        )
         p.add_argument("--workflow", required=True)
         p.add_argument(
             "--workflow-path",
@@ -202,6 +256,11 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_path)
 
     args = ap.parse_args(argv)
+    if args.cmd != "path":
+        try:
+            args.context_key = context_key(args.context)
+        except (OSError, ValueError) as exc:
+            return usage(f"cannot read execution context: {exc}")
     return args.fn(args)
 
 
