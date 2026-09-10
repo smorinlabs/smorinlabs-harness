@@ -134,7 +134,11 @@ def plan(profile, *args):
 
 def base(tmp_path, job="pytest", step=PYTEST_STEP, workflow="CI", ids=3, **flags):
     """Common arguments: a dispatchable workflow, no filter input, local step, not CI-is-lab."""
-    args = ["--workflow", workflow, "--job", job, "--step", step, "--ids", str(ids)]
+    args = ["--job", job, "--step", step, "--ids", str(ids)]
+    if workflow is not None:
+        args += ["--workflow", workflow]
+    if "workflow_path" in flags:
+        args += ["--workflow-path", flags.pop("workflow_path")]
     for flag in (
         "isolate_local",
         "isolate_remote",
@@ -157,8 +161,9 @@ def base(tmp_path, job="pytest", step=PYTEST_STEP, workflow="CI", ids=3, **flags
     ledger = flags.pop("ledger", None)
     if ledger:
         args += ["--ledger", str(ledger)]
+    profile = flags.pop("profile", None)
     assert not flags, f"unused flags: {flags}"
-    return plan(write_profile(tmp_path), *args)
+    return plan(profile or write_profile(tmp_path), *args)
 
 
 @pytest.mark.parametrize(
@@ -256,6 +261,8 @@ def test_remote_diagnostics_never_suppress_required_ci(
     )["remote"]
     assert remote["mode"] == mode and remote["marker"] is False
     assert "unfiltered" in remote["required_coverage"]
+    if not dispatchable:
+        assert remote["filter_input"] is None
     if mode == "offer-filter":
         assert remote["on_accept"]["marker"] is False
         assert remote["on_decline"] == {"mode": "push", "marker": False}
@@ -362,6 +369,20 @@ def test_same_command_in_another_workflow_does_not_borrow_local_timing(tmp_path)
     ledger, context = measured_ledger(tmp_path)
     local = base(tmp_path, workflow="Nightly", ledger=ledger, context=context)["local"]
     assert local["source"] == "profile" and local["step_expected_s"] == 1750
+
+
+def test_path_only_identity_reuses_timing_when_profile_row_is_absent(tmp_path):
+    ledger, context = measured_ledger(tmp_path)
+    profile = write_profile(tmp_path, {"jobs": []})
+    local = base(
+        tmp_path,
+        profile=profile,
+        workflow=None,
+        workflow_path=CI_PATH,
+        ledger=ledger,
+        context=context,
+    )["local"]
+    assert local["source"] == "ledger" and local["step_expected_s"] == 5
 
 
 def test_ledger_without_current_context_is_not_used(tmp_path):

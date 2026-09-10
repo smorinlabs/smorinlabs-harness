@@ -72,9 +72,19 @@ def find_job(
 def ledger_median(path, workflow, workflow_path, job, step, context):
     if path is None or context is None:
         return None, 0
-    samples = matching(load(path), workflow, workflow_path, job, step, context)[
-        -LEDGER_KEEP:
-    ]
+    data = load(path)
+    samples = matching(data, workflow, workflow_path, job, step, context)
+    if not samples and workflow is None and workflow_path:
+        names = {
+            sample.get("workflow")
+            for sample in data.get("samples", [])
+            if isinstance(sample, dict)
+            and sample.get("workflow_path") == workflow_path
+            and sample.get("workflow")
+        }
+        if len(names) == 1:
+            samples = matching(data, next(iter(names)), workflow_path, job, step, context)
+    samples = samples[-LEDGER_KEEP:]
     if not samples:
         return None, 0
     from statistics import median
@@ -174,7 +184,7 @@ def remote_plan(args, floor_s: int, job_entry: dict | None) -> dict:
     job_class = classify(job_median, floor_s)
     wait_bound = job_entry.get("wait_bound_s") if job_entry else None
     ci_is_lab = args.ci_is_lab or not args.local_step
-    can_filter = bool(args.filter_input) and args.ids > 0
+    can_filter = bool(args.filter_input) and args.ids > 0 and args.dispatchable
 
     plan = {
         "job": args.job,
