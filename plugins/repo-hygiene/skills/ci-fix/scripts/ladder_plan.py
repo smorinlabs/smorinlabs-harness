@@ -65,7 +65,10 @@ def classify(seconds: float | None, floor_s: int) -> str:
 def find_job(
     profile: dict, workflow: str | None, job: str
 ) -> tuple[dict | None, list[str]]:
-    matches = [j for j in profile.get("jobs", []) if j.get("name") == job]
+    """Match on the profile's `job` (the jobs-API name, and the ledger's key);
+    `name` is the display string, which becomes `CI / pytest` when two
+    workflows share a job name."""
+    matches = [j for j in profile.get("jobs", []) if j.get("job", j.get("name")) == job]
     if workflow is not None:
         matches = [j for j in matches if j.get("workflow_name") == workflow]
     if len(matches) > 1:

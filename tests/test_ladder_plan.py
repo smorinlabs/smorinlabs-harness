@@ -41,7 +41,7 @@ def profile_fixture():
         "truncated_runs": [],
         "jobs": [
             {
-                "name": "pytest",
+                "name": "CI / pytest",  # display name: disambiguated because Nightly also runs a pytest job
                 "job": "pytest",
                 "workflow_name": "CI",
                 "workflow_path": ".github/workflows/ci.yml",
@@ -92,7 +92,7 @@ def profile_fixture():
                 "steps": [],
             },
             {
-                "name": "pytest",
+                "name": "Nightly / pytest",
                 "job": "pytest",
                 "workflow_name": "Nightly",
                 "workflow_path": ".github/workflows/nightly.yml",
@@ -539,3 +539,80 @@ def test_text_output_names_both_decisions(tmp_path):
         and "verified locally" in out
         and "push" in out
     )
+
+
+# ------------------------------------------ the real profiler output, end to end
+
+
+def test_plan_reads_the_profiler_output_when_job_names_collide(tmp_path):
+    """Copilot on PR #61: ci_profile.py sets `name` to `CI / pytest` when two
+    workflows share a job name and keeps the jobs-API name in `job`; the
+    planner must match on `job`, or every such job reads as unmeasured."""
+    profiler = REPO_ROOT / "plugins/repo-hygiene/skills/ci-fix/scripts/ci_profile.py"
+
+    def job_record(workflow, seconds):
+        end = f"2026-01-01T00:{seconds // 60:02d}:{seconds % 60 + 10:02d}Z"
+        return {
+            "name": "pytest",
+            "workflow_name": workflow,
+            "conclusion": "success",
+            "status": "completed",
+            "created_at": "2026-01-01T00:00:00Z",
+            "started_at": "2026-01-01T00:00:10Z",
+            "completed_at": end,
+            "steps": [
+                {
+                    "name": PYTEST_STEP,
+                    "started_at": "2026-01-01T00:00:10Z",
+                    "completed_at": end,
+                    "conclusion": "success",
+                }
+            ],
+        }
+
+    run_file = tmp_path / "r1.json"
+    run_file.write_text(
+        json.dumps(
+            {
+                "total_count": 2,
+                "jobs": [job_record("CI", 20), job_record("Nightly", 600)],
+            }
+        )
+    )
+    out = subprocess.run(
+        [sys.executable, str(profiler), "--json", str(run_file)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert out.returncode == 0, out.stderr
+    profile = json.loads(out.stdout)
+    assert {j["name"] for j in profile["jobs"]} == {"CI / pytest", "Nightly / pytest"}
+    path = tmp_path / "profile.json"
+    path.write_text(out.stdout)
+    p = plan(
+        path,
+        "--workflow",
+        "CI",
+        "--job",
+        "pytest",
+        "--step",
+        PYTEST_STEP,
+        "--ids",
+        "2",
+        "--local-step",
+    )
+    assert p["local"]["step_class"] == "fast" and p["local"]["step_expected_s"] == 20.0
+    p = plan(
+        path,
+        "--workflow",
+        "Nightly",
+        "--job",
+        "pytest",
+        "--step",
+        PYTEST_STEP,
+        "--ids",
+        "2",
+        "--no-local-step",
+    )
+    assert p["remote"]["job_class"] == "slow" and p["remote"]["job_expected_s"] == 600.0

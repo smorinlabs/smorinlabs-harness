@@ -257,7 +257,7 @@ for the remote mode when the local outcome changed the lab status:
 python3 <skill-dir>/scripts/ladder_plan.py --profile "$SCRATCH/profile/profile.json" \
   --ledger "$(python3 <skill-dir>/scripts/local_ledger.py path --repo <owner/repo>)" \
   --isolate-local <dur> --isolate-remote <dur> \
-  --workflow "<workflow name>" --job "<job display name>" \
+  --workflow "<workflow name>" --job "<jobs-API job name>" \
   --step "<failed step display name>" --ids <count from step 5> \
   --dispatchable|--not-dispatchable --local-step|--no-local-step \
   --ci-is-lab|--not-ci-is-lab [--filter-input <input name>]
@@ -266,8 +266,11 @@ python3 <skill-dir>/scripts/ladder_plan.py --profile "$SCRATCH/profile/profile.j
 (`profile.json` is step 2's `--json` output saved to a file; `--dispatchable`
 is the rung-2d test from `references/fix-loop.md`; `--filter-input` is the
 `dispatch_inputs` entry the inventory shows for the workflow, if any;
-`--no-local-step` implies `--ci-is-lab`.) The plan names the entry rung, the
-rung-1 gate (`run` or `ask`), the remote mode, whether the commit carries
+`--no-local-step` implies `--ci-is-lab`. `--job` and `--step` take the names
+the jobs API reports — the profile's `job` and `steps[].name` fields, which
+are the ledger's keys too — never the table's `<workflow> / <job>` display
+column, which appears only when two workflows share a job name.) The plan
+names the entry rung, the rung-1 gate (`run` or `ask`), the remote mode, whether the commit carries
 the marker, and the reason; the reason goes in the report verbatim.
 
 **Reproduce before editing.** Run the entry rung once, unchanged.
