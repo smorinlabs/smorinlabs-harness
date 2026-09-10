@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.25.0 — 2026-09-10
+
 ### Added
 
 - **`repo-hygiene` 0.12.0 — `ci-fix` reproduces Linux jobs in whatever is
