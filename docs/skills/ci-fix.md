@@ -25,18 +25,24 @@ the input when the workflow lacks one, and the full run follows. Each rung
 runs only after the one below is green, and each CI wait is bounded by the
 measured duration. Local runs are timed too and kept in a machine-level
 ledger, so later fixes on the same machine decide from local numbers rather
-than CI's. Done means every job is green in CI on the pushed commit.
+than CI's. A Linux job this host cannot run directly is not automatically a
+CI-only failure: the skill surveys what is already on the machine that could
+run it (Podman, Docker, Lima, act), ranks by what is already running rather
+than by what is most faithful, and runs the same rungs there. Nothing is
+started, pulled, or installed without asking, and a machine with none of
+them is told the one easiest thing to install rather than the best one. Done means every job is green in CI on the pushed commit.
 After that, the skill offers once to add the failed check as a lefthook or
 pre-commit hook, staged by its measured duration, so the same failure never
 reaches CI again. `--audit` runs the measurement and the checks (actionlint,
 Action pins, hook installation and CI/hook parity) and stops. `--optimize`
 dispatches a read-only sub-agent that analyzes each slow job and returns
 ranked, evidence-backed changes that would make it faster; nothing is
-applied. Five bundled scripts do the measuring, the localizing, the reading
+applied. Six bundled scripts do the measuring, the localizing, the reading
 of workflow files, the planning, and the local timing: `scripts/ci_profile.py`,
 `scripts/extract_failures.py` (pytest, jest, vitest, cargo, cargo-nextest,
 go), `scripts/workflow_inventory.py` (run with `uv run --no-project --with
-pyyaml`), `scripts/ladder_plan.py`, and `scripts/local_ledger.py`.
+pyyaml`), `scripts/ladder_plan.py`, `scripts/local_ledger.py`, and
+`scripts/detect_runners.py`.
 
 Renamed from `ci-audit` in repo-hygiene 0.9.0.
 
@@ -80,8 +86,16 @@ location) as well.
 > bound. That run is the full run: every job green, done, and a pre-push
 > hook offered for the test that failed.
 
-> "Fix CI" when the red job is Linux-only and the machine is a Mac
-> → not reproducible locally, so CI is the lab; the `integration` job is
+> "Fix CI" when the red job is Linux-only and a container runtime is running
+> → the survey finds Podman already up, so the failing test runs in it in
+> nine seconds, the whole step follows, and the fix reaches CI verified —
+> one plain push, no dispatch. The report names the runner, why it was
+> picked ("already running"), and that the run was emulated to `linux/amd64`
+> because the host is arm64.
+
+> "Fix CI" when the red job is Linux-only and nothing local can run it
+> → not reproducible on this host and the one install offer was declined, so
+> CI is the lab; the `integration` job is
 > expected at 18 minutes, over the 5-minute remote floor, and its workflow
 > has no filter input: one question to add it (rendered from
 > `references/filter-input.md`), then the fix commit carries the input and

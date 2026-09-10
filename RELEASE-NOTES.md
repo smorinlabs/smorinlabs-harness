@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Added
+
+- **`repo-hygiene` 0.12.0 — `ci-fix` reproduces Linux jobs in whatever is
+  already on the machine.** A new `scripts/detect_runners.py` surveys podman,
+  docker, lima, act and the devcontainer CLI and writes
+  `~/.config/ci-fix/runners.toml`. The survey is read-only — it starts no VM,
+  pulls no image, installs nothing — and ranks by **readiness before
+  fidelity**: a runtime already running is recommended over a more faithful
+  one that first needs an install or a 1 GB image, because the ready one
+  reproduces the failure now. Within one tier the order is act → podman →
+  docker → lima; podman leads the runtimes as rootless, licence-free and
+  CLI-compatible with docker, and lima is the full-VM fallback. A machine
+  with nothing installed is told the easiest thing to get, not the best, and
+  a hand-written `pinned` value overrides the ranking and survives
+  `--refresh`. Architecturally this adds no rung: a Linux runner changes
+  *where* rungs 0 and 1 execute, so every floor and cap from 0.11.0 holds,
+  and `CI is the lab` now means no local path exists at all. `ladder_plan.py`
+  gains `--local-env container`, which doubles a step's CI-proxy estimate for
+  its first run in a container and defers to the ledger afterwards.
+  `references/local-runners.md` carries the podman/docker, act and lima
+  recipes, the toolchain-to-image map and the architecture rule. Every start,
+  pull and install is one AskUserQuestion, and a decline is recorded.
+
 ## v0.24.0 — 2026-09-10
 
 ### Added
