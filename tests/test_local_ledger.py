@@ -143,4 +143,69 @@ def test_ledger_file_shape_is_what_ladder_plan_reads(tmp_path):
     record(ledger, 12.5)
     data = json.loads(ledger.read_text())
     assert set(data) == {"version", "samples"}
-    assert set(data["samples"][0]) == {"workflow", "job", "step", "seconds", "at"}
+    assert set(data["samples"][0]) == {
+        "workflow",
+        "workflow_path",
+        "job",
+        "step",
+        "seconds",
+        "at",
+    }
+
+
+def test_workflow_path_is_part_of_the_identity(tmp_path):
+    """CodeRabbit on PR #61: two workflow files may share a `name:`; keying on
+    the display name alone would lend one file's local median to the other."""
+    ledger = tmp_path / "ledger.json"
+    ci = [
+        "--workflow",
+        "CI",
+        "--workflow-path",
+        ".github/workflows/ci.yml",
+        "--job",
+        "test",
+        "--step",
+        "Run tests",
+    ]
+    arm = [
+        "--workflow",
+        "CI",
+        "--workflow-path",
+        ".github/workflows/ci-arm.yml",
+        "--job",
+        "test",
+        "--step",
+        "Run tests",
+    ]
+    record(ledger, 20, key=ci)
+    record(ledger, 900, key=arm)
+    assert median(ledger, key=ci) == {"samples": 1, "median_s": 20.0}
+    assert median(ledger, key=arm) == {"samples": 1, "median_s": 900.0}
+    # a query with no path is its own bucket, never a wildcard over the two above
+    assert median(
+        ledger, key=["--workflow", "CI", "--job", "test", "--step", "Run tests"]
+    ) == {
+        "samples": 0,
+        "median_s": None,
+    }
+
+
+def test_seconds_must_be_finite_and_non_negative(tmp_path):
+    """CodeRabbit on PR #61: a negative value would classify as `fast`, and a
+    persisted nan or inf raises in ladder_plan's duration formatter."""
+    ledger = tmp_path / "ledger.json"
+    for bad in ("-5", "nan", "inf", "-inf"):
+        result = run(
+            "record",
+            "--ledger",
+            ledger,
+            *KEY,
+            "--seconds",
+            bad,
+            "--conclusion",
+            "success",
+        )
+        assert result.returncode == 2, bad
+        assert "--seconds" in result.stderr, bad
+    assert not ledger.exists()
+    assert median(ledger) == {"samples": 0, "median_s": None}

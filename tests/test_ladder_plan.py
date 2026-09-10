@@ -116,8 +116,18 @@ def write_profile(tmp_path, data=None):
     return path
 
 
+CI_PATH = ".github/workflows/ci.yml"
+NIGHTLY_PATH = ".github/workflows/nightly.yml"
+
+
 def write_ledger(tmp_path, samples):
+    """The ledger keys on the workflow path too, so a sample without one is a
+    separate bucket; the fixtures fill it in unless a case says otherwise."""
     path = tmp_path / "ledger.json"
+    for s in samples:
+        s.setdefault(
+            "workflow_path", CI_PATH if s["workflow"] == "CI" else NIGHTLY_PATH
+        )
     path.write_text(json.dumps({"version": 1, "samples": samples}))
     return path
 
@@ -323,7 +333,85 @@ def test_same_job_name_in_two_workflows_needs_the_workflow(tmp_path):
         "--local-step",
     )
     assert result.returncode == 2
-    assert "CI" in result.stderr and "Nightly" in result.stderr
+    assert CI_PATH in result.stderr and NIGHTLY_PATH in result.stderr
+    assert "pass --workflow" in result.stderr
+
+
+def test_two_workflow_files_sharing_a_name_are_selected_by_path(tmp_path):
+    """CodeRabbit on PR #61: with two `CI / test` rows, --workflow CI matched
+    both and the error told the user to pass the flag they already had.
+    --workflow-path separates them, and the error names the paths."""
+    profile = profile_fixture()
+    for j in profile["jobs"]:
+        j["workflow_name"] = "CI"  # both files are named CI; only the paths differ
+        j["name"] = "CI / " + j["job"]
+    path = write_profile(tmp_path, profile)
+
+    result = run(
+        "--json",
+        "--profile",
+        path,
+        "--workflow",
+        "CI",
+        "--job",
+        "pytest",
+        "--step",
+        PYTEST_STEP,
+        "--ids",
+        "1",
+    )
+    assert result.returncode == 2
+    assert "pass --workflow-path" in result.stderr
+    assert CI_PATH in result.stderr and NIGHTLY_PATH in result.stderr
+
+    p = plan(
+        path,
+        "--workflow-path",
+        CI_PATH,
+        "--job",
+        "pytest",
+        "--step",
+        PYTEST_STEP,
+        "--ids",
+        "2",
+        "--local-step",
+    )
+    assert p["workflow_path"] == CI_PATH
+    assert p["local"]["step_expected_s"] == 540.0
+    p = plan(
+        path,
+        "--workflow-path",
+        NIGHTLY_PATH,
+        "--job",
+        "pytest",
+        "--step",
+        PYTEST_STEP,
+        "--ids",
+        "2",
+        "--local-step",
+    )
+    assert p["workflow_path"] == NIGHTLY_PATH
+    assert p["local"]["step_expected_s"] == 1750.0
+
+
+def test_the_ledger_lookup_is_scoped_to_the_workflow_path(tmp_path):
+    """A sample recorded for ci-arm.yml must not decide ci.yml's rung."""
+    ledger = write_ledger(
+        tmp_path,
+        [
+            {
+                "workflow": "CI",
+                "workflow_path": ".github/workflows/ci-arm.yml",
+                "job": "pytest",
+                "step": PYTEST_STEP,
+                "seconds": 5.0,
+                "at": "2026-09-09T00:00:00Z",
+            }
+        ],
+    )
+    p = base(tmp_path, ids=3, ledger=ledger)
+    assert p["local"]["source"] == "profile"  # not the 5s sample from the other file
+    assert p["local"]["step_expected_s"] == 540.0
 
 
 # --------------------------------------------------------------- remote mode

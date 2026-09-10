@@ -63,21 +63,31 @@ def classify(seconds: float | None, floor_s: int) -> str:
 
 
 def find_job(
-    profile: dict, workflow: str | None, job: str
+    profile: dict, workflow: str | None, workflow_path: str | None, job: str
 ) -> tuple[dict | None, list[str]]:
     """Match on the profile's `job` (the jobs-API name, and the ledger's key);
     `name` is the display string, which becomes `CI / pytest` when two
     workflows share a job name."""
     matches = [j for j in profile.get("jobs", []) if j.get("job", j.get("name")) == job]
-    if workflow is not None:
+    if workflow_path is not None:
+        matches = [j for j in matches if j.get("workflow_path") == workflow_path]
+    elif workflow is not None:
         matches = [j for j in matches if j.get("workflow_name") == workflow]
     if len(matches) > 1:
-        return None, sorted({j.get("workflow_name") or "?" for j in matches})
+        # two workflow *files* can share a `name:`, so --workflow cannot
+        # separate them; name the paths, which --workflow-path selects
+        return None, sorted(
+            {j.get("workflow_path") or j.get("workflow_name") or "?" for j in matches}
+        )
     return (matches[0] if matches else None), []
 
 
 def ledger_median(
-    path: Path | None, workflow: str | None, job: str, step: str
+    path: Path | None,
+    workflow: str | None,
+    workflow_path: str | None,
+    job: str,
+    step: str,
 ) -> tuple[float | None, int]:
     if path is None or not path.is_file():
         return None, 0
@@ -89,6 +99,7 @@ def ledger_median(
         s["seconds"]
         for s in data.get("samples", [])
         if s.get("job") == job
+        and s.get("workflow_path") == workflow_path
         and s.get("step") == step
         and (workflow is None or s.get("workflow") == workflow)
     ]
@@ -112,7 +123,11 @@ def fmt(seconds: float | None) -> str:
 
 
 def local_plan(
-    args, floor_s: int, job_entry: dict | None, workflow: str | None
+    args,
+    floor_s: int,
+    job_entry: dict | None,
+    workflow: str | None,
+    workflow_path: str | None,
 ) -> dict:
     step_median = None
     source = "none"
@@ -122,7 +137,7 @@ def local_plan(
                 step_median = st.get("median_s")
                 source = "profile" if step_median is not None else "none"
                 break
-    led, n = ledger_median(args.ledger, workflow, args.job, args.step)
+    led, n = ledger_median(args.ledger, workflow, workflow_path, args.job, args.step)
     if led is not None:
         step_median, source = led, "ledger"
     step_class = classify(step_median, floor_s)
@@ -323,6 +338,11 @@ def main(argv: list[str] | None = None) -> int:
         help="workflow name (required when the job name exists in several workflows)",
     )
     ap.add_argument(
+        "--workflow-path",
+        help="workflow file path (e.g. .github/workflows/ci.yml); the only way to separate two "
+        "workflow files that share a name:, and part of the local ledger's identity",
+    )
+    ap.add_argument(
         "--job",
         required=True,
         help="job display name as the jobs API reports it, e.g. 'pytest (3.12)'",
@@ -383,18 +403,25 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: cannot read profile {args.profile}: {e}", file=sys.stderr)
         return 2
 
-    job_entry, ambiguous = find_job(profile, args.workflow, args.job)
+    job_entry, ambiguous = find_job(
+        profile, args.workflow, args.workflow_path, args.job
+    )
     if ambiguous:
+        flag = "--workflow-path" if args.workflow else "--workflow"
         print(
-            f"error: job {args.job!r} exists in several workflows ({', '.join(ambiguous)}); pass --workflow",
+            f"error: job {args.job!r} exists in several workflows ({', '.join(ambiguous)}); pass {flag}",
             file=sys.stderr,
         )
         return 2
     workflow = args.workflow or (job_entry.get("workflow_name") if job_entry else None)
+    workflow_path = args.workflow_path or (
+        job_entry.get("workflow_path") if job_entry else None
+    )
 
     plan = {
         "workflow": workflow,
-        "local": local_plan(args, local_floor, job_entry, workflow),
+        "workflow_path": workflow_path,
+        "local": local_plan(args, local_floor, job_entry, workflow, workflow_path),
         "remote": remote_plan(args, remote_floor, job_entry),
     }
     print(json.dumps(plan, indent=2) if args.json else render(plan))

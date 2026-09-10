@@ -25,8 +25,10 @@ only when the bare name collides, and two workflow *files* that share a
 run missing from the listing cannot be attributed to either file: its jobs
 are an ambiguous join, listed under `ambiguous_joins` and reported
 `unmeasured` rather than folded into the wrong row. `runs_per_workflow`
-counts the sampled runs per workflow, so a starved workflow (fewer than 3)
-can be topped up from the default branch. A run whose `total_count` exceeds the jobs delivered is
+counts the sampled runs per workflow — keyed by workflow *path* wherever the
+`--runs` listing resolves one, and by display name only for runs it does not
+cover — so a starved file (fewer than 3) can be told apart from its busy
+namesake and topped up from the default branch. A run whose `total_count` exceeds the jobs delivered is
 listed under `truncated_runs` and warned about on stderr — fetch with
 `per_page=100` (or paginate). `external` is tri-state: True for a
 GitHub-managed workflow, False for a repository-owned one, None when the run
@@ -53,7 +55,9 @@ import sys
 from datetime import datetime, timezone
 
 DURATION_RE = re.compile(r"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")
-SAMPLE_CONCLUSION = "success"  # a failed, timed-out, skipped, or cancelled job is not the job's shape
+SAMPLE_CONCLUSION = (
+    "success"  # a failed, timed-out, skipped, or cancelled job is not the job's shape
+)
 
 
 def parse_duration(text: str) -> int:
@@ -63,7 +67,9 @@ def parse_duration(text: str) -> int:
         return int(text)
     m = DURATION_RE.match(text)
     if not m or not any(m.groups()):
-        raise ValueError(f"unrecognized threshold {text!r} (use e.g. 2m, 90s, 1h30m, or seconds)")
+        raise ValueError(
+            f"unrecognized threshold {text!r} (use e.g. 2m, 90s, 1h30m, or seconds)"
+        )
     h, mi, s = (int(g) if g else 0 for g in m.groups())
     return h * 3600 + mi * 60 + s
 
@@ -132,7 +138,9 @@ def fmt_secs(value: float | None) -> str:
     return f"{value}s"
 
 
-def profile(files: list[str], threshold_s: int, runs_listing: str | None = None) -> dict:
+def profile(
+    files: list[str], threshold_s: int, runs_listing: str | None = None
+) -> dict:
     run_paths = load_run_paths(runs_listing)
     Key = tuple  # (workflow_name, workflow_path or None, job name)
     workflow_path: dict[Key, str | None] = {}
@@ -160,19 +168,34 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
     for path, jobs, truncated in loaded:
         if truncated:
             truncated_runs.append(path)
-        for wf in {job.get("workflow_name") or "" for job in jobs}:
-            runs_per_workflow[wf] = runs_per_workflow.get(wf, 0) + 1
+        # count by workflow *path* wherever the listing resolves one: two files
+        # sharing a `name:` would otherwise be summed, hiding a starved file
+        # behind its busy namesake. Runs the listing does not cover fall back
+        # to the display name, and are visibly a separate bucket.
+        for wf_key in {
+            run_paths.get(job.get("run_id")) or (job.get("workflow_name") or "")
+            for job in jobs
+        }:
+            runs_per_workflow[wf_key] = runs_per_workflow.get(wf_key, 0) + 1
         for job in jobs:
             wf = job.get("workflow_name") or ""
             rp = run_paths.get(job.get("run_id"))
             if wf in colliding:
                 key_path = rp  # None here means: cannot tell which file — ambiguous
             else:
-                key_path = next(iter(paths_by_wf.get(wf, ())), None)  # the one known file, or None
+                key_path = next(
+                    iter(paths_by_wf.get(wf, ())), None
+                )  # the one known file, or None
             name = (wf, key_path, job.get("name", "<unnamed>"))
             if name not in durations:
                 order.append(name)
-                durations[name], queues[name], in_progress[name], excluded[name], steps[name] = [], [], 0, 0, {}
+                (
+                    durations[name],
+                    queues[name],
+                    in_progress[name],
+                    excluded[name],
+                    steps[name],
+                ) = [], [], 0, 0, {}
                 workflow_path[name] = key_path
             if wf in colliding and rp is None:
                 ambiguous.add(name)
@@ -182,7 +205,9 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                 in_progress[name] += 1
                 continue
             if job.get("conclusion") != SAMPLE_CONCLUSION:
-                excluded[name] += 1  # failure/timed_out = time-to-failure; skipped = 0s; cancelled = truncated
+                excluded[name] += (
+                    1  # failure/timed_out = time-to-failure; skipped = 0s; cancelled = truncated
+                )
                 continue
             durations[name].append(dur)
             queue = seconds_between(job.get("created_at"), job.get("started_at"))
@@ -191,7 +216,9 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
             for step in job.get("steps") or []:
                 sdur = seconds_between(step.get("started_at"), step.get("completed_at"))
                 if sdur is not None:
-                    steps[name].setdefault(step.get("name", "<unnamed>"), []).append(sdur)
+                    steps[name].setdefault(step.get("name", "<unnamed>"), []).append(
+                        sdur
+                    )
 
     bare_counts: dict[str, int] = {}
     for _, _, bare in order:
@@ -206,7 +233,10 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
             display = f"{wf} / {bare}" if bare_counts[bare] > 1 and wf else bare
         samples = durations[name]
         step_rows = sorted(
-            ({"name": s, "median_s": statistics.median(v)} for s, v in steps[name].items()),
+            (
+                {"name": s, "median_s": statistics.median(v)}
+                for s, v in steps[name].items()
+            ),
             key=lambda r: r["median_s"],
             reverse=True,
         )
@@ -218,7 +248,11 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                 "job": bare,
                 "workflow_name": wf or None,
                 "workflow_path": workflow_path[name],
-                "external": (workflow_path[name].startswith("dynamic/") if workflow_path[name] else None),
+                "external": (
+                    workflow_path[name].startswith("dynamic/")
+                    if workflow_path[name]
+                    else None
+                ),
                 "class": "slow" if median > threshold_s else "fast",
                 "samples": len(samples),
                 "in_progress": in_progress[name],
@@ -236,7 +270,11 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                 "job": bare,
                 "workflow_name": wf or None,
                 "workflow_path": workflow_path[name],
-                "external": (workflow_path[name].startswith("dynamic/") if workflow_path[name] else None),
+                "external": (
+                    workflow_path[name].startswith("dynamic/")
+                    if workflow_path[name]
+                    else None
+                ),
                 "class": "unmeasured",
                 "samples": 0,
                 "in_progress": in_progress[name],
@@ -254,7 +292,13 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
     # external (GitHub-managed) jobs last; then unmeasured on top so they are
     # never overlooked; then slowest first
     # external (GitHub-managed) jobs last, unknown ownership just before them
-    rows.sort(key=lambda r: ({False: 0, None: 1, True: 2}[r["external"]], r["median_s"] is not None, -(r["median_s"] or 0)))
+    rows.sort(
+        key=lambda r: (
+            {False: 0, None: 1, True: 2}[r["external"]],
+            r["median_s"] is not None,
+            -(r["median_s"] or 0),
+        )
+    )
     return {
         "threshold_s": threshold_s,
         "runs_sampled": len(files),
@@ -271,19 +315,35 @@ def render_text(data: dict) -> str:
     lines = [
         f"CI duration profile — {data['runs_sampled']} run(s) sampled, "
         f"threshold {fmt_secs(data['threshold_s'])} (slow = median above it)",
-        "runs per workflow: " + ", ".join(f"{wf or '?'} {n}" for wf, n in data["runs_per_workflow"].items()),
+        "runs per workflow: "
+        + ", ".join(
+            f"{(wf.rsplit('/', 1)[-1] if '/' in wf else wf) or '?'} {n}"
+            for wf, n in data["runs_per_workflow"].items()
+        ),
         "",
         f"{'class':<10} {'job':<32} {'median':>8} {'max':>8} {'queue':>7} {'n':>3}  slowest step",
     ]
     for j in data["jobs"]:
-        step = f"{j['slowest_step']['name']} ({fmt_secs(j['slowest_step']['median_s'])})" if j["slowest_step"] else "—"
+        step = (
+            f"{j['slowest_step']['name']} ({fmt_secs(j['slowest_step']['median_s'])})"
+            if j["slowest_step"]
+            else "—"
+        )
         n = f"{j['samples']}" + (f"+{j['in_progress']}r" if j["in_progress"] else "")
-        flag = "  [external]" if j["external"] else ("  [ownership unknown]" if j["external"] is None else "")
+        flag = (
+            "  [external]"
+            if j["external"]
+            else ("  [ownership unknown]" if j["external"] is None else "")
+        )
         lines.append(
             f"{j['class']:<10} {j['name'][:32]:<32} {fmt_secs(j['median_s']):>8} "
             f"{fmt_secs(j['max_s']):>8} {fmt_secs(j['queue_median_s']):>7} {n:>3}  {step}{flag}"
         )
-    slow = [j["name"] for j in data["jobs"] if j["class"] != "fast" and j["external"] is False]
+    slow = [
+        j["name"]
+        for j in data["jobs"]
+        if j["class"] != "fast" and j["external"] is False
+    ]
     lines.append("")
     lines.append(
         f"{len(slow)} job(s) at or above threshold or unmeasured: {', '.join(slow)}"
@@ -308,10 +368,20 @@ def render_text(data: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--threshold", default="2m", help="slow-job threshold (default 2m)")
-    parser.add_argument("--json", action="store_true", help="emit JSON instead of a table")
-    parser.add_argument("--runs", metavar="LISTING_JSON", help="actions/runs listing: joins jobs to workflow paths")
-    parser.add_argument("files", nargs="+", metavar="JOBS_JSON", help="one jobs response per run")
+    parser.add_argument(
+        "--threshold", default="2m", help="slow-job threshold (default 2m)"
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="emit JSON instead of a table"
+    )
+    parser.add_argument(
+        "--runs",
+        metavar="LISTING_JSON",
+        help="actions/runs listing: joins jobs to workflow paths",
+    )
+    parser.add_argument(
+        "files", nargs="+", metavar="JOBS_JSON", help="one jobs response per run"
+    )
     args = parser.parse_args(argv)
     try:
         threshold_s = parse_duration(args.threshold)

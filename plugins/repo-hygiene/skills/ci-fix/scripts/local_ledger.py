@@ -11,8 +11,8 @@ The ledger is machine-level and never lives in the repo:
   ${XDG_CACHE_HOME:-~/.cache}/ci-fix/<owner>--<repo>.json   (from --repo)
 or any explicit --ledger path.
 
-  record  --repo o/r|--ledger F --workflow W --job J --step S --seconds N --conclusion success|failure
-  median  --repo o/r|--ledger F --workflow W --job J --step S     → {"samples": n, "median_s": x|null}
+  record  --repo o/r|--ledger F --workflow W [--workflow-path P] --job J --step S --seconds N --conclusion success|failure
+  median  --repo o/r|--ledger F --workflow W [--workflow-path P] --job J --step S → {"samples": n, "median_s": x|null}
   path    --repo o/r                                              → prints the default path, writes nothing
 
 Exit 0 on success; exit 2 on a usage error.
@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import statistics
 import sys
@@ -61,17 +62,29 @@ def load(path: Path) -> dict:
 
 
 def key_of(s: dict) -> tuple:
-    return (s.get("workflow"), s.get("job"), s.get("step"))
+    """The workflow *path* is part of the identity: two workflow files may
+    share a `name:`, and reusing one file's local median for the other would
+    pick the wrong rung. A sample recorded without a path keys on None and so
+    matches only a query that also supplies none."""
+    return (s.get("workflow"), s.get("workflow_path"), s.get("job"), s.get("step"))
 
 
-def matching(data: dict, workflow: str, job: str, step: str) -> list[dict]:
-    return [s for s in data["samples"] if key_of(s) == (workflow, job, step)]
+def matching(
+    data: dict, workflow: str, workflow_path: str | None, job: str, step: str
+) -> list[dict]:
+    return [
+        s for s in data["samples"] if key_of(s) == (workflow, workflow_path, job, step)
+    ]
 
 
 def cmd_record(args) -> int:
     path = resolve_path(args)
     if path is None:
         return usage("record needs --ledger <file> or --repo <owner/repo>")
+    if not math.isfinite(args.seconds) or args.seconds < 0:
+        return usage(
+            f"--seconds must be a finite value of at least 0, not {args.seconds!r}"
+        )
     if args.conclusion != "success":
         print(
             json.dumps(
@@ -86,13 +99,16 @@ def cmd_record(args) -> int:
     data = load(path)
     sample = {
         "workflow": args.workflow,
+        "workflow_path": args.workflow_path,
         "job": args.job,
         "step": args.step,
         "seconds": float(args.seconds),
         "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),  # noqa: UP017
     }
     others = [s for s in data["samples"] if key_of(s) != key_of(sample)]
-    mine = matching(data, args.workflow, args.job, args.step) + [sample]
+    mine = matching(data, args.workflow, args.workflow_path, args.job, args.step) + [
+        sample
+    ]
     data = {"version": VERSION, "samples": others + mine[-KEEP:]}
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -117,7 +133,9 @@ def cmd_median(args) -> int:
     if path is None:
         return usage("median needs --ledger <file> or --repo <owner/repo>")
     data = load(path)
-    mine = matching(data, args.workflow, args.job, args.step)[-KEEP:]
+    mine = matching(data, args.workflow, args.workflow_path, args.job, args.step)[
+        -KEEP:
+    ]
     print(
         json.dumps(
             {
@@ -155,6 +173,11 @@ def main(argv: list[str] | None = None) -> int:
 
     def key(p):
         p.add_argument("--workflow", required=True)
+        p.add_argument(
+            "--workflow-path",
+            help="workflow file path (e.g. .github/workflows/ci.yml); part of the identity, "
+            "so two files sharing a name: keep separate timings",
+        )
         p.add_argument(
             "--job", required=True, help="job display name as the jobs API reports it"
         )

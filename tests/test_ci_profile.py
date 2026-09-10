@@ -93,7 +93,9 @@ def test_text_output_lists_jobs_slowest_first():
     result = run(FAST_RUN)
     assert result.returncode == 0, result.stderr
     lines = [l for l in result.stdout.splitlines() if l.strip()]
-    order = [l.split()[1] for l in lines if l.startswith(("fast", "slow", "unmeasured"))]
+    order = [
+        l.split()[1] for l in lines if l.startswith(("fast", "slow", "unmeasured"))
+    ]
     assert order[0] == "plugin-validate"  # 13s, the longest
     assert order[-1] == "gen-check"  # 6s, the shortest
     assert "threshold" in result.stdout
@@ -106,15 +108,35 @@ def test_median_over_multiple_runs_and_in_progress_jobs_are_not_samples(tmp_path
     r1 = write_run(
         tmp_path / "r1.json",
         [
-            job("suite", "2026-01-01T00:00:00Z", "2026-01-01T00:01:00Z", "2026-01-01T00:16:00Z"),
-            job("lint", "2026-01-01T00:00:00Z", "2026-01-01T00:00:30Z", "2026-01-01T00:01:00Z"),
+            job(
+                "suite",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:01:00Z",
+                "2026-01-01T00:16:00Z",
+            ),
+            job(
+                "lint",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:30Z",
+                "2026-01-01T00:01:00Z",
+            ),
         ],
     )
     r2 = write_run(
         tmp_path / "r2.json",
         [
-            job("suite", "2026-01-01T01:00:00Z", "2026-01-01T01:00:20Z", "2026-01-01T01:20:20Z"),
-            job("lint", "2026-01-01T01:00:00Z", "2026-01-01T01:00:10Z", "2026-01-01T01:00:50Z"),
+            job(
+                "suite",
+                "2026-01-01T01:00:00Z",
+                "2026-01-01T01:00:20Z",
+                "2026-01-01T01:20:20Z",
+            ),
+            job(
+                "lint",
+                "2026-01-01T01:00:00Z",
+                "2026-01-01T01:00:10Z",
+                "2026-01-01T01:00:50Z",
+            ),
         ],
     )
     r3 = write_run(
@@ -122,7 +144,12 @@ def test_median_over_multiple_runs_and_in_progress_jobs_are_not_samples(tmp_path
         [
             # still running: no completed_at → not a duration sample
             job("suite", "2026-01-01T02:00:00Z", "2026-01-01T02:00:05Z", None),
-            job("lint", "2026-01-01T02:00:00Z", "2026-01-01T02:00:05Z", "2026-01-01T02:00:35Z"),
+            job(
+                "lint",
+                "2026-01-01T02:00:00Z",
+                "2026-01-01T02:00:05Z",
+                "2026-01-01T02:00:35Z",
+            ),
         ],
     )
     data = profile(r1, r2, r3)
@@ -140,7 +167,14 @@ def test_median_over_multiple_runs_and_in_progress_jobs_are_not_samples(tmp_path
 def test_wait_bound_is_derived_from_measured_duration_and_queue(tmp_path):
     r = write_run(
         tmp_path / "r.json",
-        [job("suite", "2026-01-01T00:00:00Z", "2026-01-01T00:02:00Z", "2026-01-01T00:12:00Z")],
+        [
+            job(
+                "suite",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:02:00Z",
+                "2026-01-01T00:12:00Z",
+            )
+        ],
     )
     suite = by_name(profile(r))["suite"]
     # 10m run + 2m queue = 12m; ×1.5 = 18m = 1080s
@@ -171,26 +205,54 @@ def test_skipped_and_cancelled_jobs_are_not_samples(tmp_path):
     r1 = write_run(
         tmp_path / "r1.json",
         [
-            job("e2e", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", conclusion="skipped"),
-            job("suite", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:01:10Z", conclusion="cancelled"),
+            job(
+                "e2e",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:00Z",
+                conclusion="skipped",
+            ),
+            job(
+                "suite",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:10Z",
+                "2026-01-01T00:01:10Z",
+                conclusion="cancelled",
+            ),
         ],
     )
     r2 = write_run(
         tmp_path / "r2.json",
-        [job("suite", "2026-01-01T01:00:00Z", "2026-01-01T01:00:10Z", "2026-01-01T01:10:10Z")],
+        [
+            job(
+                "suite",
+                "2026-01-01T01:00:00Z",
+                "2026-01-01T01:00:10Z",
+                "2026-01-01T01:10:10Z",
+            )
+        ],
     )
     jobs = by_name(profile(r1, r2))
     assert jobs["e2e"]["class"] == "unmeasured" and jobs["e2e"]["samples"] == 0
     assert jobs["e2e"]["excluded"] == 1
     assert jobs["suite"]["samples"] == 1 and jobs["suite"]["excluded"] == 1
-    assert jobs["suite"]["median_s"] == 600  # the cancelled 60s run did not drag it down
+    assert (
+        jobs["suite"]["median_s"] == 600
+    )  # the cancelled 60s run did not drag it down
 
 
 def test_accepts_bare_job_list(tmp_path):
     p = tmp_path / "list.json"
     p.write_text(
         json.dumps(
-            [job("x", "2026-01-01T00:00:00Z", "2026-01-01T00:00:01Z", "2026-01-01T00:00:31Z")]
+            [
+                job(
+                    "x",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:01Z",
+                    "2026-01-01T00:00:31Z",
+                )
+            ]
         )
     )
     assert by_name(profile(p))["x"]["median_s"] == 30
@@ -204,15 +266,22 @@ def test_runs_listing_marks_dynamic_workflow_jobs_external_and_sorts_them_last()
     reviewer) show up as jobs the repo cannot change. Real fixtures: the runs
     listing plus the jobs of one dynamic run and one CI run from it."""
     data = profile(
-        "--runs", FIXTURES / "runs_listing.json",
-        FIXTURES / "jobs_dynamic_run.json", FIXTURES / "jobs_ci_run.json",
+        "--runs",
+        FIXTURES / "runs_listing.json",
+        FIXTURES / "jobs_dynamic_run.json",
+        FIXTURES / "jobs_ci_run.json",
     )
     jobs = by_name(data)
     assert jobs["copilot-pull-request-reviewer"]["external"] is True
-    assert jobs["copilot-pull-request-reviewer"]["workflow_path"] == "dynamic/agents/copilot-pull-request-reviewer"
+    assert (
+        jobs["copilot-pull-request-reviewer"]["workflow_path"]
+        == "dynamic/agents/copilot-pull-request-reviewer"
+    )
     assert jobs["pytest"]["external"] is False
     assert jobs["pytest"]["workflow_path"] == ".github/workflows/ci.yml"
-    assert data["jobs"][-1]["name"] == "copilot-pull-request-reviewer"  # last, whatever its duration
+    assert (
+        data["jobs"][-1]["name"] == "copilot-pull-request-reviewer"
+    )  # last, whatever its duration
     assert data["external_jobs"] == ["copilot-pull-request-reviewer"]
 
 
@@ -222,15 +291,25 @@ def test_without_runs_listing_ownership_is_unknown_not_repo_owned():
     jobs = by_name(profile(FIXTURES / "jobs_dynamic_run.json"))
     assert jobs["copilot-pull-request-reviewer"]["external"] is None
     assert jobs["copilot-pull-request-reviewer"]["workflow_path"] is None
-    known = by_name(profile("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_ci_run.json"))
+    known = by_name(
+        profile("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_ci_run.json")
+    )
     assert known["pytest"]["external"] is False
 
 
 def test_text_output_flags_external_jobs():
-    result = run("--runs", FIXTURES / "runs_listing.json", FIXTURES / "jobs_dynamic_run.json", FIXTURES / "jobs_ci_run.json")
+    result = run(
+        "--runs",
+        FIXTURES / "runs_listing.json",
+        FIXTURES / "jobs_dynamic_run.json",
+        FIXTURES / "jobs_ci_run.json",
+    )
     assert result.returncode == 0, result.stderr
     assert "external" in result.stdout
-    assert "copilot-pull-request-reviewer" in result.stdout.splitlines()[-2] or "copilot" in result.stdout.splitlines()[-1]
+    assert (
+        "copilot-pull-request-reviewer" in result.stdout.splitlines()[-2]
+        or "copilot" in result.stdout.splitlines()[-1]
+    )
 
 
 # --------------------------------------------------------- threshold parsing
@@ -239,9 +318,23 @@ def test_text_output_flags_external_jobs():
 def test_threshold_accepts_common_duration_spellings(tmp_path):
     r = write_run(
         tmp_path / "r.json",
-        [job("j", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", "2026-01-01T00:05:00Z")],
+        [
+            job(
+                "j",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:05:00Z",
+            )
+        ],
     )
-    for spelling, seconds in [("2m", 120), ("90s", 90), ("1h", 3600), ("1h30m", 5400), ("2m30s", 150), ("120", 120)]:
+    for spelling, seconds in [
+        ("2m", 120),
+        ("90s", 90),
+        ("1h", 3600),
+        ("1h30m", 5400),
+        ("2m30s", 150),
+        ("120", 120),
+    ]:
         assert profile("--threshold", spelling, r)["threshold_s"] == seconds, spelling
 
 
@@ -263,24 +356,65 @@ def test_missing_file_is_a_usage_error(tmp_path):
 def test_same_job_name_in_two_workflows_is_two_rows(tmp_path):
     """Greptile: keying by display name alone merged `test` from two workflows
     into one median. The jobs API carries `workflow_name`; key on both."""
-    r1 = write_run(tmp_path / "r1.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI"},
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:20:10Z"), "workflow_name": "Nightly"},
-    ])
+    r1 = write_run(
+        tmp_path / "r1.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:00:40Z",
+                ),
+                "workflow_name": "CI",
+            },
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:20:10Z",
+                ),
+                "workflow_name": "Nightly",
+            },
+        ],
+    )
     data = profile(r1)
     rows = {(j["workflow_name"], j["job"]): j for j in data["jobs"]}
     assert set(rows) == {("CI", "test"), ("Nightly", "test")}
-    assert rows[("CI", "test")]["median_s"] == 30 and rows[("CI", "test")]["class"] == "fast"
-    assert rows[("Nightly", "test")]["median_s"] == 1200 and rows[("Nightly", "test")]["class"] == "slow"
+    assert (
+        rows[("CI", "test")]["median_s"] == 30
+        and rows[("CI", "test")]["class"] == "fast"
+    )
+    assert (
+        rows[("Nightly", "test")]["median_s"] == 1200
+        and rows[("Nightly", "test")]["class"] == "slow"
+    )
     text = run(r1).stdout
-    assert "Nightly / test" in text and "CI / test" in text  # disambiguated only when names collide
+    assert (
+        "Nightly / test" in text and "CI / test" in text
+    )  # disambiguated only when names collide
 
 
 def test_truncated_jobs_page_is_reported(tmp_path):
     """Greptile: the jobs endpoint pages at 30 by default; a run with more jobs
     than the page silently loses matrix cells unless total_count is checked."""
     p = tmp_path / "r.json"
-    p.write_text(json.dumps({"total_count": 45, "jobs": [job("a", "2026-01-01T00:00:00Z", "2026-01-01T00:00:01Z", "2026-01-01T00:00:31Z")]}))
+    p.write_text(
+        json.dumps(
+            {
+                "total_count": 45,
+                "jobs": [
+                    job(
+                        "a",
+                        "2026-01-01T00:00:00Z",
+                        "2026-01-01T00:00:01Z",
+                        "2026-01-01T00:00:31Z",
+                    )
+                ],
+            }
+        )
+    )
     result = run("--json", p)
     assert result.returncode == 0
     data = json.loads(result.stdout)
@@ -290,7 +424,9 @@ def test_truncated_jobs_page_is_reported(tmp_path):
 
 def test_unmeasured_wait_bound_is_documented_as_null():
     doc = SCRIPT.read_text()
-    assert "wait_bound_s" in doc and "null" in doc.split('"""')[1].lower()  # the module docstring says it
+    assert (
+        "wait_bound_s" in doc and "null" in doc.split('"""')[1].lower()
+    )  # the module docstring says it
     assert "UNITS" not in doc  # Copilot: dead constant removed
 
 
@@ -298,11 +434,31 @@ def test_only_successful_jobs_are_duration_samples(tmp_path):
     """A `continue-on-error: true` job keeps conclusion `failure` or
     `timed_out` inside a green run; those measure time-to-failure, not the
     job's shape (deep review, PR #49)."""
-    r = write_run(tmp_path / "r.json", [
-        job("flaky", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:01:00Z"),
-        job("flaky", "2026-01-01T01:00:00Z", "2026-01-01T01:00:10Z", "2026-01-01T01:05:10Z", conclusion="failure"),
-        job("flaky", "2026-01-01T02:00:00Z", "2026-01-01T02:00:10Z", "2026-01-01T02:05:10Z", conclusion="timed_out"),
-    ])
+    r = write_run(
+        tmp_path / "r.json",
+        [
+            job(
+                "flaky",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:10Z",
+                "2026-01-01T00:01:00Z",
+            ),
+            job(
+                "flaky",
+                "2026-01-01T01:00:00Z",
+                "2026-01-01T01:00:10Z",
+                "2026-01-01T01:05:10Z",
+                conclusion="failure",
+            ),
+            job(
+                "flaky",
+                "2026-01-01T02:00:00Z",
+                "2026-01-01T02:00:10Z",
+                "2026-01-01T02:05:10Z",
+                conclusion="timed_out",
+            ),
+        ],
+    )
     j = by_name(profile(r))["flaky"]
     assert j["samples"] == 1 and j["median_s"] == 50 and j["class"] == "fast"
     assert j["excluded"] == 2
@@ -311,9 +467,22 @@ def test_only_successful_jobs_are_duration_samples(tmp_path):
 def test_unknown_ownership_jobs_are_listed_separately_not_as_actionable(tmp_path):
     """Greptile (PR #55): a slow job of unknown ownership must not appear in
     the actionable slow list; it gets its own non-actionable line."""
-    r = write_run(tmp_path / "r.json", [job("mystery", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:10:10Z")])
+    r = write_run(
+        tmp_path / "r.json",
+        [
+            job(
+                "mystery",
+                "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:10Z",
+                "2026-01-01T00:10:10Z",
+            )
+        ],
+    )
     out = run(r).stdout
-    assert "ownership unknown (" in out and "mystery" in out.split("ownership unknown (")[1]
+    assert (
+        "ownership unknown (" in out
+        and "mystery" in out.split("ownership unknown (")[1]
+    )
     assert "at or above threshold or unmeasured: mystery" not in out
 
 
@@ -324,16 +493,57 @@ def test_runs_sampled_per_workflow_are_reported(tmp_path):
     """T09 (c): a 10-run branch-wide sample starves an infrequent workflow. The
     profile counts sampled runs per workflow so the skill can apply the ≥3 rule
     per workflow and fetch the default branch's runs for the starved one."""
-    r1 = write_run(tmp_path / "r1.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI"},
-        {**job("lint", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:20Z"), "workflow_name": "CI"},
-    ])
-    r2 = write_run(tmp_path / "r2.json", [
-        {**job("test", "2026-01-02T00:00:00Z", "2026-01-02T00:00:10Z", "2026-01-02T00:00:50Z"), "workflow_name": "CI"},
-    ])
-    r3 = write_run(tmp_path / "r3.json", [
-        {**job("test", "2026-01-03T00:00:00Z", "2026-01-03T00:00:10Z", "2026-01-03T00:20:10Z"), "workflow_name": "Nightly"},
-    ])
+    r1 = write_run(
+        tmp_path / "r1.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:00:40Z",
+                ),
+                "workflow_name": "CI",
+            },
+            {
+                **job(
+                    "lint",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:00:20Z",
+                ),
+                "workflow_name": "CI",
+            },
+        ],
+    )
+    r2 = write_run(
+        tmp_path / "r2.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-02T00:00:00Z",
+                    "2026-01-02T00:00:10Z",
+                    "2026-01-02T00:00:50Z",
+                ),
+                "workflow_name": "CI",
+            },
+        ],
+    )
+    r3 = write_run(
+        tmp_path / "r3.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-03T00:00:00Z",
+                    "2026-01-03T00:00:10Z",
+                    "2026-01-03T00:20:10Z",
+                ),
+                "workflow_name": "Nightly",
+            },
+        ],
+    )
     data = profile(r1, r2, r3)
     assert data["runs_sampled"] == 3
     assert data["runs_per_workflow"] == {"CI": 2, "Nightly": 1}
@@ -346,7 +556,9 @@ def test_runs_sampled_per_workflow_are_reported(tmp_path):
 
 def _runs_listing(tmp_path, paths):
     listing = tmp_path / "runs.json"
-    listing.write_text(json.dumps({"workflow_runs": [{"id": i, "path": p} for i, p in paths.items()]}))
+    listing.write_text(
+        json.dumps({"workflow_runs": [{"id": i, "path": p} for i, p in paths.items()]})
+    )
     return listing
 
 
@@ -355,25 +567,74 @@ def test_two_workflow_files_with_the_same_name_are_keyed_by_path(tmp_path):
     collapsed into one median because the key was (workflow_name, job). With
     the runs listing the key is the workflow path, and a job whose run is not
     in the listing under a colliding name is an ambiguous join: unmeasured."""
-    listing = _runs_listing(tmp_path, {1: ".github/workflows/ci.yml", 2: ".github/workflows/ci-arm.yml"})
-    r1 = write_run(tmp_path / "r1.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI", "run_id": 1},
-    ])
-    r2 = write_run(tmp_path / "r2.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:20:10Z"), "workflow_name": "CI", "run_id": 2},
-    ])
-    r3 = write_run(tmp_path / "r3.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:10:10Z"), "workflow_name": "CI", "run_id": 3},
-    ])
+    listing = _runs_listing(
+        tmp_path, {1: ".github/workflows/ci.yml", 2: ".github/workflows/ci-arm.yml"}
+    )
+    r1 = write_run(
+        tmp_path / "r1.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:00:40Z",
+                ),
+                "workflow_name": "CI",
+                "run_id": 1,
+            },
+        ],
+    )
+    r2 = write_run(
+        tmp_path / "r2.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:20:10Z",
+                ),
+                "workflow_name": "CI",
+                "run_id": 2,
+            },
+        ],
+    )
+    r3 = write_run(
+        tmp_path / "r3.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:10:10Z",
+                ),
+                "workflow_name": "CI",
+                "run_id": 3,
+            },
+        ],
+    )
     data = profile("--runs", listing, r1, r2, r3)
     rows = {(j["workflow_path"], j["job"]): j for j in data["jobs"]}
-    assert set(rows) == {(".github/workflows/ci.yml", "test"), (".github/workflows/ci-arm.yml", "test"), (None, "test")}
+    assert set(rows) == {
+        (".github/workflows/ci.yml", "test"),
+        (".github/workflows/ci-arm.yml", "test"),
+        (None, "test"),
+    }
     assert rows[(".github/workflows/ci.yml", "test")]["median_s"] == 30
     assert rows[(".github/workflows/ci-arm.yml", "test")]["median_s"] == 1200
     ambiguous = rows[(None, "test")]
     assert ambiguous["class"] == "unmeasured" and ambiguous["samples"] == 0
     assert ambiguous["ambiguous_join"] is True
     assert data["ambiguous_joins"] == ["CI / test"]
+    # Greptile/CodeRabbit on PR #61: counting by display name reported `CI: 3`
+    # and hid the one-run file; the count is keyed by path where one resolves
+    assert data["runs_per_workflow"] == {
+        ".github/workflows/ci.yml": 1,
+        ".github/workflows/ci-arm.yml": 1,
+        "CI": 1,  # the run the listing does not cover, a separate bucket
+    }
     text = run("--runs", listing, r1, r2, r3).stdout
     assert "ci.yml / test" in text and "ci-arm.yml / test" in text
     assert "ambiguous" in text
@@ -383,15 +644,83 @@ def test_unlisted_run_merges_into_a_non_colliding_workflow(tmp_path):
     """Without a name collision, a run missing from the listing still belongs
     to the one workflow of that name: one row, the path taken from any listed run."""
     listing = _runs_listing(tmp_path, {1: ".github/workflows/ci.yml"})
-    r_unlisted = write_run(tmp_path / "r0.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:20Z"), "workflow_name": "CI", "run_id": 9},
-    ])
-    r1 = write_run(tmp_path / "r1.json", [
-        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI", "run_id": 1},
-    ])
+    r_unlisted = write_run(
+        tmp_path / "r0.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:00:20Z",
+                ),
+                "workflow_name": "CI",
+                "run_id": 9,
+            },
+        ],
+    )
+    r1 = write_run(
+        tmp_path / "r1.json",
+        [
+            {
+                **job(
+                    "test",
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:00:10Z",
+                    "2026-01-01T00:00:40Z",
+                ),
+                "workflow_name": "CI",
+                "run_id": 1,
+            },
+        ],
+    )
     data = profile("--runs", listing, r_unlisted, r1)
     assert len(data["jobs"]) == 1
     row = data["jobs"][0]
-    assert row["workflow_path"] == ".github/workflows/ci.yml" and row["external"] is False
+    assert (
+        row["workflow_path"] == ".github/workflows/ci.yml" and row["external"] is False
+    )
     assert row["samples"] == 2 and row["median_s"] == 20
     assert data["ambiguous_joins"] == []
+
+
+def test_runs_per_workflow_separates_same_name_files(tmp_path):
+    """The starved file must be identifiable: three `ci.yml` runs and one
+    `ci-arm.yml` run, both named `CI`, are two buckets, not `CI: 4`."""
+    listing = _runs_listing(
+        tmp_path,
+        {
+            1: ".github/workflows/ci.yml",
+            2: ".github/workflows/ci.yml",
+            3: ".github/workflows/ci.yml",
+            4: ".github/workflows/ci-arm.yml",
+        },
+    )
+    runs = []
+    for run_id in (1, 2, 3, 4):
+        runs.append(
+            write_run(
+                tmp_path / f"r{run_id}.json",
+                [
+                    {
+                        **job(
+                            "test",
+                            "2026-01-01T00:00:00Z",
+                            "2026-01-01T00:00:10Z",
+                            "2026-01-01T00:00:40Z",
+                        ),
+                        "workflow_name": "CI",
+                        "run_id": run_id,
+                    }
+                ],
+            )
+        )
+    data = profile("--runs", listing, *runs)
+    assert data["runs_per_workflow"] == {
+        ".github/workflows/ci.yml": 3,
+        ".github/workflows/ci-arm.yml": 1,
+    }
+    text = run("--runs", listing, *runs).stdout
+    assert (
+        "ci.yml 3" in text and "ci-arm.yml 1" in text
+    )  # basenames in the table, full paths in JSON
