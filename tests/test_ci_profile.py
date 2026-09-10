@@ -315,3 +315,83 @@ def test_unknown_ownership_jobs_are_listed_separately_not_as_actionable(tmp_path
     out = run(r).stdout
     assert "ownership unknown (" in out and "mystery" in out.split("ownership unknown (")[1]
     assert "at or above threshold or unmeasured: mystery" not in out
+
+
+# ------------------------------------------------- P42-T09 (c): per-workflow sampling
+
+
+def test_runs_sampled_per_workflow_are_reported(tmp_path):
+    """T09 (c): a 10-run branch-wide sample starves an infrequent workflow. The
+    profile counts sampled runs per workflow so the skill can apply the ≥3 rule
+    per workflow and fetch the default branch's runs for the starved one."""
+    r1 = write_run(tmp_path / "r1.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI"},
+        {**job("lint", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:20Z"), "workflow_name": "CI"},
+    ])
+    r2 = write_run(tmp_path / "r2.json", [
+        {**job("test", "2026-01-02T00:00:00Z", "2026-01-02T00:00:10Z", "2026-01-02T00:00:50Z"), "workflow_name": "CI"},
+    ])
+    r3 = write_run(tmp_path / "r3.json", [
+        {**job("test", "2026-01-03T00:00:00Z", "2026-01-03T00:00:10Z", "2026-01-03T00:20:10Z"), "workflow_name": "Nightly"},
+    ])
+    data = profile(r1, r2, r3)
+    assert data["runs_sampled"] == 3
+    assert data["runs_per_workflow"] == {"CI": 2, "Nightly": 1}
+    text = run(r1, r2, r3).stdout
+    assert "runs per workflow: CI 2, Nightly 1" in text
+
+
+# --------------------------------------- P42-T09 (d): same-name workflows keyed by path
+
+
+def _runs_listing(tmp_path, paths):
+    listing = tmp_path / "runs.json"
+    listing.write_text(json.dumps({"workflow_runs": [{"id": i, "path": p} for i, p in paths.items()]}))
+    return listing
+
+
+def test_two_workflow_files_with_the_same_name_are_keyed_by_path(tmp_path):
+    """T09 (d), PR #55 wave 4: two files both named `CI` with a `test` job
+    collapsed into one median because the key was (workflow_name, job). With
+    the runs listing the key is the workflow path, and a job whose run is not
+    in the listing under a colliding name is an ambiguous join: unmeasured."""
+    listing = _runs_listing(tmp_path, {1: ".github/workflows/ci.yml", 2: ".github/workflows/ci-arm.yml"})
+    r1 = write_run(tmp_path / "r1.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI", "run_id": 1},
+    ])
+    r2 = write_run(tmp_path / "r2.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:20:10Z"), "workflow_name": "CI", "run_id": 2},
+    ])
+    r3 = write_run(tmp_path / "r3.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:10:10Z"), "workflow_name": "CI", "run_id": 3},
+    ])
+    data = profile("--runs", listing, r1, r2, r3)
+    rows = {(j["workflow_path"], j["job"]): j for j in data["jobs"]}
+    assert set(rows) == {(".github/workflows/ci.yml", "test"), (".github/workflows/ci-arm.yml", "test"), (None, "test")}
+    assert rows[(".github/workflows/ci.yml", "test")]["median_s"] == 30
+    assert rows[(".github/workflows/ci-arm.yml", "test")]["median_s"] == 1200
+    ambiguous = rows[(None, "test")]
+    assert ambiguous["class"] == "unmeasured" and ambiguous["samples"] == 0
+    assert ambiguous["ambiguous_join"] is True
+    assert data["ambiguous_joins"] == ["CI / test"]
+    text = run("--runs", listing, r1, r2, r3).stdout
+    assert "ci.yml / test" in text and "ci-arm.yml / test" in text
+    assert "ambiguous" in text
+
+
+def test_unlisted_run_merges_into_a_non_colliding_workflow(tmp_path):
+    """Without a name collision, a run missing from the listing still belongs
+    to the one workflow of that name: one row, the path taken from any listed run."""
+    listing = _runs_listing(tmp_path, {1: ".github/workflows/ci.yml"})
+    r_unlisted = write_run(tmp_path / "r0.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:20Z"), "workflow_name": "CI", "run_id": 9},
+    ])
+    r1 = write_run(tmp_path / "r1.json", [
+        {**job("test", "2026-01-01T00:00:00Z", "2026-01-01T00:00:10Z", "2026-01-01T00:00:40Z"), "workflow_name": "CI", "run_id": 1},
+    ])
+    data = profile("--runs", listing, r_unlisted, r1)
+    assert len(data["jobs"]) == 1
+    row = data["jobs"][0]
+    assert row["workflow_path"] == ".github/workflows/ci.yml" and row["external"] is False
+    assert row["samples"] == 2 and row["median_s"] == 20
+    assert data["ambiguous_joins"] == []

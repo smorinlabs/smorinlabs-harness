@@ -17,9 +17,16 @@ CI-wait monitor: ceil(1.5 × (median + queue)) with a 60s floor. An
 `wait_bound_s` are null: callers fall back to the longest measured job's bound
 (or, with no measured job at all, to 1.5 × the failed run's own duration).
 
-Jobs are keyed by (`workflow_name`, `name`): two workflows that both run a
-job called `test` stay two rows, shown as `<workflow> / <job>` only when the
-bare name collides. A run whose `total_count` exceeds the jobs delivered is
+Jobs are keyed by (workflow, `name`), where the workflow is its file path
+when `--runs` supplies one and its `workflow_name` otherwise: two workflows
+that both run a job called `test` stay two rows, shown as `<workflow> / <job>`
+only when the bare name collides, and two workflow *files* that share a
+`name:` stay two rows shown as `<file> / <job>`. Under such a name collision a
+run missing from the listing cannot be attributed to either file: its jobs
+are an ambiguous join, listed under `ambiguous_joins` and reported
+`unmeasured` rather than folded into the wrong row. `runs_per_workflow`
+counts the sampled runs per workflow, so a starved workflow (fewer than 3)
+can be topped up from the default branch. A run whose `total_count` exceeds the jobs delivered is
 listed under `truncated_runs` and warned about on stderr — fetch with
 `per_page=100` (or paginate). `external` is tri-state: True for a
 GitHub-managed workflow, False for a repository-owned one, None when the run
@@ -127,8 +134,21 @@ def fmt_secs(value: float | None) -> str:
 
 def profile(files: list[str], threshold_s: int, runs_listing: str | None = None) -> dict:
     run_paths = load_run_paths(runs_listing)
-    Key = tuple  # (workflow_name, job name)
+    Key = tuple  # (workflow_name, workflow_path or None, job name)
     workflow_path: dict[Key, str | None] = {}
+    runs_per_workflow: dict[str, int] = {}
+
+    # first pass: which workflow names map to more than one file (a name collision)
+    loaded = [(path, *load_jobs(path)) for path in files]
+    paths_by_wf: dict[str, set[str]] = {}
+    for _, jobs, _ in loaded:
+        for job in jobs:
+            wf = job.get("workflow_name") or ""
+            rp = run_paths.get(job.get("run_id"))
+            if rp:
+                paths_by_wf.setdefault(wf, set()).add(rp)
+    colliding = {wf for wf, ps in paths_by_wf.items() if len(ps) > 1}
+    ambiguous: set[Key] = set()
     durations: dict[Key, list[float]] = {}
     queues: dict[Key, list[float]] = {}
     in_progress: dict[Key, int] = {}
@@ -137,16 +157,26 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
     order: list[Key] = []
     truncated_runs: list[str] = []
 
-    for path in files:
-        jobs, truncated = load_jobs(path)
+    for path, jobs, truncated in loaded:
         if truncated:
             truncated_runs.append(path)
+        for wf in {job.get("workflow_name") or "" for job in jobs}:
+            runs_per_workflow[wf] = runs_per_workflow.get(wf, 0) + 1
         for job in jobs:
-            name = (job.get("workflow_name") or "", job.get("name", "<unnamed>"))
+            wf = job.get("workflow_name") or ""
+            rp = run_paths.get(job.get("run_id"))
+            if wf in colliding:
+                key_path = rp  # None here means: cannot tell which file — ambiguous
+            else:
+                key_path = next(iter(paths_by_wf.get(wf, ())), None)  # the one known file, or None
+            name = (wf, key_path, job.get("name", "<unnamed>"))
             if name not in durations:
                 order.append(name)
                 durations[name], queues[name], in_progress[name], excluded[name], steps[name] = [], [], 0, 0, {}
-                workflow_path[name] = run_paths.get(job.get("run_id"))
+                workflow_path[name] = key_path
+            if wf in colliding and rp is None:
+                ambiguous.add(name)
+                continue  # an ambiguous join contributes no sample
             dur = seconds_between(job.get("started_at"), job.get("completed_at"))
             if dur is None:
                 in_progress[name] += 1
@@ -164,13 +194,16 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                     steps[name].setdefault(step.get("name", "<unnamed>"), []).append(sdur)
 
     bare_counts: dict[str, int] = {}
-    for _, bare in order:
+    for _, _, bare in order:
         bare_counts[bare] = bare_counts.get(bare, 0) + 1
 
     rows = []
     for name in order:
-        wf, bare = name
-        display = f"{wf} / {bare}" if bare_counts[bare] > 1 and wf else bare
+        wf, key_path, bare = name
+        if wf in colliding:
+            display = f"{key_path.rsplit('/', 1)[-1] if key_path else wf} / {bare}"
+        else:
+            display = f"{wf} / {bare}" if bare_counts[bare] > 1 and wf else bare
         samples = durations[name]
         step_rows = sorted(
             ({"name": s, "median_s": statistics.median(v)} for s, v in steps[name].items()),
@@ -215,6 +248,7 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
                 "slowest_step": None,
                 "steps": [],
             }
+        row["ambiguous_join"] = name in ambiguous
         rows.append(row)
 
     # external (GitHub-managed) jobs last; then unmeasured on top so they are
@@ -227,6 +261,8 @@ def profile(files: list[str], threshold_s: int, runs_listing: str | None = None)
         "external_jobs": [r["name"] for r in rows if r["external"]],
         "unknown_ownership_jobs": [r["name"] for r in rows if r["external"] is None],
         "truncated_runs": truncated_runs,
+        "runs_per_workflow": dict(sorted(runs_per_workflow.items())),
+        "ambiguous_joins": [r["name"] for r in rows if r["ambiguous_join"]],
         "jobs": rows,
     }
 
@@ -235,6 +271,7 @@ def render_text(data: dict) -> str:
     lines = [
         f"CI duration profile — {data['runs_sampled']} run(s) sampled, "
         f"threshold {fmt_secs(data['threshold_s'])} (slow = median above it)",
+        "runs per workflow: " + ", ".join(f"{wf or '?'} {n}" for wf, n in data["runs_per_workflow"].items()),
         "",
         f"{'class':<10} {'job':<32} {'median':>8} {'max':>8} {'queue':>7} {'n':>3}  slowest step",
     ]
@@ -253,6 +290,11 @@ def render_text(data: dict) -> str:
         if slow
         else "All jobs below threshold."
     )
+    if data.get("ambiguous_joins"):
+        lines.append(
+            "ambiguous join (two workflow files share this name and the run is not in the listing; "
+            f"unmeasured): {', '.join(data['ambiguous_joins'])}"
+        )
     if data["unknown_ownership_jobs"]:
         lines.append(
             f"ownership unknown (not in the runs listing; not actionable here): {', '.join(data['unknown_ownership_jobs'])}"
