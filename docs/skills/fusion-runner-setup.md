@@ -140,13 +140,17 @@ showed a connected network, and the required restart was completed. Fusion
 subsequently reported Tools as installed and current; Windows first-run setup
 repeated its region and keyboard prompts, reached its online update check,
 accepted a device name, and displayed the personal/work-or-school setup choice.
-The user subsequently reported selecting personal use. The agent then observed
-the three-stage Windows update screen; update completion and Microsoft-account
-sign-in remain unverified. The walkthrough distinguishes the reported click
-from observed progress and records the automation input failure that required
-the manual click.
-The Windows desktop, runner service registration, a local CI job, and baseline restoration remain
-**unverified**.
+The user subsequently reported selecting personal use. The agent observed the
+three-stage update screen and later the Windows desktop; the intervening account,
+preference, and final update screens were not observed. Guest commands verified
+Windows 11 Pro 25H2, build `26200.9445`, an Arm64 processor, the guest computer
+name, and a running VMware Tools service. A guest TCP connection to GitHub port
+443 succeeded, and the prepared installer disc's contents were verified in
+Windows; its package verification and installation remain pending. The walkthrough records keyboard
+recovery, command verification, and the later loss of window access while the
+VM continued running.
+Windows installation is complete. CI prerequisites, runner service registration,
+a local CI job, and baseline restoration remain **unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that
 distinction during actual setup.
 

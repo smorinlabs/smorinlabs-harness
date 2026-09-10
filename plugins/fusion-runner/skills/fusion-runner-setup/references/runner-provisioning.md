@@ -33,7 +33,19 @@ Keep the runner directory and checkouts on the Windows filesystem, normally unde
 
 Open the target repository or organization's GitHub runner registration page. Derive the URL from the actual scope, then use **Settings ▸ Actions ▸ Runners** to add a self-hosted runner. Select **Windows** and the architecture observed in the guest. Use the current download instructions and checksum for that exact asset. The [official runner releases](https://github.com/actions/runner/releases) are a secondary source; do not embed a stale release URL or substitute a different server's required runner version.
 
-Download the archive inside Windows. Set `$RunnerZip` to the downloaded file's absolute guest path and `$ExpectedSha256` to the SHA-256 digest shown for that asset in GitHub's instructions or release. This PowerShell check must succeed before extraction:
+Download the archive inside Windows, or transfer an officially downloaded,
+verified copy from the Mac. A data ISO can carry the chosen vendor installers
+and their checksum manifest without sharing host home folders. Attach that ISO
+through **Fusion ▸ Virtual Machine ▸ CD/DVD (SATA) ▸ Choose Disc or Disc Image…**,
+then verify its actual drive letter and contents inside Windows. In the
+validation run, `D:` exposed the prepared PowerShell, Git, and runner files;
+directory visibility alone did not verify their guest-side hashes or install
+them. Retain the source URLs and expected digests from the official downloads.
+
+Set `$RunnerZip` to the archive's absolute guest path, including its actual disc
+drive if using transfer media, and `$ExpectedSha256` to the SHA-256 digest shown
+for that asset in GitHub's instructions or release. This PowerShell check must
+succeed before extraction:
 
 ```powershell
 if ($ExpectedSha256 -notmatch '^[0-9a-fA-F]{64}$') {

@@ -1572,7 +1572,7 @@ software and Windows images are downloaded from their official sources.
 - [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
 - [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
 - [x] [P45-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
-- [~] [P45-T06] Record the real installation as it happens: walkthrough includes the immediate Space boot prompt, Pro selection, approved license, disk installation and restarts, first-run region/keyboard choices, and successful VMware Tools/network-driver recovery; remaining Windows setup continues
+- [~] [P45-T06] Record the real installation as it happens: walkthrough reaches the verified Windows desktop, Pro 25H2 build 26200.9445, Arm64 processor and running VMware Tools; intervening account/preference screens were not observed; guest CI provisioning continues
 - [x] [P45-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
 - [ ] [P45-T04] Merge and release the public plugin after review
 
@@ -1595,11 +1595,16 @@ Network Connected. The required restart completed. Fusion reported Tools as
 installed and current. First-run setup reached its online update check, accepted
 a device name, and displayed the personal/work-or-school choice. The user
 subsequently reported selecting personal use, and the agent observed the
-three-stage Windows update screen. Update completion and account sign-in are
-pending.
-The Windows desktop, runner service registration,
-local smoke tests, reboot recovery, and reusable-baseline recovery remain
-unverified.
+three-stage Windows update screen. The desktop was observed later; intervening
+account, preference, and final update screens were not observed. Guest commands
+verified Windows 11 Pro 25H2, build 26200.9445, the chosen computer name, an Arm64
+processor and a running VMware Tools service. Windows installation is complete.
+The guest's TCP connection check to GitHub port 443 returned True. After a
+temporary loss of automation window access, the prepared installer ISO was
+attached and its contents verified inside Windows. Guest package hash/signature
+checks and installation have not yet completed. The VM power helper reported running.
+CI prerequisites, runner service registration, local smoke tests, reboot
+recovery, and reusable-baseline recovery remain unverified.
 
 Loader note: Claude reports the generator's existing `_generated` manifest
 field as an ignored unknown field. Both skill load checks passed. Additional

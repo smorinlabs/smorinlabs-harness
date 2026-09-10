@@ -142,9 +142,14 @@ Windows showed a connected network, and its required restart completed. Fusion
 reported Tools as installed and current afterward. Windows first-run setup
 repeated its region and keyboard prompts, reached its online update check, and
 accepted a device name. The user later reported selecting personal-use setup;
-the agent then observed the three-stage Windows update screen. Update completion,
-Microsoft-account sign-in, the Windows desktop, and local CI validation were
-still pending at this checkpoint.
+the agent then observed the three-stage Windows update screen. The Windows
+desktop was subsequently observed, and guest commands verified Windows 11 Pro
+25H2, build `26200.9445`, an Arm64 processor, and the running VMware Tools
+service. The intervening account, preference, and final update screens were
+not observed by the agent. A guest TCP connection check to GitHub port 443
+returned `True`, and the prepared installer disc was attached with its contents
+visible inside Windows. Guest package checks and installation, runner registration, local
+CI, and baseline recovery remained pending at this checkpoint.
 On another release or an Intel Mac, use the actual labels and matching media.
 
 1. **Choose the existing Windows installer.** From Fusion's **New Virtual
@@ -397,12 +402,39 @@ language and keyboard choices.
     Starting update - 3%**. Windows said it would restart and then continue
     setup. Leave the VM running through the update and automatic restart.
     **Update later** was available but was not selected in this run. Observe
-    the next screen before marking updates or account setup complete; this
-    update stage was still in progress at the recorded checkpoint.
+    the next screen before marking updates or account setup complete. This
+    stage was initially observed at 3%; the desktop was seen later, without
+    observing the intervening update or account screens. A later desktop does
+    not establish that Windows Update has no additional updates pending.
 12. **Complete the remaining Windows screens.** Use the user's authorized account
     and preference choices; the user handles protected credential entry. The
-    Windows desktop and remaining first-run screens were still pending at this
-    checkpoint. Continue from the actual screen after the restart.
+    agent did not observe these intervening prompts in this run. Continue from
+    the actual screen after any restart; do not reconstruct unobserved choices.
+13. **Verify the desktop and installed Windows.** Confirm that Windows reaches
+    its desktop. In this run, the Start menu was open. Keyboard search for
+    `powershell`, followed by `Ctrl+Shift+Return`, opened the administrator
+    consent prompt for **Windows PowerShell**. The approved setup continued
+    after selecting **Yes**. Run the following read-only checks separately
+    inside Windows, verifying each complete command before submitting it:
+
+    ```powershell
+    hostname
+    get-ciminstance win32_operatingsystem | fl caption,version,buildnumber
+    get-ciminstance win32_processor | fl architecture,addresswidth
+    get-itemproperty 'hklm:\software\microsoft\windows nt\currentversion' | fl displayversion,ubr
+    get-service vmtools | fl name,status
+    ```
+
+    `hostname` reports the guest's computer name; retain it locally. `fl` is
+    PowerShell's `Format-List` alias. The operating-system and registry checks
+    together identify the Windows edition, release, and full update build;
+    `UBR` is the revision appended to the base build number. These observations
+    established **Microsoft Windows 11 Pro**, **25H2**, and `26200.9445` in the
+    validation VM. The processor reported `Architecture` equal to `12` and
+    `AddressWidth` equal to `64`; interpret these using the architecture check
+    in [runner provisioning](runner-provisioning.md#2-identify-the-guest-and-install-its-tools).
+    The `vmtools` service reported **Running**. Desktop and service verification
+    do not establish installed CI tools, runner registration, or a CI job.
 
 When automation enters Windows commands through JavaScript, preserve literal
 backslashes with `String.raw` or correct string escaping. A path containing
@@ -433,6 +465,31 @@ input. The user reported a successful manual click, and Windows then advanced.
 The precise cause of the tool failure was not established. Do not describe it
 as Windows rejecting the choice or as a missing user authorization. If recovery
 does not work, hand off the current click and verify the resulting screen.
+
+Keyboard input later worked at the Windows desktop even while coordinate
+clicks still failed. An initial long diagnostic command lost characters and
+returned an invalid-class error. The agent enlarged the current console font
+for readability, then used short text segments and checked the whole command
+before pressing `Return`. Clipboard attempts timed out and left unexpected
+text; `Ctrl+C` cleared that input before any command was run. Inspect the
+received text after a failed paste instead of appending another command to it.
+Use the user's existing authorization for keyboard recovery from a tool error;
+an approval rejection still requires resolving the stated approval boundary.
+
+Later, window lookup returned `cgWindowNotFound` for both Fusion and Finder,
+including after a fresh automation connection. The VM's read-only power helper
+still reported **running**. Preserve the guest state and check whether the Mac
+is unlocked and the VM window is visible; the tool error alone does not prove
+that the VM stopped or that the Mac is locked. Do not restart a running guest
+solely to recover the automation connection.
+
+Window access subsequently returned without a guest restart. The agent attached
+the prepared installer ISO, observed its contents in Windows, and loaded its
+checksum manifest. A later window lookup failure interrupted entry of the
+hash-check command before it was submitted. On resume, inspect and clear any
+partial command before continuing; an interrupted entry is not an executed
+check. Follow [runner provisioning](runner-provisioning.md#3-download-the-runner-and-prepare-a-baseline)
+for transfer-media and checksum requirements.
 
 Record subsequent edition, licensing, storage, and first-run screens as they
 occur. The remaining procedure below states the required setup and verification;
