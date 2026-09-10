@@ -8,21 +8,35 @@ threshold (default 2 minutes). In fix mode it then triages every red job
 (workflow or config, code or test, flake, or not reproducible locally),
 extracts the failing test IDs from the job log, reproduces the failure before
 editing, and verifies up a ladder: the targeted tests locally, the full step
-locally, a local sweep of every other fast job's commands, then CI. When the
-failing workflow declares `workflow_dispatch`, the fix is pushed with
-`[skip ci]` and only that workflow is dispatched; otherwise the push is
-watched on the target job. The full run happens once at the end. Each rung
+locally, a local sweep of every other fast job's commands, then CI. One
+heuristic with two floors decides how narrow each level runs, computed by
+`scripts/ladder_plan.py` from the measurement, because isolating costs
+seconds locally and minutes in CI. Locally, a failed step expected over 30
+seconds (`--isolate-local`) runs its failing tests first and the whole step
+follows; a shorter one runs whole. The whole step always runs when expected
+within 10 minutes, and is asked about once above that. In CI, the fix is a
+plain push, one run that is both the targeted check and the full run,
+unless CI is the only place the failure can be seen (not reproducible
+locally, the long local step declined, or CI red again after a local green)
+and the job is expected over 5 minutes (`--isolate-remote`): then the fix
+is pushed with `[skip ci]` and only that workflow is dispatched carrying
+just the failing tests through a filter input, with a one-time offer to add
+the input when the workflow lacks one, and the full run follows. Each rung
 runs only after the one below is green, and each CI wait is bounded by the
-measured duration. Done means every job is green in CI on the pushed commit.
+measured duration. Local runs are timed too and kept in a machine-level
+ledger, so later fixes on the same machine decide from local numbers rather
+than CI's. Done means every job is green in CI on the pushed commit.
 After that, the skill offers once to add the failed check as a lefthook or
 pre-commit hook, staged by its measured duration, so the same failure never
 reaches CI again. `--audit` runs the measurement and the checks (actionlint,
 Action pins, hook installation and CI/hook parity) and stops. `--optimize`
 dispatches a read-only sub-agent that analyzes each slow job and returns
 ranked, evidence-backed changes that would make it faster; nothing is
-applied. Three bundled scripts do the measuring, the localizing, and the reading of
-workflow files: `scripts/ci_profile.py`, `scripts/extract_failures.py`, and
-`scripts/workflow_inventory.py` (run with `uv run --no-project --with pyyaml`).
+applied. Five bundled scripts do the measuring, the localizing, the reading
+of workflow files, the planning, and the local timing: `scripts/ci_profile.py`,
+`scripts/extract_failures.py` (pytest, jest, vitest, cargo, cargo-nextest,
+go), `scripts/workflow_inventory.py` (run with `uv run --no-project --with
+pyyaml`), `scripts/ladder_plan.py`, and `scripts/local_ledger.py`.
 
 Renamed from `ci-audit` in repo-hygiene 0.9.0.
 
@@ -33,7 +47,9 @@ running?" ·
 **Arguments:** `--audit` (measure and report, no changes), `--optimize`
 (job-by-job speed analysis, no changes), `--actions-only` / `--hooks-only`
 (skip the other half), `--slow-threshold <dur>` (slow-job line, default
-`2m`), `--update-versions` (fix mode only: bump stale Action pins in their own commit)
+`2m`), `--isolate-local <dur>` / `--isolate-remote <dur>` (fix mode: the
+isolation floors, default `30s` and `5m`), `--update-versions` (fix mode
+only: bump stale Action pins in their own commit)
 
 ## Install
 
@@ -53,13 +69,30 @@ location) as well.
 > "Fix CI"
 > → profiles the last ten successful runs (the `integration` job runs 18
 > minutes, the rest under a minute), finds `integration` red, pulls its log
-> and extracts `tests/test_rollup.py::test_nested_totals`, runs that one test
-> locally in two seconds and sees it fail, fixes the rollup, re-runs it green,
-> asks before running the 18-minute step locally and skips it on a no, sweeps
-> the lint and typecheck jobs locally in 40 seconds, pushes with `[skip ci]`,
-> dispatches only the `integration` workflow and watches it under a 27-minute
-> bound, then pushes an empty `ci: full run` commit and reports every job
-> green on it — and offers a pre-push hook for the test that failed.
+> and extracts `tests/test_rollup.py::test_nested_totals`. The plan says: the
+> step is expected at 9 minutes here, over the 30-second floor, so the one
+> test first; the whole step is under the 10-minute cap, so it runs
+> afterwards without asking. It runs that one test locally in two seconds
+> and sees it fail, fixes the rollup, re-runs it green, runs the whole
+> integration step locally (9m10s, recorded for next time), sweeps the lint
+> and typecheck jobs in 40 seconds, and — verified locally, so one CI round
+> expected — pushes plainly and watches `integration` under a 27-minute
+> bound. That run is the full run: every job green, done, and a pre-push
+> hook offered for the test that failed.
+
+> "Fix CI" when the red job is Linux-only and the machine is a Mac
+> → not reproducible locally, so CI is the lab; the `integration` job is
+> expected at 18 minutes, over the 5-minute remote floor, and its workflow
+> has no filter input: one question to add it (rendered from
+> `references/filter-input.md`), then the fix commit carries the input and
+> `[skip ci]`, only `integration` is dispatched with that one test, feedback
+> arrives in three minutes instead of eighteen, and the empty `ci: full
+> run` commit proves an empty input still runs the whole suite.
+
+> "Fix CI" on a repo whose slowest step takes 20 seconds
+> → under the local floor: the whole failing step runs locally (no isolated
+> test), the sweep follows, and one plain push is both the targeted run and
+> the full run — no marker, no dispatch, no second commit.
 
 > "Why is CI slow?"
 > → `--optimize`: profiles the runs, hands the workflow files, the profile,

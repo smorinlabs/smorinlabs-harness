@@ -87,7 +87,10 @@ def test_cargo_yields_full_test_paths_once():
     assert data["format"] == "cargo"
     # each name appears in `---- X stdout ----`, the `failures:` list, and the
     # running list; it must come out exactly once
-    assert data["failures"] == ["parser::tests::parses_nested", "rollup::tests::sums_totals"]
+    assert data["failures"] == [
+        "parser::tests::parses_nested",
+        "rollup::tests::sums_totals",
+    ]
 
 
 # -------------------------------------------------------------------------- go
@@ -113,7 +116,13 @@ def test_explicit_format_overrides_detection():
 def test_no_failures_recognized_exits_one_with_empty_list():
     result = run("--json", FIXTURES / "log_no_failures.txt")
     assert result.returncode == 1
-    assert json.loads(result.stdout) == {"format": None, "failures": [], "failures_quoted": [], "packages": []}
+    assert json.loads(result.stdout) == {
+        "format": None,
+        "failures": [],
+        "failures_quoted": [],
+        "packages": [],
+        "failure_pairs": [],
+    }
     assert "no failures recognized" in result.stderr.lower()
 
 
@@ -153,12 +162,18 @@ def test_json_carries_shell_quoted_ids(tmp_path):
     shell syntax; `$(...)` inside double quotes executes. The JSON carries a
     shell-safe form the skill must use verbatim in local commands."""
     log = tmp_path / "evil.log"
-    log.write_text("2026-09-08T10:00:00.0000000Z FAILED tests/test_x.py::test_case[$(touch /tmp/pwned)] - boom\n")
+    log.write_text(
+        "2026-09-08T10:00:00.0000000Z FAILED tests/test_x.py::test_case[$(touch /tmp/pwned)] - boom\n"
+    )
     data = extract(log)
     assert data["failures"] == ["tests/test_x.py::test_case[$(touch /tmp/pwned)]"]
-    assert data["failures_quoted"] == ["'tests/test_x.py::test_case[$(touch /tmp/pwned)]'"]
+    assert data["failures_quoted"] == [
+        "'tests/test_x.py::test_case[$(touch /tmp/pwned)]'"
+    ]
     plain = extract(FIXTURES / "log_pytest.txt")
-    assert plain["failures_quoted"][0] == "tests/test_sample.py::test_rollup_total"  # safe IDs stay bare
+    assert (
+        plain["failures_quoted"][0] == "tests/test_sample.py::test_rollup_total"
+    )  # safe IDs stay bare
 
 
 def test_pytest_ids_are_parsed_bracket_aware(tmp_path):
@@ -215,3 +230,119 @@ def test_cargo_show_output_headers_for_passing_tests_are_not_failures(tmp_path):
     data = extract(log)
     assert data["format"] == "cargo"
     assert data["failures"] == ["tests::failing_test"]
+
+
+# ----------------------------------- P42-T09 (a): an unmatched `[` inside a param ID
+
+
+def test_pytest_unmatched_bracket_in_param_id_falls_back_to_the_first_reason_split(
+    tmp_path,
+):
+    """T09 (a): `[a[b]` never returns to depth 0, so the depth-aware cut found
+    no delimiter and the whole line, reason included, became the ID. Fallback:
+    the first `] - ` split on summary lines, the first `] FAILED`/`] ERROR` on
+    verbose lines. First, because the reason below itself contains `] - `."""
+    log = tmp_path / "log.txt"
+    log.write_text(
+        "FAILED tests/test_parse.py::test_brackets[a[b] - AssertionError: assert x[0] - y == 1\n"
+        "tests/test_parse.py::test_more[c[d] FAILED [ 50%]\n"
+        "ERROR tests/test_parse.py::test_setup[e[f] - fixture 'db' not found\n"
+    )
+    data = json.loads(run("--json", "--format", "pytest", log).stdout)
+    assert data["failures"] == [
+        "tests/test_parse.py::test_brackets[a[b]",
+        "tests/test_parse.py::test_more[c[d]",
+        "tests/test_parse.py::test_setup[e[f]",
+    ]
+
+
+# --------------------------------------------- P42-T09 (b): vitest and cargo-nextest
+
+
+def test_vitest_yields_file_and_test_path_from_fail_lines():
+    """`FAIL  <file> > <suite> > <name>` summary lines; a suite that failed to
+    load (`FAIL  <file> [ <file> ]`) yields the file alone. The × marks are the
+    fallback when no summary block is present."""
+    data = json.loads(run("--json", FIXTURES / "log_vitest.txt").stdout)
+    assert data["format"] == "vitest"
+    assert data[
+        "failures"
+    ] == [  # log order: the Failed Suites block precedes Failed Tests
+        "src/broken.test.ts",
+        "src/utils.test.ts > format > pads numbers",
+        "src/utils.test.ts > format > handles negatives",
+    ]
+    assert data["packages"] == []
+
+
+def test_vitest_marks_are_the_fallback_without_a_summary(tmp_path):
+    """CodeRabbit on PR #61: the targeted command needs `<file> > <suite> >
+    <name>`, so a `×` mark takes the file from the `❯ <file> (N tests…)`
+    header above it."""
+    log = tmp_path / "log.txt"
+    log.write_text(
+        " ❯ src/utils.test.ts (3 tests | 1 failed) 12ms\n"
+        "   × format > pads numbers 4ms\n"
+        "   ✓ format > trims\n"
+        " ❯ src/math.test.ts (2 tests | 1 failed) 5ms\n"
+        "   × adds > negative operands 1ms\n"
+    )
+    data = json.loads(run("--json", "--format", "vitest", log).stdout)
+    assert data["failures"] == [
+        "src/utils.test.ts > format > pads numbers",
+        "src/math.test.ts > adds > negative operands",
+    ]
+
+
+def test_nextest_yields_test_names_and_binary_ids():
+    """`FAIL [ 0.012s] <binary-id> <test>` lines, printed during the run and
+    again under the summary; deduplicated. Binary ids go to `packages` for the
+    `-E 'binary_id(...) & test(=...)'` filter."""
+    data = json.loads(run("--json", FIXTURES / "log_nextest.txt").stdout)
+    assert data["format"] == "nextest"
+    assert data["failures"] == ["tests::math::test_div", "cli::test_version"]
+    assert data["packages"] == ["acme", "acme::bin/cli"]
+    assert data["failure_pairs"] == [
+        {"binary_id": "acme", "test": "tests::math::test_div"},
+        {"binary_id": "acme::bin/cli", "test": "cli::test_version"},
+    ]
+
+
+def test_nextest_is_not_mistaken_for_cargo_or_go():
+    """The nextest log embeds libtest's `test x ... FAILED` lines and `--- STDOUT:`
+    blocks; neither the cargo (`failures:` + `---- X stdout ----`) nor the go
+    (`--- FAIL:`) detector may claim them."""
+    for fmt in ("cargo", "go"):
+        result = run("--json", "--format", fmt, FIXTURES / "log_nextest.txt")
+        assert result.returncode == 1, fmt
+        assert json.loads(result.stdout)["failures"] == []
+
+
+def test_nextest_pairs_are_not_recombined(tmp_path):
+    """Greptile on PR #61: the same test name can fail in one binary and pass
+    in another, so a filter built from the cross product would run a passing
+    test, or none. `failure_pairs` keeps the association."""
+    log = tmp_path / "log.txt"
+    log.write_text(
+        "        FAIL [   0.010s] acme tests::shared::test_roundtrip\n"
+        "        FAIL [   0.020s] acme::bin/cli cli::test_flags\n"
+    )
+    data = json.loads(run("--json", "--format", "nextest", log).stdout)
+    assert data["failures"] == ["tests::shared::test_roundtrip", "cli::test_flags"]
+    assert data["packages"] == ["acme", "acme::bin/cli"]
+    assert data["failure_pairs"] == [
+        {"binary_id": "acme", "test": "tests::shared::test_roundtrip"},
+        {"binary_id": "acme::bin/cli", "test": "cli::test_flags"},
+    ]
+    # the cross product would claim acme ran cli::test_flags, which it did not
+    assert {"binary_id": "acme", "test": "cli::test_flags"} not in data["failure_pairs"]
+
+
+def test_other_formats_carry_an_empty_failure_pairs_list():
+    for fixture, fmt in (
+        (FIXTURES / "log_pytest.txt", "pytest"),
+        (FIXTURES / "log_go.txt", "go"),
+    ):
+        data = json.loads(run("--json", fixture).stdout)
+        assert data["format"] == fmt
+        assert data["failure_pairs"] == []

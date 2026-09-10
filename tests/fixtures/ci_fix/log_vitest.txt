@@ -1,0 +1,51 @@
+2026-09-08T10:00:01.1234567Z ##[group]Run npx vitest run
+2026-09-08T10:00:01.1234568Z [36;1mnpx vitest run[0m
+2026-09-08T10:00:01.1234569Z ##[endgroup]
+2026-09-08T10:00:02.0000000Z 
+2026-09-08T10:00:02.0000000Z  RUN  v2.1.8 /home/runner/work/acme/acme
+2026-09-08T10:00:02.0000000Z 
+2026-09-08T10:00:03.0000000Z  ✓ src/math.test.ts (2 tests) 5ms
+2026-09-08T10:00:03.0000000Z  ❯ src/utils.test.ts (4 tests | 2 failed) 12ms
+2026-09-08T10:00:03.0000000Z    × format > pads numbers 4ms
+2026-09-08T10:00:03.0000000Z      → expected '07' to be '007' // Object.is equality
+2026-09-08T10:00:03.0000000Z    × format > handles negatives 3ms
+2026-09-08T10:00:03.0000000Z      → expected '-7' to be '-07' // Object.is equality
+2026-09-08T10:00:03.0000000Z  ❯ src/broken.test.ts (0 test)
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z ⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z  FAIL  src/broken.test.ts [ src/broken.test.ts ]
+2026-09-08T10:00:03.0000000Z Error: Failed to resolve import "./missing" from "src/broken.test.ts". Does the file exist?
+2026-09-08T10:00:03.0000000Z  ❯ src/broken.test.ts:1:20
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z ⎯⎯⎯⎯⎯⎯⎯[1/3]⎯⎯⎯⎯⎯⎯⎯
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z  FAIL  src/utils.test.ts > format > pads numbers
+2026-09-08T10:00:03.0000000Z AssertionError: expected '07' to be '007' // Object.is equality
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z Expected: "007"
+2026-09-08T10:00:03.0000000Z Received: "07"
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z  ❯ src/utils.test.ts:14:22
+2026-09-08T10:00:03.0000000Z      12|   it('pads numbers', () => {
+2026-09-08T10:00:03.0000000Z      13|     expect(pad(7, 2)).toBe('07')
+2026-09-08T10:00:03.0000000Z      14|     expect(pad(7, 3)).toBe('007')
+2026-09-08T10:00:03.0000000Z        |                      ^
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z ⎯⎯⎯⎯⎯⎯⎯[2/3]⎯⎯⎯⎯⎯⎯⎯
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z  FAIL  src/utils.test.ts > format > handles negatives
+2026-09-08T10:00:03.0000000Z AssertionError: expected '-7' to be '-07' // Object.is equality
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z  ❯ src/utils.test.ts:19:24
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z ⎯⎯⎯⎯⎯⎯⎯[3/3]⎯⎯⎯⎯⎯⎯⎯
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z  Test Files  2 failed | 1 passed (3)
+2026-09-08T10:00:03.0000000Z       Tests  2 failed | 4 passed (6)
+2026-09-08T10:00:03.0000000Z    Start at  10:00:02
+2026-09-08T10:00:03.0000000Z    Duration  1.02s (transform 120ms, setup 0ms, collect 210ms, tests 17ms)
+2026-09-08T10:00:03.0000000Z 
+2026-09-08T10:00:03.0000000Z ##[error]Process completed with exit code 1.

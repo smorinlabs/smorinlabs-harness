@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### Added
+
+- **`repo-hygiene` 0.11.0 — `ci-fix` isolates only where it pays, with a
+  floor per level.** A new `scripts/ladder_plan.py` computes the entry rung
+  and the remote mode from the duration profile. Locally (isolating costs
+  seconds): a failed step expected over `--isolate-local` (30s) runs its
+  failing IDs first, a shorter one runs whole; the whole step (rung 1)
+  always runs when expected within a 10-minute cap and is asked about once
+  above it. In CI (isolating costs a marked commit, a dispatch, and a
+  second cycle): a plain push is both rung 2 and rung 3 unless CI is the
+  only place the failure can be seen and the job is expected over
+  `--isolate-remote` (5m); then the failing workflow is dispatched alone
+  with only the failing tests through a `workflow_dispatch` filter input,
+  with a one-time offer to add the input (`references/filter-input.md`,
+  newline-split through `env:`, never `${{ }}` in `run:`, empty input runs
+  the whole suite). Whole-workflow dispatch without a filter is gone from
+  the fix path (runner minutes, not time). Local durations are
+  recorded by `scripts/local_ledger.py` in a machine-level ledger so later
+  fixes decide from local numbers. The profile reports runs per workflow and
+  tops up starved workflows from their own listing; two workflow files with
+  one `name:` are keyed by path and an unattributable run is reported as an
+  ambiguous join. `extract_failures.py` reads vitest and cargo-nextest logs
+  and recovers a pytest ID with an unmatched `[`. `--update-versions` and the
+  pin audit name a replacement tag only after `git/refs/tags/<tag>` returns
+  it (the `setup-uv@v10` lesson).
+
 ## v0.23.0 — 2026-09-09
 
 ### Added
