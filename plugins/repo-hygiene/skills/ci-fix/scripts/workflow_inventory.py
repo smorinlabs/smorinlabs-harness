@@ -7,10 +7,11 @@ uses (`unit (ubuntu-latest, 3.12)`), `needs`, `container`, `services`,
 `timeout-minutes`, and every step with its display name (`Run <uses>` /
 `Run <first run line>`, exactly as the jobs API names unnamed steps), its
 `run:` text, `working-directory`, `env`, `if`, `continue-on-error`, `shell`,
-the workflow's `trigger_filters` (branches, paths, types per push/pull_request),
-and two flags the local sweep keys on: `kind` (`run` or `uses`) and `setup`
-(installers that write outside the repository, on any line of the step, and
-must not run on the host). Jobs carry merged workflow+job `env` and
+the workflow's `trigger_filters` (branches, tags, paths, event types),
+and conservative validation hints. `kind` distinguishes `run` from `uses`;
+`setup` flags installers that must not run on the host. Effective step
+context and three-state conditions guide inspection, never authorization.
+Jobs carry merged workflow+job `env` and
 `defaults_run`; a matrix job named with `name:` gets that name with
 `${{ matrix.* }}` substituted as its cell display name, as the jobs API does.
 
@@ -23,13 +24,26 @@ Exit 0 ok; 2 on a usage error (missing file, invalid YAML, PyYAML absent).
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import itertools
 import json
 import os
 import re
+import shlex
 import sys
 
 RUNNER_LINE = "uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py"
+
+
+def json_safe(value):
+    """Convert YAML values such as unquoted dates into JSON-safe values."""
+    if isinstance(value, (dt.datetime, dt.date, dt.time)):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    return value
 
 try:
     import yaml
@@ -38,7 +52,7 @@ except ImportError:  # pragma: no cover - exercised by the -S test
 
 # Installers that write outside the repository are `setup` and never run on
 # the host. Project-local installs (`npm ci`, `uv sync`, `pnpm install`) are
-# the job's own steps and stay sweepable.
+# prerequisites to inspect, not permission to execute a local check.
 SETUP_RE = re.compile(
     r"^\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*(?:sudo\s+)?("
     r"apt-get|apt|brew|choco|winget|yum|dnf|apk|pacman|zypper"
@@ -57,6 +71,80 @@ def is_setup(run) -> bool:
         if SETUP_RE.match(line) or PIPED_INSTALLER_RE.match(line):
             return True
     return False
+
+
+def constant_boolean(value, default=None):
+    """Recognize booleans and literal boolean expressions only; all else is unknown."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text.startswith("${{") and text.endswith("}}"):
+            text = text[3:-2].strip()
+        if text.lower() in ("true", "false"):
+            return text.lower() == "true"
+    return None
+
+
+def default_shell(family: str, container=False):
+    if container:
+        return "sh"
+    if family == "windows":
+        return "pwsh"
+    if family in ("linux", "macos"):
+        return "bash"  # verify availability; GitHub falls back to sh
+    return None  # choose the matrix cell / resolve the runner before execution
+
+
+def validation_kind(run, shell) -> str:
+    """Conservative command hints, never execution authorization or a shell evaluator.
+
+    Wrappers, compound commands and non-POSIX shells require source inspection.
+    Even a candidate needs its conditions, environment and prerequisites checked.
+    """
+    if not isinstance(run, str) or not run.strip():
+        return "not-validation"
+    if is_setup(run) or re.search(
+        r"\b(?:npm\s+publish|cargo\s+publish|twine\s+upload|terraform\s+apply|"
+        r"kubectl\s+apply|gh\s+release\s+create)\b",
+        run,
+    ):
+        return "not-validation"
+    if shell not in ("bash", "sh") or any(c in run for c in "\n;&|<>`$"):
+        return "inspect"
+    try:
+        args = shlex.split(run)
+    except ValueError:
+        return "inspect"
+    if args[:2] == ["uv", "run"]:
+        args = args[2:]
+    if (
+        len(args) >= 3
+        and re.fullmatch(r"python(?:3(?:\.\d+)?)?", args[0])
+        and args[1] == "-m"
+    ):
+        args = args[2:]
+    if not args or any(
+        a in ("--fix", "--fix-only", "--unsafe-fixes", "fix") for a in args
+    ):
+        return "inspect"
+    if args[0] in ("pytest", "mypy", "actionlint"):
+        return "candidate"
+    if args[:2] in (
+        ["ruff", "check"],
+        ["cargo", "test"],
+        ["cargo", "check"],
+        ["cargo", "clippy"],
+        ["go", "test"],
+    ):
+        return "candidate"
+    if args[:3] == ["cargo", "nextest", "run"]:
+        return "candidate"
+    if args[:2] == ["ruff", "format"] and "--check" in args:
+        return "candidate"
+    return "inspect"
 
 
 def os_family(runs_on) -> str:
@@ -148,7 +236,15 @@ def expand_matrix(job_id: str, runs_on, matrix, job_name: str | None = None) -> 
     return out
 
 
-def step_record(index: int, step: dict) -> dict:
+def step_record(
+    index: int,
+    step: dict,
+    *,
+    defaults=None,
+    env=None,
+    family="unknown",
+    container=False,
+) -> dict:
     uses = step.get("uses")
     run = step.get("run")
     if step.get("name"):
@@ -159,6 +255,22 @@ def step_record(index: int, step: dict) -> dict:
         display = f"Run {str(run).strip().splitlines()[0] if str(run).strip() else ''}"
     else:
         display = f"step {index}"
+    defaults = defaults or {}
+    effective_shell = (
+        step.get("shell") or defaults.get("shell") or default_shell(family, container)
+    )
+    effective_directory = (
+        step.get("working-directory") or defaults.get("working-directory") or "."
+    )
+    effective_env = {**(env or {}), **(step.get("env") or {})}
+    unresolved = sorted(
+        set(
+            re.findall(
+                r"\$\{\{.*?\}\}",
+                json.dumps([run, effective_shell, effective_directory, effective_env]),
+            )
+        )
+    )
     return {
         "index": index,
         "display_name": display,
@@ -168,13 +280,30 @@ def step_record(index: int, step: dict) -> dict:
         "working_directory": step.get("working-directory"),
         "env": step.get("env") or {},
         "if": step.get("if"),
-        "continue_on_error": bool(step.get("continue-on-error", False)),
+        "condition_state": constant_boolean(step.get("if"), True),
+        "continue_on_error": step.get("continue-on-error", False),
+        "continue_on_error_state": constant_boolean(
+            step.get("continue-on-error"), False
+        ),
         "shell": step.get("shell"),
         "setup": is_setup(run),
+        "effective_shell": effective_shell,
+        "effective_working_directory": effective_directory,
+        "effective_env": effective_env,
+        "unresolved_expressions": unresolved,
+        "validation_kind": validation_kind(run, effective_shell),
     }
 
 
-FILTER_KEYS = {"branches": "branches", "branches-ignore": "branches_ignore", "paths": "paths", "paths-ignore": "paths_ignore", "types": "types"}
+FILTER_KEYS = {
+    "branches": "branches",
+    "branches-ignore": "branches_ignore",
+    "paths": "paths",
+    "paths-ignore": "paths_ignore",
+    "tags": "tags",
+    "tags-ignore": "tags_ignore",
+    "types": "types",
+}
 
 
 def trigger_filters_of(doc: dict) -> dict:
@@ -224,7 +353,7 @@ def triggers_of(doc: dict) -> tuple[list[str], dict | None]:
 def inventory_file(path: str) -> dict:
     try:
         with open(path, encoding="utf-8") as fh:
-            doc = yaml.safe_load(fh)
+            doc = json_safe(yaml.safe_load(fh))
     except OSError as exc:
         raise SystemExit(f"error: cannot read {path}: {exc.strerror}") from exc
     except yaml.YAMLError as exc:
@@ -247,21 +376,54 @@ def inventory_file(path: str) -> dict:
         needs = job.get("needs")
         if isinstance(needs, str):
             needs = [needs]
+        job_env = {**workflow_env, **(job.get("env") or {})}
         jobs.append(
             {
                 "id": str(job_id),
                 "name": job.get("name"),
                 "runs_on": runs_on,
+                "if": job.get("if"),
+                "condition_state": constant_boolean(job.get("if"), True),
+                "environment": job.get("environment"),
+                "continue_on_error": job.get("continue-on-error", False),
+                "continue_on_error_state": constant_boolean(
+                    job.get("continue-on-error"), False
+                ),
                 "os_family": os_family(runs_on),
                 "needs": needs or [],
-                "matrix": strategy.get("matrix") if isinstance(strategy, dict) else None,
-                "matrix_cells": expand_matrix(str(job_id), runs_on, strategy.get("matrix") if isinstance(strategy, dict) else None, job.get("name")),
-                "env": {**{str(k): v for k, v in workflow_env.items()}, **{str(k): v for k, v in (job.get("env") or {}).items()}},
-                "defaults_run": {"working_directory": job_defaults.get("working-directory"), "shell": job_defaults.get("shell")},
+                "matrix": strategy.get("matrix")
+                if isinstance(strategy, dict)
+                else None,
+                "matrix_cells": expand_matrix(
+                    str(job_id),
+                    runs_on,
+                    strategy.get("matrix") if isinstance(strategy, dict) else None,
+                    job.get("name"),
+                ),
+                "env": {
+                    **{str(k): v for k, v in workflow_env.items()},
+                    **{str(k): v for k, v in (job.get("env") or {}).items()},
+                },
+                "defaults_run": {
+                    "working_directory": job_defaults.get("working-directory"),
+                    "shell": job_defaults.get("shell"),
+                },
                 "container": container,
+                "container_config": job.get("container"),
                 "services": sorted((job.get("services") or {}).keys()),
+                "service_configs": job.get("services") or {},
                 "timeout_minutes": job.get("timeout-minutes"),
-                "steps": [step_record(i, s or {}) for i, s in enumerate(job.get("steps") or [])],
+                "steps": [
+                    step_record(
+                        i,
+                        s or {},
+                        defaults=job_defaults,
+                        env=job_env,
+                        family=os_family(runs_on),
+                        container=bool(container),
+                    )
+                    for i, s in enumerate(job.get("steps") or [])
+                ],
             }
         )
     return {
@@ -281,7 +443,14 @@ def render_text(data: dict) -> str:
         disp = f" inputs={','.join(wf['dispatch_inputs'])}" if wf["dispatch_inputs"] else ""
         lines.append(f"{base}  triggers={','.join(wf['triggers'])}{disp}")
         for j in wf["jobs"]:
-            runs = sum(1 for s in j["steps"] if s["kind"] == "run" and not s["setup"])
+            runs = sum(
+                1
+                for s in j["steps"]
+                if j["condition_state"] is True
+                and s["condition_state"] is True
+                and s["validation_kind"] == "candidate"
+                and not s["unresolved_expressions"]
+            )
             extras = []
             if j["matrix_cells"]:
                 extras.append(f"cells={len(j['matrix_cells'])}")
@@ -293,7 +462,7 @@ def render_text(data: dict) -> str:
                 extras.append(f"needs={','.join(j['needs'])}")
             lines.append(
                 f"  {j['id']} runs-on={j['runs_on']} os={j['os_family']} "
-                f"steps={len(j['steps'])} sweepable={runs} {' '.join(extras)}".rstrip()
+                f"steps={len(j['steps'])} validation-candidates={runs} {' '.join(extras)}".rstrip()
             )
     return "\n".join(lines)
 

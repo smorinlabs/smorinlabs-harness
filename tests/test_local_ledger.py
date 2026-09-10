@@ -1,16 +1,18 @@
 """tests/test_local_ledger.py — the local duration ledger.
 
 local_ledger.py records how long a CI step's command took on this machine
-(rung 1 and rung 1s runs, successes only, last 10 per step) and reports the
-median, so ladder_plan.py can key the local decision on local time rather
-than the CI proxy. The file is machine-level under $XDG_CACHE_HOME, never in
-the repo.
+(verified successes only, last 10 per compatible execution context) and
+reports the median. The planner uses this estimate without treating timing
+history as current validation evidence. The file is machine-level under
+$XDG_CACHE_HOME, never in the repo.
 """
 
 import json
 import os
 import subprocess
 import sys
+
+import pytest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -18,10 +20,14 @@ SCRIPT = REPO_ROOT / "plugins/repo-hygiene/skills/ci-fix/scripts/local_ledger.py
 
 assert SCRIPT.is_file(), f"local_ledger.py not found at {SCRIPT}"
 
+CONTEXT = REPO_ROOT / "tests/fixtures/ci_fix/execution-context.json"
+
 KEY = ["--workflow", "CI", "--job", "pytest", "--step", "Run uv run pytest"]
 
 
 def run(*args, env=None):
+    if args and args[0] in ("record", "median") and "--context" not in args:
+        args = (*args, "--context", CONTEXT)
     merged = {**os.environ, **(env or {})}
     return subprocess.run(
         [sys.executable, str(SCRIPT), *[str(a) for a in args]],
@@ -119,7 +125,7 @@ def test_default_path_is_under_xdg_cache_home(tmp_path):
     assert Path(out["ledger"]) == expected
     assert expected.is_file()
     data = json.loads(expected.read_text())
-    assert data["version"] == 1
+    assert data["version"] == 2
     assert data["samples"][0]["seconds"] == 42.0
     assert data["samples"][0]["at"].endswith("Z")
 
@@ -150,6 +156,7 @@ def test_ledger_file_shape_is_what_ladder_plan_reads(tmp_path):
         "step",
         "seconds",
         "at",
+        "context",
     }
 
 
@@ -209,3 +216,76 @@ def test_seconds_must_be_finite_and_non_negative(tmp_path):
         assert "--seconds" in result.stderr, bad
     assert not ledger.exists()
     assert median(ledger) == {"samples": 0, "median_s": None}
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("command", "uv run pytest tests/integration"),
+        ("scope", "tests/unit"),
+        ("environment", {"runner": "podman", "os": "linux", "arch": "arm64"}),
+    ],
+)
+def test_changed_execution_context_does_not_reuse_a_fast_sample(tmp_path, field, value):
+    ledger = tmp_path / "ledger.json"
+    record(ledger, 5)
+    context = json.loads(CONTEXT.read_text())
+    context[field] = value
+    changed = tmp_path / "changed.json"
+    changed.write_text(json.dumps(context))
+    assert median(ledger, key=[*KEY, "--context", changed]) == {
+        "samples": 0,
+        "median_s": None,
+    }
+    assert median(ledger) == {"samples": 1, "median_s": 5.0}
+
+
+def test_legacy_samples_are_preserved_but_not_reused(tmp_path):
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "samples": [
+                    {
+                        "workflow": "CI",
+                        "workflow_path": None,
+                        "job": "pytest",
+                        "step": "Run uv run pytest",
+                        "seconds": 5,
+                    }
+                ],
+            }
+        )
+    )
+    assert median(ledger) == {"samples": 0, "median_s": None}
+    record(ledger, 1200)
+    assert median(ledger) == {"samples": 1, "median_s": 1200.0}
+    assert len(json.loads(ledger.read_text())["samples"]) == 2
+
+
+def test_context_hash_does_not_store_raw_context_values(tmp_path):
+    ledger = tmp_path / "ledger.json"
+    record(ledger, 4)
+    sample = json.loads(ledger.read_text())["samples"][0]
+    assert len(sample["context"]) == 64
+    assert "environment" not in sample and "command" not in sample
+
+
+def test_invalid_execution_context_is_a_usage_error(tmp_path):
+    context = tmp_path / "bad.json"
+    context.write_text('{"command": "pytest", "scope": "all"}')
+    result = run(
+        "record",
+        "--ledger",
+        tmp_path / "ledger.json",
+        *KEY,
+        "--context",
+        context,
+        "--seconds",
+        "5",
+        "--conclusion",
+        "success",
+    )
+    assert result.returncode == 2 and "environment" in result.stderr
+    assert not (tmp_path / "ledger.json").exists()

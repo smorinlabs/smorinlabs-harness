@@ -8,15 +8,16 @@ plan) and `optimize.md`'s lever 11 both use it.
 Two rules make it safe and honest:
 
 - **The input is data, never code.** Its value reaches the shell through an
-  environment variable and is split on newlines into an array. No `${{ }}`
+  environment variable and is parsed according to the runner's input grammar
+  below (for example, newline-separated node IDs or one regex/expression). No `${{ }}`
   inside `run:` (GitHub substitutes that into the script before the shell
   runs it), no `eval`, no unquoted expansion. A dispatch input can only be
   set by someone with write access, but the pattern costs nothing and reads
   the same on every runner.
 - **An empty input runs the whole suite.** Push and pull-request runs never
   set the input, so the workflow must behave exactly as before on those
-  events. The rung-3 run proves it: its test count in the log matches the
-  profile's, and the report says so.
+  events. Verify the actual ordinary command and current-revision test
+  selection; a historical test count alone cannot prove unchanged coverage.
 
 ## The rendering
 
@@ -96,9 +97,16 @@ name in `filter_input`. Read the step that consumes it to learn the value
 shape (a single pattern, a space-separated list, a file glob) and send that
 shape. Never add a second input beside a working one.
 
-## Verifying the empty-input path (rung 3)
+## Verify selected tests and the empty-input path
 
-After the marker-free commit runs, fetch the test step's log from the rung-3
-run and compare the test count with a profiled run of the same job (the
-profile's slowest-step line, or the summary line in a sampled run's log). A
-smaller count means the input leaked into push runs; fix before done.
+For a filtered run, inspect a supported test report/listing or runner output
+and confirm the intended tests ran. Exit 0 with zero selected tests is
+`no-selection`: correct the selector. A different matched test also cannot
+verify the repair. Preserve binary/test pairs when identifiers are not unique.
+
+For ordinary push/PR CI, verify the unset input preserves the original command,
+options, wrapper, package targets and coverage for this revision. Compare
+selected tests or collection output against the expected current test set and
+investigate unexpected skips. A historical count is supporting evidence only:
+tests may have been added or removed, and equal counts can contain different
+tests. Use `ci-coverage.md` for final required-check reconciliation.

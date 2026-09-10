@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Changed
+
+- `repo-hygiene` 0.13.0 shares repair validation between `ci-fix` and
+  `pr-merge-flow`: verify bot claims, verify fixes and intended test selection,
+  prefer failing/affected checks, and apply the approximately 30-second shortcut
+  to a measured complete local bundle. Full steps require an affected-behavior
+  reason; unrelated sweeps, broad audits and repeated commit approvals are removed
+  from the default repair path.
+- CI inventory preserves guards, environments, tag filters and effective step
+  context. Version-2 timing records require `--context` for command/scope/environment
+  compatibility; old samples are retained but not reused as current measurements.
+  Linux runner discovery/ranking remains available.
+- Required CI is reconciled against expected checks and evaluated revisions.
+  Filtered diagnostics remain supplemental; skip markers and empty trigger
+  commits no longer stand in for full coverage. PR repair pushes restart review
+  collection, reopened threads receive a new disposition when needed, and merges
+  are bound to the reviewed head. Optimization advice preserves supported coverage.
+
 ## v0.25.0 — 2026-09-10
 
 ### Added

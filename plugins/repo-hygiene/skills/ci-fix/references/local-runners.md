@@ -5,13 +5,13 @@ reproducible locally*. A container runtime or a Linux VM already on the
 machine can run the step's command, which turns a CI-only failure back into
 a rung-0 and rung-1 failure — the cheap end of the ladder.
 
-**This changes where the local rungs run, never which rungs exist.** Rung 0 is
-still the extracted IDs, rung 1 still the whole step, and every rule from
-SKILL.md step 6 holds unchanged: rung 0 only above `--isolate-local`, rung 1
-always within the cap, `CI is the lab` only when there is no local path at
-all. One number moves: pass `--local-env container` to `ladder_plan.py`, and
-a step with no local sample yet is estimated at twice its CI median, because
-CI's number never included the image pull and start-up this machine pays.
+**A runner changes the execution environment; scope follows the shared
+validation contract.** Reproduce selected failures, then verify affected
+behavior. A full step needs a reason. A complete compatible bundle measured
+at approximately 30 seconds or less runs directly. `--local-env container`
+keeps the first-run cost estimate at twice the CI step median until a compatible
+local sample exists; this estimate is not a measurement of the complete bundle.
+Include setup costs and relevant architecture/toolchain differences explicitly.
 
 ## 1. Survey first — use what is already here
 
@@ -50,9 +50,10 @@ all, so the report can say whether the recommendation costs a boot.
 | `host.arch_note` | non-empty when this host is not CI's `x86_64` |
 
 act sits above the runtimes in that order but is a driver, not a peer: it is
-only ready when a runtime is. **Never start, install, or pin anything without
-asking**: present `recommend_start` or `recommend_install` as one
-AskUserQuestion, and record a decline so it is not asked again.
+only ready when a runtime is. Respect the current session's authority. For a start, install, pull or pin
+outside that scope, present the concrete action once with its cost and reason.
+Record a decline so it is not asked again. Existing authorization is not lost
+when `pr-merge-flow` delegates the repair.
 
 ## 2. Pick the runner for *this* failure
 
@@ -68,7 +69,9 @@ first row it is a slower way to get the same red.
 ## 3. The recipes
 
 `<image>` comes from the failing step's toolchain, read from the inventory's
-`setup` steps (`workflow_inventory.py`), never guessed:
+`setup` steps (`workflow_inventory.py`), never guessed. The table gives
+example image families; select the actual job's version/architecture and verify
+needed tools. A convenient image with a different toolchain is not CI parity:
 
 | Toolchain in the job | Image |
 |---|---|
@@ -90,7 +93,7 @@ up an image before believing the red.
 ### Container runtime (podman or docker — same flags)
 
 ```bash
-# rung 0: the extracted IDs; rung 1: the step's run: line verbatim
+# run the selected reproducer/affected command; full scope only when justified
 podman run --rm -v "$PWD:/w" -w /w <image> sh -lc '<the command>'
 ```
 
@@ -134,9 +137,10 @@ VM (`limactl start --name ci-fix template://ubuntu`) rather than the owner's.
   2026-09-10, a fresh `template://ubuntu` VM took 367s to download and boot
   before running anything, so the 5-minute floor would have expired on a
   healthy run. Say in the report that the wait was VM creation, not the step.
-- **After that**: the ledger decides, like any host run. Record every green
-  with `local_ledger.py record`, so the second fix on this machine plans from
-  a measurement instead of a doubled guess.
+- **After that**: compatible ledger samples estimate cost. Record verified
+  successes with `local_ledger.py record --context <execution-context.json>`;
+  include runner/image, architecture, toolchain, command and selected scope.
+  A host sample cannot stand in for a different container environment.
 - The report names the runner, its readiness reason, and the architecture:
   `rung 1 in podman (already running), linux/amd64 emulated, 3m40s, recorded`.
 
@@ -160,8 +164,9 @@ is the one-off creation, and a VM that already exists does not pay it.
 The container is roughly twice the CI job's own time before emulation, which
 is why an untested step is estimated at 2 × the CI median; the estimate is
 deliberately replaced by the first recorded run, and on this repo the real
-number (38s) crossed the 30s floor that the 18s guess did not — so the second
-fix isolates where the first would not have.
+number (38s) exceeded the 18s guess. These historical step timings estimate
+cost; the current scope rule requires the measured complete bundle before
+using its 30-second shortcut.
 
 **Containers run as root.** Anything that depends on file permissions, a
 non-root user, or `sudo` behaves differently: this repo has a test that skips

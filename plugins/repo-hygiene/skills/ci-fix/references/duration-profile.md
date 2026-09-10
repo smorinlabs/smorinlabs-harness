@@ -74,8 +74,13 @@ it returns carries its `path`.
 # find | xargs -r, not a bare glob: zero fetched runs must neither abort the shell under zsh
 # nor invoke the profiler with no input (-r: GNU stops, BSD/macOS never ran it anyway)
 find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json"          # table
-find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" --json   # for --optimize
+find "$SCRATCH/profile" -name 'jobs-*.json' -print0 | xargs -0 -r python3 <skill-dir>/scripts/ci_profile.py --threshold <slow-threshold> --runs "$SCRATCH/profile/runs.json" --json > "$SCRATCH/profile/profile.json"   # for the planner and --optimize
 ```
+
+When no job files exist, write `{"jobs": []}` to that profile file. A profiler
+error is preparation failure, not evidence of zero jobs; do not use partial
+output. The table command is optional when the saved JSON supplies the needed
+summary, so the same data need not be profiled twice.
 
 Per job the script reports:
 
@@ -105,8 +110,8 @@ overlooked.
   are an `ambiguous join`, reported `unmeasured` and named in the output.
   The per-workflow fetch above resolves it.
 - **Zero successful runs anywhere** → skip the script (an empty glob aborts
-  under zsh and the script refuses no input): every job is `unmeasured`, rung 1
-  needs the user's acceptance, and a CI wait is bounded by 1.5 × the failed
+  under zsh and the script refuses no input): every job is `unmeasured`.
+  Start with a bounded informative target; a CI wait is bounded by 1.5 × the failed
   run's own duration for that job.
 - **A job that has never been green is absent, not `unmeasured`** — success-only
   sampling never sees it. The inventory is the complete job list; an
@@ -114,8 +119,8 @@ overlooked.
   *Join inventory to profile*).
 - **`unmeasured` is `slow`.** A job with no successful sample (always
   cancelled or skipped, new in this branch, only in-progress) gets the slow
-  treatment: rung 0 and 1 locally before any CI run, and the longest measured
-  job's `wait_bound_s` as its wait.
+  cost classification; it does not mandate the full local step. Localize
+  useful checks and use the longest measured job's `wait_bound_s` as its wait.
 - **Every job unmeasured** (no successful run anywhere) → there is no measured
   bound. Rung 2 still runs, bounded by 1.5 × the failed run's own duration for
   the job being watched, and the report says the bound is not from a
@@ -125,31 +130,37 @@ overlooked.
 - **A cache hit and a cache miss are both samples.** The median absorbs one
   miss; `max_s` shows it. A wide gap between the two is itself an `--optimize`
   finding.
-- **Re-profile after a fix lands** only when the fix touched the workflow or
-  the test command; a code fix does not change the job's shape.
+- **Reuse compatible timing evidence.** Refresh affected estimates when
+  commands, scope, environment or relevant workload changed, or observations
+  contradict the estimate. A code change can change runtime too. Do not
+  re-profile unrelated workflows after every edit.
 - **Threshold is a flag, not a constant.** `--slow-threshold 10s` makes a fast
   repo exercise the slow path; that is how the skill's own slow-path test runs
   against a repo whose CI finishes in seconds.
 
 ## How the numbers are used
 
-| Consumer | Reads |
+| Consumer | Evidence |
 |---|---|
-| Fix mode, the sweep (rung 1s) | `class` per job: `fast` jobs are swept; `slow` only when the user accepts; `external` never |
-| Fix mode, the entry rung (`ladder_plan.py`) | the failed step's own median in `steps`, overridden by the local ledger's median when one exists, against `--isolate-local` (30s): under it → enter at rung 1 (no rung 0); over it or unmeasured → rung 0 first, then rung 1. Rung 1 itself is gated only by the 10-minute cap (a question, once), never by this floor |
-| Fix mode, the remote mode (`ladder_plan.py`) | the target job's `median_s` against `--isolate-remote` (5m), and only when CI is the lab: over it or unmeasured → dispatch with the failing IDs in the filter input; anything else → plain push (rung 2 = rung 3). The profile's `class` (against `--slow-threshold`) is not this decision: it drives the sweep, the report, and the `--optimize` pointer |
-| Fix mode, CI waits | `wait_bound_s` of the job being watched (rung 2) or of the longest job (rung 3) |
-| Audit report | the whole table, plus the `--optimize` pointer when any job is not `fast` |
-| Optimize sub-agent | the `--json` output: `steps` per job tell it where the time goes |
+| Local scope | A compatible measured complete bundle at or below `--isolate-local` (30s) runs directly; otherwise use failing/affected checks and a reason for full scope |
+| Step cost estimate | Compatible `--context` ledger median, else CI proxy; container first-run multiplier is an estimate, not a measured shortcut |
+| Affected neighbors | Select by changed behavior first, then measure planned cost; a fast class alone never adds a check |
+| Supplemental remote isolation | Job median versus `--isolate-remote` (5m) when CI diagnosis is needed; ordinary required CI remains enabled |
+| CI waits | Relevant `wait_bound_s`, with explicit bounded fallback when unmeasured |
+| Audit/optimization | Requested workflow timing table; success-only data estimates durations, not failure frequency or equivalent coverage |
 
 ## The local ledger
 
-CI time is a proxy for local time; the two diverge with hardware, caches, and
-service containers. `scripts/local_ledger.py` keeps the last 10 successful
-local durations per (workflow, job, step) at
-`${XDG_CACHE_HOME:-~/.cache}/ci-fix/<owner>--<repo>.json` (`path --repo` prints
-it; never inside the repo). `record` is called after every rung-1 and
-rung-1s run (`targeted-repro.md`, *Timing*); `median` and
-`ladder_plan.py --ledger` read it. On a machine's first fix of a step there
-is no local sample, the CI step median decides, and the report says
-`(CI proxy)`; from the second fix on it says `(ledger, n samples)`.
+`scripts/local_ledger.py` keeps ten successful timings per workflow file/job/step
+and execution context at `${XDG_CACHE_HOME:-~/.cache}/ci-fix/<owner>--<repo>.json`.
+The context hashes the actual command, test scope and relevant environment.
+`record` and `median` require `--context`; see `targeted-repro.md`, *Timing*.
+The planner ignores legacy or incompatible samples and ignores the ledger
+entirely without a current context. Failures and zero-selection outcomes are
+not successful timing samples. These measurements estimate cost; reusing a
+passing result additionally requires compatible tested code and execution inputs.
+
+The full local bundle measurement includes preparation that the chosen path
+must pay. Sum sequential costs; report observed parallel elapsed time and
+aggregate work separately. Never add per-job CI medians and call that a local
+measurement, or treat one fast step as the complete bundle.

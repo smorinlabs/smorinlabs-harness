@@ -1,65 +1,64 @@
 # ci-fix
 
-Gets a repository's GitHub Actions and git hooks (lefthook, pre-commit) green
-again in the least CI time possible. Every run starts by measuring: it samples
-the last successful runs through the REST jobs endpoint and profiles each
-job's median duration, queue wait, and slowest step against a slow-job
-threshold (default 2 minutes). In fix mode it then triages every red job
-(workflow or config, code or test, flake, or not reproducible locally),
-extracts the failing test IDs from the job log, reproduces the failure before
-editing, and verifies up a ladder: the targeted tests locally, the full step
-locally, a local sweep of every other fast job's commands, then CI. One
-heuristic with two floors decides how narrow each level runs, computed by
-`scripts/ladder_plan.py` from the measurement, because isolating costs
-seconds locally and minutes in CI. Locally, a failed step expected over 30
-seconds (`--isolate-local`) runs its failing tests first and the whole step
-follows; a shorter one runs whole. The whole step always runs when expected
-within 10 minutes, and is asked about once above that. In CI, the fix is a
-plain push, one run that is both the targeted check and the full run,
-unless CI is the only place the failure can be seen (not reproducible
-locally, the long local step declined, or CI red again after a local green)
-and the job is expected over 5 minutes (`--isolate-remote`): then the fix
-is pushed with `[skip ci]` and only that workflow is dispatched carrying
-just the failing tests through a filter input, with a one-time offer to add
-the input when the workflow lacks one, and the full run follows. Each rung
-runs only after the one below is green, and each CI wait is bounded by the
-measured duration. Local runs are timed too and kept in a machine-level
-ledger, so later fixes on the same machine decide from local numbers rather
-than CI's. A Linux job this host cannot run directly is not automatically a
-CI-only failure: the skill surveys what is already on the machine that could
-run it (Podman, Docker, Lima, act) and runs the same rungs there. The
-ranking is what the machine already has rather than what is most faithful:
-installed beats absent, because starting a stopped runner is one command
-while installing one is a download; a runner already holding an image or a
-VM beats one that would fetch it; and only then does the order Podman, Lima,
-Docker decide. Nothing is
-started, pulled, or installed without asking, and a machine with none of
-them is told the one easiest thing to install rather than the best one. Done means every job is green in CI on the pushed commit.
-After that, the skill offers once to add the failed check as a lefthook or
-pre-commit hook, staged by its measured duration, so the same failure never
-reaches CI again. `--audit` runs the measurement and the checks (actionlint,
-Action pins, hook installation and CI/hook parity) and stops. `--optimize`
-dispatches a read-only sub-agent that analyzes each slow job and returns
-ranked, evidence-backed changes that would make it faster; nothing is
-applied. Six bundled scripts do the measuring, the localizing, the reading
-of workflow files, the planning, and the local timing: `scripts/ci_profile.py`,
-`scripts/extract_failures.py` (pytest, jest, vitest, cargo, cargo-nextest,
-go), `scripts/workflow_inventory.py` (run with `uv run --no-project --with
-pyyaml`), `scripts/ladder_plan.py`, `scripts/local_ledger.py`, and
-`scripts/detect_runners.py`.
+Repairs failing GitHub Actions and git hooks with evidence before and after
+an edit. It shares `references/validation-contract.md` with `pr-merge-flow`:
+confirm or refute the claim, reproduce locally where a suitable environment
+exists, verify the intended tests actually ran, then check affected behavior
+and applicable required CI.
+
+A complete compatible local validation bundle measured at approximately 30
+seconds or less runs directly. Otherwise the skill starts with failing tests
+or the smallest useful target and widens for a stated reason. A single fast
+step or a suite below ten minutes does not require broader execution. Compatible
+fixes are batched; unrelated fast jobs and broad action/hook audits are excluded
+from the default repair path.
+
+`scripts/ladder_plan.py` reports local scope and whether supplemental remote
+isolation would help. A filtered dispatch preserves the runner-specific input
+format and never replaces ordinary required CI. Completion reconciles expected
+workflows/jobs, conditions, required-check policy, actual revision and attempts;
+missing checks are not green, and legitimate conditional skips are not defects.
+No skip-marker/empty-trigger-commit strategy is used.
+
+The local Linux runner survey remains installed-first: prefer existing runners,
+then images/VMs already on disk, then Podman, Lima and Docker, with the owner's
+pin preserved. A runner changes the execution environment, not the verification
+scope. Check architecture, toolchain, shell and services. A new start, install
+or pull outside current authority needs a concrete decision; inherited approval
+is honored without repeat questions.
+
+Six scripts provide timing profiles (`ci_profile.py`), failure extraction
+(`extract_failures.py`), workflow facts (`workflow_inventory.py`), scope planning
+(`ladder_plan.py`), compatible timing history (`local_ledger.py`) and runner
+survey (`detect_runners.py`). Inventory retains raw conditions, job environments,
+tag filters and effective step context. Its validation hints require inspection;
+`run` plus `setup: false` never authorizes local execution.
+
+The version-2 timing ledger hashes a non-secret command/scope/environment
+context. `record` and `median` now require `--context <json-file>`; the planner
+accepts the same option and ignores ledger history without it. Legacy samples
+are retained but cannot override a compatible current estimate. The helper's
+`--bundle-seconds` accepts a measured total, while `--full-step-reason` states
+why affected behavior needs the whole command. These helper inputs are documented
+in the skill; they are not additional top-level skill modes.
+
+Existing commit/push authority carries through a PR handoff. A repair push sends
+`pr-merge-flow` back to review collection; no-change repair reruns refresh state.
+The CI skill itself does not merge. Hook prevention and unrelated pin updates
+remain optional; later edits get fresh verification rather than inheriting a
+previous commit's readiness.
 
 Renamed from `ci-audit` in repo-hygiene 0.9.0.
 
-**Triggers on:** "fix CI", "fix GitHub actions", "actions broken", "CI is
-red", "audit CI", "check actions", "why is CI slow", "make CI faster",
-"speed up CI", "actionlint", "lefthook", "pre-commit hooks", "are my hooks
-running?" ·
-**Arguments:** `--audit` (measure and report, no changes), `--optimize`
-(job-by-job speed analysis, no changes), `--actions-only` / `--hooks-only`
-(skip the other half), `--slow-threshold <dur>` (slow-job line, default
-`2m`), `--isolate-local <dur>` / `--isolate-remote <dur>` (fix mode: the
-isolation floors, default `30s` and `5m`), `--update-versions` (fix mode
-only: bump stale Action pins in their own commit)
+**Triggers on:** "fix CI", "CI is red", "actions broken", "audit CI",
+"why is CI slow", "make CI faster", or "are my hooks running?".
+
+**Arguments:** `--audit` reports health, `--optimize` proposes speed changes,
+`--actions-only` / `--hooks-only` restrict scope, `--slow-threshold <dur>`
+sets the reporting threshold (default `2m`), `--isolate-local <dur>` sets the
+measured complete-bundle shortcut (default `30s`), `--isolate-remote <dur>`
+sets the supplemental diagnosis threshold (default `5m`), and
+`--update-versions` requests action-pin updates. Fix and optimize remain separate.
 
 ## Install
 
@@ -74,47 +73,31 @@ only: bump stale Action pins in their own commit)
 plugin — or dev-symlink into `~/.agents/skills` (Codex's current skills
 location) as well.
 
-## Example session
+## Example sessions
 
-> "Fix CI"
-> → profiles the last ten successful runs (the `integration` job runs 18
-> minutes, the rest under a minute), finds `integration` red, pulls its log
-> and extracts `tests/test_rollup.py::test_nested_totals`. The plan says: the
-> step is expected at 9 minutes here, over the 30-second floor, so the one
-> test first; the whole step is under the 10-minute cap, so it runs
-> afterwards without asking. It runs that one test locally in two seconds
-> and sees it fail, fixes the rollup, re-runs it green, runs the whole
-> integration step locally (9m10s, recorded for next time), sweeps the lint
-> and typecheck jobs in 40 seconds, and — verified locally, so one CI round
-> expected — pushes plainly and watches `integration` under a 27-minute
-> bound. That run is the full run: every job green, done, and a pre-push
-> hook offered for the test that failed.
+> "Fix CI" for a narrow defect in a nine-minute test step
+> → reproduce the extracted failure, repair it, verify that test and relevant
+> affected behavior, then push once and reconcile required CI. Run the whole
+> step only when the change or unresolved uncertainty justifies it.
 
-> "Fix CI" when the red job is Linux-only and a container runtime is running
-> → the survey finds Podman already up, so the failing test runs in it in
-> nine seconds, the whole step follows, and the fix reaches CI verified —
-> one plain push, no dispatch. The report names the runner, why it was
-> picked ("already running"), and that the run was emulated to `linux/amd64`
-> because the host is arm64.
+>
+> "Fix CI" where the complete appropriate local bundle is measured at 20 seconds
+> → run that bundle directly; avoid a redundant isolated test pass. Preserve
+> the pre-edit and post-edit evidence, then observe ordinary required CI.
 
-> "Fix CI" when the red job is Linux-only and nothing local can run it
-> → not reproducible on this host and the one install offer was declined, so
-> CI is the lab; the `integration` job is
-> expected at 18 minutes, over the 5-minute remote floor, and its workflow
-> has no filter input: one question to add it (rendered from
-> `references/filter-input.md`), then the fix commit carries the input and
-> `[skip ci]`, only `integration` is dispatched with that one test, feedback
-> arrives in three minutes instead of eighteen, and the empty `ci: full
-> run` commit proves an empty input still runs the whole suite.
+>
+> "Fix CI" for a Linux-specific failure with a suitable runner already available
+> → run the selected tests in that runner, verify environment and selected IDs,
+> record compatible timings, and report ordinary CI coverage for the pushed code.
 
-> "Fix CI" on a repo whose slowest step takes 20 seconds
-> → under the local floor: the whole failing step runs locally (no isolated
-> test), the sweep follows, and one plain push is both the targeted run and
-> the full run — no marker, no dispatch, no second commit.
+>
+> "Fix CI" with no adequate local equivalent
+> → retain that limitation. When a filtered diagnostic would help, use the
+> existing runner-specific input or propose the concrete required addition.
+> Confirm the intended tests ran and separately establish unfiltered required CI.
 
+>
 > "Why is CI slow?"
-> → `--optimize`: profiles the runs, hands the workflow files, the profile,
-> and the `integration` job's log to a read-only sub-agent, and reports a
-> ranked table: no dependency cache (install is 6 of the 18 minutes), no
-> `needs:` gate behind the 40-second lint, no `timeout-minutes` — each with
-> the evidence line and a before/after sketch, nothing applied.
+> → profile requested workflows and validate optimization proposals against the
+> evidence. An all-green matrix does not justify removing supported platforms;
+> successful timing samples alone do not estimate gate-failure frequency.

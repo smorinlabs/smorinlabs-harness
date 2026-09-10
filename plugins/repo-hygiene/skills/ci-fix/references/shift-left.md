@@ -1,12 +1,10 @@
 # Shift left — offer the failed check as a hook (step 6b)
 
-The fastest CI fix is the one that never reaches CI. Once the target job is
-green at rung 2 and before the rung-3 push, ci-fix offers to run the check
-that just failed as a git hook, so the same class of failure is caught at
-commit or push time next time. An accepted offer becomes the marker-free
-commit that carries rung 3 (`fix-loop.md`, *Rung 3 after 2d*), so it costs
-no extra CI run; a declined one leaves the empty `ci: full run` commit to do
-that job.
+Adding the failed check as a hook is optional prevention work. If already
+requested, prepare it before the planned validation and push. Otherwise show
+the concrete proposal after reporting repair completion. A later accepted
+change needs fresh validation, CI coverage and PR review refresh; it cannot
+inherit readiness from the previous commit. No empty trigger commit is used.
 
 ## When to offer
 
@@ -14,7 +12,7 @@ All of these, else skip with the reason in the report:
 
 - the fixed job's class was code, test, or lint (a workflow-config fix or a
   flake has no check to shift);
-- the step-3 parity list shows no hook already running that step's tool;
+- inspecting this check's existing hooks shows no equivalent; do not run an unrelated full hook audit;
 - the repo has a hook manager (`lefthook.yml` or `.pre-commit-config.yaml`).
   With neither, the offer is to add lefthook with this one hook — only when
   `command -v lefthook` resolves; otherwise the offer names the install
@@ -65,18 +63,22 @@ pre-commit framework (`.pre-commit-config.yaml`):
 
 ## The question, the commit, the proof
 
-Ask once, with AskUserQuestion: the check, the stage, and the rendered block,
+When not already authorized, ask once with AskUserQuestion: the check, the stage, and the rendered block,
 with "add it" recommended when the stage is `pre-commit` and neutral when it
 is `pre-push`. On yes: show the diff (a repo with no hook manager gets a new
 `lefthook.yml` with this one hook, which is why the skill grants `Write`),
 commit as `chore(hooks): run <check> on <stage>` with no skip marker, install
 the stage (`lefthook install` / `pre-commit install --hook-type <stage>` —
 `pre-commit install` alone installs only `pre-commit`), confirm the hook file
-at `"$(git rev-parse --git-path hooks)/<stage>"`, run it once
-(`lefthook run <stage>` / `pre-commit run --all-files --hook-stage <stage>`)
-to prove it fires, then push: that push is rung 3. On no: the report's
-*Shift left* line says declined and the empty `ci: full run` commit carries
-rung 3 instead.
+at `"$(git rev-parse --git-path hooks)/<stage>"`, then prove the added hook
+fires on a relevant file: `lefthook run <stage> --commands <check-name>
+--file <affected-file>` or `pre-commit run <check-name> --hook-stage <stage>
+--files <affected-file>`. Here the names come from the rendered hook and the
+file must match its pattern. Confirm it executed rather than skipped. A
+test hook with `pass_filenames: false` still runs its configured test command;
+use the same scope/cost reasoning to decide whether that hook is appropriate.
+Then use an ordinary push and reconcile required CI for this
+revision. On no: record the decline; it creates no additional commit or CI run.
 
 Never add a hook silently, and never add one for a check that CI itself does
 not run — parity means the hook mirrors CI, not the other way round.

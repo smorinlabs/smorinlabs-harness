@@ -2,8 +2,8 @@
 
 The script gives ci-fix the facts it needs without reading YAML by eye: each
 job's runner family, matrix cells with their GitHub display names, container
-and services, every step with its display name and whether it is a `run:` step
-the local sweep may execute, and the workflow's triggers including
+and services, every step's raw and effective context plus conservative
+validation hints, and the workflow's triggers including
 `workflow_dispatch` inputs. Exit 0 ok, 2 usage (missing file, bad YAML, or
 PyYAML absent — with the exact `uv run --no-project --with pyyaml` line).
 """
@@ -125,12 +125,40 @@ def test_step_working_directory_env_and_multiline_run():
     assert apt["setup"] is True  # apt-get is package-manager setup, never swept
 
 
+def test_unquoted_yaml_dates_are_json_safe(tmp_path):
+    path = tmp_path / "date-env.yml"
+    path.write_text(
+        """name: date-env
+on: push
+env:
+  RELEASE_DATE: 2026-01-01
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+"""
+    )
+    wf, jobs = jobs_of(inventory(path), "date-env.yml")
+    assert jobs["test"]["env"]["RELEASE_DATE"] == "2026-01-01"
+
+
 def test_text_output_one_line_per_job():
     result = run(SYNTH)
     assert result.returncode == 0, result.stderr
     lines = result.stdout.splitlines()
-    assert any(l.startswith("synthetic.yml") and "workflow_dispatch" in l for l in lines)
-    assert sum(1 for l in lines if "  integration " in l or l.strip().startswith("integration ")) == 1
+    assert any(
+        line.startswith("synthetic.yml") and "workflow_dispatch" in line
+        for line in lines
+    )
+    assert (
+        sum(
+            1
+            for line in lines
+            if "  integration " in line or line.strip().startswith("integration ")
+        )
+        == 1
+    )
 
 
 # ------------------------------------------------------------------- errors
@@ -210,7 +238,10 @@ def test_step_with_neither_uses_nor_run_is_not_runnable():
     assert steps[0]["kind"] == "other" and steps[0]["run"] is None
     assert steps[1]["kind"] == "run"
     text = run(SYNTH).stdout
-    assert any(l.strip().startswith("odd-steps ") and "sweepable=1" in l for l in text.splitlines())
+    assert any(
+        line.strip().startswith("odd-steps ") and "validation-candidates=0" in line
+        for line in text.splitlines()
+    )
 
 
 def test_later_include_overwrites_earlier_include_values_but_never_axes():
@@ -227,11 +258,27 @@ def test_later_include_overwrites_earlier_include_values_but_never_axes():
 def test_trigger_filters_are_exposed():
     wf, _ = jobs_of(inventory(SYNTH), "synthetic.yml")
     f = wf["trigger_filters"]
-    assert f["push"] == {"branches": ["main"], "branches_ignore": None, "paths": None, "paths_ignore": ["docs/**", "*.md"], "types": None}
+    assert f["push"] == {
+        "branches": ["main"],
+        "branches_ignore": None,
+        "paths": None,
+        "paths_ignore": ["docs/**", "*.md"],
+        "tags": None,
+        "tags_ignore": None,
+        "types": None,
+    }
     assert f["pull_request"]["types"] == ["opened", "synchronize"] and f["pull_request"]["branches"] is None
     real, _ = jobs_of(inventory(REAL), "ci_real.yml")
     assert real["trigger_filters"]["push"]["branches"] == ["main"]
-    assert real["trigger_filters"]["pull_request"] == {"branches": None, "branches_ignore": None, "paths": None, "paths_ignore": None, "types": None}
+    assert real["trigger_filters"]["pull_request"] == {
+        "branches": None,
+        "branches_ignore": None,
+        "paths": None,
+        "paths_ignore": None,
+        "tags": None,
+        "tags_ignore": None,
+        "types": None,
+    }
 
 
 def test_exclude_applies_before_include_so_include_can_add_back():
@@ -248,10 +295,115 @@ def test_exclude_applies_before_include_so_include_can_add_back():
 def test_inventory_tolerates_non_workflow_files(tmp_path):
     """`.github/workflows/` can hold a README or an action fragment; those are
     skipped with a warning, never a usage error that hides every workflow."""
-    readme = tmp_path / "README.md"; readme.write_text("# notes\n")
-    frag = tmp_path / "fragment.yml"; frag.write_text("- just\n- a list\n")
+    readme = tmp_path / "README.md"
+    readme.write_text("# notes\n")
+    frag = tmp_path / "fragment.yml"
+    frag.write_text("- just\n- a list\n")
     result = run("--json", SYNTH, readme, frag)
     assert result.returncode == 0, result.stderr
     data = json.loads(result.stdout)
     assert [w["path"] for w in data["workflows"]] == [str(SYNTH)]
     assert "README.md" in result.stderr and "fragment.yml" in result.stderr
+
+
+def test_conditions_and_release_boundaries_are_preserved(tmp_path):
+    workflow = tmp_path / "guarded.yml"
+    workflow.write_text("""on:
+  push:
+    tags: ['v*']
+jobs:
+  release:
+    if: false
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm publish
+        continue-on-error: ${{ false }}
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pytest tests/unit
+      - run: pytest tests/optional
+        if: ${{ inputs.enabled }}
+      - run: pytest tests/disabled
+        if: ${{ false }}
+""")
+    wf, jobs = jobs_of(inventory(workflow), "guarded.yml")
+    release = jobs["release"]
+    assert release["if"] is False and release["condition_state"] is False
+    assert release["environment"] == "production"
+    step = release["steps"][0]
+    assert step["continue_on_error"] == "${{ false }}"
+    assert step["continue_on_error_state"] is False
+    assert step["validation_kind"] == "not-validation"
+    assert jobs["tests"]["steps"][0]["validation_kind"] == "candidate"
+    assert jobs["tests"]["steps"][1]["condition_state"] is None
+    assert jobs["tests"]["steps"][2]["condition_state"] is False
+    assert wf["trigger_filters"]["push"]["tags"] == ["v*"]
+
+
+def test_shell_and_environment_precedence_and_unknown_context(tmp_path):
+    workflow = tmp_path / "shells.yml"
+    workflow.write_text("""env: {LEVEL: workflow, KEEP: yes}
+defaults:
+  run: {working-directory: root}
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - run: pytest
+  container:
+    runs-on: ubuntu-latest
+    container: {image: python:3.12, options: '--user 1000'}
+    steps:
+      - run: pytest
+  linux:
+    runs-on: ubuntu-latest
+    env: {LEVEL: job}
+    defaults:
+      run: {shell: sh, working-directory: package}
+    steps:
+      - run: pytest
+      - run: pytest
+        shell: bash
+        working-directory: tests
+        env: {LEVEL: step}
+      - run: echo app:${{ github.sha }}
+""")
+    _, jobs = jobs_of(inventory(workflow), "shells.yml")
+    assert jobs["windows"]["steps"][0]["effective_shell"] == "pwsh"
+    assert jobs["container"]["steps"][0]["effective_shell"] == "sh"
+    assert jobs["container"]["container_config"]["options"] == "--user 1000"
+    inherited, override, unresolved = jobs["linux"]["steps"]
+    assert inherited["effective_shell"] == "sh"
+    assert inherited["effective_working_directory"] == "package"
+    assert inherited["effective_env"]["LEVEL"] == "job"
+    assert override["effective_shell"] == "bash"
+    assert override["effective_working_directory"] == "tests"
+    assert override["effective_env"]["LEVEL"] == "step"
+    assert unresolved["unresolved_expressions"] == ["${{ github.sha }}"]
+    assert unresolved["validation_kind"] == "inspect"
+
+
+def test_unknown_wrappers_and_compound_commands_need_inspection(tmp_path):
+    workflow = tmp_path / "commands.yml"
+    workflow.write_text("""jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - run: make test
+      - run: npm test
+      - run: pytest && npm publish
+      - run: uv run ruff check --fix .
+      - run: uv run ruff check .
+      - run: python3 -m pytest tests/unit
+""")
+    _, jobs = jobs_of(inventory(workflow), "commands.yml")
+    assert [s["validation_kind"] for s in jobs["checks"]["steps"]] == [
+        "inspect",
+        "inspect",
+        "not-validation",
+        "inspect",
+        "candidate",
+        "candidate",
+    ]
