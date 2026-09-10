@@ -456,7 +456,9 @@ def render(data: dict) -> str:
     lines = [
         "# ci-fix — how this machine can run a Linux CI step.",
         "# Written by scripts/detect_runners.py; re-run it with --refresh to survey again.",
-        "# Ranked by readiness before fidelity: whatever is already running wins.",
+        "# Ranked by what is here: installed beats absent, an image already on disk",
+        "# beats a download, then podman, lima, docker. `ready` is the subset that",
+        "# needs no start at all.",
         "",
         f"schema = {data['schema']}",
         f"generated_at = {_v(data['generated_at'])}",

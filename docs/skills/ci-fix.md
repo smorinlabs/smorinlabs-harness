@@ -27,8 +27,12 @@ measured duration. Local runs are timed too and kept in a machine-level
 ledger, so later fixes on the same machine decide from local numbers rather
 than CI's. A Linux job this host cannot run directly is not automatically a
 CI-only failure: the skill surveys what is already on the machine that could
-run it (Podman, Docker, Lima, act), ranks by what is already running rather
-than by what is most faithful, and runs the same rungs there. Nothing is
+run it (Podman, Docker, Lima, act) and runs the same rungs there. The
+ranking is what the machine already has rather than what is most faithful:
+installed beats absent, because starting a stopped runner is one command
+while installing one is a download; a runner already holding an image or a
+VM beats one that would fetch it; and only then does the order Podman, Lima,
+Docker decide. Nothing is
 started, pulled, or installed without asking, and a machine with none of
 them is told the one easiest thing to install rather than the best one. Done means every job is green in CI on the pushed commit.
 After that, the skill offers once to add the failed check as a lefthook or
