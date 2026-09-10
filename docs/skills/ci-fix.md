@@ -80,19 +80,23 @@ location) as well.
 > affected behavior, then push once and reconcile required CI. Run the whole
 > step only when the change or unresolved uncertainty justifies it.
 
+>
 > "Fix CI" where the complete appropriate local bundle is measured at 20 seconds
 > → run that bundle directly; avoid a redundant isolated test pass. Preserve
 > the pre-edit and post-edit evidence, then observe ordinary required CI.
 
+>
 > "Fix CI" for a Linux-specific failure with a suitable runner already available
 > → run the selected tests in that runner, verify environment and selected IDs,
 > record compatible timings, and report ordinary CI coverage for the pushed code.
 
+>
 > "Fix CI" with no adequate local equivalent
 > → retain that limitation. When a filtered diagnostic would help, use the
 > existing runner-specific input or propose the concrete required addition.
 > Confirm the intended tests ran and separately establish unfiltered required CI.
 
+>
 > "Why is CI slow?"
 > → profile requested workflows and validate optimization proposals against the
 > evidence. An all-green matrix does not justify removing supported platforms;

@@ -125,6 +125,24 @@ def test_step_working_directory_env_and_multiline_run():
     assert apt["setup"] is True  # apt-get is package-manager setup, never swept
 
 
+def test_unquoted_yaml_dates_are_json_safe(tmp_path):
+    path = tmp_path / "date-env.yml"
+    path.write_text(
+        """name: date-env
+on: push
+env:
+  RELEASE_DATE: 2026-01-01
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+"""
+    )
+    wf, jobs = jobs_of(inventory(path), "date-env.yml")
+    assert jobs["test"]["env"]["RELEASE_DATE"] == "2026-01-01"
+
+
 def test_text_output_one_line_per_job():
     result = run(SYNTH)
     assert result.returncode == 0, result.stderr

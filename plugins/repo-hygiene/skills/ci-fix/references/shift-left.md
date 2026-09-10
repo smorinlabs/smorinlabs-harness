@@ -71,7 +71,7 @@ commit as `chore(hooks): run <check> on <stage>` with no skip marker, install
 the stage (`lefthook install` / `pre-commit install --hook-type <stage>` —
 `pre-commit install` alone installs only `pre-commit`), confirm the hook file
 at `"$(git rev-parse --git-path hooks)/<stage>"`, then prove the added hook
-fires on a relevant file: `lefthook run <stage> --command <check-name>
+fires on a relevant file: `lefthook run <stage> --commands <check-name>
 --file <affected-file>` or `pre-commit run <check-name> --hook-stage <stage>
 --files <affected-file>`. Here the names come from the rendered hook and the
 file must match its pattern. Confirm it executed rather than skipped. A

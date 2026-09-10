@@ -24,6 +24,7 @@ Exit 0 ok; 2 on a usage error (missing file, invalid YAML, PyYAML absent).
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import itertools
 import json
 import os
@@ -32,6 +33,17 @@ import shlex
 import sys
 
 RUNNER_LINE = "uv run --no-project --with pyyaml <skill-dir>/scripts/workflow_inventory.py"
+
+
+def json_safe(value):
+    """Convert YAML values such as unquoted dates into JSON-safe values."""
+    if isinstance(value, (dt.datetime, dt.date, dt.time)):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    return value
 
 try:
     import yaml
@@ -341,7 +353,7 @@ def triggers_of(doc: dict) -> tuple[list[str], dict | None]:
 def inventory_file(path: str) -> dict:
     try:
         with open(path, encoding="utf-8") as fh:
-            doc = yaml.safe_load(fh)
+            doc = json_safe(yaml.safe_load(fh))
     except OSError as exc:
         raise SystemExit(f"error: cannot read {path}: {exc.strerror}") from exc
     except yaml.YAMLError as exc:
