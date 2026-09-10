@@ -88,6 +88,12 @@ Fix-mode flags:
   passes only YAML files, and the script skips any file that is not a
   workflow with a warning rather than failing the whole inventory).
 - Hooks: `ls lefthook.yml .pre-commit-config.yaml 2>/dev/null`.
+- Local Linux runners, when any job's `runs-on` this host cannot satisfy:
+  `python3 <skill-dir>/scripts/detect_runners.py` writes and prints
+  `~/.config/ci-fix/runners.toml` — a read-only survey of what is already
+  here (podman, docker, lima, act, devcontainer), ranked by readiness before
+  fidelity. It starts, pulls, and installs nothing. Fields and recipes:
+  `references/local-runners.md`.
 - Runs on this commit, the fix-target set — listed by `head_sha`, not by
   branch, so every workflow's run on HEAD is present however many the branch
   has:
@@ -202,7 +208,7 @@ Classify before fixing anything. `references/fix-loop.md` has the signals.
 | **Workflow or config** | actionlint finding, bad `uses:`, missing permission, YAML typo, a secret name that does not exist | Edit the workflow; `actionlint <file>` locally is its rung 1. Sweep (1s) unless the edit changed no `run:` line; then push (rung 2) |
 | **Code or test** | a test ID or compile error in the failed step's log | Steps 5–6, the targeted loop |
 | **Flake or infrastructure** | runner lost, network timeout, the same commit green on another attempt | Rerun the failed job once on the same commit (`references/fix-loop.md`). Green → record it as a flake; do not "fix" it. Red again → treat as code or test |
-| **Not reproducible locally** | needs secrets, a service container, or a matrix OS this machine lacks | No local rung **for this job**; fix from the log evidence. The sweep (1s) still runs on the neighbors; then enter CI at rung 2 |
+| **Not reproducible on this host** | needs secrets, a service container, or a matrix OS this machine lacks | An `ubuntu-*` job is only *CI-only* once the runner survey says so: with a ready runner in `runners.toml`, rungs 0 and 1 run there (`references/local-runners.md`, `--local-env container`) and this is an ordinary code-or-test failure. With none — nothing ready and the owner declined the one start or install command — there is no local rung for this job: fix from the log evidence, record `CI is the lab`, sweep the neighbours, and enter CI at rung 2. macOS and Windows jobs stay CI-only unless the host matches |
 
 A red **commit status** with no failing check-run (a reviewer bot reporting its
 own rate limit, for example) is not CI. Say so and leave it to `pr-merge-flow`.
@@ -239,9 +245,13 @@ in CI; and every isolated run is followed by the whole thing.
 | local | the failed step's expected time (ledger, else CI median) | over `--isolate-local` (30s), or unmeasured: the extracted IDs first (rung 0), then the whole step (rung 1) | the whole step only (rung 1) |
 | CI | the target job's expected time | **CI is the lab** and the job is over `--isolate-remote` (5m), or unmeasured: dispatch only the failing workflow with only the failing tests (rung 2d), offering to add the filter input when the workflow lacks one; then the full run (rung 3) | a plain push: rung 2 and rung 3 are the same run |
 
-**CI is the lab** when the failure can only be observed in CI: the job is
-not reproducible locally, the whole local step was declined at the cap, or
-CI went red again after a local green. After a local green, one CI round is
+**CI is the lab** when the failure can only be observed in CI: there is no
+local path to the job at all, the whole local step was declined at the cap,
+or CI went red again after a local green. "No local path" now includes the
+runner survey: an `ubuntu-*` job this host cannot run directly still has a
+local path when `runners.toml` names a ready runner, and only when it names
+none — and the owner has declined the single start or install command — does
+the job become CI-only (`references/local-runners.md`). After a local green, one CI round is
 expected, and a dispatch would only add its own setup and a second cycle: a
 plain push is faster whatever the job's size.
 
@@ -263,13 +273,18 @@ python3 <skill-dir>/scripts/ladder_plan.py --profile "$SCRATCH/profile/profile.j
   --job "<jobs-API job name>" \
   --step "<failed step display name>" --ids <count from step 5> \
   --dispatchable|--not-dispatchable --local-step|--no-local-step \
-  --ci-is-lab|--not-ci-is-lab [--filter-input <input name>]
+  --ci-is-lab|--not-ci-is-lab [--filter-input <input name>] \
+  [--local-env host|container]
 ```
 
 (`profile.json` is step 2's `--json` output saved to a file; `--dispatchable`
 is the rung-2d test from `references/fix-loop.md`; `--filter-input` is the
 `dispatch_inputs` entry the inventory shows for the workflow, if any;
-`--no-local-step` implies `--ci-is-lab`. `--job` and `--step` take the names
+`--no-local-step` implies `--ci-is-lab`; `--local-env container` says the
+local rungs would run in a Linux runner rather than on this host, which
+doubles a step's CI-proxy estimate for its first run there (the image pull
+and start-up CI never paid) and is dropped as soon as the ledger has a real
+sample. `--job` and `--step` take the names
 the jobs API reports — the profile's `job` and `steps[].name` fields, which
 are the ledger's keys too — never the table's `<workflow> / <job>` display
 column, which appears only when two workflows share a job name.
@@ -290,8 +305,8 @@ edit is `superpowers:systematic-debugging`'s discipline.
 
 | Rung | Runs | Where | Wait bound | Available when |
 |---|---|---|---|---|
-| 0 | the extracted test IDs only | local | seconds | IDs were extracted, the toolchain exists here, and the failed step is expected over `--isolate-local` or is unmeasured (under it, straight to rung 1: isolating one test would cost a run and save nothing) |
-| 1 | the failed step's full `run:` command | local | the step's expected time (ledger, else CI); unmeasured or over 10 minutes it runs in the background and is awaited | the step runs here and is expected within the 10-minute cap — then it **always** runs, the wait stated, never negotiated; over the cap, one AskUserQuestion with the number, and a "no" records `CI is the lab` and moves on to the sweep |
+| 0 | the extracted test IDs only | local — this host, or a Linux runner from `runners.toml` | seconds on the host; in a container the first run also pays the image pull | IDs were extracted, the toolchain exists here **or** a ready Linux runner does, and the failed step is expected over `--isolate-local` or is unmeasured (under it, straight to rung 1: isolating one test would cost a run and save nothing) |
+| 1 | the failed step's full `run:` command | local — same environment as rung 0 | the step's expected time (ledger, else CI, doubled on a container's first run); unmeasured or over 10 minutes it runs in the background and is awaited; a first container run is bounded at 2 × the CI median with a 5-minute floor | the step runs here, or in a ready Linux runner, and is expected within the 10-minute cap — then it **always** runs, the wait stated, never negotiated; over the cap, one AskUserQuestion with the number, and a "no" records `CI is the lab` and moves on to the sweep |
 | 1s | **the sweep**: every other host-runnable job's sweepable `run:` steps (candidate rules, toolchain pre-check, and skips: `references/targeted-repro.md`, *The sweep*) | local | the sum of the swept jobs' medians | rung 1 green (or unavailable); before **every** push |
 | 2 | push, per the plan's remote mode: `push` — plain push, watch the target job, and this run is also rung 3; `dispatch-filtered` — the commit carries `[skip ci]` on a body line and only the failing workflow is dispatched with the failing IDs in its filter input, the remote mirror of rung 0 (rung 2d, `references/fix-loop.md`); `offer-filter` — one AskUserQuestion to add the input from `references/filter-input.md`, then `dispatch-filtered` on yes, else `push`. A whole-workflow dispatch without a filter is never used: it saves runner minutes, not time | CI | that job's `wait_bound_s` (the largest, when several workflows are watched) | rung 1s green |
 | 3 | every run on the pushed commit (step 1's `head_sha` listing), every job: the run the push started, or after a marked commit the first marker-free commit — the step-6b hook commit, the `--update-versions` commit, or an empty `ci: full run` commit | CI | the largest `wait_bound_s` across those runs | rung 2 green |
@@ -323,6 +338,15 @@ Rules:
   A dispatch that still fails is recovered by making the rung-3 commit at
   once and watching the target job on the run it starts. Mechanics and
   failure cases: `references/fix-loop.md`, *Rung 2d*.
+- The runner offer is made at most once per machine, before triage decides a
+  job is CI-only. When the survey has no ready runner but names a
+  `recommend_start` (something installed, not running) or a
+  `recommend_install` (nothing installed — podman on this host: one formula,
+  rootless, no licence), put that one command to the user with
+  AskUserQuestion, quoting its reason and its cost. On yes, run it, re-survey,
+  and continue at rung 0. On no, record the decline in the report, treat the
+  job as CI-only, and never ask again this run. Starting a VM, pulling an
+  image, and installing a tool are all mutations: none happens unasked.
 - The filter-input offer is made once per workflow, only when the plan says
   `offer-filter`: the workflow edit is the "changes and commits" that make
   remote isolation expensive, so it is offered only when it would pay on
@@ -401,7 +425,7 @@ later run, and the change is shown as a diff before commit like any fix.
 - Hooks: ✅/❌ installed · tools resolve · parity gaps: <list>
 
 ### Fixes                          (fix mode)
-- <job> — <class> — plan: step <expected> (<ledger|CI proxy>) vs floor <dur> → entered at rung <n>; rung 1 <ran <duration>, recorded | asked, declined>; job <expected> vs floor <dur>, <verified locally|CI is the lab> → <push|dispatch-filtered>, filter offer <accepted|declined|n/a> — <what changed> — sweep: <jobs run>, skipped <job (reason)> — ✅ every job green on <rung-3 sha> / ❌ stopped after 3 attempts: <evidence>
+- <job> — <class> — plan: step <expected> (<ledger|CI proxy>) vs floor <dur> → entered at rung <n>; rung 1 <ran <duration>, recorded | asked, declined>; rung 1 environment <this host|podman|docker|lima|act, readiness reason, arch>; job <expected> vs floor <dur>, <verified locally|CI is the lab> → <push|dispatch-filtered>, filter offer <accepted|declined|n/a> — <what changed> — sweep: <jobs run>, skipped <job (reason)> — ✅ every job green on <rung-3 sha> / ❌ stopped after 3 attempts: <evidence>
 - Shift left: hook added for <check> (<stage>) / declined / not applicable
 
 ### Speed analysis                 (optimize mode)
@@ -421,6 +445,8 @@ later run, and the change is shown as a diff before commit like any fix.
 | "This job was never measured, so just run it" | Unmeasured is slow until a successful sample says otherwise. |
 | "Run the one failing test first, it's always cheaper" | Only over the local floor. Isolating a test from a 20-second suite costs a run of its own and saves nothing; the plan says rung 1. |
 | "The suite takes 8 minutes locally, CI can run it" | Under the cap, rung 1 runs. It costs 8 minutes here and saves a full CI cycle whenever the fix broke a neighbor; the number was stated, not negotiated. Over the cap it is a question, once, with the number. |
+| "It's an ubuntu job and I'm on a Mac, so CI is the only place" | Only after the survey says so. A ready podman, docker, or lima turns it back into a rung-0 failure; `detect_runners.py` costs one read-only probe per tool. |
+| "act is the most faithful, so use act" | Faithful to the *workflow*. For a failing test it is a slower route to the same red, and its first run pulls 1 to 2 GB. Use it when the workflow itself is what broke. |
 | "The job is slow, so dispatch it alone" | Only when CI is the lab. After a local green one CI round is expected, and a dispatch adds its own checkout and setup plus a second commit and cycle: the plain push is faster. |
 | "CI is red — fix the workflow" | Triage first. A flake is rerun, not fixed; a reviewer-bot status is not CI at all. |
 | "The dispatched run is green — done" | 2d ran one workflow. Done is every workflow green on the rung-3 commit. |
@@ -438,4 +464,5 @@ later run, and the change is shown as a diff before commit like any fix.
   skill debugs runs.
 - `references/duration-profile.md` · `references/targeted-repro.md` ·
   `references/fix-loop.md` · `references/filter-input.md` ·
-  `references/shift-left.md` · `references/optimize.md`.
+  `references/local-runners.md` · `references/shift-left.md` ·
+  `references/optimize.md`.
