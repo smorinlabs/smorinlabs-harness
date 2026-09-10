@@ -158,6 +158,8 @@ def base(tmp_path, job="pytest", step=PYTEST_STEP, workflow="CI", ids=3, **flags
     )
     args.append("--local-step" if flags.pop("local_step", True) else "--no-local-step")
     args.append("--ci-is-lab" if flags.pop("ci_is_lab", False) else "--not-ci-is-lab")
+    if "local_env" in flags:
+        args += ["--local-env", flags.pop("local_env")]
     filter_input = flags.pop("filter_input", None)
     if filter_input:
         args += ["--filter-input", filter_input]
@@ -704,3 +706,100 @@ def test_plan_reads_the_profiler_output_when_job_names_collide(tmp_path):
         "--no-local-step",
     )
     assert p["remote"]["job_class"] == "slow" and p["remote"]["job_expected_s"] == 600.0
+
+
+# ------------------------------------- running the local rungs in a container
+
+
+def test_a_container_first_run_doubles_the_ci_proxy(tmp_path):
+    """A Linux job reproduced in a container pays an image pull and start-up
+    that CI's own median never included, so the untested estimate is doubled.
+    Here 15s of CI lint becomes 30s, which is not above the 30s floor, while
+    the reported source says plainly where the number came from."""
+    p = base(tmp_path, job="lint", step=LINT_STEP, ids=2, local_env="container")
+    local = p["local"]
+    assert local["local_env"] == "container"
+    assert local["step_expected_s"] == 30.0
+    assert local["source"] == "profile x2 (container, first run)"
+    assert local["step_class"] == "fast"  # 30 is not *above* the 30s floor
+
+
+def test_the_doubling_can_push_a_step_over_the_local_floor(tmp_path):
+    """A 20s CI step runs whole on the host, but isolating is worth it in a
+    container, where the same step is expected to take 40s."""
+    profile = profile_fixture()
+    for j in profile["jobs"]:
+        if j["job"] == "lint":
+            j["steps"] = [{"name": LINT_STEP, "median_s": 20.0}]
+    path = write_profile(tmp_path, profile)
+    host = plan(
+        path,
+        "--workflow",
+        "CI",
+        "--job",
+        "lint",
+        "--step",
+        LINT_STEP,
+        "--ids",
+        "2",
+        "--local-step",
+    )
+    assert host["local"]["step_expected_s"] == 20.0 and host["local"]["entry_rung"] == 1
+    container = plan(
+        path,
+        "--workflow",
+        "CI",
+        "--job",
+        "lint",
+        "--step",
+        LINT_STEP,
+        "--ids",
+        "2",
+        "--local-step",
+        "--local-env",
+        "container",
+    )
+    assert container["local"]["step_expected_s"] == 40.0
+    assert container["local"]["entry_rung"] == 0
+
+
+def test_a_real_local_sample_beats_the_container_estimate(tmp_path):
+    """Once the ledger holds a measured container run, the multiplier is gone:
+    a guess never overrides a measurement."""
+    ledger = write_ledger(
+        tmp_path,
+        [
+            {
+                "workflow": "CI",
+                "job": "pytest",
+                "step": PYTEST_STEP,
+                "seconds": 12.0,
+                "at": "2026-09-10T00:00:00Z",
+            }
+        ],
+    )
+    p = base(tmp_path, ids=3, ledger=ledger, local_env="container")
+    assert p["local"]["source"] == "ledger"
+    assert p["local"]["step_expected_s"] == 12.0
+    assert p["local"]["entry_rung"] == 1
+
+
+def test_an_unmeasured_step_stays_unmeasured_in_a_container(tmp_path):
+    """Doubling nothing is still nothing; unmeasured keeps its slow treatment."""
+    p = base(
+        tmp_path,
+        job="nightly",
+        step="Run make test",
+        workflow="Nightly",
+        ids=2,
+        local_env="container",
+    )
+    assert p["local"]["step_expected_s"] is None
+    assert p["local"]["step_class"] == "unmeasured"
+    assert p["local"]["entry_rung"] == 0
+
+
+def test_the_default_environment_is_the_host(tmp_path):
+    p = base(tmp_path, ids=3)
+    assert p["local"]["local_env"] == "host"
+    assert p["local"]["step_expected_s"] == 540.0  # not doubled
