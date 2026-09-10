@@ -6,7 +6,8 @@ isolated run is much shorter than the whole thing, and the cost of isolating
 differs by level: locally it is one command (5–20 s of overhead), in CI it is
 a marked commit, a dispatch, and a second commit and run (2–4 min extra).
 
-  local   failed step expected under --isolate-local (30s) → rung 1 only
+  local   (on this host, or in a Linux runner when --local-env container)
+          failed step expected under --isolate-local (30s) → rung 1 only
           over it, or unmeasured                           → rung 0 (the IDs), then rung 1
           rung 1 (the whole step) always runs when the step can run here and
           its expected time is within the cap (10 min); above the cap the
@@ -45,6 +46,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 DEFAULT_ISOLATE_LOCAL = "30s"
 DEFAULT_ISOLATE_REMOTE = "5m"
+CONTAINER_FIRST_RUN_FACTOR = (
+    2  # image pull and start-up, until the ledger has a real sample
+)
 LOCAL_CAP_S = 600  # the harness's single-command limit; a longer whole-step run is asked about, then backgrounded
 LEDGER_KEEP = 10
 
@@ -140,6 +144,13 @@ def local_plan(
     led, n = ledger_median(args.ledger, workflow, workflow_path, args.job, args.step)
     if led is not None:
         step_median, source = led, "ledger"
+    elif step_median is not None and args.local_env == "container":
+        # No local sample yet, and the step will run in a container or VM:
+        # CI's own number does not include the image pull and start-up this
+        # machine pays, so the first run is estimated at twice it. Once the
+        # ledger has a real sample the multiplier is gone.
+        step_median *= CONTAINER_FIRST_RUN_FACTOR
+        source = f"profile x{CONTAINER_FIRST_RUN_FACTOR} (container, first run)"
     step_class = classify(step_median, floor_s)
     where = (
         f"{fmt(step_median)} ({source})" if step_median is not None else "unmeasured"
@@ -156,6 +167,7 @@ def local_plan(
         "step_expected_s": step_median,
         "source": source,
         "ledger_samples": n,
+        "local_env": args.local_env,
         "floor_s": floor_s,
         "cap_s": LOCAL_CAP_S,
         "entry_rung": None,
@@ -374,6 +386,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     g2.add_argument("--no-local-step", dest="local_step", action="store_false")
     ap.set_defaults(local_step=True)
+    ap.add_argument(
+        "--local-env",
+        choices=["host", "container"],
+        default="host",
+        help="where the local rungs would run: on this host, or in a Linux container or VM from "
+        "runners.toml (detect_runners.py). A container's first run is estimated at twice the CI "
+        "median, because CI's number excludes the image pull and start-up this machine pays.",
+    )
     g3 = ap.add_mutually_exclusive_group()
     g3.add_argument(
         "--ci-is-lab",
