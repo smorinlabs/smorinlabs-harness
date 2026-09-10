@@ -20,6 +20,14 @@ push can match no path filters and cannot restore omitted coverage by itself.
    dependencies. Include expected validation and the failed checks being repaired.
    A success-only duration profile is not a job inventory. A permissions/API
    error reading policy is unknown policy, not an empty set of requirements.
+   Discover policy with paginated reads: `gh api --paginate
+   repos/<owner>/<repo>/branches/<base>/protection` for classic protection, then
+   `gh api --paginate "repos/<owner>/<repo>/rulesets?per_page=100"` for
+   repository rulesets and the corresponding organization rulesets endpoint
+   when organization policy may apply. Inspect each ruleset's
+   `conditions.ref_name` and `rules` for the evaluated base branch, and record
+   its source and required status names. A failed or forbidden read keeps policy
+   unknown.
 3. **Collect complete observations.** Paginate workflow runs and each run's
    jobs; inspect required external checks/commit statuses too. Retain workflow
    file, run ID, event, actual evaluated commit, attempt, matrix-cell identity,
