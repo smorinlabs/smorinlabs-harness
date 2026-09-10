@@ -41,10 +41,10 @@ Read the failed step's `run:` line in the workflow. Keep its wrapper (`uv run`,
 | Runner | CI step looks like | Rung 0 — targeted | Rung 1 — full step |
 |---|---|---|---|
 | pytest | `uv run pytest` / `pytest tests` | `uv run pytest -x <id> [<id> …]` — IDs are node IDs, taken from `failures_quoted` | the `run:` line verbatim |
-| jest | `npm test` / `npx jest` | `npx jest -t <quoted pattern>` — `-t` is a **regex**, so escape every metacharacter in the name first (`(`, `)`, `[`, `.`, `+`, `*`, `?`, `$`, `^`, `|`) or a name like `parses (float)` matches nothing and Jest exits 0, a false green; then quote as `failures_quoted` does, with ` › ` replaced by a space | the `run:` line verbatim |
-| vitest | `npx vitest run` | an ID is `<file> > <suite> > <name>` (or `<file>` alone for a suite that failed to load): `npx vitest run <file> -t <quoted pattern>` with the last ` > ` segment as the pattern, escaped as for jest; a file-only ID runs `npx vitest run <file>` | the `run:` line verbatim |
+| jest | `npm test` / `npx jest` | `npx jest -t <quoted pattern>` — `-t` is a **regex**, so escape every metacharacter in the name first (`(`, `)`, `[`, `.`, `+`, `*`, `?`, `$`, `^`, `\|`) or a name like `parses (float)` matches nothing and Jest exits 0, a false green; then quote as `failures_quoted` does, with ` › ` replaced by a space | the `run:` line verbatim |
+| vitest | `npx vitest run` | an ID is `<file> > <suite> > <name>` (or `<file>` alone for a suite that failed to load): `npx vitest run <quoted file> -t <quoted pattern>` with the last ` > ` segment as the pattern, escaped as for jest; a file-only ID runs `npx vitest run <quoted file>`. **The file is shell-quoted like every other extracted value** — a committed test filename can contain `$(…)`, which would execute here; split the ID yourself and quote each half, never paste the raw ID | the `run:` line verbatim |
 | cargo | `cargo test` | `cargo test <module::tests::name> -- --exact` | the `run:` line verbatim |
-| cargo-nextest | `cargo nextest run` | `cargo nextest run -E 'test(=<name>)'`; with a binary id from `packages`, `-E 'binary_id(<id>) & test(=<name>)'`; several IDs join with ` \| ` inside one expression | the `run:` line verbatim |
+| cargo-nextest | `cargo nextest run` | `cargo nextest run -E 'test(=<name>)'`; to scope a test to its binary use its own pair from `failure_pairs`, `-E 'binary_id(<id>) & test(=<name>)'` — never a binary from `packages` with a test from `failures`, because the same test name can fail in one binary and pass in another, so the cross product runs a passing test or none; several pairs join with ` \| ` inside one expression | the `run:` line verbatim |
 | go | `go test ./...` | `go test <package> -run '^<TestName>$'` — for an ID with `/`, split on it and anchor each segment: `TestParent/sub` → `-run '^TestParent$/^sub$'`; `<package>` from `packages` when present, else the package of the failing file | the `run:` line verbatim |
 | just / make wrapper | `just test`, `make test` | open the recipe and narrow its inner command as above; run the inner command directly at rung 0, the recipe at rung 1 | the recipe |
 | lint / format / typecheck | `ruff check .`, `eslint .`, `tsc` | the tool on the files the log names (`ruff check <file>`); a typecheck has no narrower target than the project | the `run:` line verbatim |
@@ -114,15 +114,22 @@ its duration is not the step's.
 LEDGER=$(python3 <skill-dir>/scripts/local_ledger.py path --repo <owner/repo>)
 start=$(date +%s); <the run: line>; rc=$?; secs=$(( $(date +%s) - start ))
 python3 <skill-dir>/scripts/local_ledger.py record --ledger "$LEDGER" \
-  --workflow "<workflow name>" --job "<job display name>" --step "<step display name>" \
+  --workflow "<workflow name>" --workflow-path "<.github/workflows/file.yml>" \
+  --job "<job display name>" --step "<step display name>" \
   --seconds "$secs" --conclusion "$([ "$rc" -eq 0 ] && echo success || echo failure)"
 ```
 
-`record` keeps the last 10 successes per (workflow, job, step) and prints the
+`record` keeps the last 10 successes per (workflow, workflow path, job, step)
+and prints the
 new median; a failure is reported and not stored (a red measures
 time-to-failure, the same rule the CI profile applies). The step name is the
 jobs API's display name, so the ledger key matches the profile's `steps`
-entry and `ladder_plan.py --ledger` can prefer it. Report the local duration
+entry and `ladder_plan.py --ledger` can prefer it. Pass `--workflow-path`
+(the profile row's `workflow_path`) wherever it is known: two workflow files
+can share a `name:`, and without the path one file's local median would
+decide the other's rung. A query and a sample match only when their paths
+match, so a ledger written before the path was known simply misses — a cache
+miss, not a wrong answer. Report the local duration
 beside the CI median (`rung 1: 3m10s local, CI median 9m40s`) so the reader
 sees why the local decision differed from the remote one.
 

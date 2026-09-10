@@ -216,9 +216,11 @@ own rate limit, for example) is not CI. Say so and leave it to `pr-merge-flow`.
    `gh api --allow-escape-sequences "repos/{owner}/{repo}/actions/jobs/<job_id>/logs" > "$SCRATCH/job-<job_id>.log"`
 3. The failing test IDs:
    `python3 <skill-dir>/scripts/extract_failures.py --json "$SCRATCH/job-<job_id>.log"`
-   → `{format, failures, failures_quoted, packages}` for pytest, jest, vitest,
-   cargo, cargo-nextest, or go; local commands take IDs from
-   `failures_quoted` only. Exit 1
+   → `{format, failures, failures_quoted, packages, failure_pairs}` for
+   pytest, jest, vitest, cargo, cargo-nextest, or go; local commands take IDs
+   from `failures_quoted` only, and a cargo-nextest command that scopes a test
+   to a binary takes both halves from one `failure_pairs` entry, never a
+   binary and a test paired across entries. Exit 1
    means no test IDs were recognized: Grep the log for the failed step's name
    and read its last 50 lines for the actual error; the step's whole `run:`
    command is then the narrowest target.
@@ -257,7 +259,8 @@ for the remote mode when the local outcome changed the lab status:
 python3 <skill-dir>/scripts/ladder_plan.py --profile "$SCRATCH/profile/profile.json" \
   --ledger "$(python3 <skill-dir>/scripts/local_ledger.py path --repo <owner/repo>)" \
   --isolate-local <dur> --isolate-remote <dur> \
-  --workflow "<workflow name>" --job "<jobs-API job name>" \
+  --workflow "<workflow name>" [--workflow-path "<.github/workflows/file.yml>"] \
+  --job "<jobs-API job name>" \
   --step "<failed step display name>" --ids <count from step 5> \
   --dispatchable|--not-dispatchable --local-step|--no-local-step \
   --ci-is-lab|--not-ci-is-lab [--filter-input <input name>]
@@ -269,7 +272,10 @@ is the rung-2d test from `references/fix-loop.md`; `--filter-input` is the
 `--no-local-step` implies `--ci-is-lab`. `--job` and `--step` take the names
 the jobs API reports — the profile's `job` and `steps[].name` fields, which
 are the ledger's keys too — never the table's `<workflow> / <job>` display
-column, which appears only when two workflows share a job name.) The plan
+column, which appears only when two workflows share a job name.
+`--workflow-path` is the profile row's `workflow_path`: pass it whenever two
+workflow *files* share a `name:`, where `--workflow` alone cannot separate
+them and the plan says so.) The plan
 names the entry rung, the rung-1 gate (`run` or `ask`), the remote mode, whether the commit carries
 the marker, and the reason; the reason goes in the report verbatim.
 

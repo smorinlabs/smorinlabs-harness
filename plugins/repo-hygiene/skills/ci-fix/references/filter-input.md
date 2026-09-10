@@ -64,14 +64,30 @@ everything in jest but is an error in some runners).
 
 ## Dispatching with the input
 
+The input **name** is the one the plan carries in `filter_input` — `filter`
+for an input this file rendered, but an existing workflow may narrow its
+tests through an input of another name (below). The input **value** is the
+shape that runner's row in the table above names: newline-separated IDs for
+pytest and cargo, and a single expression for jest, vitest, cargo-nextest,
+and go. Sending raw IDs to a runner that expects one expression is how a
+filtered run selects nothing and reports green without reproducing anything.
+
 ```bash
+INPUT=<filter_input from the plan>          # the declared input's name, not always "filter"
+VALUE=$(printf '%s\n' "${IDS[@]}")          # pytest, cargo: one ID per line
+# jest/vitest: VALUE=$(printf '%s' "$ESCAPED_ALTERNATION")   one -t regex
+# nextest:     VALUE='test(=a) | test(=b)'                   one -E expression
+# go:          VALUE='^TestA$|^TestB$'                       one anchored -run regex
 gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>/dispatches" \
   -f ref="$(git branch --show-current)" \
-  -f "inputs[filter]=$(printf '%s\n' "${IDS[@]}")"     # IDS: the raw failures list
+  -f "inputs[$INPUT]=$VALUE"
 ```
 
 `-f` sends the value verbatim, newlines included. Any other input the
-workflow marks `required` is passed the same way.
+workflow marks `required` is passed the same way. Build the expression forms
+with the rules in `targeted-repro.md` (metacharacter escaping for jest and
+vitest, anchoring for go, `failure_pairs` for nextest) — the same values the
+local rung-0 command uses, so the remote run reproduces the local one.
 
 ## When the workflow already has an input of another shape
 

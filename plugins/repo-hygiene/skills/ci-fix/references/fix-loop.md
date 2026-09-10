@@ -106,11 +106,13 @@ git push -u origin "$(git branch --show-current)"
 SHA=$(git rev-parse HEAD)
 
 # dispatch only the failing workflow on this branch (204 = accepted, no body);
-# every dispatch_inputs entry marked required must be passed; the filter input
-# carries the raw IDs one per line (filter-input.md) in dispatch-filtered mode
+# every dispatch_inputs entry marked required must be passed. In
+# dispatch-filtered mode the narrowing input is the plan's `filter_input`
+# (not always literally "filter"), and its value is the shape that runner
+# expects — see filter-input.md, *Dispatching with the input*
 gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>/dispatches" \
   -f ref="$(git branch --show-current)" \
-  -f "inputs[filter]=$(printf '%s\n' "${IDS[@]}")"      # dispatch-filtered only; drop in dispatch mode
+  -f "inputs[$INPUT]=$VALUE"                            # dispatch-filtered only; drop in dispatch mode
 
 # find the run it created: same workflow file, same event, same commit, created after T0
 # (the workflow-specific listing, so several dispatched workflows never hand back the wrong run id)
