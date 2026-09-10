@@ -9,4 +9,4 @@ def rollup(values):
 
 
 def test_rollup_total():
-    assert rollup([1, 2, 3]) == 7
+    assert rollup([1, 2, 3]) == 6
