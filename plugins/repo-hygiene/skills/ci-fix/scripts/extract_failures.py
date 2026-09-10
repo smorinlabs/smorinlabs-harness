@@ -7,7 +7,12 @@ test identifiers in the form each runner accepts back as a filter:
 
   pytest  tests/test_x.py::TestCls::test_name[param]   (FAILED/ERROR summary lines)
   jest    Suite › test name                             (● failure blocks)
+  vitest  src/x.test.ts > suite > test name             (FAIL summary lines; a suite
+                                                         that failed to load yields
+                                                         its file alone)
   cargo   module::tests::test_name                      (---- X stdout ---- headers)
+  nextest tests::module::test_name                      (FAIL [ time ] <binary-id> <test>
+                                                         lines; binary ids → packages)
   go      TestName/subtest                              (leaf --- FAIL lines; parents
                                                          whose only failures are
                                                          subtests are dropped)
@@ -18,7 +23,7 @@ failures_quoted, packages}. `failures_quoted` is each ID passed through
 `shlex.quote`: a contributor controls test names and parameter IDs, and
 `$(...)` inside double quotes executes, so local commands take the quoted
 form verbatim and never re-interpolate the bare one. `packages` is populated
-for go from `FAIL <pkg>` lines.
+for go from `FAIL <pkg>` lines and for nextest from the binary ids.
 
 Exit 0 when at least one failure was recognized, 1 when none, 2 on usage error.
 """
@@ -53,18 +58,39 @@ def _cut_at_depth0(text: str, delimiters: tuple[str, ...]) -> str | None:
     return None
 
 
+def _cut_after_first_bracket(text: str, delimiters: tuple[str, ...]) -> str | None:
+    """Fallback for a param ID with an unmatched `[` (depth never returns to
+    0): cut at the first `]` that is directly followed by one of the
+    delimiters. First, not last: a failure reason often contains `] - `
+    (`assert x[0] - y == 1`), while a param ID that contains the delimiter
+    *and* an unmatched bracket is vanishingly rare."""
+    best = -1
+    for d in delimiters:
+        idx = text.find("]" + d)
+        if idx >= 0 and (best < 0 or idx < best):
+            best = idx
+    return text[: best + 1] if best >= 0 else None
+
+
 def _pytest_id(line: str) -> str | None:
     """A node ID has no whitespace outside its [param] brackets, so it ends at
     the first depth-0 whitespace. Summary lines carry a FAILED/ERROR prefix;
     verbose lines must have the verdict as the very next token, so a SKIPPED
-    or PASSED line whose free text mentions ERROR is not a failure."""
+    or PASSED line whose free text mentions ERROR is not a failure. When the
+    brackets never close (an unmatched `[` inside a param ID) the depth-aware
+    cut finds nothing and the first `] - ` (summary) or `] FAILED` / `] ERROR`
+    (verbose) split is used instead."""
     m = PYTEST_SUMMARY_PREFIX_RE.match(line)
     if m:
         rest = m.group(1)
         cut = _cut_at_depth0(rest, (" ",))
+        if cut is None:
+            cut = _cut_after_first_bracket(rest, (" - ",))
         return (cut if cut is not None else rest).rstrip()
     if "::" in line:
         cut = _cut_at_depth0(line, (" ",))
+        if cut is None:
+            cut = _cut_after_first_bracket(line, (" FAILED", " ERROR"))
         if cut and "::" in cut and not cut.startswith(("FAILED", "ERROR")):
             verdict = line[len(cut):].split(None, 1)
             if verdict and verdict[0] in ("FAILED", "ERROR"):
@@ -72,11 +98,15 @@ def _pytest_id(line: str) -> str | None:
     return None
 JEST_BLOCK_RE = re.compile(r"^●\s+(.+?)\s*$")
 JEST_MARK_RE = re.compile(r"^✕\s+(.+?)(?:\s+\(\d+\s*m?s\))?\s*$")
+VITEST_FAIL_RE = re.compile(r"^FAIL\s+(\S+(?:\s+>\s+.+?)?)\s*$")
+VITEST_SUITE_RE = re.compile(r"^FAIL\s+(\S+)\s+\[\s*\S+\s*\]\s*$")
+VITEST_MARK_RE = re.compile(r"^×\s+(.+?)(?:\s+\d+\s*m?s)?\s*$")
 CARGO_HEADER_RE = re.compile(r"^----\s+(\S+)\s+stdout\s+----$")
+NEXTEST_FAIL_RE = re.compile(r"^FAIL\s+\[\s*[\d.]+s\s*\]\s+(\S+)\s+(\S+)\s*$")
 GO_FAIL_RE = re.compile(r"^---\s+FAIL:\s+(\S+)")
 GO_PACKAGE_RE = re.compile(r"^FAIL\s+(\S+)\s+[\d.]+s$")
 
-FORMATS = ("auto", "pytest", "jest", "cargo", "go")
+FORMATS = ("auto", "pytest", "jest", "vitest", "cargo", "nextest", "go")
 
 
 def clean(line: str) -> str:
@@ -113,6 +143,28 @@ def detect_jest(lines: list[str]) -> list[str]:
     return dedup([m.group(1) for line in lines if (m := JEST_MARK_RE.match(line))])
 
 
+def detect_vitest(lines: list[str]) -> list[str]:
+    """`FAIL  <file> > <suite> > <name>` summary lines, or `FAIL  <file> [ <file> ]`
+    for a suite that failed to load (the file alone is the target). Without a
+    summary, the `×` marks under the file's `❯` line name the failing tests."""
+    ids = []
+    for line in lines:
+        if m := VITEST_SUITE_RE.match(line):
+            ids.append(m.group(1))
+        elif (m := VITEST_FAIL_RE.match(line)) and " > " in m.group(1):
+            ids.append(m.group(1).strip())
+    if ids:
+        return dedup(ids)
+    return dedup([m.group(1) for line in lines if (m := VITEST_MARK_RE.match(line))])
+
+
+def detect_nextest(lines: list[str]) -> tuple[list[str], list[str]]:
+    """`FAIL [   0.012s] <binary-id> <test>` lines (printed during the run and
+    again under the summary; deduplicated). Binary ids become `packages`."""
+    pairs = [(m.group(1), m.group(2)) for line in lines if (m := NEXTEST_FAIL_RE.match(line))]
+    return dedup([t for _, t in pairs]), dedup([b for b, _ in pairs])
+
+
 def detect_cargo(lines: list[str]) -> list[str]:
     """`---- X stdout ----` headers count only after a `failures:` marker:
     `cargo test -- --show-output` prints the same headers under `successes:`."""
@@ -142,7 +194,9 @@ def extract(lines: list[str], fmt: str) -> dict:
     results = {
         "pytest": (detect_pytest(lines), []),
         "jest": (detect_jest(lines), []),
+        "vitest": (detect_vitest(lines), []),
         "cargo": (detect_cargo(lines), []),
+        "nextest": detect_nextest(lines),
         "go": detect_go(lines),
     }
     if fmt != "auto":
@@ -179,7 +233,7 @@ def read_lines(paths: list[str]) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--format", default="auto", help="auto|pytest|jest|cargo|go (default auto)")
+    parser.add_argument("--format", default="auto", help="auto|pytest|jest|vitest|cargo|nextest|go (default auto)")
     parser.add_argument("--json", action="store_true", help="emit {format, failures, failures_quoted, packages}")
     parser.add_argument("logs", nargs="*", metavar="LOG", help="job log file(s); stdin when omitted")
     args = parser.parse_args(argv)
@@ -197,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("\n".join(data["failures"]))
     if not data["failures"]:
-        print("no failures recognized (pytest/jest/cargo/go); fall back to the step command", file=sys.stderr)
+        print("no failures recognized (pytest/jest/vitest/cargo/nextest/go); fall back to the step command", file=sys.stderr)
         return 1
     return 0
 

@@ -215,3 +215,73 @@ def test_cargo_show_output_headers_for_passing_tests_are_not_failures(tmp_path):
     data = extract(log)
     assert data["format"] == "cargo"
     assert data["failures"] == ["tests::failing_test"]
+
+
+# ----------------------------------- P42-T09 (a): an unmatched `[` inside a param ID
+
+
+def test_pytest_unmatched_bracket_in_param_id_falls_back_to_the_first_reason_split(tmp_path):
+    """T09 (a): `[a[b]` never returns to depth 0, so the depth-aware cut found
+    no delimiter and the whole line, reason included, became the ID. Fallback:
+    the first `] - ` split on summary lines, the first `] FAILED`/`] ERROR` on
+    verbose lines. First, because the reason below itself contains `] - `."""
+    log = tmp_path / "log.txt"
+    log.write_text(
+        "FAILED tests/test_parse.py::test_brackets[a[b] - AssertionError: assert x[0] - y == 1\n"
+        "tests/test_parse.py::test_more[c[d] FAILED [ 50%]\n"
+        "ERROR tests/test_parse.py::test_setup[e[f] - fixture 'db' not found\n"
+    )
+    data = json.loads(run("--json", "--format", "pytest", log).stdout)
+    assert data["failures"] == [
+        "tests/test_parse.py::test_brackets[a[b]",
+        "tests/test_parse.py::test_more[c[d]",
+        "tests/test_parse.py::test_setup[e[f]",
+    ]
+
+
+# --------------------------------------------- P42-T09 (b): vitest and cargo-nextest
+
+
+def test_vitest_yields_file_and_test_path_from_fail_lines():
+    """`FAIL  <file> > <suite> > <name>` summary lines; a suite that failed to
+    load (`FAIL  <file> [ <file> ]`) yields the file alone. The × marks are the
+    fallback when no summary block is present."""
+    data = json.loads(run("--json", FIXTURES / "log_vitest.txt").stdout)
+    assert data["format"] == "vitest"
+    assert data["failures"] == [  # log order: the Failed Suites block precedes Failed Tests
+        "src/broken.test.ts",
+        "src/utils.test.ts > format > pads numbers",
+        "src/utils.test.ts > format > handles negatives",
+    ]
+    assert data["packages"] == []
+
+
+def test_vitest_marks_are_the_fallback_without_a_summary(tmp_path):
+    log = tmp_path / "log.txt"
+    log.write_text(
+        " ❯ src/utils.test.ts (3 tests | 1 failed) 12ms\n"
+        "   × format > pads numbers 4ms\n"
+        "   ✓ format > trims\n"
+    )
+    data = json.loads(run("--json", "--format", "vitest", log).stdout)
+    assert data["failures"] == ["format > pads numbers"]
+
+
+def test_nextest_yields_test_names_and_binary_ids():
+    """`FAIL [ 0.012s] <binary-id> <test>` lines, printed during the run and
+    again under the summary; deduplicated. Binary ids go to `packages` for the
+    `-E 'binary_id(...) & test(=...)'` filter."""
+    data = json.loads(run("--json", FIXTURES / "log_nextest.txt").stdout)
+    assert data["format"] == "nextest"
+    assert data["failures"] == ["tests::math::test_div", "cli::test_version"]
+    assert data["packages"] == ["acme", "acme::bin/cli"]
+
+
+def test_nextest_is_not_mistaken_for_cargo_or_go():
+    """The nextest log embeds libtest's `test x ... FAILED` lines and `--- STDOUT:`
+    blocks; neither the cargo (`failures:` + `---- X stdout ----`) nor the go
+    (`--- FAIL:`) detector may claim them."""
+    for fmt in ("cargo", "go"):
+        result = run("--json", "--format", fmt, FIXTURES / "log_nextest.txt")
+        assert result.returncode == 1, fmt
+        assert json.loads(result.stdout)["failures"] == []
