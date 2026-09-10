@@ -43,19 +43,34 @@ pulling a rerun's log.
 
 A push starts every workflow whose trigger matches, and GitHub cannot run one
 job of a workflow on a fresh commit. It can run one **workflow** on demand
-when that workflow declares `on: workflow_dispatch`. Rung 2d uses that so a
-fix iteration costs one workflow in CI, not all of them.
+when that workflow declares `on: workflow_dispatch`, and that workflow can
+narrow its own test step through an input. Rung 2d uses both so a fix
+iteration on a slow job costs one workflow, and ideally only the failing
+tests, in CI.
 
-**When 2d applies.** Only when the push would start more than one
-non-external workflow. Count from the inventory's `triggers` **and**
-`trigger_filters`, conservatively: a workflow counts when its `push` or
-`pull_request` trigger has no filter that excludes this event — `branches` /
-`branches-ignore` against the branch, `paths` / `paths-ignore` against the
-files the fix changed, `types` against the event (a plain push is not a
-`pull_request` unless a PR is open). When a filter cannot be evaluated, do
-not count the workflow: a needless 2d costs two commits and a dispatch, a
-missed one costs nothing. With a single counted workflow, plain
-push-and-watch is rung 2 and that same run, all green, is rung 3.
+**When 2d applies — the plan decides.** `ladder_plan.py` (SKILL.md step 6)
+returns the remote mode from four facts, in this order; the first that
+fails means `push`, and a plain push is rung 2 and rung 3 in one run:
+
+1. **CI is the lab.** The failure can only be observed in CI: the job is
+   not reproducible locally, the whole local step was declined at the cap,
+   or CI went red again after a local green. After a local green one CI
+   round is expected, and a dispatch would add its own checkout and setup
+   (1–3 min) plus a second commit and cycle to save nothing. The arithmetic:
+   with `N` CI rounds, isolating costs `N·i + J` and pushing whole costs
+   `N·J`, where `i` is the isolated run and `J` the target job; for `N = 1`
+   isolation is a loss of `i`, and it pays only when a second round is
+   likely, which is exactly when CI is the lab.
+2. **The target job's expected time.** Over `--isolate-remote` (5m), or
+   unmeasured. Under it, the isolated run's own setup eats the saving.
+3. **Dispatchable.** `workflow_dispatch` in the inventory's `triggers` for
+   the failing workflow **and** the file present on the default branch (next
+   paragraph). Not dispatchable → `push`, and the report records lever 11.
+4. **IDs and a filter input.** Both present → `dispatch-filtered`. IDs but
+   no input → `offer-filter` (SKILL.md step 6; rendering in
+   `filter-input.md`), and a declined offer is a `push`. No IDs → `push`:
+   there is nothing to isolate, and dispatching the whole job would save
+   runner minutes, not time (`--optimize` lever 11 covers that case).
 
 **Decide the marker before committing, from the inventory.** Two rules,
 both from GitHub's documentation and a live probe on 2026-09-08. The workflow
@@ -63,11 +78,14 @@ both from GitHub's documentation and a live probe on 2026-09-08. The workflow
 that is new on this branch cannot be dispatched (404). The *trigger* is read
 from the ref you dispatch against: a dispatch against a branch carrying
 `workflow_dispatch` while `main`'s copy lacked it returned 204 and the run
-appeared one second later. So: the file exists on the default branch
-(`git cat-file -e origin/<default>:.github/workflows/<file>`) and
-`workflow_dispatch` is in the failing workflow's `triggers` → commit with the
-marker; either condition fails → plain rung 2, and record `--optimize` lever
-11. `<file>` is the workflow's exact basename from the inventory, `.yml` or
+appeared one second later. So: fetch first, then check — `origin/<default>` is only as fresh as the last
+fetch, and a workflow merged to the default branch an hour ago is
+dispatchable now:
+`git fetch -q origin <default> && git cat-file -e origin/<default>:.github/workflows/<file>`
+(or, without a fetch, `gh api "repos/{owner}/{repo}/contents/.github/workflows/<file>?ref=<default>" --jq .sha`).
+The file exists there and `workflow_dispatch` is in the failing workflow's
+`triggers` → `--dispatchable`; either condition fails → `--not-dispatchable`,
+plain rung 2, and record `--optimize` lever 11. `<file>` is the workflow's exact basename from the inventory, `.yml` or
 `.yaml`, used verbatim in both API paths. The POST executes; it does not
 decide.
 
@@ -88,10 +106,11 @@ git push -u origin "$(git branch --show-current)"
 SHA=$(git rev-parse HEAD)
 
 # dispatch only the failing workflow on this branch (204 = accepted, no body);
-# every dispatch_inputs entry marked required must be passed
+# every dispatch_inputs entry marked required must be passed; the filter input
+# carries the raw IDs one per line (filter-input.md) in dispatch-filtered mode
 gh api -X POST "repos/{owner}/{repo}/actions/workflows/<file>/dispatches" \
   -f ref="$(git branch --show-current)" \
-  -f "inputs[<name>]=<value>"                           # one per required input; drop the line when there are none
+  -f "inputs[filter]=$(printf '%s\n' "${IDS[@]}")"      # dispatch-filtered only; drop in dispatch mode
 
 # find the run it created: same workflow file, same event, same commit, created after T0
 # (the workflow-specific listing, so several dispatched workflows never hand back the wrong run id)
@@ -123,14 +142,19 @@ names it, not the fix commit. Under a rebase-merge repository, confirm the
 empty commit survives the merge; if it would not, the marker must not sit on
 the branch's final code commit.
 
-**The remote ladder mirrors the local one.** When the failing workflow
-declares a filter input (lever 11's sketch adds `inputs.filter`, read through
-an environment variable), rung 2d always passes the extracted IDs through it:
-the isolated tests run remotely first, the way rung 0 ran them locally, and
-their green earns the full run at rung 3. Feedback arrives after the isolated
-tests' duration, not the suite's. Without a filter input the dispatched run
-is the whole workflow, which is why the `--optimize` report and the
-shift-left offer both propose adding one to every slow workflow.
+**The remote ladder mirrors the local one.** Locally, a slow step runs its
+failing IDs first (rung 0) and then the whole step (rung 1). Remotely, a
+slow job runs its failing IDs first (`dispatch-filtered`, through the input
+`filter-input.md` renders) and then the whole run (rung 3). Feedback arrives
+after the isolated tests' duration, not the suite's, and the full run is
+still the gate. A fast step or a fast job skips the isolated run at its own
+level because the isolated run would save nothing: that is the heuristic,
+applied identically at both levels.
+
+**Proving the empty input (rung 3).** The first dispatch through a newly
+added input is followed by a rung-3 run where the input is unset. Fetch that
+run's test-step log and compare its test count with a profiled run's; the
+counts match or the fix is not done (`filter-input.md`, *Verifying*).
 
 ## Waiting on CI — the four laws
 
