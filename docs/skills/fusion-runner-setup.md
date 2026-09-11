@@ -133,38 +133,25 @@ the machine appropriate for arbitrary public pull requests. A custom runner
 label selects the machine; repository permissions and runner-group access
 control who can use it.
 
-The host probe has been exercised on macOS. Automated VM-control tests use a
-simulated `vmrun` executable. On 2026-09-08, the included compatibility workflow
-passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 runners.
-Its local Fusion job was skipped. Fusion `26H1u1` is installed on an Apple
-Silicon Mac. A VM has been created with 4 CPU cores, 8 GB memory, a 96 GB growable
-disk, UEFI Secure Boot, and NAT networking. On 2026-09-09, Windows 11 Pro was
-installed onto the virtual disk after the user approved its license and clean
-installation. Automatic restarts and first-run region and keyboard screens
-were observed. The network page initially showed no adapter. VMware Tools
-`13.1.5.0.25544008` was then installed through its **Typical** wizard. Windows
-showed a connected network, and the required restart was completed. Fusion
-subsequently reported Tools as installed and current; Windows first-run setup
-repeated its region and keyboard prompts, reached its online update check,
-accepted a device name, and displayed the personal/work-or-school setup choice.
-The user subsequently reported selecting personal use. The agent observed the
-three-stage update screen and later the Windows desktop; the intervening account,
-preference, and final update screens were not observed. Guest commands verified
-Windows 11 Pro 25H2, build `26200.9445`, an Arm64 processor, the guest computer
-name, and a running VMware Tools service. A guest TCP connection to GitHub port
-443 succeeded, and the prepared installer disc's contents were verified in
-Windows; its package verification and installation remain pending. The walkthrough records keyboard
-recovery, command verification, and the later loss of window access while the
-VM continued running.
-Windows installation is complete. On 2026-09-09, authenticated VMware Tools
-commands and file transfers worked through `vmrun` with hidden password prompts.
-A short interactive guest probe confirmed the account and profile but ran with
-a non-elevated token. A separate elevation attempt was canceled. These checks
-do not establish successful administrator installation or unattended SSH access.
-SSH setup, CI prerequisites, runner service registration, a local CI job, and
-baseline/archive restoration remain **unverified**.
-Hosted success does not validate the VM. The entrypoints preserve that
-distinction during actual setup.
+By 2026-09-11, the compatibility workload passed in the original Fusion VM
+and in two independently downloaded restores. All three jobs used fresh
+ephemeral runner services under a standard Windows account. The guest ran
+Windows 11 Pro 25H2, build `26200.9445`, with native Arm64 tools. SSH commands,
+SFTP transfers, signed-out reboot access before registration, archive integrity,
+clean restoration, and graceful shutdown also passed. The public smoke script
+matches the executed script byte for byte.
+
+The [validation record](../../plugins/fusion-runner/docs/validation.md) contains
+the curated environment and results, the five smoke checks, and their limits.
+The earlier 2026-09-08 hosted Windows 11 Arm64 and Windows Server x64 jobs passed
+separately; their local Fusion job was skipped before installation.
+
+Persistent runner restart after a post-registration reboot, locked-Mac
+unattended startup, Intel Fusion, and restoration on another Mac remain
+unverified. The public helpers have simulated vendor-response tests; the live
+private recovery does not validate every helper path or fresh-agent setup
+scenario. Another persistent installation must still pass the setup skill's
+own reboot and real-job checks.
 
 Implementation details and current primary sources:
 [installation](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md),

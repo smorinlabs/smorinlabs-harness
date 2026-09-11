@@ -1764,47 +1764,33 @@ software and Windows images are downloaded from their official sources.
 - [x] [P47-T01] Check installed/source skill names and adjacent triggers; select the public harness and a new plugin
 - [x] [P47-T02] Author setup and operation skills, references, and helper scripts
 - [x] [P47-T03] Add both install guides, README entries, metadata, and manual smoke workflow
-- [x] [P47-TS01] `just all`: manifest check passed and 69 tests passed, including 29 helper fixtures; Python lint and both skill validators passed; source/links/public-content checks passed; independent review findings fixed and rechecked
-- [x] [P47-TS03] Both skills load in fresh Claude Code and Codex verification sessions; four development placements resolve to this worktree and their placement records agree
-- [ ] [P47-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
-- [x] [P47-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
+- [x] [P47-TS01] Current package checks on 2026-09-11 after main integration: 245 Python tests passed in 45.05 seconds, including all 29 Fusion helper fixtures; generated manifests, Claude plugin schema, and static Codex manifest validation passed. The existing `_generated` warning remains; static Codex checks do not validate skill following. Link/privacy and independent content review are recorded with the PR validation evidence.
+- [x] [P47-TS03] Earlier Claude Code and Codex loader verification and four development placements were recorded. Static manifest verification alone is not fresh-session skill-following evidence; retain that limit in the current validation record.
+- [x] [P47-TS02] Live Fusion install, Windows boot, and three actual GitHub smoke jobs passed by 2026-09-11 on one Apple Silicon Mac. Each job used a fresh ephemeral service under a standard Windows account. See the [validation record](plugins/fusion-runner/docs/validation.md).
+- [x] [P47-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job was skipped in that earlier run and was subsequently validated under P47-TS02
 - [x] [P47-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
-- [~] [P47-T06] Record the real installation as it happens: walkthrough reaches the verified Windows desktop, Pro 25H2 build 26200.9445, Arm64 processor and running VMware Tools; intervening account/preference screens were not observed; guest CI provisioning continues
-- [x] [P47-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
-- [ ] [P47-T04] Merge and release the public plugin after review
+- [x] [P47-T06] Record observed installation steps and later successful guest access and CI provisioning. The walkthrough distinguishes observed screens from user reports; intervening account/preference screens were not observed.
+- [x] [P47-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the private pre-registration baseline was preserved unchanged and two independent downloaded restores passed fresh jobs
+- [x] [P47-T08] Preserve the six original Windows-on-Mac research files, scrub local account paths, and distinguish the September 8 Parallels proposal from the later Fusion choice and validation
+- [ ] [P47-T04] Merge PR #57 after current package checks and review
+- [ ] [P47-T09] Release the public plugin through the harness release process after separate release authorization
+- [ ] [P47-TS05] Extend runtime coverage when those deployment modes are needed: persistent service restart after registration, locked-Mac startup, Intel Fusion, and restore to another Mac. These are outside the completed ephemeral Arm64 validation.
 
-**Validation boundary**: Helper fixtures do not validate vendor installation,
-encrypted headless startup, Windows service behavior, or a GitHub Actions job.
-The host probe has run on macOS. Live runner setup is in progress: official
-Windows Arm64 ISO downloaded and verified against Microsoft's SHA-256; Fusion
-26H1u1 installed and opens. Installer integrity, app signature, and notarization
-checks passed. The Windows 11 Arm64 VM has 4 CPU cores, 8 GB memory, a 96 GB
-growable disk, UEFI Secure Boot, and NAT networking. The user answered the CD/DVD
-prompt with immediate Space. The agent used the official no-key option and
-selected Windows 11 Pro with explicit authorization. The user approved the
-displayed license and remaining installation; the agent accepted it, verified
-the intended empty 96 GB disk, and started installation. Automatic restarts led
-to first-run setup. United States, US keyboard, and Skip for a second layout
-were observed. The network page showed no adapter and disabled Next despite
-Fusion's connected NAT adapter. The matching Tools disc was mounted. Ctrl+Alt+Tab
-exposed its hidden wizard; Typical installation completed and Windows showed
-Network Connected. The required restart completed. Fusion reported Tools as
-installed and current. First-run setup reached its online update check, accepted
-a device name, and displayed the personal/work-or-school choice. The user
-subsequently reported selecting personal use, and the agent observed the
-three-stage Windows update screen. The desktop was observed later; intervening
-account, preference, and final update screens were not observed. Guest commands
-verified Windows 11 Pro 25H2, build 26200.9445, the chosen computer name, an Arm64
-processor and a running VMware Tools service. Windows installation is complete.
-The guest's TCP connection check to GitHub port 443 returned True. After a
-temporary loss of automation window access, the prepared installer ISO was
-attached and its contents verified inside Windows. Guest package hash/signature
-checks and installation have not yet completed. The VM power helper reported running.
-CI prerequisites, runner service registration, local smoke tests, reboot
-recovery, and reusable-baseline recovery remain unverified.
+**Validation boundary**: The [public validation record](plugins/fusion-runner/docs/validation.md)
+and its curated JSON summary describe the exact smoke workload and observed
+platform. Live SSH/SFTP access, signed-out pre-registration reboot access,
+three non-administrator jobs, two independent archive downloads/restores,
+marker preservation, and graceful shutdown passed. Private recovery scripts,
+credentials, VM files, account names, and job URLs are not part of this plugin.
+The public helper fixtures remain simulated vendor-response tests.
+
+**Related work**: P45's proposed Windows execution phase in `ci-fix` remains a
+separate integration task. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
+records the original direct-execution proposal and the owner's later choice of
+Fusion with a registered runner. Completing this plugin's live smoke validation
+does not implement that diagnostic workflow.
 
 Loader note: Claude reports the generator's existing `_generated` manifest
-field as an ignored unknown field. Both skill load checks passed. Additional
-provider-backed scenario simulations are unrun; independent content review and
-local helper fixtures are the behavioral evidence in this change.
-
+field as an ignored unknown field. Static Codex manifest validation does not
+establish runtime loading. Additional provider-backed skill-following scenarios
+remain unrun.

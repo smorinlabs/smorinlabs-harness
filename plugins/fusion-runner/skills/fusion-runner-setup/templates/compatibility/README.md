@@ -30,3 +30,9 @@ Visual Studio installation or .NET SDK.
 
 Read [reuse and compatibility](../../references/reuse-and-compatibility.md) for
 the validation boundary and the difference between restarting a VM and cloning it.
+
+The [recorded validation](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/fusion-runner/docs/validation.md) covers the hosted
+comparison and three local Arm64 jobs, including two independent restores.
+Those local jobs used ephemeral registrations. The same persistent runner's
+post-registration reboot check above remains a setup requirement, not a result
+established by those recovery cycles.

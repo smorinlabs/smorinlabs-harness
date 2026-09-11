@@ -26,6 +26,16 @@ user's chosen password or client-key authentication; client keys are not require
 by this skill. Microsoft documents [Windows OpenSSH](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse).
 Keep deployment-specific access automation and credential records private.
 
+A VMware Tools command can run with a filtered, non-administrator token even
+when the account belongs to Administrators. Verify elevation before installing
+privileged prerequisites; use an elevated Windows console when needed. An SSH
+service reported as running is not an access test: verify the intended account,
+command output and exit status, file-transfer hashes, and access after reboot.
+Use the native SSH terminal's hidden password prompt or an established private
+helper that checks terminal echo before supplying a saved password. If the
+available tool cannot do that, leave password entry to the user's terminal or
+Windows console; never substitute a password-bearing command argument.
+
 Run the following in **PowerShell inside Windows**, not in the macOS terminal:
 
 ```powershell

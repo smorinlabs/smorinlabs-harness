@@ -74,8 +74,12 @@ any remaining uncertainty instead of claiming the machine stopped.
 
 Automated tests exercise the helper with a simulated `vmrun` executable,
 including idempotence, an unrelated running VM, paths containing shell syntax,
-timeouts, malformed output, FIFO refusal, and shutdown guards. On 2026-09-09,
-real Fusion `26H1u1` guest commands and file transfers were verified through
-VMware Tools. That does not verify SSH, runner-service lifecycle, local CI, or
-baseline restoration; those remain unverified. See the [operations reference](../../plugins/fusion-runner/skills/fusion-runner-run/references/operations.md)
+timeouts, malformed output, FIFO refusal, and shutdown guards. By 2026-09-11,
+the original Fusion Windows 11 Arm64 VM and two independent downloaded restores
+passed real local CI jobs under fresh standard-account runner services. Native
+SSH/SFTP, signed-out reboot access before registration, and graceful shutdown
+also passed. These were one-job registrations; persistent runner restart after
+registration and unattended encrypted startup on a locked Mac remain untested.
+See the [validation evidence and limits](../../plugins/fusion-runner/docs/validation.md),
+[operations reference](../../plugins/fusion-runner/skills/fusion-runner-run/references/operations.md),
 and [helper interface](../../plugins/fusion-runner/docs/cli-interface.md).
