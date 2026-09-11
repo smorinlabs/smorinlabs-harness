@@ -48,8 +48,10 @@ decision; a bot repair does not trigger an unrelated CI audit.
 
 - Target PR: an explicit number/URL, else the current branch's PR
   (`gh pr view --json number,title,url,state,isDraft`). No PR → stop and say
-  so. Draft → report and stop unless told to mark it ready (`gh pr ready`);
-  bots rarely review drafts.
+  so. Invoking this skill on a draft PR explicitly approves it to proceed
+  toward production: mark it ready (`gh pr ready`) and continue without
+  asking for separate draft approval. The selected end mode, required
+  checks, and review-resolution gates still apply.
 - Preferences: read `.claude/pr-merge-flow.local.md` if present (keys: `mode`,
   `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
   `continue-until-clean`, `defer-target`). **Provenance gate first**: a
