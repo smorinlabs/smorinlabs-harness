@@ -41,6 +41,13 @@ confirms a VM power observation, not completion of a CI job. Windows 11 VM
 encryption can require an interactive Fusion unlock before headless operation
 works.
 
+Use an existing verified guest connection for diagnostics. Windows login names
+come from `whoami`, not the display name. Machine-specific access automation,
+credentials, and backup locations belong in the user's local or private records;
+this public skill does not depend on a private setup. Starting the working VM
+preserves its files. A saved baseline is a separate recovery artifact, and an
+ordinary start request does not authorize restoring it.
+
 Stopping a busy runner can interrupt its job. GitHub's idle status is a snapshot,
 so a noninterrupting stop requires a window in which new jobs cannot be assigned.
 Without that window or explicit authorization to interrupt a racing job, the
@@ -67,7 +74,8 @@ any remaining uncertainty instead of claiming the machine stopped.
 
 Automated tests exercise the helper with a simulated `vmrun` executable,
 including idempotence, an unrelated running VM, paths containing shell syntax,
-timeouts, malformed output, FIFO refusal, and shutdown guards. Real Fusion,
-Windows-service, and GitHub-runner execution remain to be verified in a live
-setup. See the [operations reference](../../plugins/fusion-runner/skills/fusion-runner-run/references/operations.md)
+timeouts, malformed output, FIFO refusal, and shutdown guards. On 2026-09-09,
+real Fusion `26H1u1` guest commands and file transfers were verified through
+VMware Tools. That does not verify SSH, runner-service lifecycle, local CI, or
+baseline restoration; those remain unverified. See the [operations reference](../../plugins/fusion-runner/skills/fusion-runner-run/references/operations.md)
 and [helper interface](../../plugins/fusion-runner/docs/cli-interface.md).

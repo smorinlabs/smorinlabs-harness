@@ -12,6 +12,20 @@ Check existing workflows and queued jobs that could match the planned runner. Th
 
 ## 2. Identify the guest and install its tools
 
+Before guest authentication, obtain the actual Windows account name using
+[`whoami`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/whoami)
+inside Windows. If the agent cannot run it, ask the user for the account name
+printed by that command. Do not guess from a display name, email, Mac login, or
+profile folder. Record its maintenance or CI role locally. Obtain a password
+through a protected prompt or the user's established private credential method;
+never copy its value into the public skill.
+
+VMware Tools can provide bootstrap and recovery commands. Native SSH can provide
+routine commands and SFTP transfers when that access is configured. Use the
+user's chosen password or client-key authentication; client keys are not required
+by this skill. Microsoft documents [Windows OpenSSH](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse).
+Keep deployment-specific access automation and credential records private.
+
 Run the following in **PowerShell inside Windows**, not in the macOS terminal:
 
 ```powershell

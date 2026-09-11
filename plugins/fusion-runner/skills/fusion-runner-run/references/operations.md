@@ -45,7 +45,7 @@ When start is requested, run in the **macOS terminal**:
 
 An already running VM can be inspected without creating a second one. Starting a suspended VM may resume its previous guest state; this is not a clean boot or reset. If Fusion requires an encrypted-VM unlock, open this exact VM in Fusion and use the user's interactive authentication or existing Keychain access. Do not put the encryption password in a command argument or change encryption to make the command succeed.
 
-Wait with a bounded deadline while checking actual boot progress. The configured service should start with Windows. A GUI sign-in should not be required. If it does not connect, inspect the exact recorded service through an available guest connection or the Fusion console. In **Windows PowerShell**, set `$ServiceName` to `runner.service_name` from the handoff, then run:
+Wait with a bounded deadline while checking actual boot progress. The configured service should start with Windows. A GUI sign-in should not be required. If it does not connect, inspect the exact recorded service through an existing verified guest connection or the Fusion console. Obtain the actual Windows login from `whoami` if the identity is missing; do not guess it or silently install another access method. In **Windows PowerShell**, set `$ServiceName` to `runner.service_name` from the handoff, then run:
 
 ```powershell
 $RunnerService = Get-Service | Where-Object Name -eq $ServiceName

@@ -67,6 +67,13 @@ organizational sign-in and management. Personal setup is suitable for a
 standalone runner VM; the runner's dedicated Windows service account is
 configured separately. Protected sign-in and new credential entry stay with
 the user.
+Before guest authentication, the skill obtains the actual Windows account name
+from `whoami`, asking the user for that output when necessary. It does not guess
+the login from a display name. Tools-based guest access or an existing SSH
+connection can support automation; password or client-key authentication follows
+the user's choice. Actual credentials and deployment-specific automation stay
+in local or private records, and the public skill has no private-repository
+dependency.
 During setup, the agent saves each completed stage and pending prompt in a local
 progress record so a later session can resume from verified state.
 The plugin distributes instructions and helpers, with official download links.
@@ -149,8 +156,13 @@ name, and a running VMware Tools service. A guest TCP connection to GitHub port
 Windows; its package verification and installation remain pending. The walkthrough records keyboard
 recovery, command verification, and the later loss of window access while the
 VM continued running.
-Windows installation is complete. CI prerequisites, runner service registration,
-a local CI job, and baseline restoration remain **unverified**.
+Windows installation is complete. On 2026-09-09, authenticated VMware Tools
+commands and file transfers worked through `vmrun` with hidden password prompts.
+A short interactive guest probe confirmed the account and profile but ran with
+a non-elevated token. A separate elevation attempt was canceled. These checks
+do not establish successful administrator installation or unattended SSH access.
+SSH setup, CI prerequisites, runner service registration, a local CI job, and
+baseline/archive restoration remain **unverified**.
 Hosted success does not validate the VM. The entrypoints preserve that
 distinction during actual setup.
 

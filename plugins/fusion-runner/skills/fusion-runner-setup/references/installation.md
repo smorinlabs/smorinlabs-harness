@@ -509,3 +509,9 @@ Complete Windows's first-run prompts, apply updates, install VMware Tools, and r
 Locate the actual `.vmx` configuration file inside the VM bundle using Fusion's location information or Finder **Show Package Contents**. Record the absolute path. The `.vmwarevm` bundle itself is not the `.vmx` argument consumed by the helper.
 
 Confirm the Windows desktop boots, networking works, VMware Tools is installed, and the guest architecture agrees with the selected media. Continue with [runner provisioning](runner-provisioning.md). A successful Fusion launch alone does not establish any of these guest checks.
+
+Before authenticating guest commands, obtain the actual account name from
+`whoami` inside Windows, asking the user for its output when necessary. The
+desktop display name is not a verified login name. Keep actual identities and
+credential records local or private. The provisioning reference briefly covers
+guest-access choices; these do not require repeating the completed installation.
