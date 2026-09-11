@@ -52,11 +52,11 @@ Repo & release-readiness skills.
 
 | Skill | Does | Details |
 |---|---|---|
-| `ci-audit` | Audits GitHub Actions runs, lints workflows with actionlint, checks Action version pins, and verifies pre-commit hook parity — fixes with `--fix`. | [docs/skills/ci-audit.md](docs/skills/ci-audit.md) |
+| `ci-fix` | Repairs CI and hooks with pre/post-edit evidence, failing and affected tests, and a measured complete-bundle shortcut of approximately 30 seconds. Uses compatible timing history and existing Linux runners; verifies intended test selection and applicable required CI. Broad audits and prevention work remain optional; `--audit` reports and `--optimize` proposes evidence-based changes. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
 | `version-check` | Reports the project version across manifest, git tag, main branch, and (with `--full`) the registry, flagging mismatches. | [docs/skills/version-check.md](docs/skills/version-check.md) |
 | `readme-sync` | Audits README.md against the codebase (install steps, CLI usage, code examples, structure, links) and applies fixes with `--fix`. | [docs/skills/readme-sync.md](docs/skills/readme-sync.md) |
 | `manual-test-guide` | Generates a copy-pasteable manual testing guide, prioritizing recently changed areas. | [docs/skills/manual-test-guide.md](docs/skills/manual-test-guide.md) |
-| `pr-merge-flow` | Drives an open PR to merge: waits (bounded) for AI reviewer bots, triages every review thread — verify, fix or refute with a reply — cycles until clean (4 cycles then a check-in, optionally continuing under a 10-minute wall clock), then merges per mode (`--auto`/`--confirm`/`--ready`, `--one-pass` for a single no-cycle pass that never merges, opt-in `--deep`) and surveys post-merge cleanup (branches, worktrees, a guarded ff-only sync of the local default branch — confirm-gated, never automatic). Quota-safe throughout, with a gated Chrome fallback for an exhausted GraphQL budget: REST supplies the thread list and IDs, the browser anchors to each thread's own permalink to read state and click Resolve, and every thread is tracked in a ledger re-merged each cycle so late-arriving reviewer comments still block the merge (under `--one-pass` a final refresh reports them as open instead — they are not triaged, and nothing merges). | [docs/skills/pr-merge-flow.md](docs/skills/pr-merge-flow.md) |
+| `pr-merge-flow` | Drives PR review and merge readiness with bounded waits, locally validated bot findings, post-edit verification shared with `ci-fix`, and evidence replies. Refreshes reviews after repair pushes, reconciles reopened threads without duplicate replies, honors existing authorization, and binds an authorized merge to the reviewed head. Preserves auto/confirm/ready modes, one-pass without merging, cycle limits, and explicit cleanup decisions. | [docs/skills/pr-merge-flow.md](docs/skills/pr-merge-flow.md) |
 
 ### factor-harness
 
@@ -156,7 +156,8 @@ Reader-centered technical communication — review, rewrite, and compose.
 
 ### clear-decision-communication
 
-Decision requests from an agent to a human during a run, as inline ASCII text.
+Decision requests from an agent to a human during a run, as inline text with
+ASCII diagram syntax and exact verbatim content.
 A self-contained synthesis of a decision-communication framework with the
 clarity rules of `clear-technical-communication` and the text forms of
 `show-me`; it names no other skill and produces no HTML, so a downstream tool
@@ -164,7 +165,7 @@ can render its output.
 
 | Skill | Does | Details |
 |---|---|---|
-| `clear-decision-communication` | Gates whether a new decision is needed at all (facts are looked up, authorization persists, the question must be sharp, the agent never answers for the human), sizes the ask by seven diagnostic axes into three tiers so preparation and depth follow the highest single axis, picks the representation from the change type (same-input table, worked example with boundary case, event sequence, coded ASCII system diagram shown baseline-first with the change as ghosts), and renders a six-question brief in a fixed order: the decision and recommendation first, context, comparison, consequences with verified-versus-unverified evidence, and the exact action approval authorizes. Questions are numbered and options lettered (`Q1.A`) so a reply is one word; the recommended option is always A and says when the runner-up wins; every option names its consequence; a silence default is always the most reversible option. Plain text is canonical, the dialog rendering is derived from it, and the brief ends its turn before any dialog opens; conditions, skips, redirects, and ask-backs are handled, and significant decisions get a record keyed by the question ID. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
+| `clear-decision-communication` | Checks whether a decision is needed, prepares evidence, and sizes a self-contained brief using seven axes and three tiers. Shows the change through a focused example or ASCII diagram while preserving exact names and quotations. Keeps option meanings stable, supersedes revised questions, supports neutral choices, and names the action each answer authorizes. Silence and skip grant no authority. Adapts to the available question tool, preserves material caveats beyond length targets, and includes behavioral evaluation cases. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
 
 ### design-by-elements
 

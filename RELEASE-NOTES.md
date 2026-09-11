@@ -1,5 +1,122 @@
 # Release Notes
 
+## Unreleased
+
+### Changed
+
+- `repo-hygiene` 0.13.0 shares repair validation between `ci-fix` and
+  `pr-merge-flow`: verify bot claims, verify fixes and intended test selection,
+  prefer failing/affected checks, and apply the approximately 30-second shortcut
+  to a measured complete local bundle. Full steps require an affected-behavior
+  reason; unrelated sweeps, broad audits and repeated commit approvals are removed
+  from the default repair path.
+- CI inventory preserves guards, environments, tag filters and effective step
+  context. Version-2 timing records require `--context` for command/scope/environment
+  compatibility; old samples are retained but not reused as current measurements.
+  Linux runner discovery/ranking remains available.
+- Required CI is reconciled against expected checks and evaluated revisions.
+  Filtered diagnostics remain supplemental; skip markers and empty trigger
+  commits no longer stand in for full coverage. PR repair pushes restart review
+  collection, reopened threads receive a new disposition when needed, and merges
+  are bound to the reviewed head. Optimization advice preserves supported coverage.
+
+## v0.25.0 — 2026-09-10
+
+### Added
+
+- **`repo-hygiene` 0.12.0 — `ci-fix` reproduces Linux jobs in whatever is
+  already on the machine.** A new `scripts/detect_runners.py` surveys podman,
+  docker, lima, act and the devcontainer CLI and writes
+  `~/.config/ci-fix/runners.toml`. The survey is read-only — it starts no VM,
+  pulls no image, installs nothing — and ranks by what the machine already
+  has: installed beats absent, since starting a stopped runner is one command
+  while installing is a download; an image or VM already on disk beats one
+  that must be fetched, so a stopped lima holding a VM outranks a running but
+  empty podman; and only then does the order podman → lima → docker decide,
+  with podman leading as the easiest (rootless, licence-free, docker's CLI)
+  and lima the right answer when a job needs a full VM. act sits above them
+  but is a driver, ready only when a runtime is. A machine with nothing
+  installed is told the easiest thing to get, not the best, and
+  a hand-written `pinned` value overrides the ranking and survives
+  `--refresh`. Architecturally this adds no rung: a Linux runner changes
+  *where* rungs 0 and 1 execute, so every floor and cap from 0.11.0 holds,
+  and `CI is the lab` now means no local path exists at all. `ladder_plan.py`
+  gains `--local-env container`, which doubles a step's CI-proxy estimate for
+  its first run in a container and defers to the ledger afterwards.
+  `references/local-runners.md` carries the podman/docker, act and lima
+  recipes, the toolchain-to-image map and the architecture rule. Every start,
+  pull and install is one AskUserQuestion, and a decline is recorded.
+
+## v0.24.0 — 2026-09-10
+
+### Added
+
+- **`repo-hygiene` 0.11.0 — `ci-fix` isolates only where it pays, with a
+  floor per level.** A new `scripts/ladder_plan.py` computes the entry rung
+  and the remote mode from the duration profile. Locally (isolating costs
+  seconds): a failed step expected over `--isolate-local` (30s) runs its
+  failing IDs first, a shorter one runs whole; the whole step (rung 1)
+  always runs when expected within a 10-minute cap and is asked about once
+  above it. In CI (isolating costs a marked commit, a dispatch, and a
+  second cycle): a plain push is both rung 2 and rung 3 unless CI is the
+  only place the failure can be seen and the job is expected over
+  `--isolate-remote` (5m); then the failing workflow is dispatched alone
+  with only the failing tests through a `workflow_dispatch` filter input,
+  with a one-time offer to add the input (`references/filter-input.md`,
+  newline-split through `env:`, never `${{ }}` in `run:`, empty input runs
+  the whole suite). Whole-workflow dispatch without a filter is gone from
+  the fix path (runner minutes, not time). Local durations are
+  recorded by `scripts/local_ledger.py` in a machine-level ledger so later
+  fixes decide from local numbers. The profile reports runs per workflow and
+  tops up starved workflows from their own listing; two workflow files with
+  one `name:` are keyed by path and an unattributable run is reported as an
+  ambiguous join. `extract_failures.py` reads vitest and cargo-nextest logs
+  and recovers a pytest ID with an unmatched `[`. `--update-versions` and the
+  pin audit name a replacement tag only after `git/refs/tags/<tag>` returns
+  it (the `setup-uv@v10` lesson).
+
+## v0.23.0 — 2026-09-09
+
+### Added
+
+- **`repo-hygiene` 0.10.0 — `ci-audit` is now `ci-fix`, and it fixes CI.**
+  Every run measures first: the last successful runs are profiled through the
+  REST jobs endpoint into per-job medians, queue wait, slowest step, a
+  slow/fast/unmeasured class against `--slow-threshold` (default 2m), and a
+  data-derived CI wait bound. Fix mode triages each red job, extracts the
+  failing test IDs from the job log (pytest, jest, cargo, go; shell-safe
+  quoted), reproduces before editing, and verifies up a ladder: the isolated
+  tests locally, the failed step locally, a local sweep of every other fast
+  job, then a push that dispatches only the failing workflow through
+  `workflow_dispatch` with the fix commit carrying `[skip ci]` (the isolated
+  tests again when the workflow declares a filter input), then every run on
+  the pushed commit. Done means every job green on the last pushed commit.
+  Then it offers once to add the failed check as a lefthook or pre-commit
+  hook, staged by its measured duration. `--audit` reports only; `--optimize`
+  dispatches a read-only sub-agent that returns ranked, evidence-backed speed
+  changes without applying them. Three stdlib scripts (`ci_profile.py`,
+  `extract_failures.py`, `workflow_inventory.py`), 55 tests with real
+  fixtures, an end-to-end run on a scratch PR. `docs/skills/ci-audit.md` is a
+  redirect stub. This repo's CI workflow now declares `workflow_dispatch`.
+  (PROJECTS P42, P45 PR-1; PRs #49, #55)
+
+### Changed
+
+- **`clear-decision-communication` 0.2.0.** Addresses review CDC-01 through
+  CDC-12: silence and skip preserve existing authorization; changed options
+  receive a new question ID; decision-relevant checks finish before approval;
+  missing human-supplied facts have an information-request path; delivery adapts
+  to the available tool; resolved uncertainty can lower the final tier;
+  length targets preserve material caveats; verbatim Unicode stays exact;
+  neutral choices carry no recommendation marker; retry waiting is separated
+  from total runtime; the pre-send check precedes delivery; reusable behavioral
+  scenarios accompany a runner that separates process results from semantic
+  grading. The original design record remains historical context. (PROJECTS P43)
+- **`repo-hygiene` `pr-merge-flow`.** Routes every failing check-run (build,
+  test, lint, coverage, workflow config) to `ci-fix`, not only build and test
+  failures; reviewer-unavailable commit statuses stay excluded.
+- **`session` 0.11.2.** `session-recap`'s red-CI prompt names `ci-fix`.
+
 ## v0.22.0 — 2026-09-08
 
 ### Added

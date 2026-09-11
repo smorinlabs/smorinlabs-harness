@@ -1495,6 +1495,61 @@ The owner skipped changing the shared numeric character-limit rules on 2026-09-0
 
 ---
 
+## [~] Project P42: ci-audit → ci-fix — measured, targeted, escalating CI fixes + speed analysis (v0.23.0)
+**Goal**: Rename `ci-audit` to `ci-fix` and make it fix CI, not just report on it, in the least CI time possible. Every run measures job durations first (REST jobs endpoint, last 5 completed runs, per-job median/queue/slowest step against a `--slow-threshold`, default 2m). Fix mode triages each red job by class, extracts failing test IDs from the job log, and verifies up a ladder — targeted tests locally, full step locally, only the failed job rerun in CI, then full CI — entering each rung only after the one below is green, with CI waits bounded by the measured duration. `--audit` measures and reports without changes. `--optimize` is a dedicated mode: a read-only sub-agent analyzes each slow job and returns ranked, evidence-backed changes that would make it faster; nothing is applied. Motivation (2026-09-07): jobs that run 10–30 minutes made every fix iteration cost a full suite run to learn whether one test still failed.
+
+**Decisions**: rename over a new skill (the name should carry the primary verb; audit is phase 1 of every run, so `--audit` is an early exit, not a separate flow); optimize runs only on request — the audit always measures and points to `--optimize` when any job is slow or unmeasured; `--optimize` proposes only, applying is a later explicit request; unmeasured jobs are treated as slow.
+
+**Out of Scope**
+- Applying speed changes from `--optimize` (a later explicit request, shown as a diff).
+- Merging or review-thread work (`pr-merge-flow` hands failures here and resumes).
+- The `smorin-harness` neighbors that name `ci-audit` (`repo-please-setup` description and see-also; `_routing.md` naming example) — a second PR in that repo after this one merges. The `release-publishing-setup` description in the unmerged `feat/release-publishing-setup` worktree stays stale until that branch merges.
+
+### Tests & Tasks
+- [x] [P42-TS01] `tests/test_ci_profile.py` (13): real run fixture `tests/fixtures/ci_fix/jobs_fast_run.json` (run 34088065449) profiles 4 jobs `fast` at 2m and reclassifies at `--threshold 10s`; median across runs, in-progress jobs excluded from samples, `unmeasured` class, queue wait separate, `wait_bound_s = ceil(1.5 × (median + queue))` with a 60s floor, slowest step from step timestamps, skipped (0s) and cancelled (truncated) jobs excluded from samples, duration spellings (`2m`, `90s`, `1h30m`, bare seconds), usage errors exit 2
+- [x] [P42-TS02] `tests/test_extract_failures.py` (11): real pytest log (3 FAILED + 1 ERROR incl. a parametrized ID and a class method) → node IDs without reasons; jest `●` blocks deduplicated; cargo `---- X stdout ----` once each; go leaf subtests with packages; ANSI and GitHub timestamps stripped; stdin; explicit `--format`; no failures → exit 1 with an empty list; usage errors exit 2
+- [x] [P42-T01] `scripts/ci_profile.py` — stdlib, no network; table or `--json`; slowest first, unmeasured on top
+- [x] [P42-T02] `scripts/extract_failures.py` — pytest/jest/cargo/go, auto-detect by match count
+- [x] [P42-T03] `git mv` `ci-audit` → `ci-fix`; new SKILL.md: Iron Law (measure before you run; never verify wider than the failure requires), three modes, triage table, four-rung ladder, three-attempt bound, definition of done, Red Flags; `allowed-tools` Bash, Read, Grep, Glob, Edit, Write, AskUserQuestion, Task; description 460 chars, no `refactor` vocabulary (factor-* collision)
+- [x] [P42-T04] `references/duration-profile.md`, `targeted-repro.md`, `fix-loop.md`, `optimize.md` (sub-agent brief + 10-lever checklist with derived savings)
+- [x] [P42-T05] Neighbors: `pr-merge-flow` (description + 6 body mentions) and `session-recap` (prompt line) → `ci-fix`; `repo-hygiene` 0.8.1 → 0.9.0 (description + `fix` keyword), `session` 0.11.1 → 0.11.2; `just gen` + `gen-check` clean
+- [x] [P42-T06] Docs: `docs/skills/ci-fix.md` rendered, `docs/skills/ci-audit.md` left as a redirect stub, README row replaced
+- [x] [P42-TS03] `just all` green (64); `skill-quality` on `ci-fix`, `pr-merge-flow`, `session-recap` at the worktree path — static verify pass on claude-code and codex for all three; the `skill-reviewer` pass returned 7 contradictions and 12 unrunnable commands, all applied (rung 2 = push and watch the target job, done = rung 3, available-rung wording instead of skips, attempt = edit-then-red, successful-run sampling, `$SCRATCH` defined, `<skill-dir>` script paths, REST rerun endpoints, zsh-safe globs, worktree-safe hooks path, block-form `concurrency`, Jest space-joined names, reproduce-before-edit, `--update-versions` pinned to fix mode, `Write` dropped from `allowed-tools`, Red Flags trimmed to 6); trigger re-scan: no installed description claims any of the seven new phrases; docs and README placeholder gate clean
+- [x] [P42-TS04] Deep verify (`--deep`) pass on claude-code and codex, no findings. Headless E2E (`claude -p --plugin-dir <worktree>/plugins/repo-hygiene`, prompt `/ci-fix --audit --slow-threshold 10s`): the unpushed branch had no runs, the fallback to repo-wide successful runs fired and was stated; 10 runs sampled; `pytest` (12s), `plugin-validate` (12s), and GitHub's dynamic `copilot-pull-request-reviewer` (2m02s) classed slow; the `--optimize` pointer printed; actionlint, pins, lefthook, and parity all reported; worktree unchanged (`git status` identical before and after). Finding for a follow-up: jobs from GitHub-managed dynamic workflows (run `path` under `dynamic/`) are profiled like repo jobs and should be annotated as outside the repo's control. The `--optimize` E2E was not run (the sub-agent path is exercised only on request; deferred to first real use)
+- [x] [P42-T10] Done 2026-09-08: action pins updated by PR #59 (merged `98a586c`): `actions/checkout@v7`, `astral-sh/setup-uv@v10.0.1` (no `v10` floating tag exists — T09 (f)), `actions/setup-node@v7`. First real `ci-fix` use, on its own repo: the pin fix commit carried `[skip ci]` on a body line and started no pull_request run, the dispatched CI run went green, then the empty `ci: full run` commit went green on every workflow. Released as v0.23.0 (PR #58, tag on merge commit `03d8bc9`)
+- [x] [P42-T07] Done 2026-09-08 after PR #49 merged as `16ffdb7` via pr-merge-flow (3 review waves + a deep review: 18 threads, 17 fixed, 1 deferred to T09): `git pull --ff-only` in the main checkout; `ci-audit` placements uninstalled and `ci-fix` dev-placed on claude-code and codex, both resolve and the ledger agrees; `feat/ci-fix` worktree removed and branch deleted
+- [x] [P42-T09] Done 2026-09-09 in P45 PR-1b (`feat/ci-fix-isolation-heuristics`): (a) fallback split with a test, (b) vitest and cargo-nextest detectors with real-shape fixtures, (c) `runs_per_workflow` plus the top-up recipe, (d) path keying with `ambiguous_joins`, (e) fetch before the default-branch file check, (f) the tag-existence rule in the flag text and the pin audit. Original text — deferred from the PR #49 deep review (cycle-4 check-in, 2026-09-08, owner chose continue-until-clean; 12 of 15 findings fixed in the branch): (a) `extract_failures.py` — an unmatched `[` inside a pytest param ID keeps the parser at depth > 0, so the summary form retains the ` - reason` suffix; fall back to the first `] - ` split (first, not last: a reason such as `assert x[0] - y == 1` contains the delimiter); (b) log shapes for vitest (`× suite > name`, `FAIL file > suite > name`) and cargo-nextest (`FAIL [ 0.012s] crate tests::name`) are not recognized though targeted-repro.md names their commands — add the patterns with fixtures, until then the table says IDs are read by hand; (c) the 10-run branch-wide sample starves infrequent workflows into `unmeasured` — sample per workflow and apply the ≥3 rule per workflow. (d) from PR #55 wave 4: two workflow files sharing the same `name:` and a same-named job collapse into one profile row because the key is (`workflow_name`, job); key by workflow path through the `--runs` listing and mark an ambiguous join `unmeasured`. (e) from PR #55 wave 5: the default-branch file check reads `origin/<default>`, which may be stale; `git fetch -q origin <default>` before it, or query `contents/.github/workflows/<file>?ref=<default>` via the API. (f) from PR #59 (2026-09-08): `--update-versions` moved `astral-sh/setup-uv@v5` to `@v10`, which does not resolve — upstream publishes no floating major for that release; the rule becomes: move a tag pin to the floating major only when the upstream publishes one, else to the exact release tag, verified with `gh api repos/<owner>/<repo>/git/refs/tags/<tag>` before writing. Payload files for the 15 deep-review findings are in this session's scratchpad and were never posted (the harness blocked the subagent's comment POSTs)
+- [x] [P42-T08] Done 2026-09-08: smorin-harness PR #64 merged as `0c054b1` — `repo-please-setup` description and see-also, its docs page, and the `_routing.md` naming example now say `ci-fix`; repo-secrets 0.7.3, skill-fleet 0.17.2; both mains fast-forwarded; `skill-system-doctor` deployment verification clean (placements resolve on both tools, parity, scrub, docs, static load of `ci-fix` pass). Two staleness advisories left for their own repos: the smorin-harness `docs/doctor-baseline.md` entry about `ci-audit --fix` commit language is superseded, and the unmerged `release-publishing-setup` worktree still names `ci-audit`
+- [ ] Regression Test Status
+
+### Deliverable
+```bash
+$ python3 plugins/repo-hygiene/skills/ci-fix/scripts/ci_profile.py --threshold 10s tests/fixtures/ci_fix/jobs_fast_run.json
+CI duration profile — 1 run(s) sampled, threshold 10s (slow = median above it)
+
+class      job                                median      max   queue   n  slowest step
+slow       plugin-validate                       13s      13s      3s   1  Run actions/setup-node@v4 (4s)
+slow       pytest                                12s      12s      2s   1  Run uv run pytest (5s)
+fast       static-checks                          7s       7s      2s   1  Set up job (1s)
+fast       gen-check                              6s       6s      2s   1  Run astral-sh/setup-uv@v5 (2s)
+
+2 job(s) at or above threshold or unmeasured: plugin-validate, pytest
+$ python3 plugins/repo-hygiene/skills/ci-fix/scripts/extract_failures.py tests/fixtures/ci_fix/log_pytest.txt
+tests/test_sample.py::test_rollup_total
+tests/test_sample.py::TestAuth::test_login
+tests/test_sample.py::test_param[2]
+tests/test_sample.py::test_error_in_setup
+```
+
+### Automated Verification
+- `just all` — gen-check clean, 64 tests pass (40 + 24 new)
+- No `ci-audit` reference remains in `plugins/`, `README.md`, or `docs/` except the redirect stub
+
+### Manual Verification
+- Fresh session: `/ci-fix --audit --slow-threshold 10s` in this repo prints the profile with two slow jobs and the `--optimize` pointer, and changes nothing (`git status` clean)
+
+---
+
 ## [x] Project P43: clear-decision-communication — decision requests from an agent to a human during a run (shipped in v0.22.0)
 **Goal**: New single-skill plugin. When an agent mid-run needs a human decision, it composes and delivers the shortest self-contained ask the reader can answer in a word: a gate that refuses to ask for facts or for anything already authorized, seven diagnostic axes sized into three tiers (T1 Confirm, T2 Compact brief, T3 Full brief) where the highest single axis sets the tier and only elevated axes expand, a representation chosen from the change type (same-input table, worked example, event sequence, coded ASCII system diagram), a six-question brief rendered decision-first with inspectable evidence, numbered questions and lettered options (`Q1.A`) with the recommended option always A and a runner-up condition, a silence default that is always the most reversible option, canonical plain text with a derived dialog rendering behind the two-turn gate, reply handling for conditions, skips, redirects, and ask-backs, and a decision record keyed by the question ID. Basis: the owner's decision-communication framework (2026-09-07), synthesized with the clarity rules of `clear-technical-communication` and the text forms of `show-me`, plus accepted additions from `grilling`, `wayfinder`, `system-atlas`, and NN/g guidance (design record: `docs/superpowers/specs/2026-09-07-clear-decision-communication-design.md`). Self-contained by instruction: names no other skill, produces ASCII text only, never HTML.
 
@@ -1539,12 +1594,154 @@ An agent about to ask for a merge sends: `Q1. Merge PR #142, the keyboard-focus 
 
 ---
 
+### P43 review update: clear-decision-communication 0.2.0 (2026-09-08)
+
+The owner approved CDC-01 through CDC-12 after reviewing version 0.1.2.
+The original shipped tasks and evidence above remain historical; the following
+tasks track this update. The addendum in
+`docs/superpowers/specs/2026-09-07-clear-decision-communication-design.md`
+records each correction and its rationale.
+
+- [x] [P43-T10] Correct authorization, skip, stable reply IDs, unavailable facts,
+  host adaptation, final sizing, length targets, Unicode literals, neutrality,
+  and workflow order; correct race and retry examples (CDC-01 through CDC-11).
+- [x] [P43-T11] Refresh the skill page, README row, design addendum, release notes,
+  and plugin version 0.1.2 -> 0.2.0; preserve the historical source framework.
+- [x] [P43-T12] Add and exercise isolated behavioral scenarios on Claude Code
+  and Codex, keeping process status separate from semantic grading (CDC-12).
+  Evidence: all 13 scenarios have a response passing their written criteria on
+  each tool; three timeout attempts remain inconclusive. Original-source
+  controls expose three failures. Source versions and observed model-output
+  limitations are recorded in the validation document below.
+- [x] [P43-TS05] Run the update's tests, generated-manifest check, static and deep
+  loading checks, and independent content review against the worktree.
+  Evidence: 61 tests passed after PR review; manifests are current; both tools
+  loaded the reply-handler revision;
+  the independent review found no remaining material issues. The existing
+  generated-metadata warning is documented in
+  `docs/validation/clear-decision-communication-0.2.0.md`.
+- [x] [P43-T13] Address PR #56 findings: stop signaling reaped process groups,
+  reject Windows-specific fixture paths, qualify prepare-mode artifacts, and
+  make the Findable gates and tier rules consistent for neutral choices.
+  Eight added regression cases failed before their fixes; 61 tests now pass.
+  The targeted neutral-choice scenario passes on Codex; source snapshots and
+  the original Claude results remain recorded in the validation document.
+
+---
+
 ## [?] Project P44: question-walkthrough delegates per-question framing to clear-decision-communication
 **Idea**: Keep `question-walkthrough` as the walk (intake, pile confirmation, sequencing, re-planning, recording) and hand the context and communication of each individual question to `clear-decision-communication`: one ID space (the pile's numbers become the skill's Q numbers), the two-turn gate stated in one place, and the walk's pre-read rendered as the skill's brief. Same round: align the owner's CLAUDE.md question-dialog guard (smorin-bootstrap) to the two-turn gate, and add an always-on digest of the new skill beside the existing clear-technical-communication digest.
 
 ---
 
-## [~] Project P45: Fusion Windows runner setup and operation skills
+## [~] Project P45: ci-fix local-first verification — sweep, targeted CI, shift left, isolation heuristic, Linux runner (v0.23.0 → next)
+**Goal**: Make `ci-fix` resolve CI faster by doing more before any push and less in CI per push. Four additions to the verification order (today: failing test locally → failing step locally → push watching one job → full run): a **local sweep** that runs every other fast job's commands locally after the failing step passes; a **targeted CI run** that pushes with `[skip ci]` and starts only the failing workflow through `workflow_dispatch`, with one full run at the end; a **shift-left offer** that, after every job is green, asks to add the failed check as a pre-commit hook; and a **Linux runner step** that runs the failing job locally via `act`, Docker, Podman, or Lima, chosen from a per-machine config written by a detection script. Origin: the P42 architecture critique (2026-09-07) and the owner's ranking on 2026-09-08.
+
+**Decision Q1 (2026-09-08): A** — two PRs. PR-1 (repo-hygiene 0.10.0): sweep, targeted CI run, shift left. PR-2 (repo-hygiene 0.11.0): Linux runner step with runner detection. Chosen because the first three need no new machine infrastructure; B (one PR) would have gated them on `act`/Lima verification.
+
+**Decision Q1b (2026-09-08): A** — the mirror-gap work ships as its own PR-1b (repo-hygiene 0.11.0) before PR-2 (now 0.12.0): (A) a remote filter input so a dispatched run carries only the failing tests, (B) a local duration ledger so local decisions use local measurements, (C) the local full-step run becomes an unconditional gate, mirroring the remote full run. Chosen over folding into PR-2 because all three edit the same ladder table, which PR-2 would otherwise rewrite twice.
+
+**Decision Q2 (2026-09-08): A** — the Windows phase runs through the owner's VMware Fusion self-hosted runner (`fusion-runner-setup` / `fusion-runner-run`), which PR-2's runner detection treats as a `runs-on` target rather than "not reproducible locally". Condition from the owner: the runner is still being installed, so PR-3 is not scoped until it is online.
+
+**Isolation heuristic (owner, 2026-09-08; floors settled by Decision Q3, 2026-09-09).** Isolate only where the measurement says it pays, because isolating has a cost of its own and that cost differs by level. Locally an isolated run is one command with 5–20 s of overhead, so the break-even is about twice that: a failed step expected over `--isolate-local` (30s) runs its failing IDs first (rung 0), a shorter one runs whole. In CI an isolated run still pays checkout and setup (1–3 min) and needs a marked commit plus a second commit and cycle, so with one expected CI round it is a loss; it pays only when a second round is likely, i.e. when **CI is the lab** (not reproducible locally, the long local step declined, or CI red again after a local green) and the job is expected over `--isolate-remote` (5m). Every other case is a plain push that is both rung 2 and rung 3. The whole local step (rung 1) is worth one avoided CI cycle, never correctness (rung 3 guarantees that), so it always runs when expected within a 10-minute cap and is asked about once above it; a "no" makes CI the lab. Whole-workflow dispatch without a filter is dropped from the fix path (runner minutes, not time; `--optimize` lever 11). The full run in CI (rung 3) is unconditional.
+
+**Decision Q3 (2026-09-09): A** — the seven-row proposal above (local floor 30s, rung-1 cap 10m with one question, remote floor 5m gated on CI-is-the-lab, no unfiltered dispatch, filter offer under the remote rule, rung 3 unconditional, `--slow-threshold` unchanged for the profile, sweep, and optimize pointer). Alternatives declined: B (isolate in CI whenever the job is over 5m, verified locally or not: a 2–4 min loss per fix for a runner-minute saving), C (the draft's single 2-minute threshold at both levels).
+
+**Design defaults** (override by saying so): `[skip ci]` fix commits and an empty `ci: full run` commit are acceptable on feature branches, never force-pushed, never on main; the runner config is machine-level at `~/.config/ci-fix/runners.toml`, repo-level override out of scope; the hook offer always asks; PyYAML runs via `uv run --with pyyaml`; the local duration ledger is machine-level at `${XDG_CACHE_HOME:-~/.cache}/ci-fix/<owner>--<repo>.json`, never committed.
+
+**Out of Scope**
+- Applying speed-analysis items automatically; a repo-level runner config; macOS or Windows runner emulation.
+- PR #49 (P42) itself. This branch is stacked on `feat/ci-fix` and merges into main after it.
+
+### Tests & Tasks
+PR-1 — sweep, targeted CI run, shift left
+- [x] [P45-TS01] (11 tests) `tests/test_workflow_inventory.py`: from workflow YAML fixtures, list jobs with `runs-on`, matrix, `container`, `services`, each step's `run:`, and the workflow triggers including `workflow_dispatch` inputs
+- [x] [P45-TS02] (3 tests) `tests/test_ci_profile.py`: `--runs <listing.json>` marks jobs from runs whose `path` starts with `dynamic/` as `external` and sorts them last (the Copilot-reviewer finding from P42-TS04)
+- [x] [P45-TS03] Done 2026-09-08 on scratch PR #54 (closed, branch deleted). Judged from the remote, not the session's report: fix commit `7585fc8` carried `[skip ci]` on a body line and started **no** pull_request run — its only run was the dispatched CI run (`event: workflow_dispatch`), green; the empty `ci: full run` commit `f507b45` ran both workflows green. The session profiled 10 runs with the repo-wide fallback stated, listed the Copilot reviewer as external and last, reproduced the red at rung 0 (`uv run pytest -x tests/test_scratch_rollup.py::test_rollup_total`), fixed the assertion rather than deleting the file, ran rung 1 (82 passed), swept gen-check, plugin-validate, and static-checks with two skips and their reasons, used 0 of 3 attempts, declined the hook offer on the standing instruction while showing the rendered `pre-commit` lefthook block, and printed no `--optimize` pointer because the only slow job is external. Defect found and fixed: `gh api …/jobs/<id>/logs` refuses a body with ANSI codes unless `--allow-escape-sequences` is passed; every log fetch in the skill now passes it. Deep verify: pass on claude-code and codex, no findings. Original plan text — fix mode on a deliberately broken test in a scratch branch — reproduce red locally, fix, local step green, sweep runs the other jobs' commands, `[skip ci]` push, dispatch of CI only, target job watched, empty trigger commit, full run green, hook offer shown and declined; proves `[skip ci]` + `workflow_dispatch` semantics
+- [x] [P45-T01] `scripts/workflow_inventory.py` (jobs, steps, runs-on, container, services, triggers, dispatch inputs; PyYAML via `uv run --with pyyaml`)
+- [x] [P45-T02] Local sweep in SKILL.md step 6 + `references/targeted-repro.md`: after the failing step is green, run every other job's step commands that map locally and are `fast`; slow ones only when the user accepts the stated time; bound = sum of their medians; always before the first push
+- [x] [P45-T03] Targeted CI run in SKILL.md step 6 + `references/fix-loop.md`: when the failing workflow has `workflow_dispatch`: commit with `[skip ci]`, push, `POST repos/{owner}/{repo}/actions/workflows/<file>/dispatches` with `ref=<branch>` (+ inputs when declared), find the run by `event=workflow_dispatch` + `head_sha` + `created_at` after dispatch (bounded poll), watch the target job; full run = `git commit --allow-empty -m "ci: full run"` + push. Without the trigger: push and watch as today
+- [x] [P45-T04] Shift left: SKILL.md step 6b + `references/shift-left.md`: after every job is green, for a code/test/lint failure whose check has no hook (step-3 parity), AskUserQuestion to add it — lefthook or pre-commit rendered from the failing step's command on staged files; `chore(hooks):` commit; only on yes. Speed-analysis lever 11: a slow workflow without `workflow_dispatch` gets a sketch adding it plus an optional filter input
+- [x] [P45-T05] `ci_profile.py --runs`; the fetch recipe saves the runs listing
+- [x] [P45-T06] Add `workflow_dispatch:` to this repo's `.github/workflows/ci.yml` (needed for TS03; lever 11 applied here). Verified 2026-09-08: `POST …/workflows/ci.yml/dispatches` with `ref=feat/ci-fix-local-first` returned 204 while main lacked the trigger, and run 34268822156 (`event: workflow_dispatch`, same head SHA) was created one second later and finished green — GitHub evaluates the branch's copy of the workflow, so the E2E is not circular. `[skip ci]` semantics verified from GitHub docs: skips push and pull_request only; dispatched runs unaffected
+- [x] [P45-T07] Docs page, README row, repo-hygiene 0.10.0, `just gen` done; `skill-quality`: static verify pass on claude-code and codex, placeholder/personal-path/private-tooling gates clean, `allowed-tools` gains `Write` (6b may create `lefthook.yml`); `skill-reviewer` round 2 found 5 critical seams and 9 major gaps, all applied — the skip marker is decided from the inventory before the commit (a `[skip ci]` push with no dispatch stranded nothing to watch), the marker sits on a body line (release-please changelogs), 2d applies only when more than one repo-owned workflow would start, the hook commit from 6b carries rung 3 (done stays the last pushed commit), the sweep runs before every push including for the workflow and not-reproducible classes, neighbor reds have an attempt-counting rule, a toolchain pre-check and output capture precede each swept job, `{push_files}` on pre-push and no file lists to test runners, `pre-commit install --hook-type`, lever 11 in block YAML, zero-successful-runs and never-green-job rules; inventory gained multi-line `setup`, merged `env`, `defaults_run`, `if`, `continue-on-error`, `shell`, and named-matrix display names (3 more tests, 81 total). closeout answered (deep verify, E2E, release after merge: all yes); PR #55 opened, retargeted to main when #49 merged, first review wave (7 threads) fixed and resolved
+PR-1b — isolation heuristic, remote filter input, local duration ledger, unconditional local gate (Decision Q1b)
+- [x] [P45-TS06] `tests/test_ladder_plan.py` (25 tests): the truth table — for each combination of failed-step expected time against the local floor, IDs extracted, CI-is-the-lab, target-job expected time against the remote floor, dispatchable, and filter input declared, the plan names the entry rung (0 or 1), the rung-1 gate (`run` / `ask` at the 10m cap / `unavailable`), the remote mode (`push`, `dispatch-filtered`, `offer-filter`), the marker, and a reason; unmeasured counts as slow; a local-ledger median overrides the CI step median; a 90-second step is isolated, a 3-minute job is not; duration syntax shared with `ci_profile.py`
+- [x] [P45-TS07] (9 tests) `tests/test_local_ledger.py`: `record` keeps the last 10 successful samples per (workflow, job, step) under `$XDG_CACHE_HOME`; `median` reports them; failed samples are not recorded; a missing ledger yields no median so the CI proxy applies; the file never lives inside the repo
+- [x] [P45-TS08] Done 2026-09-10 on scratch PR #60 (closed, branch deleted), judged from the remote by a script, not the sessions' reports; the skill loaded from the worktree via `--plugin-dir`. Run 1 (locally reproducible failure, default floors): plan said step 9s (CI proxy) under the 30s floor → rung 1 only, no rung 0; rung 1 reproduced red then green in 25s and was recorded in the ledger; verified locally → plain push; fix commit `a474943` carried no marker and had exactly its `pull_request` runs, all green — rung 2 and rung 3 were one run. Run 2 (`assert sys.platform != "linux"`, `--isolate-remote 5s`): plan 1 said rung 1 (ledger 25s); the unchanged reproduction ran green, so the job was reclassified and CI became the lab; plan 2 (ledger 37s, over the floor) ran rung 0 then rung 1; remote `offer-filter` accepted → `ci.yml` gained `workflow_dispatch.inputs.filter` exactly as `filter-input.md` renders it; fix commit `baf856c` with `[skip ci]` on a body line started no `pull_request` run and carried one dispatched run that collected 1 item, green; the empty `ci: full run` commit `c299fce` ran both workflows green and its pytest step collected 119, equal to the red run's 119 — the empty input did not narrow the suite. The remote floor is decisive: with the default 5m the same job (16s) would have been a plain push. Deep (session-backed) load verification not selected at closeout; static load verification passes on both tools
+- [x] [P45-T12] `scripts/ladder_plan.py` — the heuristic as code: profile JSON, ledger, `--isolate-local` (30s), `--isolate-remote` (5m), the 10m cap, failed job and step, `--ci-is-lab`, and flags → entry rung, rung-1 gate, remote mode, marker, reason (`--json`)
+- [x] [P45-T13] `scripts/local_ledger.py` — `record` / `median`; `targeted-repro.md` times every rung 0, 1, and 1s command and records the successes; on a machine's first fix the CI step median is the stated proxy
+- [x] [P45-T14] SKILL.md: Iron Law reworded to the narrowest run the measurement says is worth it, with the two floors; `--isolate-local` / `--isolate-remote` flags; rung 0 only over the local floor or unmeasured; rung 1 always within the 10m cap, one question above it; rung 2 keyed on CI-is-the-lab and the remote floor; three Red Flags rows (isolating a short step, skipping rung 1 under the cap, dispatching after a local green); `fix-loop.md` 2d section rewritten around the four facts with the cost arithmetic; `targeted-repro.md` timing capture, the cap question, and the background-run recipe
+- [x] [P45-T15] Filter-input offer (mirror gap A): when the target job is slow and its workflow declares `workflow_dispatch` without a filter input, one AskUserQuestion to add one, rendered from `optimize.md` lever 11 (the single rendering: env-var threading, `eval set --` on `failures_quoted`, an empty input runs the whole suite); on yes the workflow edit rides the fix commit; on no, the dispatch runs the whole job and the report records the declined offer
+- [x] [P45-T16] P42-T09 (a)–(f) in this branch (see P42), with vitest and cargo-nextest log fixtures for (b)
+- [~] [P45-T17] Docs page, README row, RELEASE-NOTES Unreleased, repo-hygiene 0.11.0, `just gen`, static verify at the worktree path (pass, both tools), closeout (deep verify skipped by owner choice), PR via pr-merge-flow
+PR-2 — Linux runner step (in progress 2026-09-10)
+
+**Design decision (2026-09-10): a Linux runner is an execution environment for rungs 0 and 1, not a new rung.** The ladder's rungs are defined by *what* runs (the failing IDs, the whole step, the neighbouring jobs, CI); a runner only changes *where* it runs. So nothing is inserted between rung 1s and rung 2. Instead one definition widens: a step is locally runnable when it runs on this host **or** its job is `runs-on: ubuntu-*` and `runners.toml` names an available Linux runner. Every downstream rule from PR-1b holds unchanged — rung 0 above the local floor, rung 1 always within the cap, `CI is the lab` only when there is no local path at all. The alternative (a new rung `1L` between 1s and 2) was rejected because it would force the two floors and the cap to be re-derived for a third position. The one number that does change is the local estimate: a container run pays image pull and start-up, so on the first run of a step in a container the CI proxy is doubled (`--local-env container` in `ladder_plan.py`); once the ledger has a real sample the multiplier is moot.
+- [x] [P45-TS04] (25 tests) `tests/test_detect_runners.py`: shim binaries on an isolated PATH (set, never prepended, so a missing shim cannot fall through to a real binary) cover docker/podman/limactl/act/devcontainer; the rendered `runners.toml` is parsed back with `tomllib` and asserted on host os/arch, per-runner readiness, the ranking, the recommendation, and the arch note; `--refresh` re-detects while a fresh file is reused; a bare machine renders an empty preference and an install recommendation; a hanging probe is bounded, not a hang; a pin survives `--refresh`; and one test asserts detection starts nothing. Two test bugs the suite caught on itself: a `sleep` shim needs an absolute path because PATH holds only shims, and a second render needs its own path because a fresh file is reused by design
+- [~] [P45-TS05] Docker path done 2026-09-10 against this repo, no machine mutation: rung 0 (one test) and rung 1 (the whole pytest step) both ran in `ghcr.io/astral-sh/uv:python3.12-bookworm`; 30s for the first run including the image pull, 38s warm for the full step against a 16s CI job median, and ~6x native under `--platform linux/amd64`. Three findings folded into the reference: the `-slim` image fails this repo's step with `Git executable not found` so the map now names non-slim images; containers run as root, so a permission test skips and a green with a skip is not CI's green; and the doubled guess (18s) sat under the 30s floor while the measured 38s crosses it, so the ledger genuinely changes the next plan. Lima path done 2026-09-10 on the owner's instruction to use a **new** instance and leave existing ones alone: a scratch `ci-fix-e2e` VM was created from `template://ubuntu` (367s to download and boot), the repo went in as a 700K `git archive` tarball, uv was installed in the guest, and the whole pytest step ran green inside Ubuntu 26.04 aarch64 in 27s — faster than the same step in a container (38s), because the VM runs a native-arch kernel. The VM was stopped and deleted; all four of the owner's VMs were verified intact and in their original states before and after. The 367s creation drove a new rule: a VM that does not yet exist is bounded at 10 minutes, not the 5-minute floor, and the report says the wait was creation rather than the step. act remains shim-tested only — the owner chose Lima-only, so `brew install act` was never run
+- [x] [P45-T08] `scripts/detect_runners.py` → `~/.config/ci-fix/runners.toml`. Owner's rules (2026-09-10, two rounds): survey what is here and recommend using it, because that is easy, practical and recordable; recommend an install only when nothing is present, and then the easiest thing rather than the best. Then: rank by what is **installed**, not by what is running, since starting a stopped runner is one command while installing is a download; break ties on whether a runner already holds an image or VM on disk, because the other one downloads first; and order the rest podman → lima → docker, podman being the easiest and lima the right answer when a job needs a full VM. The sharp edge is deliberate and tested: a stopped lima holding a VM outranks a running but empty podman. act sits above the runtimes but is a driver, ready only when a runtime is. On the owner's own machine the rules pick lima, which is what they predicted. Read-only: bounded probes, no start, no pull, no install. Carries `recommend_start` (installed but stopped), `recommend_install` (nothing present: podman, with the Linux-host variant saying no VM is needed), `pinned` (the owner's own choice, honoured over the ranking and preserved across `--refresh`), `pinned_unavailable`, and `host.arch_note`. `limactl list --json` is JSONL, one object per line, not an array. TOML is written by hand so the script runs on any python3
+- [x] [P45-T09] `references/local-runners.md` (survey, per-failure runner choice, the three recipes, the toolchain-to-image map, bounds, and the no-local-path case) plus SKILL.md: step 1 runs the survey, the triage row becomes *Not reproducible on this host* and defers to it, `CI is the lab` now means no local path exists at all, rungs 0 and 1 name their environment, and `ladder_plan.py --local-env container` doubles an untested step's CI proxy. macOS and Windows jobs stay CI-only unless the host matches
+- [x] [P45-T10] Generalised past act: whenever the survey has no ready runner it offers the single `recommend_start` or `recommend_install` command once per machine via AskUserQuestion, quoting its reason and cost; a decline is recorded and the job becomes CI-only. Starting a VM, pulling an image and installing a tool are all mutations and none happens unasked
+- [ ] [P45-T11] Docs, PROJECTS, repo-hygiene 0.12.0, gen, skill-quality, closeout, PR
+- [ ] Regression Test Status
+
+### Automated Verification
+- `just all` green after each PR; new tests listed above pass with real fixtures
+- No `{{`, `TBD`, `<TODO`, personal paths, or private-tooling references in shipped files
+
+### Manual Verification
+- Fresh session on a repo with a slow dispatchable workflow: one fix iteration runs only that workflow in CI, and the full run happens once at the end
+
+
+---
+
+## [x] Project P46: Evidence-based PR repairs and targeted CI validation (repo-hygiene 0.13.0)
+
+**Goal**: Make `pr-merge-flow` use `ci-fix`'s shared validation discipline for
+bot findings, then preserve current-code CI and review evidence through merge
+preflight. The owner approved the eight-step fix plan after a read-only audit,
+local revalidation, adversarial review and an inline consequence/risk walkthrough.
+
+**Scope decision**: This update supersedes P45's mandatory fast-job sweep,
+unconditional local full-step gate, skip-marker/empty-commit strategy and repeated
+permission gates where current-session authority already exists. It preserves
+P45's Linux runner survey, ranking, pins, runner recipes and existing selector
+and workflow identity fixes. It does not authorize a release or live installation.
+
+- [x] [P46-T01] Shared repair validation contract: confirmed/refuted/unresolved,
+  pre/post-edit evidence, intended test selection and compact handoff records.
+- [x] [P46-T02] Conservative inventory: raw guards and tolerance expressions,
+  tags, effective shell/environment/directory and validation eligibility hints.
+- [x] [P46-T03] Compatible timing identity: workflow path, job/cell and hashed
+  command/scope/environment context; legacy samples retained but not reused.
+- [x] [P46-T04] Target failing and affected checks. A measured complete bundle
+  at or below approximately 30 seconds may run directly; a full step otherwise
+  needs an affected-behavior reason. Duration estimates alone do not widen scope.
+- [x] [P46-T05] Preserve ordinary required CI; distinguish supplemental filtered
+  diagnostics and reconcile expected coverage with complete current-code evidence.
+- [x] [P46-T06] Revalidate after editing, restart reviews after a CI repair push,
+  honor authoritative reopens, deduplicate replies by disposition round and bind
+  authorized merges to the reviewed head without resetting mode/cycle/owner gates.
+- [x] [P46-T07] Refresh optimization guidance, both skill pages, README, release
+  notes and generated plugin manifests for version 0.13.0.
+- [x] [P46-T08] Finish focused regression and instruction-scenario review,
+  adversarial implementation review and the four-layer skill quality gate.
+
+### Verification status
+
+The six relevant helper test modules pass: 153 tests in 16.80 seconds. Ruff
+passes on the edited Python files. Generated manifests are current. Claude and
+Codex static verification has no errors; Claude ignores generated metadata,
+and Codex static verification covers the manifest rather than skill execution.
+The implementation review returned five findings; all were locally confirmed
+and corrected. Command probes and instruction traces cover the final corrections.
+The complete evidence, reviewer provenance and limitations are recorded in
+`docs/validation/pr-ci-validation-0.13.0.md`.
+
+---
+
+## [~] Project P47: Fusion Windows runner setup and operation skills
 
 **Goal**: Publish a reusable `fusion-runner` plugin with `fusion-runner-setup`
 for installing Fusion, Windows, workflow tools, and a GitHub runner service, and
@@ -1564,17 +1761,17 @@ software and Windows images are downloaded from their official sources.
 
 ### Tests & Tasks
 
-- [x] [P45-T01] Check installed/source skill names and adjacent triggers; select the public harness and a new plugin
-- [x] [P45-T02] Author setup and operation skills, references, and helper scripts
-- [x] [P45-T03] Add both install guides, README entries, metadata, and manual smoke workflow
-- [x] [P45-TS01] `just all`: manifest check passed and 69 tests passed, including 29 helper fixtures; Python lint and both skill validators passed; source/links/public-content checks passed; independent review findings fixed and rechecked
-- [x] [P45-TS03] Both skills load in fresh Claude Code and Codex verification sessions; four development placements resolve to this worktree and their placement records agree
-- [ ] [P45-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
-- [x] [P45-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
-- [x] [P45-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
-- [~] [P45-T06] Record the real installation as it happens: walkthrough reaches the verified Windows desktop, Pro 25H2 build 26200.9445, Arm64 processor and running VMware Tools; intervening account/preference screens were not observed; guest CI provisioning continues
-- [x] [P45-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
-- [ ] [P45-T04] Merge and release the public plugin after review
+- [x] [P47-T01] Check installed/source skill names and adjacent triggers; select the public harness and a new plugin
+- [x] [P47-T02] Author setup and operation skills, references, and helper scripts
+- [x] [P47-T03] Add both install guides, README entries, metadata, and manual smoke workflow
+- [x] [P47-TS01] `just all`: manifest check passed and 69 tests passed, including 29 helper fixtures; Python lint and both skill validators passed; source/links/public-content checks passed; independent review findings fixed and rechecked
+- [x] [P47-TS03] Both skills load in fresh Claude Code and Codex verification sessions; four development placements resolve to this worktree and their placement records agree
+- [ ] [P47-TS02] Live Fusion install, Windows boot, service registration, and manual GitHub smoke job on a chosen Mac/repository
+- [x] [P47-TS04] Identical compatibility smoke passed on real GitHub-hosted Windows 11 Arm64 and Windows Server x64 on 2026-09-08; local Fusion job skipped pending installation
+- [x] [P47-T05] Document Broadcom account creation, sign-in, reopening the Fusion URL, release selection, terms/profile prompts, and the 26H1u1 Mac installer filename
+- [~] [P47-T06] Record the real installation as it happens: walkthrough reaches the verified Windows desktop, Pro 25H2 build 26200.9445, Arm64 processor and running VMware Tools; intervening account/preference screens were not observed; guest CI provisioning continues
+- [x] [P47-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the baseline itself is not yet created or tested
+- [ ] [P47-T04] Merge and release the public plugin after review
 
 **Validation boundary**: Helper fixtures do not validate vendor installation,
 encrypted headless startup, Windows service behavior, or a GitHub Actions job.
@@ -1610,3 +1807,4 @@ Loader note: Claude reports the generator's existing `_generated` manifest
 field as an ignored unknown field. Both skill load checks passed. Additional
 provider-backed scenario simulations are unrun; independent content review and
 local helper fixtures are the behavioral evidence in this change.
+

@@ -11,11 +11,12 @@ when someone asks what the rules in `references/clarity.md` rest on.
 Use its four governing outcomes at the level of the whole brief:
 
 1. **Relevant**: readers get what they need. For a brief: the decision, the
-   recommendation, the consequences, the evidence, and the next action, and
+   supported recommendation or explicit neutrality, the consequences, the
+   evidence, and the next action, and
    nothing about drafting, queuing, or agent coordination.
 2. **Findable**: readers can easily find what they need. For a brief: the
-   question line is first, the recommendation is second, every section carries
-   its label, and the options are a list with IDs.
+   question line is first, the recommendation or explicit neutrality is second,
+   every section carries its label, and the options are a list with IDs.
 3. **Understandable**: readers can easily understand what they find. For a
    brief: every identifier is described at first use, every claim carries its
    status, every artifact is framed, and the reader's own vocabulary is used.
@@ -75,7 +76,8 @@ STE is useful but not sufficient. It does not by itself determine:
 - whether the options exhaust the feasible set;
 - whether a table, sequence, or diagram beats prose for this comparison;
 - whether verified, inferred, assumed, and not verified are told apart;
-- whether the recommendation says when it would flip;
+- whether a supported recommendation says when it would flip, or neutrality
+  names the preference needed to choose;
 - whether the reader knows the exact action approval authorizes.
 
 Therefore the gate, the axes, and the six questions decide what the brief
@@ -93,8 +95,9 @@ Do not send if any answer is no:
 - Are causes, contrasts, constraints, and consequences explicit?
 - Can the reader tell verified facts from inferences, assumptions, and
   unknowns, and proposals from decisions already taken?
-- Does every option name its consequence, and does the recommendation say
-  why it wins and when it would not?
+- Does every option name its consequence? Does a supported recommendation say
+  why it wins and when it would not, or does neutrality explain what preference
+  would settle the choice without marking an option recommended?
 - Does the reader know how to reply?
 
 ### Strong review signals
@@ -108,16 +111,18 @@ Inspect closely when any are present:
 - essential information inside parentheses;
 - two or more semicolons or dashes carrying logical relationships;
 - an approximate quantity without a basis, a date, or an implication;
-- an option without an effect, or a recommendation without a runner-up
-  condition;
+- an option without an effect, or a supported recommendation without a
+  runner-up condition when there is a meaningful alternative;
 - phrases such as "only you can answer", "obviously", "should be fine",
   "probably", or "N/A" without supporting criteria;
 - an embedded code block, table, or diagram with no lead-in stating why it is
   present or no reading stating what to take from it;
 - a quantity stated with no unit or no reference point that makes it
   interpretable;
-- a brief past its tier's cap.
+- a brief past its tier's length target.
 
-Signals are not automatic defects. Verify the actual reader burden and
+Signals are not automatic defects or hard limits. Keep every material
+consequence, uncertainty, and approval boundary visible even when the length
+target is exceeded. Verify the actual reader burden and
 preserve technical precision: never remove a name, an example, or a quoted
 artifact in the name of simplification.

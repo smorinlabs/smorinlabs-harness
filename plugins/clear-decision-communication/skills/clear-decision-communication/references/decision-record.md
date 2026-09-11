@@ -1,7 +1,7 @@
 # Decision record
 
 What to retain after a significant decision, and where. Read this at workflow
-step 7. The record is plain text. This skill writes the text and names where it
+step 8. The record is plain text. This skill writes the text and names where it
 should live; the run persists it there.
 
 ## When a record is due
@@ -44,7 +44,8 @@ Revisit when: a material new finding or a changed constraint; state the
   finding explicitly when reopening.
 ```
 
-Fields, in order: the decision as a sentence; status with followed or overrode;
+Fields, in order: the decision as a sentence; status with followed, overrode,
+or no recommendation for a neutral choice;
 problem; context; chosen option; rationale; alternatives and why they lost;
 approval scope and its limits; conditions attached by the reader; evidence with
 its status; when to revisit.
@@ -58,8 +59,12 @@ its status; when to revisit.
 - The accepted decision is the baseline for later work. Reconsider it only
   when a material new finding or a changed constraint warrants it, and say what
   that finding is.
-- After recording, sweep everything that persists for the rejected option's
-  name and for claims the decision made stale. The reader reads everything.
+- Never reuse an ID for changed options, a changed recommendation, or a changed
+  approval scope. Mark the old question superseded by the new question ID;
+  retain its original options and evidence as history. A reply to the old ID
+  does not authorize either action.
+- After recording, correct persistent claims the decision made stale. Keep
+  rejected alternatives and superseded records labeled as historical context.
 - Refer to the decision by its sentence, with the ID attached, never by the
   bare ID: "the worker-process decision (Q3)".
 

@@ -1,0 +1,48 @@
+2026-09-08T10:00:01.1234567Z ##[group]Run cargo nextest run --workspace
+2026-09-08T10:00:01.1234568Z [36;1mcargo nextest run --workspace[0m
+2026-09-08T10:00:01.1234569Z ##[endgroup]
+2026-09-08T10:00:02.0000000Z    Compiling acme v0.1.0 (/home/runner/work/acme/acme)
+2026-09-08T10:00:06.0000000Z     Finished `test` profile [unoptimized + debuginfo] target(s) in 4.10s
+2026-09-08T10:00:06.0000000Z     Starting 5 tests across 2 binaries
+2026-09-08T10:00:06.0000000Z         PASS [   0.004s] acme tests::math::test_add
+2026-09-08T10:00:06.0000000Z         PASS [   0.003s] acme tests::math::test_mul
+2026-09-08T10:00:06.0000000Z         FAIL [   0.012s] acme tests::math::test_div
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z --- STDOUT:              acme tests::math::test_div ---
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z running 1 test
+2026-09-08T10:00:06.0000000Z test tests::math::test_div ... FAILED
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z failures:
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z failures:
+2026-09-08T10:00:06.0000000Z     tests::math::test_div
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z --- STDERR:              acme tests::math::test_div ---
+2026-09-08T10:00:06.0000000Z thread 'tests::math::test_div' panicked at src/lib.rs:20:9:
+2026-09-08T10:00:06.0000000Z attempt to divide by zero
+2026-09-08T10:00:06.0000000Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z         PASS [   0.003s] acme::bin/cli cli::test_help
+2026-09-08T10:00:06.0000000Z         FAIL [   0.021s] acme::bin/cli cli::test_version
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z --- STDOUT:              acme::bin/cli cli::test_version ---
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z running 1 test
+2026-09-08T10:00:06.0000000Z test cli::test_version ... FAILED
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z --- STDERR:              acme::bin/cli cli::test_version ---
+2026-09-08T10:00:06.0000000Z thread 'cli::test_version' panicked at src/bin/cli.rs:44:5:
+2026-09-08T10:00:06.0000000Z assertion `left == right` failed
+2026-09-08T10:00:06.0000000Z   left: "0.1.0"
+2026-09-08T10:00:06.0000000Z  right: "0.2.0"
+2026-09-08T10:00:06.0000000Z 
+2026-09-08T10:00:06.0000000Z ------------
+2026-09-08T10:00:06.0000000Z      Summary [   0.050s] 5 tests run: 3 passed, 2 failed, 0 skipped
+2026-09-08T10:00:06.0000000Z         FAIL [   0.012s] acme tests::math::test_div
+2026-09-08T10:00:06.0000000Z         FAIL [   0.021s] acme::bin/cli cli::test_version
+2026-09-08T10:00:06.0000000Z error: test run failed
+2026-09-08T10:00:06.0000000Z ##[error]Process completed with exit code 100.

@@ -1,6 +1,6 @@
 ---
 name: clear-decision-communication
-description: "Compose and deliver a decision request from an agent to a human during a run, as inline ASCII text: decide whether a new decision is needed at all, size the ask by seven axes into three tiers, show the change in the smallest form that exposes it, and hand back numbered questions with lettered options, a recommendation that says when it would flip, evidence with its limits visible, and the exact action approval authorizes. Use whenever an agent is about to ask the user to choose, approve, merge, deploy, or accept a deviation, before raising any question dialog, or when the user says \"ask me properly\", \"frame this decision\", \"what do you need me to decide\", \"turn this into a decision\". Not for reviewing someone else's draft, walking a whole pile of questions, or producing pages, HTML, or rendered diagrams."
+description: "Compose and deliver a decision request from an agent to a human during a run, as inline text: decide whether a new decision is needed at all, size the ask by seven axes into three tiers, show the change in the smallest form that exposes it, and hand back numbered questions with lettered options, a recommendation when evidence supports one, evidence with its limits visible, and the exact action approval authorizes. Use whenever an agent is about to ask the user to choose, approve, merge, deploy, or accept a deviation, before opening a decision dialog, or when the user says \"ask me properly\", \"frame this decision\", \"what do you need me to decide\", \"turn this into a decision\". Not for reviewing someone else's draft, walking a whole pile of questions, or producing pages, HTML, or rendered diagrams."
 arguments: [target]
 argument-hint: "[target]"
 allowed-tools: Read, Grep, Glob, Bash, Agent, AskUserQuestion, WebFetch, WebSearch
@@ -10,14 +10,18 @@ allowed-tools: Read, Grep, Glob, Bash, Agent, AskUserQuestion, WebFetch, WebSear
 
 Turn the moment an agent needs a human decision into the shortest self-contained
 ask the reader can answer in a word: one question per decision, lettered options
-that name their consequences, a recommendation that says when it would flip,
-evidence with its limits visible, and the exact action approval authorizes. The
-output is inline text in ASCII characters. Never HTML, never a rendered diagram;
-a downstream tool may render this text.
+that name their consequences, a recommendation when supported and what would
+change it, evidence with its limits visible, and the exact action approval
+authorizes. Use ASCII for authored prose and diagram syntax. Preserve verbatim
+paths, identifiers, input data, quotations, and captured output exactly,
+including non-ASCII characters. Never produce an HTML artifact or a rendered
+diagram; a downstream tool may render this text.
 
 > **NEVER ASK WHAT YOU CAN RESOLVE, AND NEVER SEND AN ASK THE READER MUST
-> RECONSTRUCT.** Facts are read, tested, fetched, or delegated; only judgment,
-> preference, policy, and authority reach the human. What does reach them carries
+> RECONSTRUCT.** Investigate discoverable facts before asking; request a required
+> fact only when authorized investigation cannot obtain it and the user can
+> supply it. Escalate unresolved judgment, preference, policy, and authority.
+> What reaches the human carries
 > its own context: the reader never reopens a plan, scrolls back, or simulates code
 > to understand the question.
 >
@@ -42,12 +46,15 @@ the output is the brief for that target.
      plan, a standing preference, an earlier answer. Authorization persists;
      never ask twice. When a standing preference changed the sizing below, name
      it in the ask.
-   - The answer is not a fact. A fact is read from the code, run, fetched, or
-     handed to a subagent; it never reaches the human as a question. Delegate
-     the lookup and keep working on whatever does not depend on it.
+   - The answer is a decision, not a discoverable fact. Read, test, fetch, or
+     delegate factual investigation within existing authorization. If a required
+     fact remains unavailable and the user can supply it, request that exact
+     information with its purpose in ordinary text or a supported information
+     dialog. Do not add decision tiers, options, or approval language to that
+     information request. Continue independent authorized work while waiting.
    - What resolves it is the human: their judgment, preference, policy, or
      authority. If a rough prototype would resolve it and building one is
-     already authorized or trivially cheap, build it and ask the human to react
+     already authorized, build it and ask the human to react
      to it; otherwise offer the prototype as an option. If a task must happen
      first, do it or hand it over, then ask.
    - The question is sharp: you can state it and its options in one sentence.
@@ -56,10 +63,12 @@ the output is the brief for that target.
      tradeoff whose criterion the human owns, or a blocker you cannot clear.
 
    When a check fails: a question that is not yet sharp becomes an ask for
-   what would sharpen it, stated with what is already known; a blocker you
-   cannot clear stops the run with a plain statement of the blocker; every
-   other failure means proceed under existing authorization, report the outcome
-   in ordinary form, and do not use this skill. Every avoided ask makes the
+   what would sharpen it, stated with what is already known. An unavailable
+   fact follows the information-request rule above. A blocker pauses the work
+   that depends on it, with the missing input or action stated plainly. Continue
+   other work only under existing authorization, report in ordinary form, and
+   do not use the decision brief for it. A failed gate creates no authorization.
+   Every avoided ask makes the
    remaining ones land. Routine confirmations teach the reader to click through,
    and then the one that matters gets clicked through too.
 
@@ -74,20 +83,20 @@ the output is the brief for that target.
    a timing, ordering, or state interaction, such as a race, a retry policy, a
    cache, or a consistency rule, is always high on domain, however few lines
    it touches; deleting data that cannot be recovered is always high on
-   reversibility. The tier ratchets up only, and preparation stops at the
-   tier.
+   reversibility. Initial sizing is provisional; preparation addresses the
+   issues that set it.
 
    | ID | Tier | Fires when | Prepare | The initial view holds | Length signal |
    |---|---|---|---|---|---|
-   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | the question line, the recommendation, two or three options with consequences; two or three sentences in all | about 80 words |
-   | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
-   | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
+   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | the question line, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
+   | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation or explicit neutrality, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
+   | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
 
-   The length signals are review signals: past them, re-run the removal test
-   on every sentence and keep every clause that could change the answer. One
-   and a half times the signal is the cap: a brief past its cap is not sent
-   until the readings are one sentence, each consequence and each evidence
-   label one clause, and everything else is behind Details. Say the sizing
+   The length signals are review targets, not caps. Past them, re-run the
+   removal test, shorten repeated explanation, and move supporting detail
+   behind Details. Keep every material consequence, uncertainty, definition,
+   and approval boundary in the initial view, even when it exceeds the target.
+   Say the final sizing
    out loud: the question line carries a tag naming the
    tier and only the axes that set it, without levels, such as
    `[T2: departure, uncertainty]`, so the reader can dispute the sizing itself.
@@ -98,14 +107,23 @@ the output is the brief for that target.
    and never mutate beyond what the run already authorized. Run the verification
    the decision needs and note the revision it ran on. Prepare a concrete,
    reviewable result: a patch with its checks for an implementation approval,
-   concrete alternatives with evidence for a direction. When essential
-   information cannot be obtained, write "I cannot verify X without Y", say why
-   it matters, and offer as the options: investigate at a stated cost, decide
-   conditionally, or defer to a smaller commitment.
+   concrete alternatives with evidence for a direction. If the user can supply
+   an unavailable fact, use step 1's information request. Otherwise, when
+   essential information cannot be obtained, write "I cannot verify X without
+   Y", say why it matters, and compare the feasible commitments: investigate
+   at a stated cost, decide conditionally, or defer to a smaller commitment.
+
+   After preparation, re-rate uncertainty using the evidence obtained. Lower
+   the final tier if evidence resolves its only elevated or high issue. Passing
+   tests alone never lowers impact, reversibility, departure, tradeoff, or
+   domain complexity. Name any material uncertainty that remains. If a check
+   could change the recommendation and can run within existing authorization,
+   run it before asking for approval of the completed work.
 
 4. **Choose the representation by change type.** First ask one question: would
    the reader understand this better by seeing it than by reading it? Then take
-   the row that matches. All forms are ASCII text and live in
+   the row that matches. Forms use ASCII syntax, preserving verbatim content,
+   and live in
    `references/representation.md`, numbered F1 to F21 so a form can be named by
    ID.
 
@@ -127,7 +145,7 @@ the output is the brief for that target.
    proposed.
 
 5. **Draft the brief.** Answer the six questions, then render in the default
-   order: decision and recommendation; necessary context; comparison or example;
+   order: decision and recommendation or explicit neutrality; necessary context; comparison or example;
    consequences and evidence; exact next action. Reorder only when a definition
    must precede the recommendation. Combine fields naturally; a T1 satisfies
    several in one sentence. The template in the next section is the canonical
@@ -139,51 +157,20 @@ the output is the brief for that target.
 
    | Question | What the reader must be able to state afterwards |
    |---|---|
-   | What am I deciding? | the exact choice, the recommended option, the main justification |
+   | What am I deciding? | the exact choice, the supported recommendation or neutrality, the main justification |
    | Why does this need my input? | the original goal, the discovery, the judgment or authorization needed |
    | What changes? | current or agreed behavior against proposed behavior, including any deviation |
    | What am I accepting? | benefit, main downside, who and what is affected, how reversal actually works |
    | What supports the recommendation? | verified evidence, material uncertainty, assumptions, what would change the recommendation |
    | What happens when I choose? | the strongest alternative, the consequence of declining or deferring, the exact action approval authorizes |
 
-6. **Deliver.** Plain text is canonical; a dialog rendering derives from it.
-   Mechanics, the dialog mapping, and reply handling are in
-   `references/delivery.md`.
-   - The brief goes in the message body as ordinary text, never wrapped in a
-     code fence. Tables use pipes. Code and pseudocode sit inside fences; a
-     short ASCII diagram may sit inline, a long one goes in a fence.
-   - The brief is the final content of its turn, with no tool call after it,
-     and the question dialog opens the next turn on the reader's reply, because
-     prose in the same turn as a dialog may never render. One exception: a T1
-     whose whole text fits inside the dialog may open with the dialog. If the
-     reader's reply already answers, no dialog is raised.
-   - Every option stands alone in case the brief is lost: the label names the
-     outcome, the description carries the consequence.
-   - At most three independent T1 or T2 questions share one message, each with
-     its own ID and recommendation; a T3 always goes alone; coupled questions
-     state the dependency and are asked in order.
-
-7. **After the answer.**
-   - Restate the decision with its ID, option, and date.
-   - A condition ("A, but behind a flag") is applied to the chosen option and
-     repeated back in one line. A redirect ("check X first") is done first,
-     then the question is re-asked, reframed if the work changed it. A skip
-     parks the question and, when the run cannot wait, triggers the silence
-     default stated in the ask.
-   - When the reader says they do not understand, re-ask with a concrete
-     example, never a restatement.
-   - Retain a decision record when at least two of these hold: hard to reverse,
-     surprising without its context, the result of a real tradeoff. The
-     template and where it lives are in `references/decision-record.md`.
-   - Sweep everything that persists for the rejected option's name and any
-     stale claim. When several questions are live, keep one tally line: open,
-     decided, skipped, redirected.
-
-8. **Pre-send check.** Send only when every line holds:
+6. **Pre-send check.** Send only when every line holds:
    - The reader can identify the work and state the exact decision and
      commitment without reopening the plan or the conversation.
-   - The recommendation follows visibly from the evidence and the project's
-     priority, and the ask says what would change it.
+   - A recommendation follows visibly from the evidence and the project's
+     priority, and the ask says what would change it. If no option wins under
+     established criteria, the brief states why it is neutral and what human
+     preference would settle the choice, without a recommended marker.
    - For a non-obvious mechanism, the reader can see the failure and why the
      change addresses it, with identical inputs across the comparison.
    - Every consequence or uncertainty that could change the answer is in the
@@ -191,16 +178,62 @@ the output is the brief for that target.
      apart; reversibility is described as actual effects, not "revert the
      commit".
    - Remove each sentence in turn: if the decision is no harder, cut it. The
-     brief is under its tier's cap; every reading after an artifact is one
-     sentence; each option consequence and each evidence label is one clause.
+     length target prompts review, never removal of material information.
+     Artifact readings, option consequences, and evidence labels are concise
+     enough to expose their meaning without hiding a condition or limitation.
      No placeholder text left to fill in later; no hedge words such as "should",
      "probably", "seems" standing in for a statement of what was not verified.
-   - Every question and option carries its ID; the recommended option is listed
-     first; every option label is a verb phrase naming its outcome; alternatives,
-     conditions, and the next action are explicit.
+   - Every question and option carries its ID. When a recommendation exists,
+     it is A and listed first. IDs have not changed meaning; a materially
+     revised question supersedes its previous ID. Every option label names its
+     outcome with a verb phrase; alternatives, conditions, and next actions are
+     explicit, including the action associated with each neutral option.
    - The brief passes the four ISO 24495-1 outcomes: relevant, findable,
      understandable, usable.
-   - The text is ASCII only, with no HTML and no rendered-diagram notation.
+   - Authored prose and diagram syntax use ASCII; verbatim content is exact,
+     including non-ASCII characters. There is no HTML artifact or rendered diagram.
+
+7. **Deliver.** Plain text is canonical; a dialog rendering derives from it.
+   Read `references/delivery.md` for tool adaptation and reply handling.
+   - Inspect the available question tool, its schema, and host restrictions.
+     Put all decision-critical context inside the question payload when using
+     a dialog; do not rely on accompanying prose being visible. Use the
+     two-turn delivery rule only on surfaces known to lose that prose when
+     necessary context cannot fit in the dialog. Plain text is the fallback
+     when no suitable tool is available or permitted.
+   - An asynchronous question does not stop independent authorized work.
+     Dependent work waits for an actual answer. A preselected option, elapsed
+     time, and tool completion without an answer are never approval.
+   - The ordinary-text brief has no surrounding code fence. Tables use pipes;
+     code and pseudocode use fences. Fence diagrams when alignment requires it.
+   - Each option names its outcome and consequence. A recommendation is marked
+     only when supported. At most three independent T1 or T2 questions share
+     one message, further limited by the host; T3 goes alone. Coupled questions
+     state their dependency and are asked in order. If a reply already answers
+     the question, do not raise a second dialog.
+
+8. **After the answer.**
+   - Match the reply to one open question and its unchanged options before
+     acting. Never execute a reply to a superseded question. Restate a valid
+     decision with its ID, option, and date.
+   - A condition ("A, but behind a flag") is restated with the chosen action.
+     If it changes the action or approval scope, record the clearly authorized
+     revised decision under a new ID with the old question as history; do not
+     ask for the same permission again. Clarify only an unresolved commitment.
+     An ask-back is answered, then reassessed before re-asking. A redirect
+     ("check X first") is done first,
+     then the question is reassessed. If the finding changes the options,
+     recommendation, or approval scope, issue a new question ID and mark the
+     old one superseded. A skip parks the question without selecting its
+     fallback or advancing its deadline; continue only independent authorized work.
+   - When the reader says they do not understand, re-ask with a concrete
+     example, never a restatement.
+   - Retain a decision record when at least two of these hold: hard to reverse,
+     surprising without its context, the result of a real tradeoff. The
+     template and where it lives are in `references/decision-record.md`.
+   - Check persistent text for claims the answer made stale. Retain rejected
+     alternatives as history in the decision record. When several questions
+     are live, keep one tally line: open, decided, skipped, redirected, superseded.
 
 ## The brief: canonical text form
 
@@ -216,6 +249,7 @@ identifiers that must be defined. Read the one closest to the situation.
 ```
 Q1. <The decision as one full sentence naming the thing>   [T2: departure, uncertainty]
 Recommendation: Q1.A, <what and why in one sentence>. Q1.B wins if <condition>.
+  OR: Neutral: <why no option wins under established criteria and which preference settles it>.
 Sized by your standing preference: <the preference>.        (only when one applied)
 
 Why I am asking: <two or three sentences: the agreed baseline, the new
@@ -226,48 +260,59 @@ What changes: <one or two sentences, or the representation from step 4 when
 What you would be accepting: <one sentence each: benefit; main downside; who
   and what is affected; what reversal actually involves>.
 Evidence: Verified: <what, on which revision or environment>. Inferred: <what,
-  from what>. Assumed: <what>. Not verified: <what, and why not>. <One clause
-  each; omit a label that has nothing under it.>
-Options:                                                <consequence: one clause, about 15 words>
+  from what>. Assumed: <what>. Not verified: <what, and why not>. <Keep labels
+  concise without dropping material limits; omit empty labels.>
+Options:                                                <concise consequence, with material conditions>
   Q1.A  <Verb phrase naming the outcome> (Recommended)  -- <what it causes>
   Q1.B  <Verb phrase naming the outcome>                -- <what it causes>
   Q1.C  <Verb phrase naming the outcome>                -- <what it causes>
-Would change my recommendation: <one sentence: the evidence, constraint, or preference>.
-On Q1.A I will: <the exact action>. <What approval does and does not authorize.>
-If I hear nothing by <when>: <the most reversible option>, because <reason>.
+Would change my recommendation: <the evidence, constraint, or preference; omit when neutral>.
+On Q1.A I will: <the exact action and approval scope; for neutrality, specify each option's action>.
+If I hear nothing by <when>: <pause, defer, or already-authorized work>, because <reason and prior authorization for any action>.
 Record: retained as Decision Q1 in <where> once you answer.   (only when due)
 Details: <paths to the diff, logs, test output, or traces>.
 ```
 
+Choose one recommendation form, never both. For neutrality, omit every
+`(Recommended)` marker and the runner-up condition; state the action each choice
+authorizes. Options may be concise clauses but must retain material conditions.
+
 Rendering by tier:
 
-- **T1** keeps the question line, the reason for the gate, the recommendation,
-  and the options with their consequences. Two or three sentences. Example:
+- **T1** keeps the question line, the reason for the gate, the recommendation
+  or explicit neutrality, and the options with their consequences. Two or three sentences. Example:
   `Q1. Merge PR #142, the keyboard-focus fix for the search dialog? [T1] It
   implements the approved change; the keyboard-interaction test and required
   checks passed on revision 9c8d7e6; CONTRIBUTING.md requires a human merge
   approval. Recommendation: Q1.A.` then `Q1.A Merge (Recommended) -- the fix
   ships on the next deploy` and `Q1.B Hold -- the PR stays open; say what to
   change`. The runner-up clause and the "On Q1.A I will" line are required
-  whenever tradeoff complexity is above low, and may be omitted at T1.
+  whenever tradeoff complexity is above low and a recommendation exists.
+  At T1 they may be omitted when the question and options already state the
+  precise action and commitment. A neutral T1 still states why the preference
+  remains the user's choice.
 - **T2** renders the question line, the recommendation with its runner-up
-  clause, the sections its elevated axes call for, the options, what would
-  change the recommendation, and the next action; the comparison table when the
+  clause or explicit neutrality, the sections its elevated axes call for,
+  the options, what would change a supported recommendation, and the next
+  action; the comparison table when the
   change is conditional.
-- **T3** renders every section, the representation from step 4, and the
+- **T3** renders every applicable section, the representation from step 4, and the
   details pointer when supporting material exists.
 - `If I hear nothing by <when>` appears at any tier only when the run cannot
   wait: the human said to continue unattended, or a scheduled step would be
   missed. It names the deadline the ask itself sets, such as "the next
-  scheduled run" or "30 minutes". Its option is always the most reversible one,
-  never the recommended one when they differ, and never one that expands
-  scope, merges, or deploys. In an attended session the line is omitted and
-  the run stops.
+  scheduled run" or "30 minutes". The fallback may only pause, defer, or perform
+  work authorized before the ask; stating it grants no authority. Choose the
+  most reversible eligible option, never scope expansion, merge, or deployment.
+  Skip parks the decision without selecting the fallback or changing its
+  deadline. In an attended session omit the line and wait on dependent work.
 
-The recommendation line names the runner-up and the condition under which it
-wins. When the tradeoff is genuinely neutral, say so and name the preference that
-would settle it; never fake a lean. The recommendation reveals the objective it
-optimizes, and the reader can still reject it or add a condition.
+A supported recommendation names the runner-up and the condition under which
+it wins when that alternative is meaningful. If no option wins under established
+criteria, state neutrality and the preference that would settle it. Do not mark
+any option recommended or render `Recommended: A.` for a neutral question. A
+supported recommendation reveals its objective; the reader may reject it or
+add a condition.
 
 ## IDs and the reply grammar
 
@@ -275,21 +320,35 @@ Questions are numbered `Q1`, `Q2`, and the numbers continue across the whole
 run, so `Q3` means the same decision in every later message. After a context
 reset, resume from the highest number visible in the conversation or the
 record, and say so. Options are lettered `Q1.A`, `Q1.B`, `Q1.C`. The
-recommended option is listed first and is therefore always `A`, so a bare "A"
-reply means "go with your recommendation". An answered question keeps its ID as
-the key of its decision record and shows one of four states: open, decided
-with its option, skipped, or redirected.
+recommended option, when one exists, is first and therefore `A`. A neutral
+question keeps lettered options but has no recommendation marker. A bare letter
+selects an option only when it identifies one live question unambiguously; in a
+batch, request a full ID such as `Q2.A` before acting if the reply is ambiguous.
+
+Keep each question's options and approval scope unchanged under its ID. If new
+evidence changes an option's meaning, the recommendation, or the approval scope,
+issue the next unused question ID and mark the old one `superseded by Qn`.
+For example, when Q1.A meant workers but streaming now wins, Q2.A may recommend
+streaming; Q1 is superseded. A later Q1.A reply executes neither action. Tell
+the reader which current question replaced it and obtain an unambiguous choice.
+A clarification that changes none of these keeps the existing ID. Do not
+re-ask when the user's reply already clearly authorizes the revised action;
+record that decision under its new ID with the prior question as history.
+
+An answered question keeps its ID as its decision-record key. States are open,
+decided with its option, skipped, redirected, and superseded with its successor.
 
 Replies the ask must accept, in any wording:
 
 | Reply | Meaning | What you do |
 |---|---|---|
-| `A`, `Q1.A` | pick | proceed with the named option |
-| `Q1.B, but <condition>` | pick with a condition | apply the condition to the option, restate both in one line, proceed |
-| `Q1: skip` | park it | continue on the stated silence default or stop; the question returns later |
-| `Q1: ask <question>` | need information first | answer it, then re-ask |
-| `Q1: do <X> first` | redirect | do X, re-ask, reframed if X changed the question |
-| a reply naming an option not offered | the option set was wrong | add it as `Q1.D` with its consequence, confirm in one line |
+| `A`, `Q1.A` | pick | match one open question and its unchanged option, then proceed |
+| `Q1.B, but <condition>` | pick with a condition | restate the exact conditional action; a changed action or scope gets a new ID, recorded directly when clearly authorized, otherwise clarify only the missing commitment |
+| `Q1: skip` | park it | select no fallback, change no deadline; continue only independent authorized work |
+| `Q1: ask <question>` | need information first | answer and reassess; keep Q1 only if options, recommendation, and scope remain unchanged, otherwise supersede it before re-asking |
+| `Q1: do <X> first` | redirect | do authorized X, then reassess; supersede Q1 if its options, recommendation, or scope changed |
+| a reply to a superseded question | stale answer | execute no choice; point to the current question and clarify the intended answer |
+| a reply naming an option not offered | revised choice | use a new question ID; record directly if already clearly authorized, otherwise clarify the missing commitment |
 | "I don't get this" | the ask failed | re-ask with a concrete example |
 
 ## Confidence is inspectable
@@ -328,9 +387,18 @@ wording. Give every number its unit, its date, and its source.
 |---|---|
 | "The user knows the plan; 'Approve Phase 2?' is enough" | The reader was not watching. Describe the thing, then attach the ID. |
 | "It is a quick yes or no" | Yes and No hide the consequence. Options name what happens: "Merge" and "Hold". |
-| "I will assume yes and keep going" | Nothing is authorized by silence except the reversible default the ask itself declared, with its deadline. |
+| "I will assume yes and keep going" | Silence grants no authority. A stated fallback can pause, defer, or perform already-authorized work; skip selects none of it. |
 | "Tests pass, so the decision is safe" | Passing tests reduce uncertainty. They do not reduce impact, recovery cost, or the need to understand the mechanism. |
 | "More context is safer" | Depth is set by the highest axis and spent only on that axis. Unrelated background hides the decision. |
-| "I will put the brief in the same turn as the dialog" | Same-turn prose may never render. The brief ends its turn; the dialog opens the next. Only a T1 that fits inside the dialog skips the delivering turn. |
+| "The host's name tells me which dialog to call" | Inspect the tools actually exposed and their restrictions. Put necessary context in the payload; use a separate delivering turn only when that surface needs it. |
 | "A diagram would look thorough" | Show only what changes the answer, in the smallest ASCII form, framed. Decoration is noise. |
 | "The label is short, the trade-off is in my head" | Every option stands alone with its consequence, in case the brief is the part that never rendered. |
+
+## Behavioral evaluation
+
+The worked examples illustrate the brief; they do not prove reply handling.
+`evals/evals.json` holds realistic scenarios with separate grading expectations.
+Use them when changing authorization, IDs, sizing, or delivery. Evaluate actual
+responses in fresh sessions on the supported tools; process completion and
+manifest validation are not semantic passes. `evals/README.md` explains the
+runner, grading, and the limits of the simulation.
