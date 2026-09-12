@@ -15,13 +15,16 @@ Use its four governing outcomes at the level of the whole brief:
    evidence, and the next action, and
    nothing about drafting, queuing, or agent coordination.
 2. **Findable**: readers can easily find what they need. For a brief: the
-   question line is first, the recommendation or explicit neutrality is second,
-   every section carries its label, and the options are a list with IDs.
+   decision topic is clear immediately. The question comes first when it is
+   self-contained; otherwise the minimum orientation precedes it. The
+   recommendation and options are easy to locate, and options carry IDs.
 3. **Understandable**: readers can easily understand what they find. For a
-   brief: every identifier is described at first use, every claim carries its
-   status, every artifact is framed, and the reader's own vocabulary is used.
+   brief: the actual artifact type, exact name, and role are given at first
+   use; the connection to the goal and current condition are clear; claim
+   scope and evidence status survive simplification; every artifact is framed.
 4. **Usable**: readers can easily use the information. For a brief: the reply
    grammar lets the reader answer in a word, add a condition, skip, or ask.
+   They can also state what answering changes now under each option.
 
 Apply these outcomes to the intended reader, their knowledge, and the
 situation in which they will read: an unattended run, some time after the
@@ -90,11 +93,16 @@ and terms.
 
 Do not send if any answer is no:
 
-- Can the reader state the exact decision and the action approval authorizes?
+- Can the reader identify the goal, concrete artifact and role, current
+  condition, exact decision, and immediate action approval authorizes?
 - Are required local terms, identifiers, and symbols defined?
 - Are causes, contrasts, constraints, and consequences explicit?
 - Can the reader tell verified facts from inferences, assumptions, and
   unknowns, and proposals from decisions already taken?
+- Have rewrites preserved which component each permission, safeguard, or
+  uncertainty concerns? Are requirements distinct from validated behavior?
+- Do the options reflect the user's latest requirements rather than a
+  superseded implementation assumption?
 - Does every option name its consequence? Does a supported recommendation say
   why it wins and when it would not, or does neutrality explain what preference
   would settle the choice without marking an option recommended?

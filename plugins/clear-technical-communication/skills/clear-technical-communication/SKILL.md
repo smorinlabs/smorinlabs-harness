@@ -60,6 +60,8 @@ understand and use it without reconstructing omitted context.
 7. **Rewrite, do not merely criticize.** Preserve technical meaning and
    necessary domain terms. Define local terminology and identifiers. Make
    causal links explicit. Move essential constraints out of parentheses.
+   Preserve each claim's subject, scope, conditions, and unknowns when
+   simplifying. A narrower observation must not become a broader conclusion.
    Mark missing analysis with a precise gap; never manufacture facts, options,
    effects, or recommendations.
 8. **Cold-read the result.** Confirm that a reader can answer after one pass:
@@ -172,14 +174,21 @@ Classify every term before deciding what to do with it.
 
 | Class | Examples | Rule |
 |---|---|---|
-| Verbatim technical name | `Promise.allSettled`, `--ff-only`, `ENOTEMPTY`, `~/.claude/settings.json`, `UserAccountRepository` | Reproduce it exactly, in code font. Never paraphrase, shorten, or replace it with a description. Pair it with a description at first use in prose. |
+| Verbatim technical name | `Promise.allSettled`, `--ff-only`, `ENOTEMPTY`, `~/.claude/settings.json`, `UserAccountRepository` | Reproduce it exactly, in code font. Never paraphrase, shorten, or replace the name with a description. At first use, give the actual artifact type and a short role. |
 | Established domain term | idempotent, fast-forward, backpressure | Keep the term. Define it at first use, then use it consistently and freely. |
-| Invented local metaphor | `tombstone`, `ladder`, `slug` | Replace it with literal wording, or coin it explicitly as a defined term when it earns reuse. |
+| Invented local metaphor | `tombstone`, `ladder`, `slug` when coined only in prose | Replace it with literal wording, or coin it explicitly as a defined term when it earns reuse. A real technical name or established domain term follows its own row, even when it contains a metaphor word. |
 
-### Pair every name with a description at first use
+### Pair every name with its type and role at first use
 
-Give both the name and what it means. Do not judge whether this reader already
-knows the name.
+Give the actual artifact type, its exact name or identifier in code font, and a
+short description of its role. Establish the type from the source, not from the
+wording of its name. If the source does not establish the type or role, retain
+the exact name and state that gap. Do not assume reader familiarity.
+
+Preserve containment and invocation: a workflow contains jobs, and a job can
+invoke an action or script. A setting controls behavior. A credential grants access.
+These are distinct referents, even when they share a label or contribute to the
+same result. State only relationships supported by the source.
 
 - `Use --ff-only.` → ``Use `--ff-only`, the flag that makes `git pull` refuse
   any update that is not a fast-forward.``
@@ -193,18 +202,20 @@ The rule has a mechanical boundary:
   may reach by deep link. It is not scoped to a heading, which would repeat the
   gloss endlessly, nor to a whole multi-page document, which would leave a
   deep-linked reader without the description.
-- Later occurrences in that unit need no further description.
+- Later occurrences use the exact name or the shortest established reference
+  that remains unambiguous. Repeat the type or relationship when related
+  artifacts could otherwise be confused; do not repeat the full gloss.
 - It does not apply to tokens inside a code block, command, or quoted output.
   Frame the block as a whole; do not gloss its individual tokens.
 
 The rule bounds the cost of a description, never the obligation:
 
-- A short role phrase satisfies it. ``` `SIGKILL` (forced termination) stopped
-  PID 8421 ``` is compliant; a full definition that delays the point is not
+- A short type and role phrase satisfies it: ``` The `SIGKILL` signal forcibly
+  stopped process 8421. ``` A full definition that delays the point is not
   required and usually harms an expert reader.
-- One shared gloss may cover a group of parallel names. ``` The configuration
-  pipeline — `parseConfig`, `validateConfig`, and `writeConfig` — now preserves
-  comments ``` is compliant. Glossing each name separately buries the change.
+- One shared gloss may cover a group of parallel names: ``` The configuration
+  functions `parseConfig`, `validateConfig`, and `writeConfig` now preserve
+  comments. ``` Glossing each name separately buries the change.
 
 ### Never edit verbatim zones
 
@@ -262,8 +273,9 @@ detection signals, corrections, and compact examples. Read it:
   or multiple unresolved decisions;
 - when a user says the communication is confusing but cannot name why.
 
-For calibrated full rewrites of a multidimensional coverage explanation and a
-three-decision owner request, read `references/worked-examples.md`.
+For calibrated rewrites of a multidimensional coverage explanation, a
+three-decision owner request, and a status report that confuses workflows,
+jobs, settings, and credentials, read `references/worked-examples.md`.
 
 ## Red Flags
 

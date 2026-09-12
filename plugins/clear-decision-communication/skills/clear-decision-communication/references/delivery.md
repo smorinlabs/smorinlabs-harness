@@ -27,7 +27,9 @@ use an information-question tool for permission when the host forbids it.
 
 Put the decision, necessary context, consequences, uncertainty, and exact
 approval scope inside the payload the reader will see. Accompanying prose may
-not render. Every option carries its ID, outcome, and consequence. If a field
+not render. When the question needs orientation, put the goal-to-component
+connection, current condition, and immediate commitment before it in that same
+payload. Every option carries its ID, outcome, and consequence. If a field
 is unavailable, combine its content into a supported field instead of sending
 an invented argument. If the tool cannot carry essential information, use
 ordinary text; never truncate a material caveat to fit the tool.
@@ -73,6 +75,7 @@ until the required answer arrives; continue other work under existing authority.
   own ID, options, and supported recommendation or explicit neutrality. Each
   stands alone. The host may impose a smaller batch or a one-question limit.
 - A T3 always goes alone.
+  Apply that batching rule without announcing tiers or drafting logistics.
 - Coupled questions state the dependency and are asked in order: a question
   whose answer depends on another still open waits for the next message.
 - A tally line precedes a batch or follows an answer when more than one
@@ -111,7 +114,7 @@ the mapping unclear, ask which question was meant in one line; do not act yet.
 | `Q1: ask <question>` | information needed first | answer with facts and reassess; keep the ID only if options, recommendation, and scope are unchanged, otherwise supersede it before asking for the revised choice |
 | `Q1: do <X> first` | redirect | do X within authorization; re-assess, then re-ask only if still needed; supersede the question if its options, recommendation, or approval scope changed |
 | a reply to a superseded question | stale answer | explain which current question replaced it; execute neither choice from that reply |
-| "I don't get this" | the ask failed | re-ask with a concrete example, never a rephrase of the same sentence |
+| "I don't get this" | the ask failed | diagnose the missing artifact, project connection, current condition, or commitment first; then terminology and mechanism; rewrite around the gap and reassess whether a decision is still needed |
 | a reply naming an option not offered | revised choice | preserve the user's direction under a new question ID, with its consequence and scope; record it directly if the reply already clearly authorizes that action, otherwise clarify only the missing commitment |
 
 A reply that overrides a supported recommendation is recorded as `overrode`;

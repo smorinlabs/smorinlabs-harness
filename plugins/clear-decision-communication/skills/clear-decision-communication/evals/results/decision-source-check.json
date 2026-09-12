@@ -1,0 +1,713 @@
+{
+  "schema_version": 1,
+  "purpose": "Exact final responses, raw scenario inputs, and independent reviews for the draft/source-check and measurement follow-up: eight new candidate F responses and two unchanged candidate E comparison records. Process success does not establish semantic correctness.",
+  "source_snapshots": {
+    "E": {
+      "fingerprint": "ce18c37ce57103ce3753abc426e9a2fa84d8ef4ad4208141eb404a3e79781aab",
+      "files": {
+        "SKILL.md": "b644df2885f3245b4c16faf3ef73dd2eefc13a1e18e61b100e06e23840d56378",
+        "references/axes-and-tiers.md": "f01eff6f45ed58d8c16dc7aa93bc9ff4a23e4ebc5103db77fd03c7a34baba7b3",
+        "references/clarity.md": "17b3a1eb66a2fe997fe5b710a68cbd7f629812e56f67ee077ddd79f1c607be6c",
+        "references/decision-record.md": "6db29417e46559fdf3e3f62b8789553f5bca8dc400a2c73309f4c63e3ba74f37",
+        "references/delivery.md": "e3936d099f2a254f6085b7ccfc502adbd40099eca4b0cdf51f893467129330b0",
+        "references/framework.md": "c829bd8c2db1fdb2bf17b8a849ee271418590bc3cb2a50f11218b5136e16b6c6",
+        "references/representation.md": "950c1f7c70a2841da88b60672285f24de4b192ac6e6f71d85d5c80dd3672e326",
+        "references/standards.md": "fdb6517d7ccc72dff5ba37cf726193c041ff5d816cc0f1f07395548ef576eabb",
+        "references/worked-examples.md": "f379ce75a8ea9f464a6c078caacdd29e88c818b4429a2a5cfd413bbbf5caa3ed"
+      }
+    },
+    "F": {
+      "fingerprint": "da9f3c7ae8b83962dfccfca10f73f8f554227f70bfebd322995a88a4f5ef4d57",
+      "files": {
+        "SKILL.md": "c0ffe5a76975d1bf87df91b9e92b051c553c9bce3f854f935460a6101cb6cbb6",
+        "references/axes-and-tiers.md": "f01eff6f45ed58d8c16dc7aa93bc9ff4a23e4ebc5103db77fd03c7a34baba7b3",
+        "references/clarity.md": "17b3a1eb66a2fe997fe5b710a68cbd7f629812e56f67ee077ddd79f1c607be6c",
+        "references/decision-record.md": "6db29417e46559fdf3e3f62b8789553f5bca8dc400a2c73309f4c63e3ba74f37",
+        "references/delivery.md": "e3936d099f2a254f6085b7ccfc502adbd40099eca4b0cdf51f893467129330b0",
+        "references/framework.md": "c829bd8c2db1fdb2bf17b8a849ee271418590bc3cb2a50f11218b5136e16b6c6",
+        "references/representation.md": "950c1f7c70a2841da88b60672285f24de4b192ac6e6f71d85d5c80dd3672e326",
+        "references/standards.md": "fdb6517d7ccc72dff5ba37cf726193c041ff5d816cc0f1f07395548ef576eabb",
+        "references/worked-examples.md": "f379ce75a8ea9f464a6c078caacdd29e88c818b4429a2a5cfd413bbbf5caa3ed"
+      }
+    }
+  },
+  "input_contents_by_sha256": {
+    "2fac93396f18c6e182bf528338da21502edbb587f51141922a15035f5fe4a452": "This is a simulated project. Export implementation awaits the user's direction.\n\nMonday: Q4 asked how to implement exports. Q4.A Add background workers (Recommended). Q4.B Stream each export directly. The user asked for a benchmark before choosing.\n\nTuesday: the benchmark favored direct streaming under the agreed latency and operating-cost criteria. The assistant marked Q4 superseded and issued Q5: Q5.A Stream each export directly (Recommended). Q5.B Add background workers. Q5 is unanswered. No export implementation is authorized yet.\n\nLatest user reply, delivered after Tuesday's brief: Q4.A.\n",
+    "66ec14246727a07ecc3b639a75294e6c25844e1cd477fb65a99bc2c6b58fa02a": "# Cedar Starter\n\nCedar Starter is a reusable repository for teams creating internal web services. Maintainers develop the starter in the public cedar-starter repository. Teams create their own repositories from it.\n\nThe maintainer plan includes Harbor, a fictional service that reviews pull requests and can prepare code changes requested in comments. The workflow files are part of the starter. Credential setup and use in each repository are separate from including those files.\n",
+    "59eed805df302d1aacd782020449b75706e5c079118dd2f562b3302b12725941": "Run: 2026-09-11, revision 2d8a641\nReview variable absent + pull request opened: job skipped; Harbor calls 0\nReview variable true + pull request opened: review comment posted; Harbor calls 1\nAssistant variable absent + maintainer comment containing @harbor: job skipped; Harbor calls 0\nAssistant variable true + maintainer request to update a documentation link: branch and pull request prepared; Harbor calls 1\nDisabling either variable prevented later calls in the fixture run. Existing comments and prepared branches remained.\n",
+    "92ea9d57b9947a961f2146bff3738503fac98640eb0d6c5d87ce2a16160a10d0": "User: The files belong in the starter. For our public cedar-starter repository, compare automated reviews alone with reviews plus the comment-driven assistant. Ask before changing the settings.\n\nAssistant working note: The R6 lanes are ready. A is the narrow lane; B adds the write lane. Keep the no-run option available.\n\nNo question has been sent.\n",
+    "3d33f5b45d1ce32d3f531d1e0bbefd04b1e49257427c1e3a31c4c1c0c5e583fa": "# Maintainer automation status\n\nSnapshot: 2026-09-11, revision 2d8a641.\nTracked files: .github/workflows/harbor-review.yml and .github/workflows/harbor-assistant.yml. Both are already merged into cedar-starter.\nRepository variables: ENABLE_HARBOR_REVIEW is absent; ENABLE_HARBOR_ASSISTANT is absent. HARBOR_TOKEN is configured as a repository secret. No secret values are included in this report.\nThe review workflow runs on pull-request creation and updates. Its job condition requires ENABLE_HARBOR_REVIEW to equal the string true. It reads the pull-request diff and posts review comments.\nThe assistant workflow runs when a maintainer writes @harbor in an issue or pull-request comment. Its job condition requires ENABLE_HARBOR_ASSISTANT to equal the string true. It can prepare a branch with requested changes and open a pull request.\nThe owner requires approval before changing these two repository variables because each model invocation uses the repository's service account allowance. Other repositories created from the starter have their own settings.\n",
+    "ee0d532cba0a8fc0fb70645a112810a1a3a0872fe0ac42d12ec2ca11e2eec572": "# Ledger Exports — benchmark EX-204\n\nservices/exports/orders_csv.py produces customer-order CSV exports.\nservices/exports/stock_csv.py produces warehouse-stock CSV exports.\n\nProduction uses background workers at revision 7ab91c2. The direct-streaming prototype is revision 8bc02d3. Production implementation changes await approval.\n\nOwner selection rule: prefer lower p95 completion latency if metered compute cost rises by no more than 25% for either export.\n\nRun: 2026-09-11. Each row represents 1,000 successful exports with four concurrent clients and warm processes. Baseline and candidate used identical infrastructure and input data: ORD-50K for orders, STK-10K for stock.\n\nCompletion latency measures request acceptance through delivery of the last byte. Compute charges are measured USD per 1,000 successful exports.\n\n| Asset | Mode | Completion latency, p95, ms | Compute, USD/1,000 exports |\n|---|---|---:|---:|\n| services/exports/orders_csv.py | Background workers | 2400 | 10.00 |\n| services/exports/orders_csv.py | Direct streaming | 2160 | 12.00 |\n| services/exports/stock_csv.py | Background workers | 1200 | 5.00 |\n| services/exports/stock_csv.py | Direct streaming | 1080 | 6.00 |\n\nLatest owner message: What should we adopt based on these results?\nAsk before changing the production implementation.\n",
+    "f02611e024eba5d50e0c52c6ada24f6b99871bfb15a173768ea8096284ee265e": "# Catalog Search — trial SEARCH-19\n\nweb/search/suggestions.ts requests and displays catalog suggestions. The performance budget is p95 latency of at most 150 ms, measured from the last keystroke until suggestions are painted.\n\nBaseline: revision 7ce91b1. Candidate: revision 8fd02c2, which coalesces pending render work. The candidate has not been approved as the default.\n\nBenchmark summary, 2026-09-11: the candidate's p95 last-keystroke-to-paint latency was 10% lower than the baseline. Conditions were 20 concurrent desktop sessions, warm caches, and an unchanged query corpus.\n\nOnly this summary reached the handoff. Absolute baseline and candidate timings and the underlying samples were not attached.\n\nLatest owner message: Does this result put us within the 150 ms budget? What should happen next?\n",
+    "a8dfde5013cab926d3ea1415d33876e62631c77960cd402aa065a72a5f154108": "# Cedar Starter — pilot closeout, revision c3e8b42\n\nCedar Starter is a reusable repository developed in public cedar-starter. Other repositories created from it have independent settings.\n\n.github/workflows/harbor-review.yml reviews new and updated pull-request diffs. It admits only human pull-request authors with OWNER, MEMBER, or COLLABORATOR association AND current repository write access.\n\n.github/workflows/harbor-assistant.yml handles @harbor comments and can prepare a branch and pull request. It admits only human comment authors with the same association requirement AND current repository write access.\n\nBoth workflows also reject bot event senders. These are the rules in the reviewed workflow source at c3e8b42.\n\nBoth files are merged. HARBOR_TOKEN is configured. Each workflow calls Harbor only when its own enable variable is the string true and HARBOR_TOKEN is configured. ENABLE_HARBOR_REVIEW controls the review workflow; ENABLE_HARBOR_ASSISTANT controls the assistant workflow. Both variables are absent following the pilot, so both workflows are disabled. Approval is required before changing them.\n\nMetering export PILOT-17:\nWindow: 2026-09-01T00:00:00Z inclusive to 2026-09-08T00:00:00Z exclusive. Both enable variables were true throughout this seven-day window. The allowance metric is service-account units consumed, not dollars.\n\n| Workflow | Harbor invocations | Allowance units consumed |\n|---|---:|---:|\n| .github/workflows/harbor-review.yml | 40 | 80 |\n| .github/workflows/harbor-assistant.yml | 10 | 120 |\n\nLatest owner message: Compare reviews alone with reviews plus the assistant. Use the closed pilot to show each workflow's share of allowance use. Ask before re-enabling either.\n"
+  },
+  "prompts": [
+    {
+      "run": "cdc-o1-claude-older-cases",
+      "tool": "claude",
+      "case_id": 4,
+      "sha256": "1e13155b74f6ff8557d4c747bc3ea559a910417c0cda8a51459595541c695a78",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nContinue from the latest reply. Use the decision history in the handoff.\n"
+    },
+    {
+      "run": "cdc-o1-claude-older-cases",
+      "tool": "claude",
+      "case_id": 14,
+      "sha256": "4b42634986188f613128fcc5f4844c2da43ab2581389bc8e4f4fa2b031d5e00f",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next decision brief from the supplied project files.\n"
+    },
+    {
+      "run": "cdc-source-check-claude-retained",
+      "tool": "claude",
+      "case_id": 4,
+      "sha256": "1e13155b74f6ff8557d4c747bc3ea559a910417c0cda8a51459595541c695a78",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nContinue from the latest reply. Use the decision history in the handoff.\n"
+    },
+    {
+      "run": "cdc-source-check-claude-retained",
+      "tool": "claude",
+      "case_id": 14,
+      "sha256": "4b42634986188f613128fcc5f4844c2da43ab2581389bc8e4f4fa2b031d5e00f",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next decision brief from the supplied project files.\n"
+    },
+    {
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "case_id": 20,
+      "sha256": "3e93c235ee4d1fb9a0410ba4f0c81912ffdf5d77348c2d47682d73f008844ac7",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next owner-facing response from the supplied files.\n"
+    },
+    {
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "case_id": 21,
+      "sha256": "3e93c235ee4d1fb9a0410ba4f0c81912ffdf5d77348c2d47682d73f008844ac7",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next owner-facing response from the supplied files.\n"
+    },
+    {
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "case_id": 22,
+      "sha256": "3e93c235ee4d1fb9a0410ba4f0c81912ffdf5d77348c2d47682d73f008844ac7",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next owner-facing response from the supplied files.\n"
+    },
+    {
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "case_id": 20,
+      "sha256": "3e93c235ee4d1fb9a0410ba4f0c81912ffdf5d77348c2d47682d73f008844ac7",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next owner-facing response from the supplied files.\n"
+    },
+    {
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "case_id": 21,
+      "sha256": "3e93c235ee4d1fb9a0410ba4f0c81912ffdf5d77348c2d47682d73f008844ac7",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next owner-facing response from the supplied files.\n"
+    },
+    {
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "case_id": 22,
+      "sha256": "3e93c235ee4d1fb9a0410ba4f0c81912ffdf5d77348c2d47682d73f008844ac7",
+      "text": "Use the clear-decision-communication skill in skill/SKILL.md and its references to handle the request below. Read the supplied raw files in inputs/. This is a self-contained simulation: the supplied project facts are the scenario baseline, not claims about any live project. Read only files under this working directory. Do not browse or inspect other projects or sessions. Produce the next user-facing response and identify the immediate next action you would take. Do not perform external actions or mutations. If the scenario calls for an unavailable action or question tool, describe that action or show its proposed payload rather than claiming to have executed it.\n\nPrepare the next owner-facing response from the supplied files.\n"
+    }
+  ],
+  "tool_versions": [
+    {
+      "snapshot": "F",
+      "run": "cdc-source-check-claude-retained",
+      "tool": "claude",
+      "stdout": "2.1.269 (Claude Code)\n",
+      "sha256": "49b8518511bf51392147c6189d19a0cf15307a8ff503e75ac4cdb76924e96cc3"
+    },
+    {
+      "snapshot": "F",
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "stdout": "2.1.269 (Claude Code)\n",
+      "sha256": "49b8518511bf51392147c6189d19a0cf15307a8ff503e75ac4cdb76924e96cc3"
+    },
+    {
+      "snapshot": "F",
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "stdout": "codex-cli 0.153.4\n",
+      "sha256": "616dba4e87de2b1f07e61fe30ff4a5b3b075986c986c466ac5d244597eac0f36"
+    }
+  ],
+  "records": [
+    {
+      "run": "cdc-o1-claude-older-cases",
+      "tool": "claude",
+      "case_id": 4,
+      "snapshot": "E",
+      "input_files": {
+        "inputs/handoff.md": "2fac93396f18c6e182bf528338da21502edbb587f51141922a15035f5fe4a452"
+      },
+      "input_fingerprint": "f6349bea87c7872e1f9c69391cfded7e7f76f66f1ed57bee44af3c3db48b7137",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-04/stdout.jsonl",
+      "stdout_sha256": "740b3765913f8b105cfde6747327fd5efe79669a76f139e6c4a878ed7eb81908",
+      "response_line": 84,
+      "response": "I read the skill, its references (`axes-and-tiers.md`, `delivery.md`, `worked-examples.md`), and `inputs/handoff.md`. The latest reply names `Q4.A`, an option on a question I already superseded, so I execute neither choice and point back to the live question. Q4.A's content (\"Add background workers\") survives as Q5.B, so the clarification names that mapping instead of re-asking from scratch. Q5's options, recommendation, and approval scope are unchanged, so it keeps its ID.\n\nHere is the response I would send:\n\n---\n\nQ4.A does not select anything I can act on: Q4 (Monday's question about how to implement report exports) was superseded after the benchmark you asked for, and the live question is Q5. Nothing is running on that reply. The approach Q4.A named, background workers, is still on the table as Q5.B.\n\nQ5 (open, unchanged). Which export implementation should I build: stream each export directly, or add background workers?\nRecommendation: Q5.A, stream each export directly, because Tuesday's benchmark favored it under the latency and operating-cost criteria we agreed on. Q5.B wins if you want to weigh something those two criteria do not cover, or you want workers regardless of the benchmark result.\n\nWhy I am asking: no export implementation is authorized yet, and export work is stopped until this is settled. Your answer selects the approach I build.\n\nWhat changes: today neither approach exists; the export path is unimplemented. The answer picks which one gets written.\n\nWhat you would be accepting: the chosen approach becomes the export path. Switching afterward means rebuilding that path on the other approach; I have not scoped that cost.\n\nEvidence: Verified: the benchmark ran and favored direct streaming under the agreed latency and operating-cost criteria. Not verified: any criterion outside those two; the benchmark measured only latency and operating cost. The per-metric figures are in Tuesday's brief, not restated here.\n\nOptions:\n  Q5.A  Stream each export directly (Recommended)  -- the benchmark-favored approach gets built\n  Q5.B  Add background workers                     -- the approach you named as Q4.A gets built, against the benchmark result on both agreed criteria\n\nWould change my recommendation: a criterion outside latency and operating cost that you want this decision judged on.\n\nOn Q5.A I will: implement direct streaming exports on a branch. Nothing deploys under this approval.\nOn Q5.B I will: implement background workers on a branch, and record the decision as overriding the benchmark result. Nothing deploys under this approval.\n\nReply with Q5.A or Q5.B, add a condition, or say skip.\n\nRecord: retained as Decision Q5 once you answer, with Q4 and its options kept as history.\n\nQ4 superseded by Q5; Q5 open.\n\n---\n\n**Immediate next action:** wait for an unambiguous Q5.A or Q5.B reply. No export code is written and no implementation starts in the meantime; there is no independent authorized export work to continue in parallel.\n\nTwo delivery notes: no question-dialog tool is exposed in this session, so the brief above is delivered as plain text, which is the specified fallback. If one were available, the same orientation, recommendation, evidence limits, and per-option actions would go inside the payload rather than in accompanying prose.",
+      "review": {
+        "case_id": 4,
+        "name": "late-export-reply",
+        "covered_findings": [
+          "CDC-02"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "All three targeted stale-ID and authorization criteria pass on snapshot E, but material source-fidelity failures remain. The handoff reports that the benchmark favored streaming under the agreed latency and operating-cost criteria. stdout.jsonl line 83 adds that it 'measured only latency and operating cost' and calls workers contrary to the result 'on both agreed criteria'; the source establishes neither exclusive benchmark coverage nor a separate loss on each metric. It also says 'The per-metric figures are in Tuesday's brief,' although the supplied handoff contains no figures and does not establish that the brief includes them. This is an invented evidence-location/availability claim, not fabricated numeric values. Compared with snapshot C, the unsupported no-shared-implementation-work claim is absent, but benchmark overstatement persists and the offer of figures becomes an unsupported claim of their location. Minor limits: internal compliance and delivery narration are long; 'today neither approach exists; the export path is unimplemented' is more categorical than the supplied authorization status. No implementation occurred: all tool events were staged-file inventory, reads, or searches, and the response waits for a current answer.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Recognizes that Q4.A refers to the superseded worker option and does not reinterpret it as the current recommendation.",
+            "met": true,
+            "evidence": "stdout.jsonl line 83 identifies Q4 as superseded and says 'The approach Q4.A named, background workers, is still on the table as Q5.B.' It never maps Q4.A to the current streaming recommendation, preserving the exact option history in inputs/handoff.md."
+          },
+          {
+            "expectation": "Does not implement either approach from this stale reply.",
+            "met": true,
+            "evidence": "stdout.jsonl line 83 states that no export implementation is authorized and that neither approach starts from the stale reply. Its immediate action is to wait for an unambiguous current answer; tool events at lines 4-36 are inventory/reads/searches only. Proposed implementation actions are conditional on a future Q5 selection."
+          },
+          {
+            "expectation": "Identifies Q5 as the current decision and obtains a current, unambiguous choice with the option meanings intact.",
+            "met": true,
+            "evidence": "stdout.jsonl line 83 retains 'Q5 (open, unchanged)' and asks for Q5.A (stream each export directly) or Q5.B (add background workers), with the earlier worker meaning explicitly mapped to Q5.B. The simulation cannot obtain a real reply; it correctly presents the current clarification and waits rather than claiming to have received an answer."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-o1-claude-older-cases",
+      "tool": "claude",
+      "case_id": 14,
+      "snapshot": "E",
+      "input_files": {
+        "inputs/README.md": "66ec14246727a07ecc3b639a75294e6c25844e1cd477fb65a99bc2c6b58fa02a",
+        "inputs/checks/automation-fixtures.txt": "59eed805df302d1aacd782020449b75706e5c079118dd2f562b3302b12725941",
+        "inputs/conversation.txt": "92ea9d57b9947a961f2146bff3738503fac98640eb0d6c5d87ce2a16160a10d0",
+        "inputs/docs/automation-status.md": "3d33f5b45d1ce32d3f531d1e0bbefd04b1e49257427c1e3a31c4c1c0c5e583fa"
+      },
+      "input_fingerprint": "06245613e79cc6e548d3fe47531c86c75ecb6365908759d54a1b899893f94359",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-14/stdout.jsonl",
+      "stdout_sha256": "9d6628bcbd7b9f49acf704ff325753c8b465bb3c27b20db3e9723907f8fbc45b",
+      "response_line": 119,
+      "response": "I read the skill, its references, and all three input files (`inputs/README.md`, `inputs/docs/automation-status.md`, `inputs/checks/automation-fixtures.txt`, `inputs/conversation.txt`).\n\nTwo things shaped the brief. The internal working note's vocabulary (\"R6 lanes\", \"narrow lane\", \"write lane\") does not identify anything a reader can act on, so the brief names the actual workflow files, the two repository variables, and the secret. And the files are already merged, so the decision is activation of settings, not installation.\n\n---\n\nBoth Harbor workflow files are already merged into the public `cedar-starter` repository: `.github/workflows/harbor-review.yml`, which reads a pull-request diff and posts review comments, and `.github/workflows/harbor-assistant.yml`, which can prepare a branch with requested changes and open a pull request. Harbor is the service both of them call. Each workflow's job runs only while a repository variable equals the string `true`: `ENABLE_HARBOR_REVIEW` for the review workflow, `ENABLE_HARBOR_ASSISTANT` for the assistant workflow. Both variables are absent today, so neither job runs and Harbor receives no calls. Your answer sets these variables in `cedar-starter` only; repositories created from the starter keep their own settings.\n\nQ1. Which Harbor automation should be active in `cedar-starter`: automated pull-request reviews alone, reviews plus the comment-driven assistant, or neither?\nRecommendation: Q1.A, set `ENABLE_HARBOR_REVIEW` to `true` and leave `ENABLE_HARBOR_ASSISTANT` absent, because it produces the review behavior you asked to compare without activating the workflow that creates branches and pull requests using a credential whose permissions I could not check. Q1.B wins if you want comment-driven change preparation now and you already know what `HARBOR_TOKEN` is allowed to do.\n\nWhy I am asking: `docs/automation-status.md` records that the owner requires approval before either of these two repository variables changes, because every Harbor invocation draws on the repository's service account allowance. You also asked me to ask before changing the settings.\n\nWhat changes. The same two events under each option, reproduced from the fixture run of 2026-09-11 on revision 2d8a641:\n\n| Event | Q1.A reviews only | Q1.B reviews and assistant | Q1.C neither |\n|---|---|---|---|\n| A pull request is opened in `cedar-starter` | review comment posted; 1 Harbor call | review comment posted; 1 Harbor call | review job skipped; 0 Harbor calls |\n| A maintainer writes `@harbor` in an issue or pull-request comment | assistant job skipped; 0 Harbor calls | branch and pull request prepared; 1 Harbor call | assistant job skipped; 0 Harbor calls |\n\nReading: the fixture exercised the assistant with one request type only, an update to a documentation link. Other request types were not exercised.\n\nWhat you would be accepting: under Q1.A every pull request receives an automated review comment, and Q1.B adds maintainer-triggered preparation of branches and pull requests. The main cost sits with reviews, not the assistant: `cedar-starter` is public, and the snapshot records no restriction on whose pull requests `harbor-review.yml` reviews, so review calls are not bounded by maintainer activity, while the assistant starts only when a maintainer writes `@harbor`. Everyone who opens a pull request or comments in `cedar-starter` is affected, and review comments and prepared pull requests are publicly visible. On reversal: in the fixture run, returning a variable to absent prevented later calls, and review comments already posted and branches already prepared stayed in the repository; that change does not remove them.\n\nEvidence: Verified in the fixture run of 2026-09-11 on revision 2d8a641: each variable state produced the outcome and call count in the table above, and disabling either variable prevented later calls. Verified from `docs/automation-status.md` at the same revision: both workflow files are merged, both variables are absent, and `HARBOR_TOKEN` is configured as a repository secret. Inferred: one Harbor call per triggering event, so allowance use follows event volume; the fixture counted calls, not money. Not verified: what `HARBOR_TOKEN` is permitted to do. I cannot verify that without the token's scope from Harbor or from you, because the snapshot excludes secret values, and the assistant workflow is the one that uses the token to create branches and pull requests. Not verified: whether `harbor-review.yml` limits which authors' pull requests it reviews; the snapshot records its trigger and its variable condition only. Not verified: behavior under live public traffic, because the outcomes above come from a fixture run.\n\nOptions:\n  Q1.A  Set `ENABLE_HARBOR_REVIEW` to true and leave `ENABLE_HARBOR_ASSISTANT` absent (Recommended)  -- pull requests receive review comments; no branch or pull-request creation by Harbor; allowance use follows pull-request volume\n  Q1.B  Set both `ENABLE_HARBOR_REVIEW` and `ENABLE_HARBOR_ASSISTANT` to true  -- adds maintainer-triggered branch and pull-request preparation using `HARBOR_TOKEN`, whose permissions are unverified\n  Q1.C  Leave both variables absent  -- no Harbor calls and no allowance use; no evidence from the live repository for either comparison\n\nWould change my recommendation: a confirmed scope for `HARBOR_TOKEN` that covers branch and pull-request creation and nothing wider, together with a wish to use comment-driven preparation now, favors Q1.B. An allowance limit that public pull-request volume could exhaust favors Q1.C, or restricting the review workflow's accepted authors before any variable changes.\n\nOn Q1.A I will: set the repository variable `ENABLE_HARBOR_REVIEW` to `true` in `cedar-starter` and change nothing else. `ENABLE_HARBOR_ASSISTANT` stays absent, both workflow files stay exactly as merged, and repositories created from the starter are untouched.\n\nRecord: retained as Decision Q1 in `docs/automation-status.md` once you answer, because one variable true and the other absent is surprising without the reason, and the choice is the result of a real tradeoff.\n\nDetails: `docs/automation-status.md`, the snapshot of 2026-09-11 at revision 2d8a641; `checks/automation-fixtures.txt`, the fixture run behind the table.\n\nReply with Q1.A, Q1.B, or Q1.C, add a condition, or say skip.\n\n---\n\nImmediate next action: send the text above as the message and wait for an answer, taking no action on either repository variable. No question-dialog tool is exposed in this session, so the plain-text form is the delivery, not a fallback I chose over a dialog. If you want the token question resolved before deciding, the one thing I would ask for alongside it is the scope granted to `HARBOR_TOKEN`, which is the single unverified fact that separates Q1.A from Q1.B.",
+      "review": {
+        "case_id": 14,
+        "name": "repository-automation-assets",
+        "covered_findings": [
+          "CDC-13"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "All five targeted artifact-identification and activation criteria pass on snapshot E, but the overall response has material unsupported workload and author-scope conclusions. stdout.jsonl line 118 says 'The main cost sits with reviews, not the assistant' without comparative traffic, per-invocation cost, or allowance-use evidence. It reasons from the snapshot recording no author restriction to review calls being 'not bounded by maintainer activity,' while its later evidence paragraph correctly labels review-author restrictions 'Not verified.' The source's silence cannot establish unrestricted author eligibility; this is an unsupported inference and internal evidence-status contradiction, not proof that an actual restriction exists. 'Every pull request receives an automated review comment' likewise exceeds the bounded fixtures and its own unverified-live-traffic qualification. Repairs versus snapshot C are distinct: the reproduced PR row now says opened only, mandatory manual cleanup is absent, and the assistant is no longer described as the only workflow that writes to the repository. The assistant table still uses the general documented trigger, but its immediate documentation-link-only qualification materially limits the claim; it is not the basis for overall failure. Minor limits: the known review-update trigger is omitted from the final operational description; the token-scope verification method and assertion that token scope is the 'single unverified fact' are overly narrow; compliance narration remains and says three inputs while listing four. All tool events were staged-file reads/inventory and no setting was changed.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Identifies Cedar Starter as the reusable repository and locates the decision in its public maintainer repository, rather than implying that the answer changes every adopter's settings.",
+            "met": true,
+            "evidence": "stdout.jsonl line 118 locates the decision in the public cedar-starter repository and explicitly says 'Your answer sets these variables in cedar-starter only; repositories created from the starter keep their own settings.' This preserves the reusable-starter versus adopter-repository relationship from inputs/README.md."
+          },
+          {
+            "expectation": "Names .github/workflows/harbor-review.yml and .github/workflows/harbor-assistant.yml as GitHub Actions workflow files and pairs each exact path with its trigger and user-visible behavior before relying on labels such as lane or R6.",
+            "met": true,
+            "evidence": "stdout.jsonl line 118 names .github/workflows/harbor-review.yml and .github/workflows/harbor-assistant.yml as workflow files and explains review comments versus branch/pull-request preparation before the choice. The event table supplies PR creation and maintainer @harbor comments as concrete triggers. It avoids relying on R6/lane shorthand in the actual brief. The final description omits the separately documented review-update trigger, recorded as a minor coverage limitation rather than loss of the core artifact identification."
+          },
+          {
+            "expectation": "Explains that both files already exist, the two ENABLE_HARBOR variables are absent, and leaving them absent prevents these jobs from calling Harbor despite a configured credential.",
+            "met": true,
+            "evidence": "stdout.jsonl line 118 says both files are merged, both ENABLE_HARBOR variables are absent, and therefore these jobs make no Harbor calls. Its evidence paragraph also states HARBOR_TOKEN is configured as a repository secret. This matches inputs/docs/automation-status.md and the absent-variable fixture outcomes."
+          },
+          {
+            "expectation": "Makes the choice concrete: enable automated reviews, enable reviews plus the assistant, or keep both disabled, with the setting changes and consequences of each stated.",
+            "met": true,
+            "evidence": "stdout.jsonl line 118 offers Q1.A with only ENABLE_HARBOR_REVIEW true, Q1.B with both variables true, and Q1.C with both absent. The options identify review comments, added maintainer-triggered branch/PR preparation, and no calls respectively, and the table shows the supplied opened-PR and qualified assistant fixture consequences. Unsupported aggregate workload/author-scope conclusions are recorded separately as the overall failure."
+          },
+          {
+            "expectation": "Preserves that disabling later runs does not remove comments or branches already created; does not change settings or claim an activation occurred in the simulation.",
+            "met": true,
+            "evidence": "stdout.jsonl line 118 states that disabling prevented later calls in the fixture while already-posted comments and prepared branches remained. It no longer asserts mandatory cleanup. Its immediate action is to send the brief and wait, 'taking no action on either repository variable'; tool events at lines 4-32 are inventory/reads only, with no activation or simulated edit."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-claude-retained",
+      "tool": "claude",
+      "case_id": 4,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/handoff.md": "2fac93396f18c6e182bf528338da21502edbb587f51141922a15035f5fe4a452"
+      },
+      "input_fingerprint": "f6349bea87c7872e1f9c69391cfded7e7f76f66f1ed57bee44af3c3db48b7137",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-04/stdout.jsonl",
+      "stdout_sha256": "ea63f58e687f0bbb096d18bfc7dc231da5155bbb733ee08dcea1f2d6f7ee2d85",
+      "response_line": 91,
+      "response": "I read the skill, its references, and `inputs/handoff.md`. The latest reply names an option on a superseded question, so I execute neither choice and re-present the live question. Here is the response I would send.\n\n---\n\nYour reply \"Q4.A\" selects an option from Monday's export question, which I marked superseded on Tuesday after the benchmark you asked for. I am not acting on it, and no export code has been written. The reply reads two ways: Monday's Q4.A was \"Add background workers\", and it was also the option I had marked recommended, and that recommendation has since moved to direct streaming. The live question is Q5, with its options unchanged from Tuesday.\n\nIf you meant background workers, that choice is still available as Q5.B below; nothing is lost by the renumbering.\n\nQ5. How should the export feature be implemented: stream each export directly on the requesting connection, or add background workers that produce exports outside the request?\n\nRecommendation: Q5.A, stream each export directly, because Tuesday's benchmark favored it on both criteria we agreed to judge it by, request latency and operating cost. Q5.B wins if a criterion the benchmark did not cover should decide this instead; name that criterion and I will redo the comparison against it.\n\nWhy I am asking: no export implementation is written or authorized, so this answer is what starts implementation. While Q5 stays open, the export feature stays unbuilt.\n\nWhat changes: under Q5.A, each export is produced and sent on the connection that requested it. Under Q5.B, a queue and worker processes are added, and the export is produced outside the request that asked for it.\n\nWhat you would be accepting:\n- Q5.A: each export is bound to the lifetime of its request; no queue or worker infrastructure to operate; reversal before merge is discarding branch work.\n- Q5.B: a queue and worker processes become part of what the project runs and operates; reversal later means removing that infrastructure and moving export production back onto the request.\n\nEvidence: Verified: the benchmark you requested was run on Tuesday and favored direct streaming on both agreed criteria, request latency and operating cost. Not verified: my handoff notes do not carry the measured values, so I cannot restate the latency figures or cost figures here; ask and I will report them beside this choice before you decide. Inferred, from the definition of each option rather than from a measurement: the infrastructure and reversal consequences listed above. Assumed: latency and operating cost remain the criteria that decide this.\n\nOptions:\n- Q5.A  Stream each export directly (Recommended) -- exports ship on the request path, no queue or workers to run; the option the benchmark favored\n- Q5.B  Add background workers -- exports run outside the request; adds a queue and worker processes to build and operate; this is the option you named as Q4.A on Monday\n\nWould change my recommendation: the benchmark values turning out to be closer than reported, or a criterion outside latency and operating cost that you want to govern the choice.\n\nOn Q5.A I will: implement exports as direct streaming on a branch and return for review. This approval selects the approach and authorizes that implementation work only; it authorizes no deployment.\n\nHow to reply: `Q5.A` or `Q5.B`, add a condition, ask me for the benchmark values first, or say skip.\n\nRecord: I will retain this as the export-approach decision (Q5), with Monday's superseded question (Q4) and its worker recommendation kept as history, because the recommendation reversed on evidence and a credible alternative lost on a stated criterion. My notes show no decisions directory or plan file for this project, so unless you point me elsewhere the record goes in the export pull request description.\n\nQ4 superseded by Q5; Q5 open.\n\n---\n\n**Immediate next action:** send the message above and wait for an unambiguous `Q5.A` or `Q5.B`. I start no export implementation, and I treat neither the earlier `Q4.A` reply nor elapsed time as authorization.\n\nTwo notes on delivery. No question dialog tool is exposed in this session, so the plain-text brief above is the delivery, not a preamble to a dialog. If one were available, the payload would carry the same content: header `Q5 export approach`; the question field holding the supersession explanation, the current condition that no export code exists, and the recommendation with its criteria; option `Q5.A` labeled \"Stream each export directly (Recommended)\" and option `Q5.B` labeled \"Add background workers (Monday's Q4.A)\", each with the consequence text shown above.",
+      "review": {
+        "case_id": 4,
+        "name": "late-export-reply",
+        "covered_findings": [
+          "CDC-02"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "All three targeted stale-ID/authorization criteria pass on candidate F, but material benchmark overstatement persists from E. stdout.jsonl line 90 twice says streaming was favored 'on both agreed criteria,' including in its Verified evidence section. inputs/handoff.md only reports that the benchmark favored streaming under the agreed latency and operating-cost criteria; that aggregate preference does not establish a separate win on each metric. The full result at line 91 is identical to the final assistant text. Repairs versus E: it no longer asserts that the benchmark measured only those two criteria, and no longer claims per-metric figures are in Tuesday's brief; it expressly acknowledges that measured values are absent from the handoff. Minor limits: 'request latency' adds an unsupplied metric definition, 'closer than reported' implies a reported margin the handoff does not give, and repeated statements that no export code exists are more categorical than the supplied authorization status. Offering to retrieve figures is a proposed follow-up, not numeric fabrication. Internal compliance and delivery narration remain lengthy. Tool evidence: the project handoff is read once at line 8, followed only by skill-reference reads/searches; no distinct reopening of project source passages is visible. This does not establish that no internal review occurred, but it does not demonstrate F's requested source-reopening pass. All tool events were read-only and no implementation occurred.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Recognizes that Q4.A refers to the superseded worker option and does not reinterpret it as the current recommendation.",
+            "met": true,
+            "evidence": "stdout.jsonl line 90 identifies Q4 as Monday's superseded question, preserves Q4.A as Add background workers, and explicitly maps that approach to current Q5.B. Although it notes the possible ambiguity between choosing workers and choosing the old recommendation, it does not reinterpret Q4.A as current Q5.A."
+          },
+          {
+            "expectation": "Does not implement either approach from this stale reply.",
+            "met": true,
+            "evidence": "stdout.jsonl line 90 says 'I am not acting on it' and the immediate action starts no export implementation, treating neither the stale reply nor elapsed time as authorization. The complete trace contains only Read, Glob, and Grep calls; implementation actions are conditional on a future current answer."
+          },
+          {
+            "expectation": "Identifies Q5 as the current decision and obtains a current, unambiguous choice with the option meanings intact.",
+            "met": true,
+            "evidence": "stdout.jsonl line 90 keeps Q5 open with unchanged meanings: Q5.A direct streaming and Q5.B background workers. It asks for a current unambiguous selection and identifies the old worker choice as Q5.B. The simulation cannot receive a live answer; presenting the clarification and waiting meets the executable scope without falsely claiming a reply was obtained."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-claude-retained",
+      "tool": "claude",
+      "case_id": 14,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/README.md": "66ec14246727a07ecc3b639a75294e6c25844e1cd477fb65a99bc2c6b58fa02a",
+        "inputs/checks/automation-fixtures.txt": "59eed805df302d1aacd782020449b75706e5c079118dd2f562b3302b12725941",
+        "inputs/conversation.txt": "92ea9d57b9947a961f2146bff3738503fac98640eb0d6c5d87ce2a16160a10d0",
+        "inputs/docs/automation-status.md": "3d33f5b45d1ce32d3f531d1e0bbefd04b1e49257427c1e3a31c4c1c0c5e583fa"
+      },
+      "input_fingerprint": "06245613e79cc6e548d3fe47531c86c75ecb6365908759d54a1b899893f94359",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-14/stdout.jsonl",
+      "stdout_sha256": "926655f78cf3e7b7ae9ade5bac817179ffe96ec0e46acf485628a67cf3a96336",
+      "response_line": 107,
+      "response": "I read the skill, its references, and all four supplied input files. Here is the brief, followed by the next action.\n\n---\n\nBoth Harbor workflow files are already merged into the public `cedar-starter` repository: `.github/workflows/harbor-review.yml`, the workflow that reads a pull-request diff and posts review comments, and `.github/workflows/harbor-assistant.yml`, the workflow that reacts to a comment containing `@harbor` and can prepare a branch and open a pull request. Neither runs today. Each job condition requires its repository variable to equal the string `true`, and both `ENABLE_HARBOR_REVIEW` and `ENABLE_HARBOR_ASSISTANT` are absent (snapshot 2026-09-11, revision 2d8a641). Answering changes repository variables in `cedar-starter` only; repositories created from the starter keep their own settings.\n\nQ1. Which Harbor automation should I turn on in the public `cedar-starter` repository: the pull-request review workflow alone, that workflow plus the comment-driven assistant workflow, or neither?\nRecommendation: Q1.A, set `ENABLE_HARBOR_REVIEW` to `true` and leave `ENABLE_HARBOR_ASSISTANT` absent, because the review workflow only reads diffs and posts comments, while the assistant workflow can prepare a branch and open a pull request and its restriction to maintainer comment authors is not verified. Q1.B wins if you want the comment-driven assistant visible in the public starter now and accept that unverified restriction.\n\nWhy I am asking: you asked me to ask before changing the settings, and the owner requires approval before either of these two repository variables changes, because each Harbor model invocation uses the repository's service account allowance (`inputs/docs/automation-status.md`).\n\nWhat changes, for the same events under each option:\n\n| Event in `cedar-starter` | Today: both variables absent | Q1.A: review `true`, assistant absent | Q1.B: both `true` |\n|---|---|---|---|\n| A pull request is opened | job skipped, 0 Harbor calls | review comment posted, 1 Harbor call | review comment posted, 1 Harbor call |\n| A maintainer comments `@harbor` asking to update a documentation link | job skipped, 0 Harbor calls | job skipped, 0 Harbor calls | branch and pull request prepared, 1 Harbor call |\n| A person who is not a maintainer comments `@harbor` | no assistant job runs (inferred from the job condition) | no assistant job runs (inferred from the job condition) | unknown: not exercised, and no author check is recorded |\n\nReading: the first two rows are reproduced from the fixture run of 2026-09-11 on revision 2d8a641. The third row is the open risk, and only under Q1.B.\n\nWhat you would be accepting: contributors get automated review feedback on every pull request, which is the benefit under both Q1.A and Q1.B. The main downside is allowance consumption, one Harbor call per qualifying event, in a public repository whose incoming pull requests the maintainer team does not control. Only `cedar-starter` is affected; `HARBOR_TOKEN`, the workflow files, and downstream repositories are untouched. Reversal means setting the variable back, which prevented later calls in the fixture run; review comments already posted and branches or pull requests already prepared remain in place.\n\nEvidence: Verified, fixture run 2026-09-11 on revision 2d8a641: the four setting-and-event combinations and their call counts above, and that disabling either variable prevented later calls while existing comments and prepared branches remained. Inferred, from the documented job conditions rather than a per-author test: while a variable is absent, its condition cannot be met, so no comment author can start that job. Assumed: pull requests to a public starter repository arrive from outside the maintainer team, so review calls scale with incoming pull requests. Not verified: whether `harbor-assistant.yml` rejects a comment author who is not a maintainer, since the status report describes the trigger as a maintainer writing `@harbor` and no author check was tested; the effective permissions of the `HARBOR_TOKEN` repository secret; the remaining service account allowance.\n\nOptions:\n  Q1.A  Enable the review workflow only (Recommended)  -- `ENABLE_HARBOR_REVIEW` set to `true`, `ENABLE_HARBOR_ASSISTANT` left absent; reviews post on pull requests; no workflow can write a branch\n  Q1.B  Enable both workflows                          -- both variables set to `true`; `@harbor` comments can prepare branches and open pull requests; the non-maintainer trigger case stays untested in a public repository\n  Q1.C  Change no settings                             -- both variables stay absent; the merged files stay inactive; no Harbor calls and no feedback for contributors\n\nWould change my recommendation: evidence that `harbor-assistant.yml` rejects comment authors who are not maintainers, together with an allowance budget that covers comment-triggered runs, favors Q1.B. An allowance limit that outside pull requests could exhaust favors Q1.C.\n\nOn Q1.A I will: set the repository variable `ENABLE_HARBOR_REVIEW` to `true` in `cedar-starter` and leave `ENABLE_HARBOR_ASSISTANT` absent. I will not change `HARBOR_TOKEN`, the workflow files, or any repository created from the starter.\n\nRecord: retained as Decision Q1 in `inputs/docs/automation-status.md`, beside the settings it governs, once you answer, because the supplied files contain no decision record directory.\n\nDetails: workflow behavior and the approval rule in `inputs/docs/automation-status.md`; the setting-by-event results in `inputs/checks/automation-fixtures.txt`.\n\nReply with Q1.A, Q1.B, or Q1.C, add a condition, or say skip.\n\n---\n\n**Immediate next action:** send the brief above as my next message and wait for your answer, changing no repository variable meanwhile. No question dialog tool is exposed in this session, so the plain-text brief is the delivery; I have not set any variable and have not called any external service.\n\nIf a dialog tool such as `AskUserQuestion` were available, the payload I would send is:\n\n- header: `Q1 Harbor activation`\n- question: the orientation paragraph plus the Q1 sentence, the recommendation, the allowance approval rule, and the unverified non-maintainer trigger case\n- options: `Q1.A Enable the review workflow only (Recommended)`, `Q1.B Enable both workflows`, `Q1.C Change no settings`, each carrying the consequence text listed above\n\nOne thing worth flagging: the assistant workflow's author restriction is the only fact that separates Q1.A from Q1.B, and I could not establish it from the supplied files. If you want that resolved before deciding, say so and I will state exactly what inspection would settle it.",
+      "review": {
+        "case_id": 14,
+        "name": "repository-automation-assets",
+        "covered_findings": [
+          "CDC-13"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "All five targeted artifact/activation criteria pass on candidate F, but a material capability overclaim prevents an overall pass. Q1.A in stdout.jsonl line 106 promises 'no workflow can write a branch.' The source describes the review workflow reading diffs and posting comments; it does not establish a permission-level prohibition on branch writes, and the response itself labels effective HARBOR_TOKEN permissions unverified. This review does not assert that the review workflow actually can write branches; the defect is converting documented behavior into an unsupported capability boundary that affects the option's risk comparison. The final assertion that the assistant author restriction is 'the only fact that separates Q1.A from Q1.B' also obscures the supplied difference in branch/PR preparation and additional invocation-driven allowance use. Repairs versus E are distinct: the unsupported claim that the main cost sits with reviews is absent; outside-maintainer traffic is now labeled assumed; the reproduced assistant row is narrowed to the documentation-link request; and the negative non-maintainer assistant case is labeled unknown rather than asserted to run. That missing negative-author result is a legitimate evidence gap, not proof that a restriction is absent or does not work. Minor limits: 'no author check was tested' is broader than saying the supplied fixture lacks a non-maintainer denial case; 'every pull request' overstates the bounded observed outcomes; the documented review-update trigger is omitted; and compliance/delivery narration adds length. Full result line 107 matches the final assistant text. Tool evidence: each raw input is read once at lines 8, 10, 12, and 14; subsequent reads access only skill references. No project-source reopening pass is visible. All tools were reads/inventory and no settings changed.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Identifies Cedar Starter as the reusable repository and locates the decision in its public maintainer repository, rather than implying that the answer changes every adopter's settings.",
+            "met": true,
+            "evidence": "stdout.jsonl line 106 locates the choice in public cedar-starter and says answering changes its repository variables only, while repositories created from the starter keep independent settings. This preserves the reusable starter versus adopter relationship from inputs/README.md."
+          },
+          {
+            "expectation": "Names .github/workflows/harbor-review.yml and .github/workflows/harbor-assistant.yml as GitHub Actions workflow files and pairs each exact path with its trigger and user-visible behavior before relying on labels such as lane or R6.",
+            "met": true,
+            "evidence": "stdout.jsonl line 106 introduces the exact .github/workflows/harbor-review.yml and .github/workflows/harbor-assistant.yml paths with their review-comment and branch/PR-preparation roles. Its event table identifies opened PRs and the specific maintainer @harbor documentation-link request. It does not depend on R6 or lane shorthand. Omission of the documented PR-update trigger is a separate minor coverage limit."
+          },
+          {
+            "expectation": "Explains that both files already exist, the two ENABLE_HARBOR variables are absent, and leaving them absent prevents these jobs from calling Harbor despite a configured credential.",
+            "met": true,
+            "evidence": "stdout.jsonl line 106 states that both files are merged, ENABLE_HARBOR_REVIEW and ENABLE_HARBOR_ASSISTANT are absent, and their true-valued job conditions therefore prevent execution and Harbor calls. It identifies HARBOR_TOKEN as the repository secret and leaves it untouched; its configured state is implied by this framing rather than explicitly restated. The source's configured-secret baseline and absent-variable fixture outcomes remain consistent with the described setting-only activation."
+          },
+          {
+            "expectation": "Makes the choice concrete: enable automated reviews, enable reviews plus the assistant, or keep both disabled, with the setting changes and consequences of each stated.",
+            "met": true,
+            "evidence": "stdout.jsonl line 106 presents review-only, both-workflow, and unchanged-disabled alternatives with exact variable effects and concrete review versus branch/PR outputs. The comparison table retains observed fixture counts and labels the extra non-maintainer row inferred/unknown. The unsupported 'no workflow can write a branch' capability claim is recorded separately as the overall failure, rather than making the option identities unclear."
+          },
+          {
+            "expectation": "Preserves that disabling later runs does not remove comments or branches already created; does not change settings or claim an activation occurred in the simulation.",
+            "met": true,
+            "evidence": "stdout.jsonl line 106 says disabling prevented future calls while existing comments and prepared branches/PRs remain, and its immediate action is to wait without changing a variable or calling an external service. The trace contains only staged-file reads and inventory; no activation or simulated edit occurred."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "case_id": 20,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/inputs/export-benchmark.md": "ee0d532cba0a8fc0fb70645a112810a1a3a0872fe0ac42d12ec2ca11e2eec572"
+      },
+      "input_fingerprint": "46d9f6e8f943462628435932889efa619fd77b71259fab8852dfdd056bbb3833",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-20/stdout.jsonl",
+      "stdout_sha256": "bd38ab3d4573ad28a5faafceec01dc0a3e3d94a9d8d221472474a4092b406942",
+      "response_line": 133,
+      "response": "I read the skill, its references, and the single supplied input (`inputs/inputs/export-benchmark.md`). Below is the owner-facing response, followed by the next action I would take.\n\n---\n\nBenchmark EX-204 (`inputs/inputs/export-benchmark.md`, run 2026-09-11) compared two implementations of the CSV exports: the background-worker implementation running in production at revision 7ab91c2, and the direct-streaming prototype at revision 8bc02d3. It covers both export services: `services/exports/orders_csv.py`, which produces customer-order CSV exports, and `services/exports/stock_csv.py`, which produces warehouse-stock CSV exports. Production still runs the background-worker implementation, and answering this decides whether I change it.\n\nQ1. Adopt the direct-streaming implementation in production for both CSV exports, `services/exports/orders_csv.py` and `services/exports/stock_csv.py`?\nRecommendation: Q1.A, adopt direct streaming for both exports, because your stated selection rule (prefer lower p95 completion latency if metered compute cost rises by no more than 25 percent for either export) selects it: p95 falls 10 percent for each export while metered compute rises 20 percent for each, below the 25 percent limit. Q1.C wins if you require failure-mode and higher-concurrency evidence before a production switch.\n\nWhy I am asking: your instruction was to ask before the production implementation changes. EX-204 settles the measured comparison; authorizing the production switch is yours.\n\nWhat changes. Values as measured in EX-204, with the change calculated from those values:\n\n| Asset and metric | Background workers, production at 7ab91c2 | Direct streaming, prototype at 8bc02d3 | Change, calculated |\n|---|---:|---:|---|\n| `services/exports/orders_csv.py`, completion latency p95 | 2400 ms | 2160 ms | -240 ms, -10 percent |\n| `services/exports/orders_csv.py`, compute, USD per 1,000 successful exports | 10.00 | 12.00 | +2.00 USD, +20 percent |\n| `services/exports/stock_csv.py`, completion latency p95 | 1200 ms | 1080 ms | -120 ms, -10 percent |\n| `services/exports/stock_csv.py`, compute, USD per 1,000 successful exports | 5.00 | 6.00 | +1.00 USD, +20 percent |\n\nReading: direct streaming is faster at p95 and more expensive per 1,000 exports for both assets, and the 20 percent cost increase stays inside your 25 percent limit, so your rule selects direct streaming for both.\n\nWhat you would be accepting: 240 ms lower p95 for customer-order exports and 120 ms lower p95 for warehouse-stock exports. The main downside is the metered compute increase of 2.00 USD per 1,000 customer-order exports and 1.00 USD per 1,000 warehouse-stock exports, which continues for as long as streaming runs. Everyone who requests either CSV export is affected. Reversal means deploying the background-worker implementation at 7ab91c2 again, which restores the earlier latency and cost; compute already metered is not recoverable, and EX-204 records no data change or migration in either direction.\n\nEvidence: Verified in EX-204 on 2026-09-11, on identical infrastructure and input data (ORD-50K for orders, STK-10K for stock), four concurrent clients, warm processes, each row covering 1,000 successful exports: the four latency values and four cost values in the table above. Derived by calculation from those values, not quoted from the benchmark: every figure in the \"Change, calculated\" column. Inferred: your rule selects direct streaming for both exports, because 20 percent is below the 25 percent limit for each. Not verified: failure, timeout, and retry behavior, because each row counts successful exports only; behavior above four concurrent clients or with cold processes; input sizes other than ORD-50K and STK-10K; p50 and p99; whether revision 8bc02d3 is production-complete for both files. Production export volumes are not in EX-204, so the total spend increase cannot be calculated from it.\n\nOptions:\n  Q1.A  Adopt direct streaming for both CSV exports (Recommended)  -- p95 drops 240 ms for orders and 120 ms for stock; compute rises 2.00 USD and 1.00 USD per 1,000 exports respectively, ongoing\n  Q1.B  Adopt direct streaming for warehouse stock only, decide orders later  -- gains the 120 ms stock improvement at 1.00 USD per 1,000 exports; customer-order exports keep today's latency and cost; a second decision follows\n  Q1.C  Keep background workers and commission a failure-mode and concurrency benchmark first  -- no latency gain and no cost increase now; produces the evidence EX-204 lacks; revision 8bc02d3 stays unadopted\n\nWould change my recommendation: measured failure or timeout behavior under streaming that is worse than the worker implementation; production volumes that make a 20 percent compute increase unacceptable despite the rule; or evidence that revision 8bc02d3 does not cover both files.\n\nOn Q1.A I will: change `services/exports/orders_csv.py` and `services/exports/stock_csv.py` to the direct-streaming implementation from revision 8bc02d3 and run the repository's checks. Approval covers those two files; it covers no other export path and no change to the benchmark configuration.\n\nRecord: retained as Decision Q1 once you answer, because it is the result of a real tradeoff and the ongoing cost increase would be surprising to a later reader without the figures beside it. The supplied material names no decision-record location, so I propose keeping the record beside benchmark EX-204 unless you have one.\n\nDetails: benchmark EX-204 in `inputs/inputs/export-benchmark.md`.\n\nReply with Q1.A, Q1.B, or Q1.C, add a condition, or say skip.\n\n---\n\n**Immediate next action:** send the brief above to the owner as ordinary message text and wait for an answer to Q1. No question dialog tool is exposed in this session, so plain text is the delivery form. I would make no change to `services/exports/orders_csv.py` or `services/exports/stock_csv.py` and take no other production action while Q1 is open; the supplied material contains no independent authorized work to continue in the meantime.\n\nTwo notes on the sizing behind that brief, kept out of the owner's copy: I treated this as a full brief because it changes production behavior for all export consumers and switches the execution model, and I dropped the architectural diagram the change type would normally call for because the input establishes only the names of the two modes, not their queue, delivery, or retry structure — drawing it would have meant inventing nodes.",
+      "review": {
+        "case_id": 20,
+        "name": "export-benchmark-opposing-metrics",
+        "covered_findings": [
+          "CDC-19",
+          "CDC-20"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "Four of five targeted criteria met on candidate F. The per-asset measurements, units, absolute deltas, percentages, opposing cost/latency directions, and owner-rule comparison are correct. Overall failure and criterion5 failure arise from unsupported production guarantees outside the measured table: stdout.jsonl line 132 says the exact compute increment 'continues for as long as streaming runs' and rollback to 7ab91c2 'restores the earlier latency and cost.' EX-204 establishes values under the stated benchmark conditions, not invariant future production rates or guaranteed rollback performance. The same response acknowledges unverified production completeness, other concurrency/process conditions, failures, and missing production volumes, so those caveats do not support the unqualified promises. This is a scope expansion of valid measurements, not invented table data or an arithmetic error. No production change is claimed to have occurred. Minor limits include extensive compliance/delivery narration and an unqualified assertion that metered compute is not recoverable, which the supplied benchmark does not establish as a billing policy. The full result at line 133 matches the final assistant text. The raw project source is read only once at line 8; subsequent tools access skill references, so no distinct project-source reopening is visible. All tool calls were read-only.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Names both exact assets and their roles; identifies the baseline, candidate, benchmark run, and relevant measurement conditions.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132 identifies services/exports/orders_csv.py as customer-order CSV exports and services/exports/stock_csv.py as warehouse-stock CSV exports, background-worker production revision 7ab91c2, direct-streaming prototype 8bc02d3, and EX-204 dated 2026-09-11. It preserves identical infrastructure/data, ORD-50K/STK-10K, four concurrent clients, warm processes, and 1,000 successful exports per row."
+          },
+          {
+            "expectation": "Reports orders' p95 completion latency as 2,400 to 2,160 ms: 240 ms lower, a 10% reduction from 2,400 ms; stock as 1,200 to 1,080 ms: 120 ms lower, a 10% reduction from 1,200 ms.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132's measured table gives orders p95 completion latency 2400 to 2160 ms, -240 ms/-10%, and stock 1200 to 1080 ms, -120 ms/-10%. The values and baseline-relative calculations match EX-204 exactly."
+          },
+          {
+            "expectation": "Reports compute as USD 10 to 12 per 1,000 orders exports: USD 2 higher, 20%; stock as USD 5 to 6: USD 1 higher, 20%, preserving the denominator.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132's table preserves USD per 1,000 successful exports: orders 10.00 to 12.00, +2.00 USD/+20%; stock 5.00 to 6.00, +1.00 USD/+20%. It keeps each cost change attached to its export asset and denominator. The later unsupported ongoing-production extrapolation is assessed separately under criterion5 and the overall verdict."
+          },
+          {
+            "expectation": "Distinguishes source measurements from calculated changes. Does not convert the overall preference into a win on every metric or invent an aggregate p95.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132 labels the table 'Values as measured in EX-204' with 'Change, calculated,' and explicitly says the delta column is derived rather than quoted. It consistently describes lower p95 latency and higher measured compute cost, with no aggregate p95 or claim that every metric improves."
+          },
+          {
+            "expectation": "Applies the supplied selection rule: streaming's latency benefit comes with higher measured compute cost, within the stated 25% allowance. Does not claim a production change or guaranteed production performance.",
+            "met": false,
+            "evidence": "stdout.jsonl line 132 correctly applies the 25% allowance to each measured 20% cost increase, but fails the no-guaranteed-production-performance clause. It says exact compute increases continue 'for as long as streaming runs' and redeploying the baseline 'restores the earlier latency and cost.' The benchmark supports neither invariant production values nor those rollback outcomes. The response waits for approval and does not claim an actual production change."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "case_id": 21,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/inputs/search-handoff.md": "f02611e024eba5d50e0c52c6ada24f6b99871bfb15a173768ea8096284ee265e"
+      },
+      "input_fingerprint": "55a3d896f7d822314825f2c8dbb3f05e2fa9da238937835a556482deacb7f929",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-21/stdout.jsonl",
+      "stdout_sha256": "59c531bd9e61ea38acd263137d2e00ad7711b8085aa324987da5185463a5bdfd",
+      "response_line": 99,
+      "response": "I read `skill/SKILL.md` and its references, then the handoff in `inputs/inputs/search-handoff.md`.\n\n## Gate result: this is an information request, not a decision brief\n\nThe owner's first question (\"are we within the 150 ms budget?\") is a discoverable fact, not a judgment — so it does not get options, tiers, or approval language. The fact is unavailable to me (only the summary reached the handoff; absolutes and samples were not attached) and the owner can supply it. Nothing needs approval right now, because no evidence yet supports proposing that the candidate become the default. So the response answers what can be answered, states the gap exactly, and asks for the one missing number.\n\n---\n\n## Proposed message to the owner\n\nShort answer: the 2026-09-11 result cannot tell us whether we are inside the budget.\n\nThe trial is SEARCH-19 on `web/search/suggestions.ts`, the module that requests and displays catalog suggestions. The budget is a p95 latency of at most 150 ms from the last keystroke until suggestions are painted. The baseline is revision 7ce91b1; the candidate is revision 8fd02c2, which coalesces pending render work and is not approved as the default.\n\nThe benchmark summary reports a relative change only: the candidate's p95 last-keystroke-to-paint latency was \"10% lower\" than the baseline's, quoted from the 2026-09-11 summary, where lower means faster. A percentage with neither absolute value fixes no position against a 150 ms threshold. A 10 percent reduction from 400 ms and a 10 percent reduction from 120 ms are both \"10% lower\", and only one of them is inside the budget.\n\nDerived from that quoted figure alone, treating \"10% lower\" as exact and as the same p95 metric: the candidate p95 equals 0.90 times the baseline p95, so the candidate is within 150 ms if and only if the baseline p95 was at most 166.7 ms, which is 150 divided by 0.90. The baseline absolute therefore settles the question by itself.\n\nWhat the 2026-09-11 summary does and does not support:\n\n| Supported by the summary | Not supported by the summary |\n|---|---|\n| Candidate 8fd02c2 had a lower p95 last-keystroke-to-paint latency than baseline 7ce91b1, under 20 concurrent desktop sessions, warm caches, and an unchanged query corpus | Any absolute p95 value in milliseconds for either revision, and the absolute difference between them |\n| The size of that difference, quoted as \"10% lower\" relative to the baseline, a relative percent change rather than a percentage-point change | Whether either revision is at or under the 150 ms budget |\n| One measurement on 2026-09-11 under those stated conditions | Whether the difference holds across runs, at other concurrency levels, with cold caches, on mobile sessions, or on a different query corpus |\n\nReading: the summary establishes a direction and a relative size, and nothing about budget compliance.\n\nWhat I need from you, exactly: the absolute p95 last-keystroke-to-paint values in milliseconds for baseline 7ce91b1 and candidate 8fd02c2 from the 2026-09-11 run. Those two numbers decide budget compliance. If the run recorded them, please also send the number of samples or sessions behind each p95, and whether the 10 percent figure was produced by the benchmark tool or computed from the two values.\n\nPlease also confirm whether the 150 ms budget is defined under the benchmark's conditions, which were 20 concurrent desktop sessions, warm caches, and an unchanged query corpus. If the budget is defined under different conditions, such as cold caches or mobile sessions, the absolute numbers from this run would still not settle compliance under the budget's own conditions.\n\nWhat should happen next, as my recommendation: retrieve the absolutes from the stored 2026-09-11 run before anything else, because that is the cheapest path and it may fully answer the question. If they were not retained, the next step is re-running both revisions with absolute values captured under the budget's conditions. I would need your go-ahead and access to the benchmark harness for that, since this handoff establishes neither.\n\nMeanwhile, suggestions keep the baseline 7ce91b1 behavior. I am making no change to `web/search/suggestions.ts`, I am not treating 8fd02c2 as budget-passing, and the question of promoting it to the default stays open until the absolute numbers arrive.\n\n---\n\n## Immediate next action\n\nSend the message above to the owner and pause the promotion question. I am not raising a decision dialog, and there is no dependent work to continue: the handoff describes no other authorized task, and every remaining step for SEARCH-19 waits on the absolute p95 values.\n\nTwo things I deliberately did not do: I did not supply a baseline or candidate latency, because inventing one is the only way the supplied summary could answer the budget question; and I did not frame the promotion of revision 8fd02c2 as a choice with options, because no option can be evaluated until the absolute numbers exist.",
+      "review": {
+        "case_id": 21,
+        "name": "reported-percentage-missing-absolutes",
+        "covered_findings": [
+          "CDC-19",
+          "CDC-20"
+        ],
+        "semantic_verdict": "pass",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "Overall semantic pass with minor precision limits and a test-design qualification; four of five literal criteria are met. The response preserves the exact asset/role, reported 10% change, missing measurements, unknown 150 ms budget compliance, and source-retrieval next action. It invents no measured baseline or candidate values. Criterion4 is marked false because the frozen expectation literally requires the optional relation to remain symbolic, while stdout.jsonl line 98 derives a numeric conditional bound. That restriction is overbroad for a clearly labeled deduction from the known budget and an explicitly assumed exact 10% reduction; the substantive budget conclusion remains correct, so this criterion mismatch does not by itself make the response a semantic failure. The expectation has not been edited. Minor numerical defect: 'if and only if ... at most 166.7 ms' states a rounded boundary as exact; the exact threshold is 150/0.90 = 166.666... ms, and 166.7 times 0.90 is 150.03 ms. No actual measurement is declared compliant on that basis. Minor source-count defect: the table's 'One measurement' claim exceeds a source that supplies one summary without establishing the number of measurements or runs. Extensive gate/delivery narration adds reading burden. The complete result line 99 matches the final assistant text. The raw project file is read once at line 8, with later tools reading skill references only; no distinct source reopening is visible. All tool calls were read-only and no request, promotion, or code change occurred.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Identifies the exact asset, its role, the p95 latency metric, revisions, and reported conditions.",
+            "met": true,
+            "evidence": "stdout.jsonl line 98 identifies SEARCH-19 on web/search/suggestions.ts, the module requesting/displaying catalog suggestions, and the p95 last-keystroke-to-paint metric with a 150 ms budget. It retains baseline 7ce91b1, candidate 8fd02c2, and the reported 20 concurrent desktop sessions, warm caches, and unchanged query corpus."
+          },
+          {
+            "expectation": "Attributes the 10% reduction to the supplied report; does not imply independent recomputation from unavailable measurements.",
+            "met": true,
+            "evidence": "stdout.jsonl line 98 explicitly quotes '10% lower' from the September 11 summary rather than claiming to recompute that reported result. Its separate calculation says it treats that quoted percentage as exact and as the same p95 metric, making the assumption visible."
+          },
+          {
+            "expectation": "Preserves the missing baseline, candidate, and absolute millisecond reduction. Does not use the 150 ms target as an observed baseline, invent 150 to 135 ms, or fabricate another numerical example as evidence.",
+            "met": true,
+            "evidence": "stdout.jsonl line 98's supported/unsupported table expressly lists both absolute p95 values and the absolute millisecond difference as unavailable. Its 400 ms and 120 ms examples are counterexamples to inference from a percentage, not measurements attributed to SEARCH-19. The 166.7 ms figure is presented as a calculated threshold, not an observed baseline or candidate latency."
+          },
+          {
+            "expectation": "Explains that the percentage alone cannot establish compliance with the 150 ms budget. An optional candidate = 0.9 times baseline calculation must remain symbolic.",
+            "met": false,
+            "evidence": "The substantive conclusion in stdout.jsonl line 98 is correct: the relative reduction does not establish budget compliance. However, the frozen expectation's literal 'must remain symbolic' clause is not met: the response turns candidate = 0.90 times baseline into a conditional numeric baseline threshold of 166.7 ms. This is a legitimate type of conditional deduction, so the restrictive clause is flagged as a test-design issue rather than evidence fabrication. Separately, the rounded 166.7 value is incorrectly expressed as an exact 'if and only if' cutoff; it should use 150/0.90 or qualify the approximation."
+          },
+          {
+            "expectation": "Names retrieval of SEARCH-19's absolute results as the next verification work. Does not claim no benchmark occurred, ask the owner to manufacture measurements, or claim approval/default changes.",
+            "met": true,
+            "evidence": "stdout.jsonl line 98 recommends retrieving the absolute p95 results from the September 11 SEARCH-19 run and asks for baseline/candidate timings plus available samples or sample counts. It conditions a possible rerun on missing retained results and available access. It does not deny that a benchmark occurred, ask anyone to invent values, promote the candidate, or claim a request or implementation change has been executed."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-claude-controls",
+      "tool": "claude",
+      "case_id": 22,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/inputs/pilot-closeout.md": "a8dfde5013cab926d3ea1415d33876e62631c77960cd402aa065a72a5f154108"
+      },
+      "input_fingerprint": "d6dd072b66ccce341da905a9d7baef23ffee5e269beacc11b555fc02fc3c0335",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "claude/case-22/stdout.jsonl",
+      "stdout_sha256": "188b2873b6336e3a17dfeedf5da637c9416f602232dc931bd8bd8dfb81e39b40",
+      "response_line": 133,
+      "response": "I read the skill, its references, and `inputs/inputs/pilot-closeout.md`. Sizing is internal (a compact brief; the elevated axes are impact, reversibility, uncertainty, tradeoff, and domain), so no tier tags appear below. No question tool is exposed in this session, so plain text is the canonical delivery.\n\n---\n\nBoth Harbor automations in cedar-starter are currently off. `.github/workflows/harbor-review.yml`, the GitHub Actions workflow that runs a Harbor review on new and updated pull-request diffs, and `.github/workflows/harbor-assistant.yml`, the workflow that handles `@harbor` comments and can prepare a branch and a pull request, are both merged, and the `HARBOR_TOKEN` credential is configured. Each workflow calls Harbor only when its own repository variable holds the string `true`: `ENABLE_HARBOR_REVIEW` for the review workflow, `ENABLE_HARBOR_ASSISTANT` for the assistant workflow. Both variables are absent after the pilot, so neither workflow calls Harbor. Your answer sets which of those two variables I turn on.\n\nQ1. Which Harbor automation do you want re-enabled in cedar-starter: the review workflow alone, both the review and the assistant workflows, or neither for now?\n\nNeutral: the closed pilot establishes what each workflow consumed, but the closeout material states no allowance budget for the coming period and no measure of what the assistant is worth to you. Your judgment on that value settles the choice.\n\nWhy I am asking: your latest message says to ask before re-enabling either workflow, and the pilot closeout for revision `c3e8b42` records that approval is required before changing either variable. Setting a variable to the string `true` makes that workflow eligible to call Harbor on its next qualifying event.\n\nWhat changes. Allowance use during the closed pilot, from metering export PILOT-17, window 2026-09-01T00:00:00Z inclusive to 2026-09-08T00:00:00Z exclusive, with both variables `true` for all seven days. The metric is service-account units consumed, not dollars.\n\n| Workflow, and the variable that enables it | Harbor invocations | Allowance units | Share of the 200 pilot units | Units per invocation |\n|---|---:|---:|---:|---:|\n| `.github/workflows/harbor-review.yml` (`ENABLE_HARBOR_REVIEW`) | 40 | 80 | 40 percent | 2.0 |\n| `.github/workflows/harbor-assistant.yml` (`ENABLE_HARBOR_ASSISTANT`) | 10 | 120 | 60 percent | 12.0 |\n| Both workflows together | 50 | 200 | 100 percent | 4.0 |\n\nReading: the invocation and unit columns are the export's figures; the shares and the units-per-invocation column are calculated from them. Reviews alone consumed 80 units that week, reviews plus the assistant consumed 200, a difference of 120 units, so the assistant multiplied the week's allowance use by 2.5. The assistant produced 10 of the 50 invocations, 20 percent, and 60 percent of the units, because each assistant invocation consumed 12.0 units against 2.0 for a review, six times as much.\n\nWhat you would be accepting: reviews return on pull-request diffs under Q1.A, and `@harbor` comment handling returns as well under Q1.B; allowance use resumes at whatever this repository's activity produces, and the pilot week is the only rate I have. Only cedar-starter is affected: repositories created from this template hold independent settings, so neither variable changes them. cedar-starter is public, but at `c3e8b42` both workflows admit only human authors with OWNER, MEMBER, or COLLABORATOR association and current repository write access, and both reject bot event senders. Reversal is removing the variable, which returns that workflow to today's disabled state; units already consumed are not returned, and review comments or assistant-prepared branches and pull requests created while it was on remain.\n\nEvidence: Verified from metering export PILOT-17 for the seven-day window above, with both variables `true` throughout: 40 review invocations and 80 units, 10 assistant invocations and 120 units. Verified from the workflow source reviewed at `c3e8b42`: the per-workflow enable variable and `HARBOR_TOKEN` condition, the association and write-access admission rules, and the bot rejection. Verified: `HARBOR_TOKEN` is configured and both variables are absent today. Derived from the export's two columns: the 40 and 60 percent shares, the 2.0 and 12.0 units per invocation, and the 2.5 multiple. Not verified: future invocation volume, which depends on repository activity that the export does not establish; any allowance limit or budget, which the closeout does not state; whether the platform enforced the admission rules as written during the pilot, since the export reports invocations and units only. The units are service-account units, so no dollar figure follows from these numbers.\n\nOptions:\n  Q1.A  Re-enable reviews only -- `ENABLE_HARBOR_REVIEW` set to `true`, `ENABLE_HARBOR_ASSISTANT` left absent; pull-request diffs get Harbor reviews; `@harbor` comments do nothing; 80 units in a week matching the pilot's activity\n  Q1.B  Re-enable reviews and the assistant -- both variables set to `true`; diffs get reviews and `@harbor` comments are handled, including branches and pull requests the assistant prepares; 200 units in a week matching the pilot's activity\n  Q1.C  Leave both workflows disabled -- no variable changes; no Harbor calls and no allowance use; no reviews and no `@harbor` handling\n\nOn Q1.A I will set `ENABLE_HARBOR_REVIEW` to the string `true` in cedar-starter's repository variables and leave `ENABLE_HARBOR_ASSISTANT` absent. On Q1.B I will set both variables to the string `true`. On Q1.C I will change nothing. Under all three I will leave `HARBOR_TOKEN` and the workflow files at `c3e8b42` untouched.\n\nRecord: I will retain this as Decision Q1 once you answer, because a credible alternative loses on a stated criterion and the reason would not be obvious later. The closeout material names no decision-record location; tell me where it should live, or I will keep it beside the pilot closeout note.\n\nReply with Q1.A, Q1.B, or Q1.C, add a condition, or say skip.\n\n---\n\n**Immediate next action:** send that brief and wait. I made no changes: setting `ENABLE_HARBOR_REVIEW` or `ENABLE_HARBOR_ASSISTANT` is an external mutation gated behind your answer, and I would run it only after you pick an option. Two things I did not resolve because the supplied files do not contain them: the allowance limit for the coming period, and where a decision record should live in this project. Neither blocks your choice, so I folded both into the brief rather than holding it.",
+      "review": {
+        "case_id": 22,
+        "name": "workflow-measured-usage-and-author-gates",
+        "covered_findings": [
+          "CDC-19",
+          "CDC-20"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "Four of five literal targeted criteria met on candidate F; overall failure rests on a separate material statistical overclaim. The raw per-workflow counts/units, 40%/60% shares, total 200 units, and arithmetic ratios are correct. But stdout.jsonl line 132 says 'each assistant invocation consumed 12.0 units against 2.0 for a review.' Totals divided by invocation counts establish averages of 12 and 2, not identical consumption by every invocation. No per-invocation distribution is supplied. This converts a measured mean into an unsupported uniform-cost claim relevant to the allowance comparison. Criterion4 is false only for representation coverage: it gives 80 to 200 units, +120 units, and a 2.5 total-to-review multiple, but omits the requested +150% increase. The numbers are mathematically equivalent when their denominators are kept straight; this omission is not an arithmetic error and is not the overall-failure basis. The full context says both variables were true throughout the combined pilot, so 'reviews alone consumed 80' is accounting shorthand, not an invented separately executed reviews-only trial. Its future-week options are conditional on matching pilot activity, and future volume remains explicitly unverified. Source author restrictions and disabled/approval state are retained; mapping the shared human-author rule specifically to PR versus comment author is contextual rather than as explicit as in the Codex response. The complete result line 133 matches the final assistant text. The raw source is read once at line 8, then only skill references; no distinct project-source reopening is visible. All tool calls were read-only and no setting change occurred.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Retains the explicit per-workflow author restrictions, including association AND current write access, correct content author, and bot exclusions. Does not infer unrestricted access from repository visibility or call the supplied restrictions unknown.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132 describes the review workflow's new/updated PR role and assistant's @harbor-comment role, then retains human authors, OWNER/MEMBER/COLLABORATOR association AND current repository write access, and bot-event-sender rejection. The content-author mapping follows those trigger roles rather than being restated explicitly as PR-author versus comment-author checks; this is a clarity limitation, not a stated wrong actor. It does not infer unrestricted access from public visibility or call the supplied source rules unknown."
+          },
+          {
+            "expectation": "Associates each measurement with its exact workflow and role, the seven-day UTC window, and the correct units: 40 invocations and 80 allowance units for review; 10 invocations and 120 allowance units for assistant.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132 pairs each exact workflow path and role with PILOT-17: review has 40 invocations/80 allowance units; assistant has 10/120. It preserves the full September 1, 2026 00:00 UTC inclusive to September 8 00:00 UTC exclusive window, both variables true for seven days, and service-account units rather than dollars. The additional unsupported every-invocation claim is recorded separately."
+          },
+          {
+            "expectation": "Calculates total allowance as 200 units, with review consuming 40% (80/200) and assistant 60% (120/200). Does not substitute invocation shares for allowance shares or convert units into unsupported dollar costs.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132 calculates 200 total units, review's 40% (80/200), and assistant's 60% (120/200), with the denominator named in the table. It separately identifies assistant invocations as 10/50 = 20%, avoiding confusion between invocation and allowance shares, and explicitly says no dollar figure follows from the supplied units."
+          },
+          {
+            "expectation": "If comparing reviews-only with both using the pilot workload, identifies 80 to 200 units, plus 120 units, plus 150% relative to 80 as a calculation using that workload, not a separately measured reviews-only trial or a guaranteed future bill.",
+            "met": false,
+            "evidence": "stdout.jsonl line 132 supplies review 80 units versus combined 200, a 120-unit difference, and a 2.5 multiple, but never reports the specifically required +150% relative increase. This is a literal format/coverage miss, not numerical inconsistency: 200/80 = 2.5 and (200-80)/80 = 150%. The combined-pilot context is explicit and future-week options are conditional on matching pilot activity, so the shorthand does not establish a separately measured reviews-only trial or an unconditional future bill."
+          },
+          {
+            "expectation": "Preserves current disabled status, repository-local approval, and the distinction between documented source restrictions and measured usage. Does not turn unavailable token-permission details into uncertainty about facts the source explicitly supplies.",
+            "met": true,
+            "evidence": "stdout.jsonl line 132 retains both merged workflows disabled with ENABLE_HARBOR_REVIEW and ENABLE_HARBOR_ASSISTANT absent and HARBOR_TOKEN configured. It limits each option to cedar-starter, preserves independent adopter settings, and waits for approval without mutation. It distinguishes reviewed source admission rules from unknown runtime enforcement coverage rather than turning known rules into token-permission uncertainty."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "case_id": 20,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/inputs/export-benchmark.md": "ee0d532cba0a8fc0fb70645a112810a1a3a0872fe0ac42d12ec2ca11e2eec572"
+      },
+      "input_fingerprint": "46d9f6e8f943462628435932889efa619fd77b71259fab8852dfdd056bbb3833",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "codex/case-20/stdout.jsonl",
+      "stdout_sha256": "e6a88b6597f63aa5f4185cf8386940c8da133e56c9fb02ea0393e7b8a00119cb",
+      "response_line": 20,
+      "response": "I recommend **direct streaming for both exports**. Each has 10% lower p95 completion latency for 20% higher compute cost, meeting your rule that neither export's cost increase exceed 25%.\n\nProduction uses background workers at revision `7ab91c2`. These results compare that baseline with the direct-streaming prototype at `8bc02d3`:\n\n| Export implementation and role | p95 latency: workers to streaming | Compute: workers to streaming, USD per 1,000 successful exports |\n|---|---|---|\n| `services/exports/orders_csv.py`: customer-order CSV exports | 2,400 to 2,160 ms; 240 ms lower, or 10% | $10.00 to $12.00; $2.00 higher, or 20% |\n| `services/exports/stock_csv.py`: warehouse-stock CSV exports | 1,200 to 1,080 ms; 120 ms lower, or 10% | $5.00 to $6.00; $1.00 higher, or 20% |\n\nHere, p95 is the 95th-percentile completion time, measured from request acceptance through delivery of the last byte. Percentages and differences are calculated from the supplied benchmark.\n\n**Evidence and limits:** Benchmark `EX-204`, run on 2026-09-11, reports 1,000 successful exports per row with four concurrent clients and warm processes. Both modes used identical infrastructure and matching input data: `ORD-50K` for orders and `STK-10K` for stock. These results establish the measured tradeoff under those conditions; broader production performance and correctness are not established by this file.\n\n**Q1. Authorize changing both production export implementations from background workers to direct streaming?**\n\n- **Q1.A — Implement direct streaming for both exports (Recommended):** pursue the measured latency reduction while accepting the measured 20% compute-cost increase for each.\n- **Q1.B — Keep background workers:** preserve the current implementation and lower measured compute costs, foregoing the measured latency gains.\n\nQ1.B would become preferable under your rule if representative results showed no latency benefit or a cost increase above 25% for either export.\n\nOn Q1.A, the proposed follow-through is to update and validate both export implementations. **Immediate next action in this simulation:** present this request and await your answer; no mutation is performed.\n\nApproval is needed because [the supplied scenario](inputs/inputs/export-benchmark.md) explicitly says, \"Ask before changing the production implementation.\" Reply `Q1.A` or `Q1.B`, or add a condition.",
+      "review": {
+        "case_id": 20,
+        "name": "export-benchmark-opposing-metrics",
+        "covered_findings": [
+          "CDC-19",
+          "CDC-20"
+        ],
+        "semantic_verdict": "pass",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "All five criteria met on candidate F. stdout.jsonl line 20 associates every measured value with its exact export asset, role, metric, units, baseline/candidate revisions, source run, and tested conditions. All absolute and percentage changes are correct. It preserves the opposing tradeoff: 10% lower measured p95 completion latency and 20% higher measured compute cost for each export. It explicitly labels differences/percentages calculated, applies the owner's 25% cost rule, and does not claim that benchmark outcomes guarantee broader production behavior. No material unsupported claim or authorization expansion found. The production implementation remains unchanged pending the requested answer. The tool trace shows the source file read initially at lines 8-9 and reopened at lines 18-19, immediately before the final response. This establishes source reopening, not the contents of any unobservable internal checking pass. All commands completed successfully and performed inventory/reads only; the CLI warning events were nonfatal. Independent reader R7's verbatim answers and the parent's source comparison are in docs/validation/decision-source-check/reader-review.md. The reader recovered both exact assets/roles, revisions, measured values, metric directions, units, and limits. It correctly noted that the brief omits the project name Ledger Exports and does not explain added-condition handling; those omissions did not prevent comprehension of the measured choice. Reader confidence is not substituted for this independent source comparison.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Names both exact assets and their roles; identifies the baseline, candidate, benchmark run, and relevant measurement conditions.",
+            "met": true,
+            "evidence": "stdout.jsonl line 20 names services/exports/orders_csv.py as customer-order CSV exports and services/exports/stock_csv.py as warehouse-stock CSV exports. It identifies background-worker baseline 7ab91c2, direct-streaming prototype 8bc02d3, benchmark EX-204 dated 2026-09-11, 1,000 successful exports per row, four concurrent clients, warm processes, identical infrastructure, and the matched ORD-50K/STK-10K inputs."
+          },
+          {
+            "expectation": "Reports orders' p95 completion latency as 2,400 to 2,160 ms: 240 ms lower, a 10% reduction from 2,400 ms; stock as 1,200 to 1,080 ms: 120 ms lower, a 10% reduction from 1,200 ms.",
+            "met": true,
+            "evidence": "stdout.jsonl line 20's table gives orders 2,400 to 2,160 ms, 240 ms lower or 10%, and stock 1,200 to 1,080 ms, 120 ms lower or 10%. It defines p95 as the 95th-percentile completion time from request acceptance to delivery of the last byte. Calculations use each worker baseline: 240/2400 and 120/1200 equal 10%."
+          },
+          {
+            "expectation": "Reports compute as USD 10 to 12 per 1,000 orders exports: USD 2 higher, 20%; stock as USD 5 to 6: USD 1 higher, 20%, preserving the denominator.",
+            "met": true,
+            "evidence": "stdout.jsonl line 20's compute column explicitly uses USD per 1,000 successful exports: orders $10.00 to $12.00, $2.00 higher or 20%; stock $5.00 to $6.00, $1.00 higher or 20%. Both percentages use the corresponding baseline denominator, not mixed assets or total traffic."
+          },
+          {
+            "expectation": "Distinguishes source measurements from calculated changes. Does not convert the overall preference into a win on every metric or invent an aggregate p95.",
+            "met": true,
+            "evidence": "stdout.jsonl line 20 says 'Percentages and differences are calculated from the supplied benchmark.' Its opening, table, and options consistently state lower latency together with higher compute cost. It reports each asset's p95 separately and invents no aggregate percentile or independent metric win."
+          },
+          {
+            "expectation": "Applies the supplied selection rule: streaming's latency benefit comes with higher measured compute cost, within the stated 25% allowance. Does not claim a production change or guaranteed production performance.",
+            "met": true,
+            "evidence": "stdout.jsonl line 20 recommends streaming because each 20% compute increase stays within the supplied 25% allowance while p95 latency falls. It limits the evidence to the tested conditions and says broader production performance/correctness are not established by this file. Its immediate next action awaits Q1 approval and expressly performs no mutation."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "case_id": 21,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/inputs/search-handoff.md": "f02611e024eba5d50e0c52c6ada24f6b99871bfb15a173768ea8096284ee265e"
+      },
+      "input_fingerprint": "55a3d896f7d822314825f2c8dbb3f05e2fa9da238937835a556482deacb7f929",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "codex/case-21/stdout.jsonl",
+      "stdout_sha256": "4e162fb3d5dc9931069061cf286c201e2899e17415f5afddd9163da8de1d1ce1",
+      "response_line": 16,
+      "response": "The result does not establish whether Catalog Search meets the 150 ms budget. The required p95 is the 95th-percentile time from the last keystroke until suggestions appear.\n\nFor trial `SEARCH-19`, the September 11 summary reports candidate revision `8fd02c2` was 10% faster than baseline revision `7ce91b1`. Absolute timings and underlying samples are missing.\n\nIllustratively, a 10% reduction takes 160 ms to 144 ms, which passes, but takes 180 ms to 162 ms, which fails. Neither example is a measured result.\n\nI recommend obtaining the absolute measurements before considering the candidate as the default. Any conclusion from this benchmark applies to its tested conditions: 20 concurrent desktop sessions, warm caches, and an unchanged query corpus.\n\n**Immediate next action:** I would request the missing evidence with this message:\n\n“Can you provide the September 11 benchmark report for `SEARCH-19`, including baseline and candidate p95 timings in milliseconds and the underlying samples, or their location? These are needed to check the candidate against the 150 ms budget.”\n\nThis is an information request, not an approval decision. No request has been sent and no default has been changed in this simulation.",
+      "review": {
+        "case_id": 21,
+        "name": "reported-percentage-missing-absolutes",
+        "covered_findings": [
+          "CDC-19",
+          "CDC-20"
+        ],
+        "semantic_verdict": "fail",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "Four of five targeted criteria met on candidate F. The failure is the missing asset frame: stdout.jsonl line 16 names Catalog Search and the latency metric but omits the supplied exact component web/search/suggestions.ts and its role of requesting and displaying catalog suggestions. That omission matters to the requested measurement-to-asset connection; it is not fabricated evidence. The numerical/source-status behavior succeeds: the response attributes the 10% reduction to the report, preserves missing absolute timings/samples, cannot determine the 150 ms target, and requests SEARCH-19's actual results. Its 160-to-144 and 180-to-162 ms pairs are explicitly illustrative and explicitly not measured; they are valid hypothetical counterexamples, not invented benchmark observations. It does not present a candidate = 0.9 times baseline formula or a numeric compliance boundary; the optional formula clause is therefore not activated. The clearly marked examples are not actual benchmark endpoints. No separate material unsupported factual or authorization claim found. The source is read at lines 8-9 and reopened at lines 14-15 before the final response, so visible source reopening did not prevent this asset omission. All commands were read-only and completed successfully; the CLI warnings were nonfatal.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Identifies the exact asset, its role, the p95 latency metric, revisions, and reported conditions.",
+            "met": false,
+            "evidence": "stdout.jsonl line 16 identifies Catalog Search, trial SEARCH-19, the p95 last-keystroke-to-paint metric, baseline 7ce91b1, candidate 8fd02c2, and reported test conditions. However, it never names web/search/suggestions.ts or identifies that component as requesting and displaying catalog suggestions, despite both being present in inputs/inputs/search-handoff.md. The full criterion is therefore unmet."
+          },
+          {
+            "expectation": "Attributes the 10% reduction to the supplied report; does not imply independent recomputation from unavailable measurements.",
+            "met": true,
+            "evidence": "stdout.jsonl line 16 says 'the September 11 summary reports' the candidate was 10% faster than the named baseline, and immediately states that absolute timings and samples are missing. It does not claim independent recomputation of the observed reduction. The surrounding latency definition and reduction examples make clear that 'faster' refers to lower latency."
+          },
+          {
+            "expectation": "Preserves the missing baseline, candidate, and absolute millisecond reduction. Does not use the 150 ms target as an observed baseline, invent 150 to 135 ms, or fabricate another numerical example as evidence.",
+            "met": true,
+            "evidence": "stdout.jsonl line 16 preserves absent baseline/candidate timings and underlying samples. It labels the 160-to-144 and 180-to-162 ms examples 'Illustratively' and then states 'Neither example is a measured result.' It neither uses the 150 ms budget as an observed baseline nor reports an invented absolute benchmark delta."
+          },
+          {
+            "expectation": "Explains that the percentage alone cannot establish compliance with the 150 ms budget. An optional candidate = 0.9 times baseline calculation must remain symbolic.",
+            "met": true,
+            "evidence": "stdout.jsonl line 16 leads with 'The result does not establish whether Catalog Search meets the 150 ms budget.' Its explicitly illustrative examples show that the same reduction can pass or fail that budget. It does not present the optional candidate = 0.9 times baseline formula or replace missing actual endpoints with assumed measurements; the clause about that optional formula is not activated."
+          },
+          {
+            "expectation": "Names retrieval of SEARCH-19's absolute results as the next verification work. Does not claim no benchmark occurred, ask the owner to manufacture measurements, or claim approval/default changes.",
+            "met": true,
+            "evidence": "stdout.jsonl line 16 proposes obtaining the September 11 SEARCH-19 report with baseline/candidate p95 values in milliseconds and samples or their location. It calls this an information request, not an approval decision, and says no request was sent and no default changed. It does not deny that a benchmark occurred or ask anyone to manufacture missing measurements."
+          }
+        ]
+      }
+    },
+    {
+      "run": "cdc-source-check-codex-controls",
+      "tool": "codex",
+      "case_id": 22,
+      "snapshot": "F",
+      "input_files": {
+        "inputs/inputs/pilot-closeout.md": "a8dfde5013cab926d3ea1415d33876e62631c77960cd402aa065a72a5f154108"
+      },
+      "input_fingerprint": "d6dd072b66ccce341da905a9d7baef23ffee5e269beacc11b555fc02fc3c0335",
+      "process_status": "completed",
+      "exit_code": 0,
+      "stdout_file": "codex/case-22/stdout.jsonl",
+      "stdout_sha256": "d82c75a91db7344c59ccc80c3d5f868c0f5676d0d54b772f993556250b73365f",
+      "response_line": 18,
+      "response": "Both Harbor workflows are merged in `cedar-starter`, but both are disabled because their enable variables are absent. The credential `HARBOR_TOKEN` is configured.\n\nThe closed pilot shows how allowance use was divided:\n\n| Workflow and role | Harbor invocations | Allowance units consumed | Calculated share of total units |\n|---|---:|---:|---:|\n| `.github/workflows/harbor-review.yml`: reviews new and updated pull-request diffs | 40 | 80 | 40% |\n| `.github/workflows/harbor-assistant.yml`: handles `@harbor` comments and can prepare a branch and pull request | 10 | 120 | 60% |\n| Total | 50 | 200 | 100% |\n\nSource: metering export `PILOT-17`, covering September 1, 2026 at 00:00 UTC inclusive through September 8 at 00:00 UTC exclusive. Both workflows were enabled throughout those seven days. Allowance units measure service-account consumption, not dollars.\n\nReviews accounted for **80 units**; reviews plus the assistant accounted for **200 units**. Adding the assistant contributed **120 units**, a calculated **150% increase** over the review component. This is an accounting comparison within the combined pilot, not a separate reviews-only trial or a forecast of future consumption.\n\nThe reviewed source at revision `c3e8b42` requires human authors with `OWNER`, `MEMBER`, or `COLLABORATOR` association **and current repository write access**. The review workflow checks the pull-request author; the assistant checks the comment author. Both reject bot event senders. These are source-established rules; the supplied evidence does not establish runtime testing of every rejection case.\n\n**Q1. Which Harbor capabilities do you authorize re-enabling in `cedar-starter`?**\n\n**Neutral:** The pilot establishes consumption, but supplies no measure of usefulness or allowance budget. The choice depends on whether comment-driven assistance is worth its additional consumption to you.\n\n- **Q1.A Enable reviews alone.** Set the review switch, `ENABLE_HARBOR_REVIEW`, to the string `true`. Leave the assistant switch, `ENABLE_HARBOR_ASSISTANT`, absent. Eligible pull-request reviews resume; comment-driven assistance stays disabled.\n- **Q1.B Enable reviews and the assistant.** Set both switches to the string `true`. Eligible reviews and `@harbor` assistance resume, including the assistant's ability to prepare branches and pull requests.\n- **Q1.C Keep both disabled.** Leave both switches absent. Neither workflow calls Harbor.\n\nActivation applies to `cedar-starter`; repositories created from it have independent settings. Removing the switches disables future Harbor calls, but does not undo consumed units or work already produced.\n\nReply with **Q1.A**, **Q1.B**, or **Q1.C**.\n\n**Immediate next action:** Present this decision and wait for the owner's answer. No settings changes or external actions have been performed in this simulation.\n\nApproval is needed because the latest owner instruction in `inputs/inputs/pilot-closeout.md` explicitly says: “Ask before re-enabling either.”",
+      "review": {
+        "case_id": 22,
+        "name": "workflow-measured-usage-and-author-gates",
+        "covered_findings": [
+          "CDC-19",
+          "CDC-20"
+        ],
+        "semantic_verdict": "pass",
+        "reviewer": "/root/independent_response_critique; independent semantic review; 2026-09-12",
+        "summary": "All five criteria met on candidate F, with no material unsupported source, measurement, or approval-scope claim found. stdout.jsonl line 18 preserves the source-established per-workflow author and bot restrictions instead of treating public visibility as unrestricted access. It correctly attaches invocation counts and allowance units to each exact workflow, the seven-day pilot window, and source revision; calculates 40%/60% shares of 200 units; and explicitly distinguishes the 80-to-200 accounting comparison from a separate reviews-only trial or future-consumption forecast. It keeps documented restrictions distinct from missing evidence of runtime testing for every rejection case. Current disabled status and repository-local approval remain clear, and no settings were changed. Tool trace limitation: the raw project source is read once at lines 8-9; subsequent commands read skill references, so no distinct project-source reopening is visible. That observation is separate from the source-faithful semantic result and does not prove that no internal review occurred. All commands completed successfully and performed inventory/reads only; the CLI warnings were nonfatal.",
+        "verdict_choices": [
+          "pass",
+          "fail",
+          "inconclusive"
+        ],
+        "criteria": [
+          {
+            "expectation": "Retains the explicit per-workflow author restrictions, including association AND current write access, correct content author, and bot exclusions. Does not infer unrestricted access from repository visibility or call the supplied restrictions unknown.",
+            "met": true,
+            "evidence": "stdout.jsonl line 18 retains human authors, OWNER/MEMBER/COLLABORATOR association AND current repository write access, PR-author checking for review, comment-author checking for the assistant, and bot-event-sender rejection. It calls these source-established rules at c3e8b42 and separately notes that the supplied evidence does not establish runtime testing of every rejection case."
+          },
+          {
+            "expectation": "Associates each measurement with its exact workflow and role, the seven-day UTC window, and the correct units: 40 invocations and 80 allowance units for review; 10 invocations and 120 allowance units for assistant.",
+            "met": true,
+            "evidence": "stdout.jsonl line 18 names .github/workflows/harbor-review.yml and its new/updated PR review role with 40 invocations and 80 allowance units; .github/workflows/harbor-assistant.yml and its @harbor branch/PR role with 10 invocations and 120 units. It identifies PILOT-17 and the September 1, 2026 00:00 UTC inclusive to September 8 00:00 UTC exclusive seven-day window with both workflows enabled."
+          },
+          {
+            "expectation": "Calculates total allowance as 200 units, with review consuming 40% (80/200) and assistant 60% (120/200). Does not substitute invocation shares for allowance shares or convert units into unsupported dollar costs.",
+            "met": true,
+            "evidence": "stdout.jsonl line 18 reports 50 total invocations and 200 total allowance units, with review's calculated unit share 40% (80/200) and assistant's 60% (120/200). The column explicitly says share of total units, and the prose says units are service-account consumption, not dollars. It does not confuse invocation shares with allowance shares."
+          },
+          {
+            "expectation": "If comparing reviews-only with both using the pilot workload, identifies 80 to 200 units, plus 120 units, plus 150% relative to 80 as a calculation using that workload, not a separately measured reviews-only trial or a guaranteed future bill.",
+            "met": true,
+            "evidence": "stdout.jsonl line 18 compares the pilot's 80 review units with 200 combined units, an added 120 units and calculated 150% relative increase over the review component. It expressly calls this 'an accounting comparison within the combined pilot, not a separate reviews-only trial or a forecast of future consumption.'"
+          },
+          {
+            "expectation": "Preserves current disabled status, repository-local approval, and the distinction between documented source restrictions and measured usage. Does not turn unavailable token-permission details into uncertainty about facts the source explicitly supplies.",
+            "met": true,
+            "evidence": "stdout.jsonl line 18 states both merged workflows are disabled because their exact enable variables are absent while HARBOR_TOKEN is configured. Its three options set only the named variables in cedar-starter and preserve adopter independence. It does not reopen established author rules as token-permission unknowns, and its immediate action waits for approval without mutation or external action."
+          }
+        ]
+      }
+    }
+  ]
+}
