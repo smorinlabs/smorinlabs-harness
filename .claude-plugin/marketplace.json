@@ -121,8 +121,8 @@
     {
       "name": "fusion-runner",
       "source": "./plugins/fusion-runner",
-      "description": "Provision a Windows GitHub Actions runner in VMware Fusion on a Mac, then start, check, and stop its VM.",
-      "version": "0.2.12",
+      "description": "Provision a Windows GitHub Actions runner in VMware Fusion on a Mac, then start, check, stop, or explicitly reset its working VM.",
+      "version": "0.3.0",
       "author": {
         "name": "Steve Morin"
       },
@@ -230,7 +230,7 @@
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
       "description": "Repo & release-readiness checks \u2014 CI fix and audit (measured, targeted, escalating), version drift, README sync, manual test guides, and a PR merge flow that resolves every review thread before merging.",
-      "version": "0.13.0",
+      "version": "0.14.0",
       "author": {
         "name": "Steve Morin"
       },

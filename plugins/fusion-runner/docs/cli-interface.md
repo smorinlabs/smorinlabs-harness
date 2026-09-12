@@ -47,8 +47,16 @@ outcome; it does not trigger a retry or forced shutdown. A successful command
 still reports `runner_state: "not_checked"`. GitHub readiness is the skill's
 separate responsibility.
 
+`--wait-seconds` optionally sets a **total operation deadline** from 1 to 300
+seconds for `start` or `stop`. It covers the initial inventory, one mutation,
+and all later observations and sleeps. Each call uses the smaller of its
+per-call timeout and the remaining total budget. The helper polls roughly once
+per second and never repeats the mutation. Omit this flag to retain the single
+post-request observation. A deadline does not establish a successful transition.
+
 For `stop`, `--runner-offline` attests that the operator has already stopped the
-exact Windows runner service and verified the GitHub runner is offline. This
+exact Windows runner service and verified the GitHub runner is offline or its
+exact registration is verifiably retired through current authorized API reads. This
 flag does not perform those checks. `--yes` authorizes shutdown without a
 prompt. Otherwise the helper confirms on an interactive stdin; `--no-input`
 or a pipe requires `--yes` when a shutdown would be requested. An already-absent
@@ -87,8 +95,22 @@ codes are 0 success, 1 runtime error, 2 invalid invocation or missing consent,
 | `timeout`, `power_not_confirmed` | Power may have changed; inspect it before another mutation |
 | `runner_not_offline`, `confirmation_required`, `cancelled` | No shutdown was attempted |
 
-No helper reads credentials, registers runners, modifies workflows, performs
+Neither Python helper reads credentials, registers runners, modifies workflows, performs
 telemetry, or contacts a network service itself. The power helper is version
-0.1.0. The host probe is version 1.0.0: its major version and JSON schema 2
+0.2.0. The host probe is version 1.0.0: its major version and JSON schema 2
 replace the prototype `windows_architecture` key with
 `expected_windows_architecture`, making the unverified planning value explicit.
+
+## Protected Windows adapters
+
+The PowerShell adapters are internal lifecycle scripts, separate from the
+Python command-line interfaces above. `register_service.ps1` accepts protected
+JSON on stdin, writes a durable secret-free receipt, downloads and verifies the
+official native runner archive in a new administrator-controlled directory, and
+registers one ephemeral standard-account service. It refuses previously used
+program directories. Download is bounded to 120 seconds and 256 MiB. `retire_service.ps1` accepts a current host retirement
+attestation, checks guest identity/processes, deletes only the stopped matching
+service and its four registration files, and preserves the working directory.
+Their exact input and failure contracts are in [provisioning](../skills/fusion-runner-setup/references/runner-provisioning.md)
+and [operations](../skills/fusion-runner-run/references/operations.md). They require
+administrator-controlled script staging and receipt storage.

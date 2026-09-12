@@ -47,6 +47,8 @@ GitHub-hosted Windows 11 Arm64 and Windows Server x64 comparison.
 - The registered runners accepted one job each. Restarting the same persistent
   runner service after a post-registration reboot remains untested here.
   Setup still requires that check before calling another persistent runner ready.
+  Persistent registration is removed from the current one-job delivery, with
+  no deferred obligation; this historical limit does not create a release gate.
 - Encrypted VM startup worked through Fusion with an unlocked Mac. A native
   `vmrun start ... nogui` attempt returned zero while no VM was running.
   Check actual VM power and guest readiness; unattended startup while the Mac
@@ -67,3 +69,12 @@ Python tests, Claude plugin schema, public-content scans, and marketplace
 parity. The generator's existing `_generated` field produces a non-fatal
 Claude warning. Static Codex manifest checks do not establish runtime skill
 loading or successful skill following.
+
+## Windows diagnostic integration
+
+The subsequent [integration validation](../../../docs/validation/windows-integration.md)
+separately records fresh verified program preparation, ordinary Windows reboot,
+failure → source repair → success, and cleanup after empty selection. Its final
+acceptance is a fresh agent following the skills through run → reset → run.
+That instruction-following check remains open until observed; the two earlier
+downloaded restores do not establish that the revised instructions were followed.

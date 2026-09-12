@@ -23,6 +23,63 @@ def load_module(path):
     return module
 
 
+@pytest.mark.parametrize('action,initial,target', [('start', False, True), ('stop', True, False)])
+def test_optional_polling_observes_delayed_transition_once(tmp_path, monkeypatch, action, initial, target):
+    from types import SimpleNamespace
+    module = load_module(POWER)
+    vmx = tmp_path / 'VM.vmx'; vmx.write_text('')
+    executable = tmp_path / 'vmrun'; executable.write_text(''); executable.chmod(0o755)
+    clock = [0.0]
+    observations = iter([initial, initial, target])
+    calls = []
+    monkeypatch.setattr(module.time, 'monotonic', lambda: clock[0])
+    monkeypatch.setattr(module.time, 'sleep', lambda seconds: clock.__setitem__(0, clock[0]+seconds))
+    monkeypatch.setattr(module, 'is_running', lambda *_: next(observations))
+    monkeypatch.setattr(module, 'invoke', lambda _vmrun, args, timeout: calls.append((args, timeout)))
+    args = SimpleNamespace(vmx=str(vmx), vmrun=str(executable), action=action, timeout=30,
+                           wait_seconds=3, runner_offline=action=='stop', yes=action=='stop',
+                           dry_run=False, no_input=True)
+    result = module.execute(args)
+    assert result['changed'] and len(calls)==1
+    assert calls[0][1] <= 3 and clock[0] <= 3
+
+
+def test_poll_deadline_does_not_repeat_a_stuck_power_request(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    module=load_module(POWER)
+    vmx=tmp_path/'VM.vmx';vmx.write_text('')
+    executable=tmp_path/'vmrun';executable.write_text('');executable.chmod(0o755)
+    clock=[0.0];calls=[]
+    monkeypatch.setattr(module.time,'monotonic',lambda:clock[0])
+    monkeypatch.setattr(module.time,'sleep',lambda seconds:clock.__setitem__(0,clock[0]+seconds))
+    monkeypatch.setattr(module,'is_running',lambda *_:False)
+    monkeypatch.setattr(module,'invoke',lambda *args:calls.append(args))
+    args=SimpleNamespace(vmx=str(vmx),vmrun=str(executable),action='start',timeout=30,
+                         wait_seconds=3,runner_offline=False,yes=False,dry_run=False,no_input=True)
+    with pytest.raises(module.Failure,match='deadline'):
+        module.execute(args)
+    assert len(calls)==1 and clock[0]==3
+
+
+def test_poll_budget_includes_initial_inventory_and_mutation(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    module=load_module(POWER)
+    vmx=tmp_path/'VM.vmx';vmx.write_text('')
+    executable=tmp_path/'vmrun';executable.write_text('');executable.chmod(0o755)
+    clock=[0.0];limits=[]
+    monkeypatch.setattr(module.time,'monotonic',lambda:clock[0])
+    def inventory(_binary,_path,timeout):
+        limits.append(timeout);clock[0]+=1;return False
+    def request(_binary,_args,timeout):
+        limits.append(timeout);clock[0]+=timeout
+    monkeypatch.setattr(module,'is_running',inventory)
+    monkeypatch.setattr(module,'invoke',request)
+    args=SimpleNamespace(vmx=str(vmx),vmrun=str(executable),action='start',timeout=30,
+                         wait_seconds=3,runner_offline=False,yes=False,dry_run=False,no_input=True)
+    with pytest.raises(module.Failure,match='deadline'):module.execute(args)
+    assert limits==[3,2] and clock[0]==3
+
+
 @pytest.fixture
 def fake_fusion(tmp_path):
     vmx = tmp_path / "Windows with spaces $(touch INJECTION).vmwarevm" / "Windows.vmx"
