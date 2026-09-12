@@ -228,3 +228,90 @@ def test_invalid_options_do_not_invoke_vmrun(fake_fusion, flags):
     assert result.returncode == 2
     assert result.stdout == ""
     assert calls() == []
+
+
+def test_already_off_stop_is_observation_without_shutdown(fake_fusion):
+    call, calls, _, _, _ = fake_fusion
+    result = call("stop")
+    assert result.returncode == 0
+    report = json.loads(result.stdout)
+    assert report["changed"] is False
+    assert report["power_state"] == "not_running"
+    assert report["runner_state"] == "not_checked"
+    assert calls() == [["list"]]
+
+
+@pytest.fixture
+def mac_preflight(monkeypatch):
+    from types import SimpleNamespace
+
+    module = load_module(PREFLIGHT)
+    monkeypatch.setattr(module.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(module.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(module.platform, "mac_ver", lambda: ("26.4", (), ""))
+    values = {"hw.optional.arm64": "1", "hw.memsize": "51539607552"}
+    monkeypatch.setattr(module, "probe_value", lambda *command: values.get(command[-1]))
+    monkeypatch.setattr(module.shutil, "disk_usage", lambda path: SimpleNamespace(free=4096))
+    return module, values
+
+
+def test_preflight_collect_labels_planned_windows_architecture(mac_preflight, tmp_path):
+    import plistlib
+
+    module, _ = mac_preflight
+    app = tmp_path / "Renamed Fusion.app"
+    library = app / "Contents/Library"
+    library.mkdir(parents=True)
+    (app / "Contents/Info.plist").write_bytes(
+        plistlib.dumps({"CFBundleShortVersionString": "26H1u1"})
+    )
+    vmrun = library / "vmrun"
+    vmrun.write_text("#!/bin/sh\nexit 0\n")
+    vmrun.chmod(0o755)
+    report = json.loads(json.dumps(module.collect(tmp_path, app)))
+    assert report["schema_version"] == 2
+    assert report["host"]["process_architecture"] == "x86_64"
+    assert report["host"]["architecture"] == "ARM64"
+    assert report["host"]["memory_bytes"] == 51539607552
+    assert report["expected_windows_architecture"] == "ARM64"
+    assert "windows_architecture" not in report
+    assert report["compatibility_verified"] is False
+    assert report["storage"] == {"path": str(tmp_path), "free_bytes": 4096}
+    assert report["fusion"]["installed"] is True
+    assert report["fusion"]["version"] == "26H1u1"
+    assert report["fusion"]["vmrun_path"] == str(vmrun)
+    assert report["fusion"]["vmrun_executable"] is True
+
+
+@pytest.mark.parametrize("plist_state", ["absent", "malformed"])
+def test_preflight_collect_preserves_unknown_facts(mac_preflight, tmp_path, plist_state):
+    module, values = mac_preflight
+    values.clear()
+    app = tmp_path / "Unavailable.app"
+    if plist_state == "malformed":
+        (app / "Contents").mkdir(parents=True)
+        (app / "Contents/Info.plist").write_bytes(b"not a plist")
+    report = module.collect(tmp_path, app)
+    assert report["host"]["architecture"] is None
+    assert report["host"]["memory_bytes"] is None
+    assert report["expected_windows_architecture"] is None
+    assert report["fusion"]["installed"] is False
+    assert report["fusion"]["version"] is None
+    assert report["fusion"]["vmrun_executable"] is False
+
+
+@pytest.mark.parametrize("storage_kind", ["file", "missing"])
+def test_preflight_collect_rejects_invalid_storage(mac_preflight, tmp_path, storage_kind):
+    module, _ = mac_preflight
+    storage = tmp_path / "destination"
+    if storage_kind == "file":
+        storage.touch()
+    with pytest.raises((ValueError, FileNotFoundError)):
+        module.collect(storage, tmp_path / "Fusion.app")
+
+
+def test_preflight_collect_rejects_non_macos(mac_preflight, monkeypatch, tmp_path):
+    module, _ = mac_preflight
+    monkeypatch.setattr(module.platform, "system", lambda: "Linux")
+    with pytest.raises(ValueError, match="requires macOS"):
+        module.collect(tmp_path, tmp_path / "Fusion.app")

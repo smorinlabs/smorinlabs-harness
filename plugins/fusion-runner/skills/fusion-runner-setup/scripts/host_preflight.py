@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "1.0.0"
 
 
 def probe_value(*command):
@@ -55,7 +55,7 @@ def collect(storage, fusion_app):
         pass
     vmrun = fusion_app / "Contents/Library/vmrun"
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "host": {
             "os": "macOS",
             "version": platform.mac_ver()[0],
@@ -74,7 +74,7 @@ def collect(storage, fusion_app):
             "vmrun_path": str(vmrun),
             "vmrun_executable": vmrun.is_file() and os.access(vmrun, os.X_OK),
         },
-        "windows_architecture": architecture,
+        "expected_windows_architecture": architecture,
         "compatibility_verified": False,
     }
 

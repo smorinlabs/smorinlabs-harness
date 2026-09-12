@@ -4,7 +4,7 @@ status: historical_research
 created: 2026-09-08
 updated: 2026-09-11
 confidence: medium
-confidence_basis: Primary documentation, current product pages, release notes, and local hardware inspection; no Windows workload executed.
+confidence_basis: September 8 primary documentation and local hardware inspection; the complete ci-fix acceptance experiment was not executed. Later Fusion smoke and recovery validation is linked separately.
 verified_example: false
 origin_prompt: prompts/00-landscape.prompt.md
 ---
@@ -203,15 +203,15 @@ These changes are recommendations for a later implementation:
 5. Keep the existing duration profile and narrow-test rules. Measure VM startup and guest execution separately; do not use a hosted median as a measured local runtime.
 6. Add Windows jobs to the local sweep only when their prerequisites and resource bounds are established. Preserve the existing final GitHub verification requirement.
 
-The first acceptance experiment should use one known Windows failure. Reproduce the unchanged failure, apply the intended fix, and deliberately reintroduce the defect to show that the check can distinguish it. Separately test nonzero exit propagation, timeout with a child process, interrupted transport, exported logs, and clean restoration. Finally verify the same candidate commit on the original GitHub runner. **All of these Windows experiments remain unrun.**
+The first acceptance experiment should use one known Windows failure. Reproduce the unchanged failure, apply the intended fix, and deliberately reintroduce the defect to show that the check can distinguish it. Separately test nonzero exit propagation, timeout with a child process, interrupted transport, exported logs, and clean restoration. Finally verify the same candidate commit on the original GitHub runner. **This complete `ci-fix` acceptance experiment was not executed during the September 8 research.** The separate Fusion validation covers only its [documented smoke and restore/recovery checks](../../../plugins/fusion-runner/docs/validation.md).
 
 ## Evidence limits and conclusion
 
-Confidence is high in the architecture distinction, current documented product features, and observed prices. Confidence in the proposed automation path is medium because no Windows guest, action, workload, or cleanup probe was executed. Exact package availability, workload duration, Windows licensing already owned, and free disk space are unresolved inputs for the pilot.
+Confidence is high in the architecture distinction, current documented product features, and observed prices. Confidence in the proposed `ci-fix` automation path was medium: the September 8 research did not execute its complete failure/fix/control and cleanup experiment. The later Fusion validation establishes only the smoke and restore/recovery checks linked above. Exact package availability, workload duration, Windows licensing already owned, and free disk space are unresolved inputs for the pilot.
 
 Microsoft's Mac support article still names M1–M3 and older Parallels versions. The M4 and macOS 26 compatibility conclusion comes from current Parallels requirements, not an assumption that the older Microsoft page covers every newer model. Broadcom's versioned matrix also takes precedence over its earlier generic Arm limitations. These documentation differences should remain visible when selecting an installed version.
 
-Proceed with a **Parallels Pro and Windows 11 Arm64 pilot using direct commands**, or **Fusion if avoiding a subscription is preferred**. Add GitHub registration only for failures that need real Actions orchestration. Keep x64 and hosted-image verification in GitHub.
+The original September 8 recommendation was a **Parallels Pro and Windows 11 Arm64 pilot using direct commands**, or **Fusion if avoiding a subscription was preferred**. The [subsequent owner choice](DECISION.md) selected Fusion with a registered runner. Add GitHub registration only for failures that need real Actions orchestration. Keep x64 and hosted-image verification in GitHub.
 
 ## Source inventory
 

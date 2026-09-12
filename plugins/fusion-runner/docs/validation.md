@@ -32,10 +32,14 @@ The public PowerShell smoke script is byte-identical to the executed script;
 its SHA-256 is recorded in the summary.
 
 The five checks exercise native Windows and runner architecture, Git checkout
-of the exact commit, Windows file permissions and Unicode/space-containing
+of the exact commit, ordinary file reads/writes and Unicode/space-containing
 paths with a ZIP round trip, C# compilation with a native Windows API, and
 native child-process exit status. They do not run an application's build or
-its full test suite. The same script also passed the earlier 2026-09-08
+its full test suite. The historical check identifier
+`windows-file-permissions-unicode-spaces-and-zip` is retained in the executed
+script and reports. It does not test access-control lists or denied access;
+non-administrator execution is a separate recorded environment fact.
+The same script also passed the earlier 2026-09-08
 GitHub-hosted Windows 11 Arm64 and Windows Server x64 comparison.
 
 ## Coverage limits

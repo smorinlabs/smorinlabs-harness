@@ -17,8 +17,10 @@ space, and Fusion's application metadata. It does not download or install
 anything. Missing or denied facts become `null`; an x86 process alone does not
 establish an Intel Mac because the process could be using Rosetta.
 
-JSON has `schema_version`, `host`, `storage`, `fusion`,
-`windows_architecture`, and `compatibility_verified`. Bytes are integers.
+JSON has `schema_version: 2`, `host`, `storage`, `fusion`,
+`expected_windows_architecture`, and `compatibility_verified`. The expected
+Windows architecture is a planning value derived from the physical Mac; this
+host probe does not inspect a Windows guest. Bytes are integers.
 `compatibility_verified` is false: version support still needs the current
 vendor matrix. Missing Fusion is an observation, not a probe error.
 
@@ -49,7 +51,9 @@ For `stop`, `--runner-offline` attests that the operator has already stopped the
 exact Windows runner service and verified the GitHub runner is offline. This
 flag does not perform those checks. `--yes` authorizes shutdown without a
 prompt. Otherwise the helper confirms on an interactive stdin; `--no-input`
-or a pipe requires `--yes`. There is no force or password option.
+or a pipe requires `--yes` when a shutdown would be requested. An already-absent
+VM returns an unchanged power observation without these flags or a shutdown
+command; GitHub state remains unchecked. There is no force or password option.
 
 `--dry-run` reads the actual power inventory and prints a planned operation
 without changing power. It does not validate GitHub state or attest that
@@ -63,7 +67,8 @@ JSON has `schema_version`, `action`, `vmx_path`, `power_state`,
 
 `--help`/`-h`, bare invocation, and `--version`/`-V` print information and exit 0.
 `--output`/`-o` selects `table` or `json`; `--json` is equivalent to `-o json`.
-Long flags cannot be abbreviated. Arguments can follow the `--` terminator.
+Long flags cannot be abbreviated. `--` ends option parsing; supply all flags
+before it. Only the positional action can follow it.
 VM and application paths name resources, not documents to read from stdin;
 `-` is not a valid path to a VM or executable.
 
@@ -83,4 +88,7 @@ codes are 0 success, 1 runtime error, 2 invalid invocation or missing consent,
 | `runner_not_offline`, `confirmation_required`, `cancelled` | No shutdown was attempted |
 
 No helper reads credentials, registers runners, modifies workflows, performs
-telemetry, or contacts a network service itself. Both ship as version 0.1.0.
+telemetry, or contacts a network service itself. The power helper is version
+0.1.0. The host probe is version 1.0.0: its major version and JSON schema 2
+replace the prototype `windows_architecture` key with
+`expected_windows_architecture`, making the unverified planning value explicit.

@@ -4,7 +4,7 @@ Prefer the terminal references below. Check this index before starting another r
 
 ## Reference index
 
-- [Windows CI reproduction on Apple Silicon](reference/windows-ci-on-apple-silicon-2026-09-08.md) — September 8 research: Parallels Pro proposal, Fusion alternative, explicit architecture evidence, and original hosted verification. The later Fusion choice and September 11 live validation are linked in the reference; the `ci-fix` Windows integration remains unimplemented.
+- [Windows CI reproduction on Apple Silicon](reference/windows-ci-on-apple-silicon-2026-09-08.md) — September 8 research: Parallels Pro proposal, Fusion alternative, explicit architecture evidence, and the requirement for original hosted verification. The later Fusion choice and September 11 live validation are linked in the reference; the `ci-fix` Windows integration remains unimplemented.
 
 ## Topic index
 

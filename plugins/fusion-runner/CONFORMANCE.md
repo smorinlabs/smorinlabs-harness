@@ -1,7 +1,8 @@
 # Helper review scope
 
 CLI Design Standard **1.4.14**, small-CLI profile, **minimal tier**. Review
-record: initial Fusion runner plugin, 2026-09-08. These are bounded skill
+record: initial Fusion runner plugin, 2026-09-08; helper contract corrections
+rechecked 2026-09-11. These are bounded skill
 helpers: one host probe and three operations on one VM. A standalone CLI with
 multiple resource types would require a new interface review.
 
@@ -13,12 +14,13 @@ helper review, not a claim of the publishable-tier Appendix C audit.
 | Applicable area | Evidence |
 |---|---|
 | R1.4, Appendix A: bounded command naming | `probe`; `status`, `start`, `stop`; descriptive single-file helper names |
-| R3.1, R3.3, R3.10: argument parsing | argparse with prefix abbreviation disabled and ordinary `--` handling |
+| R3.1, R3.3, R3.10: argument parsing | argparse with prefix abbreviation disabled; `--` ends flags and permits only the action operand after it |
 | Minimal-tier R4.1, R4.2 | Help/version aliases and `-o json`/`--json` parity |
 | R5.5, R5.6 | No credential argument or credential store; vendor error output is not echoed |
 | R6.1, R7.1, R7.8, R7.9 | Documented exit codes, result/error stream split, JSON runtime errors, help on bare invocation |
 | R8.1, R8.2 | Shutdown guard plus interactive confirmation or explicit `--yes`; noninteractive refusal |
 | R8.6 | Dry run observes power and exposes the plan without mutating it |
+| R7.2, R9.3 | Host probe 1.0.0 / schema 2 explicitly version the rename to `expected_windows_architecture`; the VM power helper remains 0.1.0 |
 
 N/A: persistent configuration and config discovery, network authentication,
 pagination, remote waiting, caching, plugins, updates, and streaming. The full
