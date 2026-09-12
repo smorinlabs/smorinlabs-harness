@@ -247,3 +247,28 @@ both runner implementations, prompts, input contents, process outcomes,
 independent reviews, and response/capture hashes. Raw CLI event streams and
 host-specific command paths stay local; their hashes establish provenance.
 Historical A–F evidence remains unchanged and linked from the earlier records.
+
+## Subsequent PR review repairs
+
+PR #67 review found two defects in commit `fd12bae`. These repairs follow the
+R1/R2 experiment and do not change its archived results or runner snapshots.
+
+| Finding | Reproduction and repair | Verification |
+|---|---|---|
+| CodeRabbit comment `3997886598`: literal pipes truncate a table example in `references/clarity.md` | GitHub's Markdown API rendered the fourth cell as “Three group comparisons become \`Group”. Replaced the inline code delimiters with an HTML `code` element and encoded the pipes. | The same renderer produces four cells and the complete fourth-cell text: “Three group comparisons become Group \| Changes \| Holds constant.” |
+| Copilot review `5188393718`: replay accepts captures edited before preflight | Replacing a saved response with another successful, complete CLI response still reached the reviewer. Original ordinary-run manifests did not contain capture hashes. The runner now records all four writer capture hashes before review and requires an exact match at import. | Sixteen new checks failed before repair. After repair, all 104 runner tests passed in 2.11 seconds. They include rejection of valid-but-altered stdout, stderr and process metadata, missing or invalid hashes, and duplicate case records for both CLI formats. Existing successful reuse and post-preflight freezing controls also pass. |
+
+`harness-kit gen --check` and `git diff --check` passed. No new model calls were
+made for these runner and rendering repairs. The replay format now rejects
+legacy manifests without original capture hashes; the evaluation README gives
+the recovery procedure. A local manifest is an integrity reference, not an
+authenticated record against simultaneous edits to the manifest and captures.
+
+Only `references/clarity.md` changes among the nine F instruction files. The
+current source is therefore a later revision, not the exact F snapshot used by
+R1/R2. Its instruction-set fingerprint is
+`e2d5b655d07e132af0d37ab9f1caff8401cba09421743058d226b1a830b9f449`,
+using the same sorted-map method as F. The rendering check establishes the repaired table's displayed text;
+it does not establish model behavior for this later instruction revision.
+The experiment archive is unchanged, with SHA-256
+`8cc28a7d52fec87014ac4979fde84fc05ad095b2156266627dd0a57ab2881538`.

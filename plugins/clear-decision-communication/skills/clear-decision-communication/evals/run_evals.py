@@ -53,6 +53,7 @@ import time
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 REVIEW_INSTRUCTIONS = Path(__file__).with_name("source-review.md")
+CAPTURE_FILES = ("prompt.txt", "stdout.jsonl", "stderr.txt", "process.json")
 
 
 def write_json(path: Path, value: object) -> None:
@@ -195,12 +196,18 @@ def validate_drafts(run: Path, selected: list[dict], tools: list[str], hashes: d
     retained = {}
     for tool in tools:
         for case in selected:
-            if not any(
+            records = [
+                item for item in manifest["runs"] if
                 isinstance(item, dict) and item.get("tool") == tool and item.get("case_id") == case["id"]
-                and item.get("process_status") == "completed"
-                for item in manifest.get("runs", [])
-            ):
-                raise ValueError(f"retained manifest has no completed {tool} case {case['id']}")
+            ]
+            if len(records) != 1 or records[0].get("process_status") != "completed":
+                raise ValueError(f"retained manifest needs one completed {tool} case {case['id']}")
+            saved_hashes = records[0].get("capture_sha256")
+            if not isinstance(saved_hashes, dict) or set(saved_hashes) != set(CAPTURE_FILES):
+                raise ValueError(
+                    f"retained {tool} case {case['id']} lacks original capture hashes; "
+                    "generate a new baseline with the current runner"
+                )
             directory = run / tool / f"case-{case['id']:02d}"
             expected = {safe_relative(item["path"]): item["content"].encode("utf-8") for item in case["files"]}
             found = {
@@ -211,8 +218,10 @@ def validate_drafts(run: Path, selected: list[dict], tools: list[str], hashes: d
                 raise ValueError(f"retained {tool} case {case['id']} raw inputs differ")
             capture = {
                 name: (directory / name).read_bytes()
-                for name in ("prompt.txt", "stdout.jsonl", "stderr.txt", "process.json")
+                for name in CAPTURE_FILES
             }
+            if {name: hashlib.sha256(data).hexdigest() for name, data in capture.items()} != saved_hashes:
+                raise ValueError(f"retained {tool} case {case['id']} capture hashes differ from its manifest")
             if capture["prompt.txt"] != case_prompt(case).encode("utf-8"):
                 raise ValueError(f"retained {tool} case {case['id']} prompt differs")
             response, provenance = completed_response(tool, directory, capture)
@@ -642,6 +651,14 @@ def main(argv: list[str] | None = None) -> int:
                 if not imported:
                     write_json(case_dir / "process.json", process)
             result = {"tool": tool, "case_id": case["id"], "process_status": process["status"]}
+            if imported or (process["status"] == "completed" and process["exit_code"] == 0):
+                result["capture_sha256"] = {
+                    name: hashlib.sha256((case_dir / name).read_bytes()).hexdigest()
+                    for name in CAPTURE_FILES
+                }
+            manifest["runs"].append(result)
+            # Persist the writer's evidence before starting any reviewer process.
+            write_json(output / "manifest.json", manifest)
             pipeline = None
             if args.source_review:
                 pipeline = review_pipeline(
@@ -650,8 +667,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 result["pipeline_status"] = pipeline["status"]
                 result["draft_origin"] = pipeline["draft_origin"]
-            manifest["runs"].append(result)
-            write_json(output / "manifest.json", manifest)
+                write_json(output / "manifest.json", manifest)
             if pipeline:
                 print(
                     f"{tool} case {case['id']}: draft={pipeline['draft_origin']}; "

@@ -575,6 +575,87 @@ def test_source_review_mismatched_import_is_rejected_before_any_cli(source, tmp_
 
 
 @pytest.mark.parametrize("tool", ["claude", "codex"])
+@pytest.mark.parametrize("change", [
+    "stdout.jsonl", "stderr.txt", "process.json", "missing_hashes",
+    "incomplete_hashes", "invalid_hashes", "duplicate_record",
+])
+def test_source_review_altered_capture_is_rejected_before_any_cli(
+    source, tmp_path, monkeypatch, tool, change,
+):
+    monkeypatch.setattr(runner, "SKILL_DIR", source)
+    prior = tmp_path / "prior"
+    fake_pipeline_processes(monkeypatch, {"writer": SOURCE_REVIEW_DRAFT})
+    assert runner.main(["--tool", tool, "--output", str(prior), "--run"]) == 0
+    prior_case = prior / tool / "case-01"
+    if change == "stdout.jsonl":
+        path = prior_case / change
+        path.write_bytes(path.read_bytes().replace(b"Raw project fact.", b"Altered project fact."))
+        response, _ = runner.completed_response(tool, prior_case)
+        assert response == SOURCE_REVIEW_DRAFT.replace("Raw", "Altered")
+    elif change == "stderr.txt":
+        (prior_case / change).write_text("Altered capture diagnostics.\n")
+    elif change == "process.json":
+        path = prior_case / change
+        process = json.loads(path.read_text())
+        process["duration_seconds"] = 99
+        path.write_text(json.dumps(process))
+        assert runner.completed_response(tool, prior_case)[0] == SOURCE_REVIEW_DRAFT
+    else:
+        path = prior / "manifest.json"
+        manifest = json.loads(path.read_text())
+        record = manifest["runs"][0]
+        if change == "missing_hashes":
+            record.pop("capture_sha256", None)
+        elif change == "incomplete_hashes":
+            record["capture_sha256"] = {"stdout.jsonl": "0" * 64}
+        elif change == "invalid_hashes":
+            record["capture_sha256"] = []
+        else:
+            manifest["runs"].append(dict(record))
+        path.write_text(json.dumps(manifest))
+    calls = fake_pipeline_processes(monkeypatch, {})
+    output = tmp_path / "rejected"
+    with pytest.raises(SystemExit) as error:
+        runner.main([
+            "--tool", tool, "--output", str(output),
+            "--source-review", "--drafts-from", str(prior), "--run",
+        ])
+    assert error.value.code == 2
+    assert calls == []
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("tool", ["claude", "codex"])
+def test_writer_capture_hashes_are_saved_before_source_review(source, tmp_path, monkeypatch, tool):
+    from hashlib import sha256
+
+    monkeypatch.setattr(runner, "SKILL_DIR", source)
+    fake_pipeline_processes(monkeypatch, {
+        "writer": SOURCE_REVIEW_DRAFT, "source-review": source_review_report(),
+    })
+    output = tmp_path / "captured-before-review"
+    pipeline = runner.review_pipeline
+    observed = []
+
+    def check_saved_capture(*args, **kwargs):
+        manifest = json.loads((output / "manifest.json").read_text())
+        expected = {
+            name: sha256((output / tool / "case-01" / name).read_bytes()).hexdigest()
+            for name in ("prompt.txt", "stdout.jsonl", "stderr.txt", "process.json")
+        }
+        assert manifest["runs"][0]["capture_sha256"] == expected
+        observed.append(expected)
+        return pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(runner, "review_pipeline", check_saved_capture)
+    assert runner.main(["--tool", tool, "--output", str(output), "--source-review", "--run"]) == 0
+    manifest = json.loads((output / "manifest.json").read_text())
+    assert len(manifest["runs"]) == len(observed) == 1
+    assert manifest["runs"][0]["capture_sha256"] == observed[0]
+    assert manifest["runs"][0]["pipeline_status"] == "completed"
+
+
+@pytest.mark.parametrize("tool", ["claude", "codex"])
 def test_source_review_paired_import_freezes_the_validated_capture(source, tmp_path, monkeypatch, tool):
     from hashlib import sha256
 

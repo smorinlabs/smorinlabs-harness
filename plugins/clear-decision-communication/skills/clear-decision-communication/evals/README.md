@@ -82,9 +82,17 @@ uv run --no-project plugins/clear-decision-communication/skills/clear-decision-c
 The selected tool/case captures must exist in the prior run. Before any new
 model invocation, the runner checks the actual instruction hashes, raw input
 bytes, original prompt bytes, manifest identity, and successful complete writer
-capture. It freezes the original capture bytes during preflight. A mismatch
-stops the run; it never silently generates a replacement draft. Reuse means
-the root capture files remain historical writer evidence, not new writer calls.
+capture. Each successful writer run records SHA-256 hashes of `prompt.txt`,
+`stdout.jsonl`, `stderr.txt`, and `process.json` in its manifest before a
+reviewer starts. Import requires those original hashes to match the retained
+files, then freezes their bytes during preflight. A mismatch stops the run;
+it never silently generates a replacement draft. Reuse means the root capture
+files remain historical writer evidence, not new writer calls.
+
+Prior runs without original capture hashes cannot be imported. Generate a new
+baseline with the current runner; do not add hashes retrospectively to old
+evidence. These hashes detect capture changes relative to the saved manifest.
+They do not authenticate evidence if both the files and manifest are edited.
 
 Omit `--drafts-from` to generate a fresh draft before reviewing it. A fresh
 pipeline uses two model calls when no finding is reported and three when a
