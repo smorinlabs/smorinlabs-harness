@@ -17,6 +17,12 @@ Both retained Claude failures remain. The new measurement controls show useful
 results, but this instruction-only source check is not an established repair
 for whole-response source fidelity. PR #67 remains draft; P48-T08 remains open.
 
+**Subsequent work:** the owner approved and the agent executed the
+[separate-review experiment](clear-decision-communication-source-review-experiment.md).
+It reuses these exact F drafts and leaves the skill instructions unchanged.
+The proposal and results below remain the historical F record; the later
+experiment records its own implementations, attempts, and independent grades.
+
 ## Source verification
 
 Before:

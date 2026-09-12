@@ -127,6 +127,7 @@ Preselection and tool completion without an answer do not count as consent.
 | `references/framework.md` | historical source framework preserved verbatim and provenance |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
 | `evals/run_evals.py` | bounded CLI runner that preserves inputs, source hashes, process evidence, and ungraded review records |
+| `evals/source-review.md` | instructions for the optional, separately executed reviewer experiment; excluded from the ordinary skill snapshot |
 | `evals/README.md` | runner usage, process evidence, semantic grading, and simulation limits |
 
 ## Behavioral validation
@@ -147,6 +148,13 @@ generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.
 
+The runner's optional `--source-review` mode evaluates a separate reviewer and
+one possible revision of a completed draft. `--drafts-from` reuses exact matched
+writer captures for paired comparison. Reviewer findings are advisory, and
+independent graders assess the original and final responses under the same
+frozen criteria. This is an evaluation mechanism; ordinary skill invocation
+does not automatically launch that reviewer.
+
 See [the evaluation guide](../../plugins/clear-decision-communication/skills/clear-decision-communication/evals/README.md)
 for commands. The scenarios simulate decision communication and intended next
 actions; they do not perform real merges or validate native dialog rendering.
@@ -157,6 +165,9 @@ records the later focused correction, affected-case results, and remaining
 limitations with their exact source revisions. The
 [source-check and measurement review](../validation/clear-decision-communication-source-check.md)
 shows the next skill-text changes verbatim and records their targeted results.
+The [separate-review experiment](../validation/clear-decision-communication-source-review-experiment.md)
+keeps those skill instructions fixed and evaluates an optional reviewer process,
+including missed errors and blocked attempts.
 The
 [0.2.0 validation record](../validation/clear-decision-communication-0.2.0.md)
 retains the earlier source snapshots, reviewed outcomes, and inverse controls.

@@ -45,6 +45,89 @@ each run so old evidence and grading cannot be silently overwritten. The chosen
 directory is retained until you remove it; copy it elsewhere if your temporary
 directory is periodically cleared.
 
+## Optional source-review experiment
+
+`--source-review` adds a separately executed review of the complete draft and
+at most one revision. The writer still receives the same skill instructions and
+scenario inputs. The runner launches a fresh reviewer session itself; nested
+agent delegation remains disabled in both CLI configurations.
+
+```text
+Writer and sources -> complete draft
+Draft, original request, and sources -> reviewer report
+Draft, sources, and report -> one revision when findings exist
+Selected final response -> separate independent evaluation
+```
+
+The reviewer sees only the original request as task data, the raw sources, the
+complete draft, and [source-review.md](source-review.md). It receives no private
+reasoning trace, writer tool history, grader expectations, prior grades, or
+skill-authoring discussion. Visible rationale and process narration remain
+included in the complete draft.
+The revision session receives the frozen skill, original task and sources,
+draft, and validated report. It treats reviewer suggestions as claims to check,
+not new project facts or authority.
+
+For paired comparison, reuse exact drafts from a completed ordinary run:
+
+```sh
+uv run --no-project plugins/clear-decision-communication/skills/clear-decision-communication/evals/run_evals.py \
+  --tool claude --cases 4 14 --output /tmp/cdc-before --run
+
+uv run --no-project plugins/clear-decision-communication/skills/clear-decision-communication/evals/run_evals.py \
+  --tool claude --cases 4 14 --source-review --drafts-from /tmp/cdc-before \
+  --output /tmp/cdc-after --run
+```
+
+The selected tool/case captures must exist in the prior run. Before any new
+model invocation, the runner checks the actual instruction hashes, raw input
+bytes, original prompt bytes, manifest identity, and successful complete writer
+capture. It freezes the original capture bytes during preflight. A mismatch
+stops the run; it never silently generates a replacement draft. Reuse means
+the root capture files remain historical writer evidence, not new writer calls.
+
+Omit `--drafts-from` to generate a fresh draft before reviewing it. A fresh
+pipeline uses two model calls when no finding is reported and three when a
+revision is requested. Reusing a draft needs one or two new calls respectively.
+Independent evaluation is additional work. Every process retains the configured
+timeout and output bound. There is no automatic retry or repeated revision loop.
+
+The reviewer returns structured findings and supported claims to preserve.
+The runner checks the schema and exact draft/source quotation references. It
+cannot establish that a matching quotation supports the reviewer's inference.
+A bare JSON report, an exact outer fence, or one `json` fence with surrounding
+prose can be read. Surrounding braces or brackets, additional fences, and
+ambiguous backticks are rejected; the runner never searches arbitrary prose for
+a parseable JSON fragment. The complete response remains in the capture even
+when one fenced payload is selected.
+A valid report is advisory; zero findings is not a semantic pass. Invalid JSON,
+unmatched references, missing final-response events, or unsuccessful process
+capture blocks the dependent revision and final selection. A failed pipeline
+exits nonzero and retains its available evidence. It does not substitute the
+original draft as a reviewed final response.
+
+With `--source-review`, each case adds these records:
+
+| Record | Meaning |
+|---|---|
+| `draft.txt`, `draft-provenance.json` | Complete original visible response, capture hashes, extraction event/line, and retained-run identity when applicable. |
+| `draft-review.json` | Fresh independent grading template for the original draft, using the same current criteria as the final response. Historical grades remain in their original run. |
+| `source-review/` | Reviewer prompt, process and stream captures, complete response, provenance, and `report.json` only when schema/reference validation succeeds. |
+| `revision/` | Corresponding records for the one revision, created only when a valid reviewer report contains findings. |
+| `final.txt` | Exact selected response: the original draft when no findings were reported, otherwise the completed revision. Absent when dependent execution fails. |
+| `pipeline.json` | Execution status, stage capture statuses, report validity, finding count, final origin, and any blocking error. Its semantic status stays `not_reviewed`. |
+| `review.json` | Independent grading of the selected final response, separate from the model's reviewer report. |
+
+The run also freezes `source-review.md` and selected `cases.json`, with runner,
+protocol, and criteria hashes in the manifest. Neither file is added to the
+writer's skill snapshot. Grade the draft and final response against the same
+frozen criteria; a later grading amendment must not masquerade as improvement.
+Keep earlier historical grades separately identifiable.
+
+Without `--run`, no CLI or version process is invoked. With retained drafts,
+preparation can preserve their validated text and provenance; without them, the
+draft and dependent responses do not yet exist. Pipeline status is `prepared`.
+
 ## Context and clarification cases
 
 Cases 1 through 13 retain the existing authorization, evidence, delivery, and
@@ -107,9 +190,10 @@ Keep quoted percentages distinct from independent calculations, and check that
 missing absolute values remain explicit gaps. Cases 20 and 22 are positive
 controls: evidence that is actually supplied must remain in the brief.
 
-The completed-draft source check is an instruction to the generating agent, not
-a separate enforced checker process. Relevant tool events can establish source
-access; a statement that verification occurred does not prove that the final
+The skill's completed-draft source check remains an instruction to the generating
+agent. The optional runner experiment adds a separate invocation. Relevant tool
+events can establish source access; a statement that verification occurred does
+not prove that the final
 claims are supported. Judge the resulting response against its raw inputs.
 
 The runner always leaves semantic grading at `not_reviewed`. Exit code zero
@@ -181,11 +265,12 @@ comprehension finding, even when the same sentence causes both.
 
 ## Scope and limitations
 
-Each case starts in a separate temporary working directory containing only the
-skill snapshot and its raw scenario inputs. Expected answers, finding IDs, case
+Each initial writer starts in a separate temporary working directory containing
+only the skill snapshot and its raw scenario inputs. Expected answers, finding IDs, case
 names, earlier outputs, and grading instructions are excluded from that context.
 The temporary directory is removed after the case. The durable input copy remains
-available for review.
+available for review. Optional reviewer and revision sessions have separate
+temporary directories and the stage-specific inputs described above.
 
 The cases simulate the next reply and immediate action. They do not merge code,
 change accounts, delete workspaces, send messages, or exercise native question
@@ -195,7 +280,7 @@ schema compatibility, but this does not establish actual dialog rendering.
 Cases 17 and 18 include a fixed earlier exchange and a simulated latest user
 reply. Each still runs as one fresh session producing one response. The runner
 does not conduct a live multi-turn conversation, solicit real confusion, resume
-a prior generated response, or automatically check persistence of a corrected
+a prior CLI session, or automatically check persistence of a corrected
 decision. A live follow-up audit needs a separate controlled conversation with
 the before message, actual reply, and after message retained as distinct
 evidence. The independent-reader procedure is also manual; the runner neither
