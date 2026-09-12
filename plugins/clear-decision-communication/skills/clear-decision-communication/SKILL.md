@@ -189,7 +189,17 @@ the output is the brief for that target.
    | What supports the recommendation? | verified evidence, material uncertainty, assumptions, what would change the recommendation |
    | What happens when I choose? | the strongest alternative, the consequence of declining or deferring, the exact action approval authorizes |
 
-6. **Pre-send check.** Send only when every line holds:
+6. **Check the completed draft against its sources.** Before the reader checks
+   below, make a separate verification pass over the recommendation, comparison,
+   option consequences, summary, and proposed decision record. Reopen the
+   supporting passages or results rather than relying on the draft's wording.
+   For each decision-critical claim, match the exact asset, source statement,
+   conditions, and evidence status. A source that supports only part of a claim
+   does not support the whole sentence. Remove the unsupported part, narrow it,
+   or state the unresolved fact. Mark calculations as derived and retain their
+   input values. Check the revised draft for contradictions, then apply every
+   reader check below. Include relevant sources and limits in the brief without
+   narrating this verification process:
    - The reader can identify the work and state the exact decision and
      commitment without reopening the plan or the conversation.
      The artifact type and exact name, its connection to the goal, current
@@ -456,8 +466,17 @@ meant. Use a concise reference such as "the review workflow" afterward only
 while unambiguous. Preserve established terms and real identifiers exactly,
 including names that contain metaphor words. Mark proposed names as proposed;
 if no name exists yet, say so instead of inventing an existing artifact.
-Never edit text the reader must type, match, or search. Give every number its
-unit, its date, and its source.
+Never edit text the reader must type, match, or search. For each reported
+measurement, identify the exact asset measured and its role, the metric,
+statistic or denominator, unit, source, and relevant revision/date and conditions.
+For a comparison, identify both baseline and candidate. When reporting a
+percentage improvement, include the percentage, both absolute values, and the
+absolute difference when the sources supply them or support their calculation.
+Say whether the percentage is quoted from the source or calculated from supplied
+values. Preserve the direction of change; distinguish relative percent change
+from percentage-point change. If a baseline or absolute value is missing, state
+the gap instead of inventing it or presenting the percentage as independently
+checked. Preserve exact quotations and point to the supporting source.
 
 ## Red Flags
 

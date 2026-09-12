@@ -165,7 +165,7 @@ can render its output.
 
 | Skill | Does | Details |
 |---|---|---|
-| `clear-decision-communication` | Checks whether a decision is needed and prepares a self-contained brief. Connects the goal to the exact artifact and its role, states current behavior and the action each answer authorizes, and chooses examples for the reader's missing understanding. Recovers context when the reader is confused and replaces obsolete options when requirements change. Checks evidence scope across comparisons, options, and records; keeps question meanings stable and adapts to available question tools. Includes nineteen behavioral cases and an independent-reader review procedure. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
+| `clear-decision-communication` | Checks whether a decision is needed and prepares a self-contained brief. Connects the goal to the exact artifact and its role, states current behavior and the action each answer authorizes, and chooses examples for the reader's missing understanding. Recovers context when the reader is confused and replaces obsolete options when requirements change. Checks the completed draft against sources and reports measurements with their assets, baselines, and absolute values when available. Keeps question meanings stable and adapts to available question tools. Includes twenty-two behavioral cases and an independent-reader review procedure. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
 
 ### design-by-elements
 

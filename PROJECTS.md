@@ -1822,13 +1822,18 @@ frontmatter descriptions, tool grants, and installation targets remain stable.
 - [x] [P48-TS02] Independent content review: repaired internal-sizing contradictions and missing current paths and actor distinctions in the new worked example; re-review passed
 - [x] [P48-TS03] Initial draft: review 28 model responses and two independent-reader checks, with 16 overall passes, 12 failures, and eight inconclusive environment attempts; preserve remaining Claude source-fidelity failures and source-snapshot limits
 - [x] [P48-TS04] Complete O1's remaining-failure audit: distinguish older candidates from final D, apply the focused evidence/comparison correction, review five affected-case responses (three passes, two failures) and one fresh-reader check, and record a resolution or proposed disposition for every remaining failure
+- [x] [P48-TS05] Review exact source-check and measurement wording before editing; test candidate F on the two retained Claude cases and three new controls on both tools: eight responses, three overall passes (one qualified), five failures, and one fresh-reader check. Preserve the original failures, additional limitations, and grading amendment; 21 runner tests pass after the amendment
 - [x] [P48-T07] Prepare the implementation and validation record for draft-PR review; keep the installed skill sources on stable main
 - [ ] [P48-T08] Resolve or explicitly disposition the remaining behavioral failures before promotion; after an authorized merge, refresh stable main to activate development placements
 
-**Evidence**: [0.3.0 validation record](docs/validation/clear-decision-communication-0.3.0.md)
-and [O1 audit with the P48-T08 closeout draft](docs/validation/clear-decision-communication-0.3.0-o1.md).
+**Evidence**: [0.3.0 validation record](docs/validation/clear-decision-communication-0.3.0.md),
+[O1 audit with the P48-T08 closeout draft](docs/validation/clear-decision-communication-0.3.0-o1.md),
+and [exact source-check changes, F results, and next-work draft](docs/validation/clear-decision-communication-source-check.md).
 O1's review is complete within P48-T08. The task remains open for disposition
 review and any later authorized promotion, merge, and stable-main refresh.
+F's instruction-only check did not resolve the retained failures. A separately
+executed review of the completed brief is proposed in the follow-up record;
+that integrated review process has not been implemented or tested.
 PR #67 remains draft; this work does not activate either skill.
 Model scenarios simulate communication and intended actions. They do not prove
 real workflow security, perform activation, or establish a future reliability rate.

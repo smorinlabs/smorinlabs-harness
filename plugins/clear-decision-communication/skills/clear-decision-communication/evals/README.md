@@ -1,6 +1,6 @@
 # Behavioral evaluations
 
-Use these nineteen scenarios to review how the skill handles approvals, facts,
+Use these twenty-two scenarios to review how the skill handles approvals, facts,
 evidence, option identity, and communication. The runner records each CLI
 session. A human or an independent agent must review the actual output before
 assigning a behavioral verdict. For the context and clarification cases, also
@@ -32,7 +32,7 @@ uv run --no-project plugins/clear-decision-communication/skills/clear-decision-c
   --tool both --cases 1 2 4 --output /tmp/cdc-live --run
 ```
 
-Use `--tool claude` or `--tool codex` for one tool. Omit `--cases` to run all nineteen.
+Use `--tool claude` or `--tool codex` for one tool. Omit `--cases` to run all twenty-two.
 Model calls use the existing account's authentication and may consume its usage
 allowance. Each call defaults to a 120-second runtime limit and a combined
 1,048,576-byte stdout/stderr limit. Change those bounds with `--timeout` and
@@ -48,7 +48,7 @@ directory is periodically cleared.
 ## Context and clarification cases
 
 Cases 1 through 13 retain the existing authorization, evidence, delivery, and
-question-ID controls. Cases 14 through 19 add the following coverage. The
+question-ID controls. Cases 14 through 22 add the following coverage. The
 `CDC-*` identifiers name review findings; they are grader metadata and are not
 part of the project conversations.
 
@@ -60,12 +60,15 @@ part of the project conversations.
 | 17 | CDC-16 | Answer a confused user's artifact and behavior questions with a concrete example while retaining unchanged question and option IDs. |
 | 18 | CDC-17 | Replace rejected enable-switch options with credential detection; preserve association and current write access as two required author checks, and retain the superseded decision as history. |
 | 19 | CDC-18 | Preserve per-workflow permissions, distinct token sources, applicable restrictions, and unverified effects when simplifying a security explanation. |
+| 20 | CDC-19, CDC-20 | Report both export assets' measured latency and compute charges with baselines and calculated differences; preserve opposing metric directions. |
+| 21 | CDC-19, CDC-20 | Attribute a reported latency percentage while retaining missing absolute measurements and unresolved budget compliance. |
+| 22 | CDC-19, CDC-20 | Retain documented author restrictions; calculate per-workflow allowance shares from measured usage without substituting invocation shares or predicting future consumption. |
 
 Run the new cases together in fresh sessions:
 
 ```sh
 uv run --no-project plugins/clear-decision-communication/skills/clear-decision-communication/evals/run_evals.py \
-  --tool both --cases 14 15 16 17 18 19 --output /tmp/cdc-context-live --run
+  --tool both --cases 14 15 16 17 18 19 20 21 22 --output /tmp/cdc-context-live --run
 ```
 
 The input artifacts are fictional project files, conversation excerpts, and
@@ -96,6 +99,18 @@ an overall semantic failure. Keep the individual criterion results, and explain
 the additional failure in the existing summary field. Record minor precision
 issues separately; do not present a narrow behavioral success as complete
 factual correctness.
+
+For measurement cases, match each value to its exact asset, metric, statistic or
+denominator, unit, baseline, candidate, and supplied measurement conditions.
+Verify calculated percentages and absolute differences against their inputs.
+Keep quoted percentages distinct from independent calculations, and check that
+missing absolute values remain explicit gaps. Cases 20 and 22 are positive
+controls: evidence that is actually supplied must remain in the brief.
+
+The completed-draft source check is an instruction to the generating agent, not
+a separate enforced checker process. Relevant tool events can establish source
+access; a statement that verification occurred does not prove that the final
+claims are supported. Judge the resulting response against its raw inputs.
 
 The runner always leaves semantic grading at `not_reviewed`. Exit code zero
 means its selected processes completed successfully, or preparation completed;

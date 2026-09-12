@@ -178,6 +178,13 @@ single fresh-session response each. No comparison with version 0.2.0 was run.
 
 ## P48-T08 closeout draft
 
+Subsequent owner-authorized work is recorded in the
+[source-check and measurement review](clear-decision-communication-source-check.md):
+exact instruction changes, eight candidate F responses, and a new next-work
+draft. The E outcomes and proposed scope below remain historical. The F work
+tests an instruction to perform a separate pass; it does not implement a
+separately executed reviewer before delivery.
+
 The following is draft follow-up text, not authorization to perform promotion
 or activation:
 

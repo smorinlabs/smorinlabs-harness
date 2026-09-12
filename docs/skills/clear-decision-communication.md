@@ -30,9 +30,14 @@ each claim's scope, conditions, and uncertainty.
 
 Outcome comparisons keep independent inputs separate. When sources establish
 only design rules, the brief compares requirements and leaves unsupported
-runtime outcomes unknown. A source check also covers option consequences and
-decision records: documented behavior is distinct from an exercised test,
-aggregate results stay aggregate, and missing evidence stays unknown.
+runtime outcomes unknown. A separate pass checks the completed draft against
+its sources, including option consequences and decision records: documented
+behavior is distinct from an exercised test, aggregate results stay aggregate,
+and missing evidence stays unknown. Measurements name the exact asset, metric,
+unit, statistic or denominator, source, and relevant conditions. Comparisons
+identify baseline and candidate values, preserve the direction of change, and
+distinguish quoted percentages from calculated changes. Missing absolute values
+remain explicit gaps.
 
 Questions use IDs such as `Q1`; options use `Q1.A` and `Q1.B`. A supported
 recommendation is A and appears first. Neutral questions mark no recommendation.
@@ -133,9 +138,11 @@ Runs that invoke a CLI also retain its output and version. Process completion
 is not a behavioral pass: a reviewer
 must judge the actual response against the expectations, including positive
 and negative controls for approval, silence, skip, and superseded replies.
-The nineteen scenarios include artifact identification, recovery of project
+The twenty-two scenarios include artifact identification, recovery of project
 context, approval stage, confusion, changed implementation requirements, and
-permission-preserving simplification. A separate reader receives only the
+permission-preserving simplification. Measurement cases cover opposing metric
+directions, missing absolute values, and documented workflow usage and author
+restrictions. A separate reader receives only the
 generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.
@@ -148,6 +155,9 @@ records the initial draft's checks. The
 [O1 follow-up audit](../validation/clear-decision-communication-0.3.0-o1.md)
 records the later focused correction, affected-case results, and remaining
 limitations with their exact source revisions. The
+[source-check and measurement review](../validation/clear-decision-communication-source-check.md)
+shows the next skill-text changes verbatim and records their targeted results.
+The
 [0.2.0 validation record](../validation/clear-decision-communication-0.2.0.md)
 retains the earlier source snapshots, reviewed outcomes, and inverse controls.
 
