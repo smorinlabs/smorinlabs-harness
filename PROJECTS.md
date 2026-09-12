@@ -1796,3 +1796,34 @@ Loader note: Claude reports the generator's existing `_generated` manifest
 field as an ignored unknown field. Static Codex manifest validation does not
 establish runtime loading. Additional provider-backed skill-following scenarios
 remain unrun.
+
+---
+
+## [~] Project P48: Concrete context in decision requests
+
+**Goal**: Make an isolated decision understandable during a long coding task:
+connect the goal to the affected artifact, explain its current state, and state
+exactly what the user's answer changes.
+
+**Scope**: The owner approved ten communication corrections after a read-only
+review. Update `clear-decision-communication` to 0.3.0 and the shared precision
+rules in `clear-technical-communication` to 0.2.3. Existing skill names,
+frontmatter descriptions, tool grants, and installation targets remain stable.
+
+### Tests & Tasks
+
+- [x] [P48-T01] Identify the artifact by type, exact name, and role; restore the goal-to-component connection before an unfamiliar question
+- [x] [P48-T02] State current condition and immediate commitment; separate owner judgment from discoverable facts and explain why the answer is needed now
+- [x] [P48-T03] Detect unapproved implementation premises, retire obsolete choices, and honor the user's revised authorization without repeating approval
+- [x] [P48-T04] Choose representations by missing understanding; diagnose confusion and rewrite the question's context before explaining more internals
+- [x] [P48-T05] Preserve claim scope, conditions, and uncertainty; keep tier calculations and drafting logistics out of ordinary requests
+- [x] [P48-T06] Add six behavioral cases and an independent-reader procedure; update examples, both skill pages, README, and affected plugin metadata
+- [x] [P48-TS01] Evaluation-runner tests: 21 passed in 1.53 seconds after the final fixture expansion; generated manifests and both tools' isolated loading checks passed, with the existing Claude `_generated` warning
+- [x] [P48-TS02] Independent content review: repaired internal-sizing contradictions and missing current paths and actor distinctions in the new worked example; re-review passed
+- [x] [P48-TS03] Review 28 model responses and two independent-reader checks: 16 overall passes, 12 failures, plus eight inconclusive environment attempts; preserve remaining Claude source-fidelity failures and source-snapshot limits
+- [x] [P48-T07] Prepare the implementation and validation record for draft-PR review; keep the installed skill sources on stable main
+- [ ] [P48-T08] Resolve or explicitly disposition the remaining behavioral failures before promotion; after an authorized merge, refresh stable main to activate development placements
+
+**Evidence**: [0.3.0 validation record](docs/validation/clear-decision-communication-0.3.0.md).
+Model scenarios simulate communication and intended actions. They do not prove
+real workflow security, perform activation, or establish a future reliability rate.

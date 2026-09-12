@@ -12,18 +12,32 @@ domain complexity, and context gap. The highest of the first six sets T1
 tier. Verification can lower uncertainty before final sizing. Length targets
 prompt editing but never hide material consequences or approval boundaries.
 
-The brief puts the decision first, then the evidence-based recommendation or
-explicit neutrality, necessary context, a focused comparison, consequences,
-and the exact action each choice authorizes. Representation follows the change:
-same-input tables, worked examples, event sequences, or small ASCII diagrams.
-Verbatim paths, identifiers, and captured output keep their exact characters,
-including Unicode.
+The brief identifies the topic immediately. When the question needs context,
+it first connects the user's goal to the exact artifact and its role, the
+relevant discovery, and the remaining choice. Current state and immediate
+commitment are clear before the options. Planning, implementation, validation,
+and activation remain distinct. Tier calculations stay internal unless the
+reader requests them.
+
+Representation follows the reader's missing understanding before the technical
+change type: an artifact table or project relationship may be needed before a
+same-input comparison, worked example, event sequence, or ASCII diagram.
+Precise names retain their artifact type and role: a workflow, its job, an
+action, a setting, and a credential are different things. Concise references
+are welcome after that first definition. Verbatim identifiers and captured
+output keep their exact characters, including Unicode. Simplification preserves
+each claim's scope, conditions, and uncertainty.
 
 Questions use IDs such as `Q1`; options use `Q1.A` and `Q1.B`. A supported
 recommendation is A and appears first. Neutral questions mark no recommendation.
 Options keep their meanings under their IDs; revised choices supersede the old
 question, and stale replies authorize no action. Conditions, redirects, skips,
-and requests for explanation have explicit handling.
+and requests for explanation have explicit handling. Confusion triggers a
+diagnosis of missing identity, project context, state, or commitment before
+another explanation of the mechanism. If the user replaces an implementation
+premise, the agent retires obsolete options and proceeds within the new
+authorization. A discoverable fact is not an owner judgment, and account access
+does not decide every adopter's credential policy.
 
 The host's available tools determine whether the brief uses a dialog,
 asynchronous question, or ordinary text. Independent authorized work can
@@ -73,9 +87,10 @@ Preselection and tool completion without an answer do not count as consent.
 > An agent fixing CSV date validation finds the clean fix lives in a shared
 > validator that API uploads also use.
 > → The gate fires (a departure from the agreed scope, and caller
-> compatibility cannot be verified from the repository), the sizing tag reads
-> `[T2: departure, uncertainty]`, and the agent sends a compact brief: the
-> question line first, "Recommendation: Q1.A, include it ... Q1.B wins if
+> compatibility cannot be verified from the repository). The agent sends a
+> compact brief that first names the shared validator and explains how the CSV
+> fix would also change API uploads. It then asks whether to include that
+> additional scope: "Recommendation: Q1.A, include it ... Q1.B wins if
 > existing external caller behavior must be preserved", a same-input table
 > showing `2024-02-30` corrected today and rejected with the fix on both
 > paths, what accepting means for API callers, "Verified: regression tests pass
@@ -97,7 +112,7 @@ Preselection and tool completion without an answer do not count as consent.
 | `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
 | `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, and reply handling |
 | `references/decision-record.md` | when a record is due and its template |
-| `references/worked-examples.md` | eight fictional situations rendered at every tier; illustrations, not behavioral validation |
+| `references/worked-examples.md` | nine fictional situations across the tiers, including clarification and a replaced implementation premise; illustrations, not behavioral validation |
 | `references/framework.md` | historical source framework preserved verbatim and provenance |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
 | `evals/run_evals.py` | bounded CLI runner that preserves inputs, source hashes, process evidence, and ungraded review records |
@@ -112,12 +127,20 @@ Runs that invoke a CLI also retain its output and version. Process completion
 is not a behavioral pass: a reviewer
 must judge the actual response against the expectations, including positive
 and negative controls for approval, silence, skip, and superseded replies.
+The nineteen scenarios include artifact identification, recovery of project
+context, approval stage, confusion, changed implementation requirements, and
+permission-preserving simplification. A separate reader receives only the
+generated brief and neutral questions. Their answers are recorded before a
+reviewer compares them with the source facts, so prior familiarity cannot
+supply context that the brief omitted.
 
 See [the evaluation guide](../../plugins/clear-decision-communication/skills/clear-decision-communication/evals/README.md)
 for commands. The scenarios simulate decision communication and intended next
 actions; they do not perform real merges or validate native dialog rendering.
-The [0.2.0 validation record](../validation/clear-decision-communication-0.2.0.md)
-records the tested source snapshots, reviewed outcomes, and inverse controls.
+The [0.3.0 validation record](../validation/clear-decision-communication-0.3.0.md)
+records checks of this revision. The
+[0.2.0 validation record](../validation/clear-decision-communication-0.2.0.md)
+retains the earlier source snapshots, reviewed outcomes, and inverse controls.
 
 ## Provenance
 

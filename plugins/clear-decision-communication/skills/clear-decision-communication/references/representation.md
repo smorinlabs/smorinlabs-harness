@@ -12,6 +12,24 @@ MIT). Attribution and licenses are in `references/framework.md`.
 
 ## Assess the difficulty first
 
+Start with the immediate commitment, then identify the reader's missing
+understanding. A precise trace of internals cannot identify an unnamed feature.
+
+| Reader's missing understanding | Smallest useful form |
+|---|---|
+| What exact asset is this? | artifact type, exact name, and role in a sentence or table |
+| How does this relate to the project? | goal-to-component connection in prose, or a small relationship diagram when several connections matter |
+| What exists and what would my answer change now? | current condition and immediate action, with proposed or inactive parts labeled |
+| What changes for the same event? | same-input or same-event comparison |
+| Why does the order matter? | event sequence or timing chart |
+
+Keep a workflow file distinct from its jobs, invoked actions or scripts,
+settings, and credentials. Include the exact artifact names the reader must
+identify; a short reference can follow once its meaning is clear. Do not
+invent a final name for an unnamed proposal.
+
+For behavior that still needs explanation, assess:
+
 - Interacting parts: how many concepts or components must be understood
   together?
 - Hidden conditions: does correctness depend on timing, ordering, state,
@@ -19,11 +37,12 @@ MIT). Attribution and licenses are in `references/framework.md`.
 - Reasoning effort: can the consequence be seen directly, or must the reader
   mentally simulate events?
 
-Provide the mental simulation when it is necessary to judge the change. Then
+Provide the mental simulation when it is necessary to judge the commitment. Then
 ask the one question that decides the channel: would the reader understand
-this better by seeing it than by reading it? A conceptual question ("should
-sessions auto-extend?") reads; a structural or sequential one ("where does the
-stale result overwrite the fresh one?") is seen.
+this better by seeing it than by reading it? A conceptual choice may need an
+artifact or behavior comparison too. Use the change-type table after resolving
+the missing project or artifact context; omit an artifact when a sentence fully
+explains the relationship.
 
 ## Change type to form
 

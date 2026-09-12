@@ -1,9 +1,10 @@
 # Worked examples
 
-These examples calibrate the skill against two recurring shapes: a compressed
-multidimensional explanation and an under-analyzed owner-decision request.
+These examples calibrate the skill against three recurring shapes: a compressed
+multidimensional explanation, an under-analyzed owner-decision request, and a
+status report that confuses related artifacts and overstates its evidence.
 
-Both rewrites below satisfy the artifact-frame rows in
+The rewrites below satisfy the artifact-frame rows in
 `references/common-errors.md`. Where a name cannot be described without
 inventing a fact, the rewrite marks the gap explicitly rather than guessing or
 dropping the name. That is the intended behavior: a name is never removed to
@@ -159,3 +160,47 @@ protect.
 
 This version does not pretend that editing can replace missing analysis. It
 creates a usable decision structure and makes the absent work explicit.
+
+## Example 3: workflow status and credential uncertainty
+
+This example is fictional. Its names, configuration, and run results illustrate
+the rewrite rules; they are not claims about a real repository.
+
+### Source facts available to the editor
+
+- The GitHub Actions workflow `Review`, defined in
+  `.github/workflows/review.yml`, contains two jobs: `static-checks`, which
+  checks source formatting, and `assisted-review`, which performs automated
+  review through the `scripts/assisted_review.py` script.
+- The repository variable `ENABLE_ASSISTED_REVIEW` controls whether the
+  `assisted-review` job runs. In inspected run `481`, the variable was `false`,
+  the `static-checks` job passed, and the `assisted-review` job was skipped.
+- The GitHub Actions secret `REVIEW_SERVICE_TOKEN` stores the script's service
+  credential. The editor could not inspect secret settings, so the credential's
+  availability was not established.
+
+### Source
+
+> The assisted-review workflow is off. Review works because static checks
+> passed. The review token is missing.
+
+### Rewritten communication
+
+> In run `481`, the GitHub Actions workflow `Review` in
+> `.github/workflows/review.yml` ran its `static-checks` job, which checks
+> source formatting. That job passed.
+>
+> Its `assisted-review` job, which invokes the `scripts/assisted_review.py`
+> automated-review script, was skipped because repository variable
+> `ENABLE_ASSISTED_REVIEW`, the setting controlling that job, was `false`.
+>
+> I could not inspect the `REVIEW_SERVICE_TOKEN` secret, which stores the
+> script's service credential. The credential's availability remains unknown.
+> This run verifies the formatting checks. It provides no executed test of the
+> `assisted-review` job.
+
+The rewrite distinguishes the workflow from its jobs, the invoked script from
+its containing job, and the job's control setting from the script's credential.
+Passing formatting checks supports no broader claim about automated review.
+Unavailable inspection does not establish a missing credential. Later references
+stay short because the types and relationships have already been established.
