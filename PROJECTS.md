@@ -1690,7 +1690,7 @@ PR-3 — Fusion Windows diagnostics
 - [x] [P45-T19] Add trusted pushed-revision dispatch and collection bound to invocation, workflow attempt, commit, runner and nonempty selected tests; preserve failed-job logs.
 - [x] [P45-T20] Define protected one-job registration, partial receipts, guarded retirement and the concrete diagnostic workflow/report examples.
 - [x] [P45-T21] Verify helper fixtures, PowerShell selection/mode/retirement controls, and fresh Claude/Codex plugin loading. Live Windows evidence remains a separate gate.
-- [ ] [P45-T22] Execute Windows failure → source repair → success and no-selection cleanup, then merge the integration PR. The Mac is locked; no new live pass is claimed.
+- [ ] [P45-T22] Execute Windows failure → source repair → success and no-selection cleanup on the selected Apple Silicon Mac's Windows 11 Arm64 VM, then merge the integration PR. The unlocked-host startup retry still produced no running VM; no new live pass is claimed.
 - [ ] [P45-T23] Settle and implement trusted runner-code preparation before repeated elevated registration. [PR #68 review](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242) is an open architectural gate; the recommended policy uses a fresh verified directory per registration and preserves earlier checkouts.
 - [ ] Regression Test Status
 
@@ -1760,6 +1760,12 @@ The skills preserve the distinction between local Windows CI and a specific
 GitHub-hosted image. The subsequent live-validation request authorizes an actual
 installation and smoke tests on a chosen Mac and private validation repository.
 
+**Current acceptance scope (owner decision, 2026-09-12):** run this delivery's
+live tests on the existing Apple Silicon Mac with Windows 11 Arm64 in Fusion.
+Intel Windows x64 and another-Mac recovery remain untested future coverage and
+are excluded from this delivery's acceptance gates. Existing architecture
+selection and refusal contracts remain applicable to the reusable plugin.
+
 **Design**: New plugin and distinct setup/operation triggers. Existing CI audit
 skills diagnose workflows; this plugin owns Fusion VM provisioning and lifecycle.
 Linux sandbox provisioning is a separate capability. A local secret-free handoff
@@ -1784,7 +1790,7 @@ software and Windows images are downloaded from their official sources.
 - [x] [P47-TS06] Cover the host-probe JSON contract with mocked macOS success, Rosetta planning, unknown facts, absent/malformed Fusion metadata, invalid storage, and non-macOS cases; verify already-off stop remains observation-only. All 36 helper tests passed in 4.30 seconds after the review repairs.
 - [x] [P47-T10] VM power helper 0.2.0 adds optional `--wait-seconds` total-deadline polling. Four delayed/stuck transition fixtures verify a single mutation and a deadline that includes the initial inventory. The default remains one post-request observation.
 - [ ] [P47-T09] Tagged public release is authorized by the current closeout request and awaits the integration/release gates; do not request authorization again.
-- [ ] [P47-TS05] Persistent service restart after registration, Intel Windows x64, and recovery on another Mac remain unrun. The 2026-09-12 locked-Mac startup check returned zero but three inventories showed no running VM; locked startup remains unsupported. Persistent reboot orchestration is implemented; additional Macs and fresh-VM storage have been requested.
+- [ ] [P47-TS05] Verify persistent service restart after registration on the selected Apple Silicon Mac. Locked-host and unlocked-host startup attempts returned zero without establishing a running VM; native startup remains unresolved. Persistent reboot orchestration is implemented. The owner limited this delivery to this Mac on 2026-09-12; Intel Windows x64 and another-Mac recovery remain untested future coverage.
 
 **Validation boundary**: The [public validation record](plugins/fusion-runner/docs/validation.md)
 and its curated JSON summary describe the exact smoke workload and observed

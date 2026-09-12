@@ -11,7 +11,12 @@ diagnostic job through GitHub Actions. This requires pushed code. It is distinct
 from host/Linux reproduction and never replaces applicable required CI.
 Fusion setup/run owns the VM, protected guest access, registration, and shutdown.
 First live coverage uses one-job Arm64 registrations on the existing Mac.
-Persistent, locked-host, Intel, and another-Mac coverage remain separately evidenced.
+Persistent and locked-host coverage remain separately evidenced.
+
+Owner scope decision, 2026-09-12: live acceptance uses this Mac's Windows 11
+Arm64 VM in Fusion. Intel Windows x64 and another-Mac recovery are excluded
+from the current delivery. They remain untested future coverage. Fresh Windows
+bootstrap validation will also use this Mac after resolving local storage.
 
 The public handoff remains secret-free. A registration intent and guest receipt
 preserve identity even if configuration succeeds but subsequent transport fails.
@@ -30,7 +35,6 @@ passing test. Unknown or active states preserve the machine and diagnostic evide
 - [x] P47-T10: optional bounded power-state polling with one total deadline.
 - [ ] Live Windows red → repair → green, plus no-selection and failure cleanup.
 - [ ] P47-TS05: persistent reboot and locked-host observations on this Mac.
-- [ ] P47-TS05: Intel Windows x64 and independent recovery on another Mac.
 - [ ] R03: supported prerequisite bootstrap and fresh-VM validation.
 - [x] Fresh Claude/Codex loading and six-case behavioral checks; content/CLI quality gates.
 - [ ] PR delivery and review, tagged harness release, tracker reconciliation.
@@ -39,9 +43,10 @@ passing test. Unknown or active states preserve the machine and diagnostic evide
 ## Resource constraints observed before implementation
 
 The host has approximately 23 GiB free and no separate writable data volume.
-Additional Intel/cross-Mac hardware and access have been requested. Existing VM
-archives, working VMs, unrelated audit files, and private recovery worktrees are
-preserved. A hardware-dependent check is not complete merely because fixtures pass.
+The owner subsequently limited testing to this Mac; the additional-hardware
+request is closed by that scope decision. Local Windows storage is being audited
+before the fresh-VM test. Cleanup candidates require a concrete reviewed scope.
+A hardware-dependent check is not complete merely because fixtures pass.
 
 The locked-host probe returned zero but three later inventories showed no
 running VM. Locked startup therefore remains unsupported. New Windows diagnostic,

@@ -67,13 +67,15 @@ decision scenarios, not live service or workflow execution.
 - P45/R02: execute an actual Windows test failure, repair the source and pass
   the same assertion on another registration; verify no-selection rejection and
   safe failure retirement.
-- P47-TS05: verify the same persistent service/runner identity after reboot,
-  Intel Windows x64 execution, and independent recovery on another Mac.
+- P47-TS05: verify the same persistent service/runner identity after reboot on
+  this Mac. The owner's 2026-09-12 scope decision excludes Intel Windows x64 and
+  another-Mac recovery from this delivery; both remain untested future coverage.
 - Locked-host startup: the recorded observation was unsuccessful despite exit 0.
   An unlocked-host retry also failed to produce a running VM. The later Fusion
   UI inspection did not establish readiness; boot/access acceptance remains open.
-- R03: run the integrated prerequisite bootstrap on a fresh VM, then prove
-  reboot access and a real job. Additional writable storage is needed.
+- R03: run the integrated prerequisite bootstrap on a fresh Windows 11 Arm64 VM
+  on this Mac, then prove reboot access and a real job. Local storage cleanup is
+  being assessed before provisioning.
 - Complete PR review, integration and tagged release after the corresponding
   acceptance gates. Delivery authorization is already recorded.
 
