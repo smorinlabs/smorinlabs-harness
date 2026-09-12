@@ -5,6 +5,11 @@ Reviewed on 2026-09-11 from repository base `02ace8a`. This change prepares
 on branch `fix/decision-context-and-precision`. Merge, release, and activation
 through the stable main checkout are distinct from these checks.
 
+This record preserves the initial draft's results through source snapshot D
+at commit `b5affcf`. The [O1 follow-up audit](clear-decision-communication-0.3.0-o1.md)
+distinguishes older-candidate failures from final-D evidence, records the focused
+correction and affected-case runs, and provides the P48-T08 closeout draft.
+
 ## Changes under review
 
 The decision skill now restores the goal-to-component connection before an
@@ -73,13 +78,14 @@ snapshots, not one full rerun of the final source.
 
 These are mixed behavioral results. The package is prepared as a draft for
 review, not as evidence that every generated decision is correct. The remaining
-Claude failures persisted after concrete instruction repairs; no further
-unchanged retries were made to seek a passing response.
+Claude failures were observed on the candidate snapshots identified below;
+only expanded case 18 was run on final snapshot D. No further unchanged
+retries were made to seek a passing response.
 
 The initial Claude approval response fabricated a placeholder diff and called
-it exact verified evidence. Its final-source response removes that artifact.
+it exact verified evidence. Its snapshot-C response removes that artifact.
 The initial permission clarification converted unreported review restrictions
-into absent restrictions; the final-source response explicitly preserves them
+into absent restrictions; the snapshot-C response explicitly preserves them
 as unknown. Other retries still broaden benchmark conclusions and tested event
 conditions, or infer facts from omitted information. Source inspection remains
 necessary when reviewing a consequential generated decision.
@@ -107,14 +113,15 @@ those two outputs, not of every scenario or future response.
 
 The runner records SHA-256 hashes for every supplied instruction file. These
 fingerprints hash that filename-to-hash map serialized as sorted JSON without
-whitespace. Evaluation inputs and expectations remain unchanged across retries.
+whitespace. Inputs and expectations remained unchanged within each fixture
+version; the later case-18 expansion is described separately below.
 
 | Snapshot | Source-set fingerprint | Runs |
 |---|---|---|
-| Initial implementation | `fb871071d4de50c83f6ce107c4c8e26901e02ff9bddfb8adaebf193af917ae27` | Eight Claude cases; successful Codex case 14; eight earlier Codex environment failures |
-| Example and sizing repair | `5af20150e95aed8590231f60ec6d9d1dc8f0325dcb377748f815d5d8a389d296` | Codex cases 1, 4, and 15-19 |
-| Evidence repair | `c0a8da6d2bcfbdf160540e5cf52bf5731f6b644123fead1c4d8bbb47c4043a31` | Codex cases 18-19; Claude cases 1, 4, 14-15, and 18-19; expanded case 18 on both tools |
-| Approval-record repair | `7187f0aeef8b5e2a3465d7cfee644401eaee951d6cceb9b35f802f8f84530e0c` | Expanded case 18 on both tools |
+| A: Initial implementation | `fb871071d4de50c83f6ce107c4c8e26901e02ff9bddfb8adaebf193af917ae27` | Eight Claude cases; successful Codex case 14; eight earlier Codex environment failures |
+| B: Example and sizing repair | `5af20150e95aed8590231f60ec6d9d1dc8f0325dcb377748f815d5d8a389d296` | Codex cases 1, 4, and 15-19 |
+| C: Evidence repair | `c0a8da6d2bcfbdf160540e5cf52bf5731f6b644123fead1c4d8bbb47c4043a31` | Codex cases 18-19; Claude cases 1, 4, 14-15, and 18-19; expanded case 18 on both tools |
+| D: Approval-record repair, initial draft's final revision | `7187f0aeef8b5e2a3465d7cfee644401eaee951d6cceb9b35f802f8f84530e0c` | Expanded case 18 on both tools |
 
 The evidence-repair instructions make reproduced actor/trigger conditions
 explicit, prohibit fabricated patch evidence and invented approval gates,
@@ -137,9 +144,10 @@ or generation inputs above.
 Case 18 was subsequently expanded to require both an allowed author association
 and current repository write access. The earlier fictional reply required only
 the write check; it could not detect loss of the conjunction in the motivating
-follow-up. One fresh run per tool exercises the expanded input with the same
-final skill snapshot. Earlier case-18 results remain tied to their original
-staged inputs and are not graded against the added requirement.
+follow-up. The first expanded-input run per tool uses snapshot C; a second pair
+uses snapshot D after the approval-record repair. Earlier case-18 results remain
+tied to their original staged inputs and are not graded against the added
+requirement.
 
 Both tools preserved the two author checks on the expanded input. The first
 Claude response nevertheless broadened approval inside its proposed decision

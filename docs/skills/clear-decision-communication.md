@@ -28,6 +28,12 @@ are welcome after that first definition. Verbatim identifiers and captured
 output keep their exact characters, including Unicode. Simplification preserves
 each claim's scope, conditions, and uncertainty.
 
+Outcome comparisons keep independent inputs separate. When sources establish
+only design rules, the brief compares requirements and leaves unsupported
+runtime outcomes unknown. A source check also covers option consequences and
+decision records: documented behavior is distinct from an exercised test,
+aggregate results stay aggregate, and missing evidence stays unknown.
+
 Questions use IDs such as `Q1`; options use `Q1.A` and `Q1.B`. A supported
 recommendation is A and appears first. Neutral questions mark no recommendation.
 Options keep their meanings under their IDs; revised choices supersede the old
@@ -138,7 +144,10 @@ See [the evaluation guide](../../plugins/clear-decision-communication/skills/cle
 for commands. The scenarios simulate decision communication and intended next
 actions; they do not perform real merges or validate native dialog rendering.
 The [0.3.0 validation record](../validation/clear-decision-communication-0.3.0.md)
-records checks of this revision. The
+records the initial draft's checks. The
+[O1 follow-up audit](../validation/clear-decision-communication-0.3.0-o1.md)
+records the later focused correction, affected-case results, and remaining
+limitations with their exact source revisions. The
 [0.2.0 validation record](../validation/clear-decision-communication-0.2.0.md)
 retains the earlier source snapshots, reviewed outcomes, and inverse controls.
 

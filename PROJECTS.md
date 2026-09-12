@@ -1820,10 +1820,15 @@ frontmatter descriptions, tool grants, and installation targets remain stable.
 - [x] [P48-T06] Add six behavioral cases and an independent-reader procedure; update examples, both skill pages, README, and affected plugin metadata
 - [x] [P48-TS01] Evaluation-runner tests: 21 passed in 1.53 seconds after the final fixture expansion; generated manifests and both tools' isolated loading checks passed, with the existing Claude `_generated` warning
 - [x] [P48-TS02] Independent content review: repaired internal-sizing contradictions and missing current paths and actor distinctions in the new worked example; re-review passed
-- [x] [P48-TS03] Review 28 model responses and two independent-reader checks: 16 overall passes, 12 failures, plus eight inconclusive environment attempts; preserve remaining Claude source-fidelity failures and source-snapshot limits
+- [x] [P48-TS03] Initial draft: review 28 model responses and two independent-reader checks, with 16 overall passes, 12 failures, and eight inconclusive environment attempts; preserve remaining Claude source-fidelity failures and source-snapshot limits
+- [x] [P48-TS04] Complete O1's remaining-failure audit: distinguish older candidates from final D, apply the focused evidence/comparison correction, review five affected-case responses (three passes, two failures) and one fresh-reader check, and record a resolution or proposed disposition for every remaining failure
 - [x] [P48-T07] Prepare the implementation and validation record for draft-PR review; keep the installed skill sources on stable main
 - [ ] [P48-T08] Resolve or explicitly disposition the remaining behavioral failures before promotion; after an authorized merge, refresh stable main to activate development placements
 
-**Evidence**: [0.3.0 validation record](docs/validation/clear-decision-communication-0.3.0.md).
+**Evidence**: [0.3.0 validation record](docs/validation/clear-decision-communication-0.3.0.md)
+and [O1 audit with the P48-T08 closeout draft](docs/validation/clear-decision-communication-0.3.0-o1.md).
+O1's review is complete within P48-T08. The task remains open for disposition
+review and any later authorized promotion, merge, and stable-main refresh.
+PR #67 remains draft; this work does not activate either skill.
 Model scenarios simulate communication and intended actions. They do not prove
 real workflow security, perform activation, or establish a future reliability rate.

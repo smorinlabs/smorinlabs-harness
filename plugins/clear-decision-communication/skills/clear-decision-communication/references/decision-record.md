@@ -65,6 +65,10 @@ its status; when to revisit.
   does not authorize either action.
 - After recording, correct persistent claims the decision made stale. Keep
   rejected alternatives and superseded records labeled as historical context.
+- Check each evidence statement against its source before retaining it. Keep
+  distinct findings separate when their statuses differ; an unselected design
+  choice does not mean its prototype or test is absent. The record preserves
+  the same qualifications and approval boundary as the response.
 - Refer to the decision by its sentence, with the ID attached, never by the
   bare ID: "the worker-process decision (Q3)".
 

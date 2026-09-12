@@ -31,8 +31,9 @@ diagram; a downstream tool may render this text.
 
 Three judgments stay separate throughout. Whether to ask is judgment one and is
 never set by size. How much to prepare and explain is judgment two, the tier.
-Which representation to use is judgment three, set by the change type, never by
-the tier. Domain complexity alone never creates a permission requirement, and a
+Which representation to use is judgment three: resolve the reader's missing
+understanding, then use the change type, never the tier. Domain complexity alone
+never creates a permission requirement, and a
 routine change behind a mandatory gate still gets only a short ask.
 
 Invoked by hand with a target, such as a pasted question, a draft ask, a pull
@@ -142,7 +143,7 @@ the output is the brief for that target.
    | Type of change | Show |
    |---|---|
    | Mechanical, such as a rename | one descriptive sentence naming the change and its purpose |
-   | Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome, as a table (F1) |
+   | Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome (F1); if only design rules are known, compare those rules and leave runtime outcomes unknown |
    | Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode (F2), a whole block (F7), or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
    | Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
    | Architectural, such as moving responsibilities | a small ASCII system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
@@ -155,12 +156,12 @@ the output is the brief for that target.
    adds nothing to a clear sentence. Say whether an example is illustrative or
    reproduced from a real run, and whether verification was performed or is
    proposed.
-   A reproduced example retains the source's actor, trigger, and operating
-   conditions. A different event or broader claim is a new inference, not that
-   test's result. A successful-response interval does not bound staleness when
-   failed requests retain old data; state that failure case when it matters.
-   If a baseline outcome is unknown, label that comparison cell unknown.
-   Do not substitute a result observed under a different condition.
+   Before filling an outcome cell, check that its source establishes the same
+   actor, trigger, and condition values as that row. Keep independent inputs
+   independent: a missing credential does not establish a setting's value.
+   Label an unsupported outcome unknown. When the evidence defines only design
+   rules, compare the stated rules instead of constructing a runtime trace.
+   Do not complete a table by changing its inputs or supplying missing facts.
 
 5. **Draft the brief.** Establish the decision topic immediately. Put the
    question first when it is understandable by itself. Otherwise precede it
@@ -208,6 +209,8 @@ the output is the brief for that target.
      commit".
      Rewriting has preserved each claim's subject, scope, and conditions;
      permissions or safeguards for one component do not stand for another's.
+     Check claims in options, table readings, and records against their sources
+     too; an accurate evidence paragraph cannot repair a stronger claim elsewhere.
    - Remove each sentence in turn: if the decision is no harder, cut it. The
      length target prompts review, never removal of material information.
      Artifact readings, option consequences, and evidence labels are concise
@@ -417,11 +420,24 @@ implementation. Where components differ, identify each one's permissions,
 safeguards, and unknowns. A workflow's declared permissions do not establish
 the effective permissions of a separately obtained credential.
 
-An omitted fact remains unknown; a record of one check does not establish that
-no other checks ran. Derive approval gates from the user's instructions and
-identified policy, not from an imagined later stage. If exact patch bytes or
-other evidence are unavailable, state the gap and the intended action. Never
-fill an evidence block with invented content or placeholders and call it verified.
+Before sending, trace each decision-critical claim back to its support. A label
+such as "Verified" does not make a stronger statement follow from its source:
+
+- A documented trigger and an exercised trigger are different evidence. Retain
+  the tested actor, event, and conditions; label broader predictions as inferences.
+- An overall comparison does not establish a win on each metric. Keep aggregate
+  conclusions aggregate unless separate measurements are supplied.
+- An omitted check or UI behavior is unknown, not absent. "Not selected",
+  "not tested", and "test status not recorded" describe different gaps; carry
+  each finding's actual status into summaries and decision records.
+- A request interval is not a maximum data age. An age estimate also needs
+  assumptions about response time, source freshness, and failures. Remaining
+  effects after reversal do not establish a need for manual cleanup.
+
+Derive approval gates from the user's instructions and identified policy, not
+from an imagined later stage. If exact patch bytes or other evidence are
+unavailable, state the gap and the intended action. Omit unsupported additions;
+never fill a template field with invented evidence, effects, or constraints.
 
 ## Self-contained references
 
