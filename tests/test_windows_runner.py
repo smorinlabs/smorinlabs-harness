@@ -3,6 +3,8 @@ import importlib.util
 import io
 import json
 import subprocess
+import sys
+import time
 import zipfile
 from pathlib import Path
 from types import SimpleNamespace
@@ -204,6 +206,53 @@ def test_api_subprocess_timeout_is_bounded_and_does_not_repost(monkeypatch):
     assert len(calls)==1 and 0 < calls[0][1]['timeout'] <= 10
 
 
+def binary_producer(monkeypatch, program):
+    """Exercise real pipes/process cleanup while replacing only the gh executable."""
+    popen = subprocess.Popen
+    children = []
+    def start(_args, **kwargs):
+        child = popen([sys.executable, '-c', program], **kwargs)
+        children.append(child)
+        return child
+    monkeypatch.setattr(w.shutil, 'which', lambda _: '/gh')
+    monkeypatch.setattr(w.subprocess, 'Popen', start)
+    return children
+
+
+@pytest.mark.parametrize('size', [0, w.MAX_JSON, 16 * w.MAX_JSON,
+                                 16 * w.MAX_JSON + 1, 25 * w.MAX_JSON])
+def test_binary_download_is_bounded_during_capture(monkeypatch, size):
+    children = binary_producer(monkeypatch,
+        "import sys; sys.stderr.buffer.write(b'e' * 1048576); "
+        f"sys.stdout.buffer.write(b'x' * {size})")
+    raw = w.GitHub('/gh', 10).api('repos/o/r/actions/jobs/9/logs', binary=True)
+    assert raw == b'x' * min(size, 16 * w.MAX_JSON + 1)
+    assert len(children) == 1 and children[0].poll() is not None
+
+
+@pytest.mark.parametrize('returncode', [0, 1])
+def test_binary_download_preserves_bytes_and_rejects_failed_requests(monkeypatch, returncode):
+    children = binary_producer(monkeypatch,
+        "import sys; sys.stdout.buffer.write(bytes(range(256)) * 4096); " + f"sys.exit({returncode})")
+    if returncode:
+        with pytest.raises(w.Failure, match='GitHub request failed'):
+            w.GitHub('/gh', 10).api('test', binary=True)
+    else:
+        assert w.GitHub('/gh', 10).api('test', binary=True) == bytes(range(256)) * 4096
+    assert children[0].poll() == returncode
+
+
+@pytest.mark.parametrize('close_stdout', [False, True])
+def test_binary_download_timeout_reaps_child(monkeypatch, close_stdout):
+    children = binary_producer(monkeypatch,
+        'import os, time; ' + ('os.close(1); ' if close_stdout else '') + 'time.sleep(10)')
+    started = time.monotonic()
+    with pytest.raises(w.Failure, match='uncertain'):
+        w.GitHub('/gh', 0.2).api('test', binary=True)
+    assert time.monotonic() - started < 3
+    assert children[0].poll() is not None
+
+
 @pytest.mark.parametrize('key', ['api_key', 'client_secret', 'cookie', 'authorization', 'accessKey'])
 def test_common_secret_keys_are_rejected_recursively(fixture, tmp_path, key):
     profile, _, _, _ = fixture
@@ -246,9 +295,9 @@ def test_oversized_failed_log_is_saved_even_for_wrong_runner(tmp_path, monkeypat
     path.write_text(json.dumps(receipt))
     run = {'id': 11, 'display_title': 'Windows diagnostic '+'c'*32, 'run_attempt': 1,
            'head_sha': 'a'*40, 'html_url': 'https://example.test/run', 'status': 'completed'}
-    monkeypatch.setattr(w.shutil, 'which', lambda _: '/gh')
     raw = b'failed log\n' + b'x' * (17 * w.MAX_JSON)
-    monkeypatch.setattr(w.subprocess, 'run', lambda *_a, **_k: SimpleNamespace(returncode=0, stdout=raw))
+    binary_producer(monkeypatch,
+        "import sys; sys.stdout.buffer.write(b'failed log\\n' + b'x' * (17 * 1048576))")
     api = w.GitHub('/gh', 10)
     api.pages = lambda _, key: {'workflow_runs': [run], 'jobs': [job], 'artifacts': []}[key]
     with pytest.raises(w.Failure, match='different runner' if wrong_runner else 'artifact'):

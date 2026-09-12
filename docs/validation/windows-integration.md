@@ -6,7 +6,7 @@ not extend the original plugin's three Arm64 smoke-job claims to unrun scenarios
 
 | Check | Observed result |
 | --- | --- |
-| Windows collector, Fusion Python helpers and PowerShell contract regression | 79 checks selected after review repairs; current result recorded in the repair commit's PR evidence |
+| Windows collector, Fusion Python helpers and PowerShell contract regression | 88 checks passed in 10.83 seconds after the bounded-download repair |
 | PowerShell contract details | Three parsers, four selection cases, five registration-mode cases, twelve retirement cases and four service-verification cases |
 | Repository Python suite | 257 passed initially; 28 existing repo-finder tests were blocked by UV cache permissions, then all 28 passed in 19.97 seconds with a writable cache. All 285 collected tests were verified across those runs. |
 | Generated manifests | Current after plugin versions became Fusion 0.3.0 and repo-hygiene 0.14.0 |
@@ -31,6 +31,12 @@ PR #68 review added regression controls for common secret keys, complete and
 exclusive runner-label matching, first-observation reruns, truncated failure logs,
 wrong-runner log preservation, stopped/wrong-path services and unmatched services
 in the same installation. The failing controls were reproduced before repair.
+The download follow-up reproduced a complete 25 MiB response being buffered
+before truncation. Binary responses now retain at most 16 MiB plus one overflow
+byte during capture. Empty, exact-limit, oversized, nonzero-exit and timeout
+controls exercise real child processes; timeout and overflow both reap the child.
+Logs retain the bounded prefix and an explicit truncation flag; oversized report
+archives remain rejected. Binary stderr is discarded instead of buffered.
 The public PR's original implementation passed all four GitHub CI checks; its
 repair commit requires a fresh check result before integration.
 
@@ -63,8 +69,9 @@ decision scenarios, not live service or workflow execution.
   safe failure retirement.
 - P47-TS05: verify the same persistent service/runner identity after reboot,
   Intel Windows x64 execution, and independent recovery on another Mac.
-- Locked-host startup: the latest observation was unsuccessful despite exit 0.
-  The Mac needed unlocking before the remaining local VM checks could proceed.
+- Locked-host startup: the recorded observation was unsuccessful despite exit 0.
+  An unlocked-host retry also failed to produce a running VM. The later Fusion
+  UI inspection did not establish readiness; boot/access acceptance remains open.
 - R03: run the integrated prerequisite bootstrap on a fresh VM, then prove
   reboot access and a real job. Additional writable storage is needed.
 - Complete PR review, integration and tagged release after the corresponding

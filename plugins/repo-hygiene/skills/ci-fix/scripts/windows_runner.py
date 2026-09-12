@@ -10,6 +10,7 @@ import io
 import json
 import os
 import re
+import selectors
 import shutil
 import signal
 import subprocess
@@ -24,6 +25,7 @@ from urllib.parse import quote
 VERSION = "0.1.0"
 VMRUN = "/Applications/VMware Fusion.app/Contents/Library/vmrun"
 MAX_JSON = 1024 * 1024
+MAX_BINARY = 16 * MAX_JSON
 
 
 class Failure(Exception):
@@ -124,6 +126,9 @@ class GitHub:
         args = [self.executable, "api", "--method", method, endpoint]
         if binary:
             args.append("--allow-escape-sequences")
+            if method != "GET" or body is not None:
+                raise Failure("invalid_options", "binary downloads require GET without a request body", 2)
+            return self.download(args, endpoint)
         if body is not None:
             args += ["--input", "-"]
         try:
@@ -133,12 +138,45 @@ class GitHub:
             raise Failure("request_timeout", "GitHub response is uncertain; reconcile before retrying a mutation", 5) from exc
         if result.returncode:
             raise Failure("github_error", f"GitHub request failed for {endpoint}; verify access and saved state")
-        if binary:
-            return result.stdout
         try:
             return json.loads(result.stdout) if result.stdout else None
         except ValueError as exc:
             raise Failure("github_response", "GitHub returned invalid JSON") from exc
+
+    def download(self, args, endpoint):
+        """Capture a bounded prefix on the Mac host, with one overflow byte.
+
+        collect retains truncated logs and rejects truncated archives. Stopping
+        the read-only download at the limit also bounds memory and disk usage.
+        """
+        deadline = time.monotonic() + min(30, self.remaining())
+        output = bytearray()
+        process = subprocess.Popen(args, stdin=subprocess.DEVNULL,
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        try:
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                while True:
+                    left = deadline - time.monotonic()
+                    if left <= 0 or not selector.select(left):
+                        raise subprocess.TimeoutExpired(args, 30)
+                    chunk = os.read(process.stdout.fileno(), min(65536, MAX_BINARY + 1 - len(output)))
+                    if not chunk:
+                        break
+                    output.extend(chunk)
+                    if len(output) > MAX_BINARY:
+                        return bytes(output)
+            process.wait(timeout=max(0, deadline - time.monotonic()))
+            if process.returncode:
+                raise Failure("github_error", f"GitHub request failed for {endpoint}; verify access and saved state")
+            return bytes(output)
+        except subprocess.TimeoutExpired as exc:
+            raise Failure("request_timeout", "GitHub response is uncertain; reconcile before retrying a mutation", 5) from exc
+        finally:
+            if process.poll() is None:
+                process.kill()
+            process.wait()
+            process.stdout.close()
 
     def pages(self, endpoint, key):
         output = []
@@ -330,12 +368,12 @@ def collect(args, api):
     try:
         with temporary.open('xb') as handle:
             temporary.chmod(0o600)
-            handle.write(raw[:16 * MAX_JSON])
+            handle.write(raw[:MAX_BINARY])
         temporary.replace(log_path)
     finally:
         temporary.unlink(missing_ok=True)
     receipt["job_log"] = str(log_path.resolve())
-    receipt['job_log_truncated'] = len(raw) > 16 * MAX_JSON
+    receipt['job_log_truncated'] = len(raw) > MAX_BINARY
     write_json(args.receipt, receipt)
     if job["runner_id"] != receipt["runner_id"] or job["runner_name"] != receipt["runner_name"]:
         raise Failure("runner_mismatch", "the actual job executed on a different runner; its logs were retained")
@@ -343,10 +381,10 @@ def collect(args, api):
     matches = [a for a in artifacts if a["name"] == "windows-diagnostic-" + receipt["invocation"] and not a["expired"]]
     if len(matches) != 1:
         raise Failure("missing_artifact", "one unexpired report artifact is required; retain the failed-job logs")
-    if matches[0].get('size_in_bytes', 0) > 16 * MAX_JSON:
+    if matches[0].get('size_in_bytes', 0) > MAX_BINARY:
         raise Failure('artifact_too_large', 'diagnostic archive exceeds 16 MiB; preserve its metadata and logs')
     archive = api.api(f"repos/{repo}/actions/artifacts/{matches[0]['id']}/zip", binary=True)
-    if len(archive) > 16 * MAX_JSON:
+    if len(archive) > MAX_BINARY:
         raise Failure('artifact_too_large', 'diagnostic report archive exceeds 16 MiB')
     try:
         with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
