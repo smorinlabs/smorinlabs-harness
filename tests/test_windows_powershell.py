@@ -22,4 +22,4 @@ def test_windows_script_contracts():
     assert result.returncode == 0, result.stdout + result.stderr
     rows = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
     assert rows[-1] == {'probe': 'summary', 'parser_files': 3, 'selection_cases': 4,
-                        'mode_cases': 5, 'retirement_cases': 5, 'failures': 0}
+                        'mode_cases': 5, 'retirement_cases': 12, 'service_cases': 4, 'failures': 0}

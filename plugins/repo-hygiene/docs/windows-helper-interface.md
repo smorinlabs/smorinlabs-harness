@@ -26,6 +26,9 @@ Fusion executable. `--timeout` sets the entire command's deadline to 1–1800
 seconds, default 120. Individual GitHub requests have a 30-second maximum and
 inventory a 15-second maximum, each reduced by the remaining budget. Listings
 are fully paginated within a 100-page bound. API errors never prove absence.
+Completed-job logs retain up to 16 MiB, with `job_log_truncated: true` when only
+the beginning was saved. Report archives over 16 MiB are rejected. A log from
+an unexpected runner remains diagnostic evidence but cannot verify the job.
 
 `dispatch --dry-run` performs read-only preflight without writing a receipt or
 posting a workflow. Normal dispatch needs explicit `--yes`/`-y` and a new receipt;

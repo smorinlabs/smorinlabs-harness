@@ -56,3 +56,28 @@ CLI Design Standard 1.4.14. Retain the existing minimal tier for bounded helpers
 new diagnostic helpers add network requests, local receipts and bounded waiting.
 No credential flags or environment dumps. Machine output, exit distinctions,
 dry-run, explicit mutation scope, help/version and no flag abbreviation apply.
+
+## Open runner-code preparation decision: P45-T23
+
+The registration helper runs `config.cmd` as administrator. GitHub's service
+configuration grants the standard CI account write access to the runner
+directory. Retirement deliberately preserves that directory. Its retained
+executable files therefore cannot be assumed trustworthy for a later elevated
+registration. This [architectural review thread](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242)
+stays open pending the owner's policy decision and implementation.
+
+Recommended policy: verify the official architecture-specific runner archive's
+release digest, create an unused directory named for the registration invocation
+under an administrator-controlled parent, and extract there before elevated
+configuration. Never execute a previously used runner directory as administrator.
+Retain earlier checkouts and receipts. This uses additional disk space and starts
+each registration with a fresh checkout.
+
+Alternative: protect the existing executable tree from the CI account, separate
+writable job data, and introduce an administrator-owned runner update procedure.
+This retains one installation but changes GitHub's normal directory/update
+permissions and needs additional Windows validation.
+
+Do not start another elevated registration or merge/release this implementation
+until the chosen preparation policy is implemented and validated. Other review
+repairs and non-mutating validation can continue.

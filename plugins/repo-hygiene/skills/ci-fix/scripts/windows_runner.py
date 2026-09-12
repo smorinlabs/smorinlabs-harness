@@ -79,7 +79,7 @@ def handoff(path, repository):
     # A private recovery configuration must never be repurposed as this handoff.
     def secret_keys(value):
         if isinstance(value, dict):
-            return any(re.search(r"password|token|credential|private.?key", str(k), re.I)
+            return any(re.search(r"password|token|credential|private.?key|secret|cookie|authorization|(?:api|access).?key", str(k), re.I)
                        or secret_keys(v) for k, v in value.items())
         return isinstance(value, list) and any(secret_keys(v) for v in value)
     if secret_keys(data):
@@ -134,8 +134,6 @@ class GitHub:
         if result.returncode:
             raise Failure("github_error", f"GitHub request failed for {endpoint}; verify access and saved state")
         if binary:
-            if len(result.stdout) > 16 * MAX_JSON:
-                raise Failure("artifact_too_large", "diagnostic report archive exceeds 16 MiB")
             return result.stdout
         try:
             return json.loads(result.stdout) if result.stdout else None
@@ -181,8 +179,13 @@ def survey(profile, repository, architecture, api, vmrun):
     state = "unregistered"
     if runner:
         actual_labels = {label["name"].casefold() for label in runner["labels"]}
-        if not {s.casefold() for s in expected["labels"]} <= actual_labels:
+        requested_labels = {s.casefold() for s in expected["labels"]}
+        if requested_labels != actual_labels:
             raise Failure("label_mismatch", "configured labels no longer match GitHub")
+        eligible = [r for r in runners
+                    if requested_labels <= {label['name'].casefold() for label in r['labels']}]
+        if len(eligible) != 1 or eligible[0]['id'] != expected['id']:
+            raise Failure('ambiguous_labels', 'the observed labels are not exclusive to this runner')
         state = "busy" if runner["busy"] else "ready" if runner["status"] == "online" else "offline"
         if runner["status"] not in ("online", "offline"):
             raise Failure("runner_unknown", "unrecognized runner connectivity")
@@ -287,7 +290,7 @@ def collect(args, api):
     # another attempt or incomplete new evidence. Keep the previous files as history.
     receipt['evidence_verified'] = False
     receipt['status'] = 'collecting'
-    for key in ('diagnostic_outcome', 'tests_executed', 'report_path', 'checked_at', 'job_log'):
+    for key in ('diagnostic_outcome', 'tests_executed', 'report_path', 'checked_at', 'job_log', 'job_log_truncated'):
         receipt.pop(key, None)
     write_json(args.receipt, receipt)
     while True:
@@ -297,7 +300,8 @@ def collect(args, api):
             raise Failure("ambiguous_run", "multiple runs match the invocation; inspect before proceeding")
         if matches:
             run = matches[0]
-            if ((receipt.get('run_id') is not None and receipt['run_id'] != run['id'])
+            if ((receipt.get('run_attempt') is None and run['run_attempt'] != 1)
+                    or (receipt.get('run_id') is not None and receipt['run_id'] != run['id'])
                     or (receipt.get('run_attempt') is not None and receipt['run_attempt'] != run['run_attempt'])):
                 raise Failure('run_attempt_changed', 'the invocation was rerun; preserve this receipt and inspect the new attempt')
             if run["head_sha"] != receipt["commit"]:
@@ -317,17 +321,24 @@ def collect(args, api):
             if run["status"] == "completed":
                 raise Failure("missing_job", "workflow ended without the expected diagnostic job")
         time.sleep(min(3, api.remaining()))
-    if job["runner_id"] != receipt["runner_id"] or job["runner_name"] != receipt["runner_name"]:
-        raise Failure("runner_mismatch", "the actual job executed on a different runner")
     # Failed-job logs are saved before parsing artifacts or classifying failure.
     log_path = Path(args.receipt).with_suffix(".job.log")
     raw = api.api(f"repos/{repo}/actions/jobs/{job['id']}/logs", binary=True)
     if log_path.is_symlink() or (log_path.exists() and not log_path.is_file()):
         raise Failure("invalid_file", "job log path is not a regular file", 2)
-    log_path.write_bytes(raw)
-    log_path.chmod(0o600)
+    temporary = log_path.with_name(log_path.name + '.' + uuid.uuid4().hex + '.tmp')
+    try:
+        with temporary.open('xb') as handle:
+            temporary.chmod(0o600)
+            handle.write(raw[:16 * MAX_JSON])
+        temporary.replace(log_path)
+    finally:
+        temporary.unlink(missing_ok=True)
     receipt["job_log"] = str(log_path.resolve())
+    receipt['job_log_truncated'] = len(raw) > 16 * MAX_JSON
     write_json(args.receipt, receipt)
+    if job["runner_id"] != receipt["runner_id"] or job["runner_name"] != receipt["runner_name"]:
+        raise Failure("runner_mismatch", "the actual job executed on a different runner; its logs were retained")
     artifacts = api.pages(f"repos/{repo}/actions/runs/{run['id']}/artifacts", "artifacts")
     matches = [a for a in artifacts if a["name"] == "windows-diagnostic-" + receipt["invocation"] and not a["expired"]]
     if len(matches) != 1:
@@ -335,6 +346,8 @@ def collect(args, api):
     if matches[0].get('size_in_bytes', 0) > 16 * MAX_JSON:
         raise Failure('artifact_too_large', 'diagnostic archive exceeds 16 MiB; preserve its metadata and logs')
     archive = api.api(f"repos/{repo}/actions/artifacts/{matches[0]['id']}/zip", binary=True)
+    if len(archive) > 16 * MAX_JSON:
+        raise Failure('artifact_too_large', 'diagnostic report archive exceeds 16 MiB')
     try:
         with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
             files = zipped.infolist()

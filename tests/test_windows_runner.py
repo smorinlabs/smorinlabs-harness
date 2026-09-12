@@ -202,3 +202,85 @@ def test_api_subprocess_timeout_is_bounded_and_does_not_repost(monkeypatch):
     api=w.GitHub('/gh',10)
     with pytest.raises(w.Failure,match='uncertain'):api.api('repos/o/r/test',method='POST',body={})
     assert len(calls)==1 and 0 < calls[0][1]['timeout'] <= 10
+
+
+@pytest.mark.parametrize('key', ['api_key', 'client_secret', 'cookie', 'authorization', 'accessKey'])
+def test_common_secret_keys_are_rejected_recursively(fixture, tmp_path, key):
+    profile, _, _, _ = fixture
+    profile['observations'] = [{'extra': {key: 'fixture-secret'}}]
+    path = tmp_path/'handoff.json'
+    path.write_text(json.dumps(profile))
+    with pytest.raises(w.Failure, match='secret-free'):
+        w.handoff(path, 'o/r')
+
+
+def test_label_drift_or_nonexclusive_routing_cannot_dispatch(fixture):
+    profile, runner, api, args = fixture
+    runner['labels'].append({'name': 'unexpected'})
+    with pytest.raises(w.Failure, match='labels'):
+        w.dispatch(args, api, profile)
+    runner['labels'].pop()
+    api.pages = lambda *_: [runner, dict(runner, id=8, name='other')]
+    with pytest.raises(w.Failure, match='exclusive'):
+        w.dispatch(args, api, profile)
+    assert not Path(args.receipt).exists()
+    assert not any(kw.get('method') == 'POST' for _, kw in api.calls)
+
+
+def test_first_collection_cannot_accept_a_rerun(tmp_path):
+    receipt, _, _ = evidence()
+    del receipt['run_id'], receipt['run_attempt']
+    path = tmp_path/'receipt.json'
+    path.write_text(json.dumps(receipt))
+    run = {'id': 11, 'display_title': 'Windows diagnostic '+'c'*32, 'run_attempt': 2}
+    with pytest.raises(w.Failure, match='rerun'):
+        w.collect(SimpleNamespace(receipt=str(path), repository='o/r'), SimpleNamespace(pages=lambda *_: [run]))
+    assert json.loads(path.read_text())['evidence_verified'] is False
+
+
+@pytest.mark.parametrize('wrong_runner', [False, True])
+def test_oversized_failed_log_is_saved_even_for_wrong_runner(tmp_path, monkeypatch, wrong_runner):
+    receipt, _, job = evidence()
+    job.update(conclusion='failure', runner_id=8 if wrong_runner else 7)
+    path = tmp_path/'receipt.json'
+    path.write_text(json.dumps(receipt))
+    run = {'id': 11, 'display_title': 'Windows diagnostic '+'c'*32, 'run_attempt': 1,
+           'head_sha': 'a'*40, 'html_url': 'https://example.test/run', 'status': 'completed'}
+    monkeypatch.setattr(w.shutil, 'which', lambda _: '/gh')
+    raw = b'failed log\n' + b'x' * (17 * w.MAX_JSON)
+    monkeypatch.setattr(w.subprocess, 'run', lambda *_a, **_k: SimpleNamespace(returncode=0, stdout=raw))
+    api = w.GitHub('/gh', 10)
+    api.pages = lambda _, key: {'workflow_runs': [run], 'jobs': [job], 'artifacts': []}[key]
+    with pytest.raises(w.Failure, match='different runner' if wrong_runner else 'artifact'):
+        w.collect(SimpleNamespace(receipt=str(path), repository='o/r'), api)
+    saved = json.loads(path.read_text())
+    assert path.with_suffix('.job.log').read_bytes() == raw[:16*w.MAX_JSON]
+    assert saved['job_log_truncated'] is True and saved['evidence_verified'] is False
+
+
+def test_log_publication_cannot_follow_a_raced_symlink(tmp_path, monkeypatch):
+    receipt, _, job = evidence()
+    path = tmp_path/'receipt.json'
+    path.write_text(json.dumps(receipt))
+    target = tmp_path/'unrelated-file'
+    target.write_bytes(b'preserve this file')
+    log = path.with_suffix('.job.log')
+    run = {'id': 11, 'display_title': 'Windows diagnostic '+'c'*32, 'run_attempt': 1,
+           'head_sha': 'a'*40, 'html_url': 'https://example.test/run', 'status': 'completed'}
+    original = Path.is_symlink
+    raced = False
+    def is_symlink(candidate):
+        nonlocal raced
+        if candidate == log and not raced:
+            raced = True
+            candidate.symlink_to(target)
+            return False  # The replacement raced the completed check.
+        return original(candidate)
+    monkeypatch.setattr(Path, 'is_symlink', is_symlink)
+    api = SimpleNamespace(pages=lambda _, key: {'workflow_runs': [run], 'jobs': [job], 'artifacts': []}[key],
+                          api=lambda *_a, **_k: b'private job log')
+    with pytest.raises(w.Failure, match='artifact'):
+        w.collect(SimpleNamespace(receipt=str(path), repository='o/r'), api)
+    assert target.read_bytes() == b'preserve this file'
+    assert not log.is_symlink() and log.read_bytes() == b'private job log'
+    assert log.stat().st_mode & 0o777 == 0o600

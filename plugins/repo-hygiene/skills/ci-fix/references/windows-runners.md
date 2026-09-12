@@ -77,7 +77,7 @@ survey command means that the survey completed; inspect its `state`:
 
 | State | Meaning and next action |
 | --- | --- |
-| `ready` | Recorded VM is running; the exact runner is online, idle, and has the recorded labels |
+| `ready` | Recorded VM is running; the exact runner is online and idle, its full label set matches the handoff, and no other listed runner matches that routing set |
 | `busy` | That runner has work; inspect its job and wait within the chosen bound |
 | `offline` | VM is running but the recorded runner is disconnected; inspect its exact service and connectivity |
 | `vm_not_running` | Registration exists but its recorded VM is not in Fusion's running inventory; use Fusion operations |
@@ -216,8 +216,11 @@ diagnostic job, runner ID and runner name. Multiple matches or a changed attempt
 require inspection, not an arbitrary choice. Review any job rerun separately;
 the existing receipt remains evidence for its original attempt.
 
-Once the correct job completes, collection saves its log as a neighboring
-`.job.log` file before requiring an artifact. It saves the decoded report as
+Once the uniquely identified job completes, collection saves its log as a neighboring
+`.job.log` file before checking runner identity or requiring an artifact. Logs over
+16 MiB retain their first 16 MiB and set `job_log_truncated: true` in the receipt;
+retrieve the full log separately when later output is needed. An oversized report
+archive is rejected. Collection saves the decoded report as
 `.report.json`, then verifies it. Treat reports and logs as private job data.
 `evidence_verified: true` and `diagnostic_outcome: passed|failed` describe a
 verified test result. A file merely existing is insufficient.

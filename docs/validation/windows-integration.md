@@ -6,8 +6,8 @@ not extend the original plugin's three Arm64 smoke-job claims to unrun scenarios
 
 | Check | Observed result |
 | --- | --- |
-| Windows collector and Fusion Python helpers | 68 passed in 4.31 seconds |
-| PowerShell contract regression test | Passed in 2.42 seconds: three parsers, four selection cases, five registration-mode cases, five retirement cases |
+| Windows collector, Fusion Python helpers and PowerShell contract regression | 79 checks selected after review repairs; current result recorded in the repair commit's PR evidence |
+| PowerShell contract details | Three parsers, four selection cases, five registration-mode cases, twelve retirement cases and four service-verification cases |
 | Repository Python suite | 257 passed initially; 28 existing repo-finder tests were blocked by UV cache permissions, then all 28 passed in 19.97 seconds with a writable cache. All 285 collected tests were verified across those runs. |
 | Generated manifests | Current after plugin versions became Fusion 0.3.0 and repo-hygiene 0.14.0 |
 | Claude and Codex static and fresh loader checks | Both plugins loaded in both tools. Claude retains the existing ignored generated-metadata warning. The sandboxed Codex probe initially failed to execute; native isolated loader probes then passed. |
@@ -26,6 +26,13 @@ The reviewed defects included a one-test selection collapsing to a scalar,
 omitted persistent `ephemeral: false`, hidden registration files, unique receipt
 recovery, interrupted workflow restoration and protected administrative staging.
 Their fixes preserve registration, test verdict and retirement as separate facts.
+
+PR #68 review added regression controls for common secret keys, complete and
+exclusive runner-label matching, first-observation reruns, truncated failure logs,
+wrong-runner log preservation, stopped/wrong-path services and unmatched services
+in the same installation. The failing controls were reproduced before repair.
+The public PR's original implementation passed all four GitHub CI checks; its
+repair commit requires a fresh check result before integration.
 
 ## Fresh-session artifact judgments
 
@@ -49,6 +56,8 @@ decision scenarios, not live service or workflow execution.
 
 ## Open acceptance gates
 
+- P45-T23: settle and implement verified runner-code preparation before another
+  elevated registration; the architectural PR #68 review thread remains open.
 - P45/R02: execute an actual Windows test failure, repair the source and pass
   the same assertion on another registration; verify no-selection rejection and
   safe failure retirement.

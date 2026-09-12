@@ -49,14 +49,36 @@ foreach ($sample in @(
 }
 
 $executable=[Environment]::ProcessPath
-$payload='{"github_registration_absent":true,"runner_directory":"C:\\fixture","service_name":null,"configuration_finished":true,"runner_id":123,"runner_name":"fusion-ci-fixture"}'
-foreach($case in @('partial','mismatch','worker','service-file','service-object')) {
+$request=@{github_registration_absent=$true;runner_directory='C:\fixture';service_name=$null;configuration_finished=$true;runner_id=123;runner_name='fusion-ci-fixture';ephemeral=$true}
+foreach($case in @('partial','mismatch','worker','service-file','service-object','registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner','root')) {
+  $request.runner_directory=if($case -eq 'root'){'C:\'}else{'C:\fixture'}
+  $request.service_name=if($case -in @('registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner')){'actions.runner.fixture'}else{$null}
+  $request.ephemeral=$case -ne 'persistent-missing-runner'
+  $payload=$request|ConvertTo-Json -Compress
   $raw=$payload | & $executable -NoLogo -NoProfile -NonInteractive -File (Join-Path $PSScriptRoot "windows-retirement-fixture.ps1") -PublicCheckout $public -Case $case
   $result=($raw -join "`n")|ConvertFrom-Json
   if($case -eq 'partial') {
     if($result.result -ne 'pass' -or $result.removed.Count -ne 3){$failures.Add('Partial retirement did not remove the expected fixture paths')}
-  } elseif($result.result -ne 'error' -or $result.removed.Count -ne 0) {$failures.Add("Retirement guard failed: $case")}
+  } elseif($case -in @('registered','ephemeral-retired')) {
+    $expectedFiles=if($case -eq 'registered'){4}else{1}
+    if($result.result -ne 'pass' -or $result.removed.Count -ne $expectedFiles -or $result.deleted_services.Count -ne 1 -or $result.deleted_services[0] -ne 'actions.runner.fixture'){$failures.Add('Registered retirement did not remove exactly its service and remaining files')}
+  } elseif($result.result -ne 'error' -or $result.removed.Count -ne 0 -or $result.deleted_services.Count -ne 0) {$failures.Add("Retirement guard failed: $case")}
   $raw
 }
+$registrationSource=$registrationCode -join "`n"
+$serviceCode=$registrationSource.Substring($registrationSource.LastIndexOf('$service=Get-CimInstance'))
+$directory=[IO.Path]::GetFullPath('C:\fixture');$qualified='VM\ci';$account=[pscustomobject]@{Name='ci'}
+function Save-Receipt {}
+function Get-CimInstance {param($ClassName) $script:FixtureService}
+foreach($case in @('running','stopped','wrong-path','wrong-account')) {
+  $receipt=@{service_name='actions.runner.fixture';phase='registered'}
+  $script:FixtureService=[pscustomobject]@{Name='actions.runner.fixture';StartName=$qualified;State='Running';PathName=(Join-Path $directory 'bin\RunnerService.exe')}
+  if($case -eq 'stopped'){$script:FixtureService.State='Stopped'}
+  if($case -eq 'wrong-path'){$script:FixtureService.PathName='C:\other\bin\RunnerService.exe'}
+  if($case -eq 'wrong-account'){$script:FixtureService.StartName='VM\other'}
+  $refused=$false
+  try {. ([scriptblock]::Create($serviceCode))|Out-Null} catch {$refused=$true}
+  if($refused -ne ($case -ne 'running')){$failures.Add("Service verification failed: $case")}
+}
 if($failures.Count){throw ($failures -join '; ')}
-[ordered]@{probe='summary';parser_files=3;selection_cases=4;mode_cases=5;retirement_cases=5;failures=0}|ConvertTo-Json -Compress
+[ordered]@{probe='summary';parser_files=3;selection_cases=4;mode_cases=5;retirement_cases=12;service_cases=4;failures=0}|ConvertTo-Json -Compress

@@ -99,6 +99,7 @@ try {
 }
 $service=Get-CimInstance Win32_Service | Where-Object Name -eq $receipt.service_name
 if ($null -eq $service -or ($service.StartName -ine $qualified -and $service.StartName -ine ".\$($account.Name)")) {throw 'The expected service account was not verified.'}
+if ($service.State -ne 'Running' -or $service.PathName.Trim('"') -ine (Join-Path $directory 'bin\RunnerService.exe')) {throw 'The running service executable was not verified for this installation.'}
 $receipt.phase='service-verified'
 Save-Receipt
 $receipt | ConvertTo-Json -Depth 5

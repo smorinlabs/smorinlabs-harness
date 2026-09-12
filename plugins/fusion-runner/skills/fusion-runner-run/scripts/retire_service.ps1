@@ -7,6 +7,7 @@ Set-StrictMode -Version Latest
 $request=[Console]::In.ReadToEnd() | ConvertFrom-Json
 if ($request.github_registration_absent -isnot [bool] -or $request.github_registration_absent -ne $true) {throw 'Current GitHub retirement evidence is required.'}
 if ($request.runner_directory -notmatch '^[A-Za-z]:\\' -or $request.runner_directory -match '[\r\n]') {throw 'An exact installation directory is required.'}
+if ($request.runner_directory.TrimEnd('\') -match '^[A-Za-z]:$') {throw 'A filesystem root cannot identify a runner installation.'}
 $hasService=-not [string]::IsNullOrEmpty($request.service_name)
 if ($hasService -and $request.service_name -notmatch '^actions\.runner\.') {throw 'The exact recorded service identity is required.'}
 if (-not $hasService -and $request.configuration_finished -ne $true) {throw 'A service-free partial receipt requires proof that configuration ended.'}
@@ -14,19 +15,26 @@ if ($request.runner_id -isnot [long] -and $request.runner_id -isnot [int]) {thro
 if ($request.runner_id -le 0 -or [string]::IsNullOrWhiteSpace($request.runner_name)) {throw 'The exact runner identity is required.'}
 if (Get-Process -Name Runner.Listener,Runner.Worker -ErrorAction SilentlyContinue) {throw 'A runner process remains active.'}
 $directory=[IO.Path]::GetFullPath($request.runner_directory).TrimEnd('\')
-$service=Get-CimInstance Win32_Service | Where-Object Name -eq $request.service_name
+if ($directory -eq [IO.Path]::GetPathRoot($directory+'\').TrimEnd('\')) {throw 'A filesystem root cannot identify a runner installation.'}
+$services=@(Get-CimInstance Win32_Service)
+$service=$services | Where-Object Name -eq $request.service_name
+$installationServices=@($services | Where-Object {$_.PathName.StartsWith(('"'+$directory+'\'),[StringComparison]::OrdinalIgnoreCase) -or $_.PathName.StartsWith(($directory+'\'),[StringComparison]::OrdinalIgnoreCase)})
+if (@($installationServices | Where-Object Name -ne $request.service_name).Count) {throw 'Another service exists for this installation; recover its exact identity first.'}
 if ($service) {
     if ($service.State -ne 'Stopped') {throw 'Stop the exact service behind an admission barrier first.'}
     if (-not $service.PathName.StartsWith(('"'+$directory+'\'),[StringComparison]::OrdinalIgnoreCase) -and
         -not $service.PathName.StartsWith(($directory+'\'),[StringComparison]::OrdinalIgnoreCase)) {throw 'Service executable belongs to another installation.'}
 }
 $serviceFile=Join-Path $directory '.service'
+if ($service -and -not (Test-Path -LiteralPath $serviceFile -PathType Leaf)) {throw 'The named service requires its matching .service identity file before deletion.'}
 if (-not $hasService) {
     if (Test-Path -LiteralPath $serviceFile) {throw 'A service identity appeared after this partial receipt; reconcile it first.'}
-    if (Get-CimInstance Win32_Service | Where-Object {$_.PathName.StartsWith(('"'+$directory+'\'),[StringComparison]::OrdinalIgnoreCase) -or $_.PathName.StartsWith(($directory+'\'),[StringComparison]::OrdinalIgnoreCase)}) {throw 'A service exists for this installation; recover its exact identity first.'}
 }
 if ((Test-Path -LiteralPath $serviceFile) -and (Get-Content -LiteralPath $serviceFile -Raw).Trim() -ne $request.service_name) {throw 'Service file identity differs.'}
 $registrationFile=Join-Path $directory '.runner'
+if ($service -and -not (Test-Path -LiteralPath $registrationFile -PathType Leaf) -and $request.ephemeral -ne $true) {throw 'A non-ephemeral service requires its matching .runner identity file before deletion.'}
+# A completed ephemeral listener removes .runner and credential files itself.
+# The host must still prove its recorded identity and current GitHub absence.
 if (Test-Path -LiteralPath $registrationFile) {
     $registration=Get-Content -LiteralPath $registrationFile -Raw | ConvertFrom-Json
     if ($registration.agentId -ne $request.runner_id -or $registration.agentName -ne $request.runner_name) {throw 'Guest registration identity differs.'}

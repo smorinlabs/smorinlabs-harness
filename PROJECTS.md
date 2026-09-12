@@ -1684,11 +1684,14 @@ PR-2 — Linux runner step (in progress 2026-09-10)
 - [x] [P45-T09] `references/local-runners.md` (survey, per-failure runner choice, the three recipes, the toolchain-to-image map, bounds, and the no-local-path case) plus SKILL.md: step 1 runs the survey, the triage row becomes *Not reproducible on this host* and defers to it, `CI is the lab` now means no local path exists at all, rungs 0 and 1 name their environment, and `ladder_plan.py --local-env container` doubles an untested step's CI proxy. macOS and Windows jobs stay CI-only unless the host matches
 - [x] [P45-T10] Generalised past act: whenever the survey has no ready runner it offers the single `recommend_start` or `recommend_install` command once per machine via AskUserQuestion, quoting its reason and cost; a decline is recorded and the job becomes CI-only. Starting a VM, pulling an image and installing a tool are all mutations and none happens unasked
 - [x] [P45-T11] Linux phase docs, metadata, generated manifests, quality and delivery shipped in v0.25.0 with repo-hygiene 0.12.0. P46 subsequently updated the validation rules in repo-hygiene 0.13.0; this stale checkbox does not represent unfinished Linux implementation.
-- [x] [P45-T12] Add read-only Fusion Windows survey with explicit unregistered/offline/busy/power/architecture states.
-- [x] [P45-T13] Add trusted pushed-revision dispatch and collection bound to invocation, workflow attempt, commit, runner and nonempty selected tests; preserve failed-job logs.
-- [x] [P45-T14] Define protected one-job registration, partial receipts, guarded retirement and the concrete diagnostic workflow/report examples.
-- [x] [P45-T15] Verify helper fixtures, PowerShell selection/mode/retirement controls, and fresh Claude/Codex plugin loading. Live Windows evidence remains a separate gate.
-- [ ] [P45-T16] Execute Windows failure → source repair → success and no-selection cleanup, then merge the integration PR. The Mac is locked; no new live pass is claimed.
+
+PR-3 — Fusion Windows diagnostics
+- [x] [P45-T18] Add read-only Fusion Windows survey with explicit unregistered/offline/busy/power/architecture states.
+- [x] [P45-T19] Add trusted pushed-revision dispatch and collection bound to invocation, workflow attempt, commit, runner and nonempty selected tests; preserve failed-job logs.
+- [x] [P45-T20] Define protected one-job registration, partial receipts, guarded retirement and the concrete diagnostic workflow/report examples.
+- [x] [P45-T21] Verify helper fixtures, PowerShell selection/mode/retirement controls, and fresh Claude/Codex plugin loading. Live Windows evidence remains a separate gate.
+- [ ] [P45-T22] Execute Windows failure → source repair → success and no-selection cleanup, then merge the integration PR. The Mac is locked; no new live pass is claimed.
+- [ ] [P45-T23] Settle and implement trusted runner-code preparation before repeated elevated registration. [PR #68 review](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242) is an open architectural gate; the recommended policy uses a fresh verified directory per registration and preserves earlier checkouts.
 - [ ] Regression Test Status
 
 ### Automated Verification
