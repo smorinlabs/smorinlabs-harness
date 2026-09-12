@@ -173,7 +173,7 @@ single fresh-session response each. No comparison with version 0.2.0 was run.
 | Generation | `harness-kit gen --check` passes; versions remain the already prepared 0.3.0 and 0.2.3 |
 | Static loading | Claude validation passes with the existing ignored `_generated` warning; Codex manifest validation passes. Codex static mode does not validate skill bodies; the prior isolated-loading evidence remains in the initial record |
 | Behavioral checks | The five affected-case results above; same runner and scenario inputs, no full-suite rerun |
-| Runner regression | Not rerun: no runner, schema, or scenario change. The prior 21 passing tests are historical evidence, not new E results |
+| Runner regression | Not rerun locally: no runner, schema, or scenario change. The prior isolated 21-test result is historical evidence; repository CI is reported separately on the PR |
 | Activation | Both tools' two existing skill placements still resolve to stable main; no placement or main-checkout change |
 
 ## P48-T08 closeout draft
