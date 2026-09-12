@@ -4,6 +4,15 @@ param()
 # independently verifies guest identity and refuses every running worker/listener.
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
+function Assert-PlainRunnerPath([string]$Path, [bool]$Directory) {
+    $item=Get-Item -LiteralPath $Path -Force
+    if ([bool]$item.PSIsContainer -ne $Directory) {throw 'The recorded runner path has the wrong file type.'}
+    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {throw 'Runner retirement must not traverse a reparse point.'}
+    $current=if ($Directory) {$item.Parent} else {$item.Directory}
+    for (; $null -ne $current; $current=$current.Parent) {
+        if ($current.Attributes -band [IO.FileAttributes]::ReparsePoint) {throw 'Runner retirement must not traverse a reparse point.'}
+    }
+}
 $request=[Console]::In.ReadToEnd() | ConvertFrom-Json
 if ($request.github_registration_absent -isnot [bool] -or $request.github_registration_absent -ne $true) {throw 'Current GitHub retirement evidence is required.'}
 if ($request.runner_directory -notmatch '^[A-Za-z]:\\' -or $request.runner_directory -match '[\r\n]') {throw 'An exact installation directory is required.'}
@@ -16,6 +25,7 @@ if ($request.runner_id -le 0 -or [string]::IsNullOrWhiteSpace($request.runner_na
 if (Get-Process -Name Runner.Listener,Runner.Worker -ErrorAction SilentlyContinue) {throw 'A runner process remains active.'}
 $directory=[IO.Path]::GetFullPath($request.runner_directory).TrimEnd('\')
 if ($directory -eq [IO.Path]::GetPathRoot($directory+'\').TrimEnd('\')) {throw 'A filesystem root cannot identify a runner installation.'}
+Assert-PlainRunnerPath $directory $true
 $services=@(Get-CimInstance Win32_Service)
 $service=$services | Where-Object Name -eq $request.service_name
 $installationServices=@($services | Where-Object {$_.PathName.StartsWith(('"'+$directory+'\'),[StringComparison]::OrdinalIgnoreCase) -or $_.PathName.StartsWith(($directory+'\'),[StringComparison]::OrdinalIgnoreCase)})
@@ -26,6 +36,7 @@ if ($service) {
         -not $service.PathName.StartsWith(($directory+'\'),[StringComparison]::OrdinalIgnoreCase)) {throw 'Service executable belongs to another installation.'}
 }
 $serviceFile=Join-Path $directory '.service'
+if (Test-Path -LiteralPath $serviceFile) {Assert-PlainRunnerPath $serviceFile $false}
 if ($service -and -not (Test-Path -LiteralPath $serviceFile -PathType Leaf)) {throw 'The named service requires its matching .service identity file before deletion.'}
 if (-not $hasService) {
     if (Test-Path -LiteralPath $serviceFile) {throw 'A service identity appeared after this partial receipt; reconcile it first.'}
@@ -36,10 +47,12 @@ if ($service -and -not (Test-Path -LiteralPath $registrationFile -PathType Leaf)
 # A completed ephemeral listener removes .runner and credential files itself.
 # The host must still prove its recorded identity and current GitHub absence.
 if (Test-Path -LiteralPath $registrationFile) {
+    Assert-PlainRunnerPath $registrationFile $false
     $registration=Get-Content -LiteralPath $registrationFile -Raw | ConvertFrom-Json
     if ($registration.agentId -ne $request.runner_id -or $registration.agentName -ne $request.runner_name) {throw 'Guest registration identity differs.'}
 }
 if ($service) {
+    Assert-PlainRunnerPath $directory $true
     & "$env:SystemRoot\System32\sc.exe" delete $request.service_name | Out-Null
     if ($LASTEXITCODE -ne 0) {throw 'Service deletion failed.'}
     $deadline=[DateTime]::UtcNow.AddSeconds(30)
@@ -52,6 +65,7 @@ if ($service) {
 # the prepared runner distribution are retained for subsequent diagnostic jobs.
 foreach ($name in @('.runner','.credentials','.credentials_rsaparams','.service')) {
     $path=Join-Path $directory $name
-    if (Test-Path -LiteralPath $path) {Remove-Item -LiteralPath $path -Force}
+    Assert-PlainRunnerPath $directory $true
+    if (Test-Path -LiteralPath $path) {Assert-PlainRunnerPath $path $false; Remove-Item -LiteralPath $path -Force}
 }
 [ordered]@{runner_id=$request.runner_id;service_name=$request.service_name;registration_files_removed=$true;working_files_preserved=$true}|ConvertTo-Json

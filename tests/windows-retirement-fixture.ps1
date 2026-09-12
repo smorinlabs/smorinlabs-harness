@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$PublicCheckout,[ValidateSet('partial','mismatch','worker','service-file','service-object','registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner','root')][string]$Case)
+param([Parameter(Mandatory)][string]$PublicCheckout,[ValidateSet('partial','mismatch','worker','service-file','service-object','registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner','root','reparse-root','reparse-ancestor','reparse-file')][string]$Case)
 $source=[IO.File]::ReadAllText((Join-Path $PublicCheckout 'plugins/fusion-runner/skills/fusion-runner-run/scripts/retire_service.ps1'))
 # macOS cannot invoke Windows sc.exe. Replace only that native call; execute
 # the complete current guard, deletion-wait and file-removal control flow.
@@ -13,6 +13,12 @@ function Get-Process {param($Name,$ErrorAction) if($global:FixtureCase -eq 'work
 function Get-CimInstance {param($ClassName)
     if($global:FixtureCase -in @('registered','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner')){[pscustomobject]@{Name='actions.runner.fixture';PathName=$global:FixtureNormalizedDirectory+'\bin\RunnerService.exe';State='Stopped'}}
     if($global:FixtureCase -in @('service-object','missing-named','registered-other')){[pscustomobject]@{Name='actions.runner.unrecorded';PathName=$global:FixtureNormalizedDirectory+'\RunnerService.exe';State='Stopped'}}
+}
+function Get-Item {param($LiteralPath,[switch]$Force)
+    $isDirectory=$LiteralPath -eq $global:FixtureNormalizedDirectory
+    $ancestor=[pscustomobject]@{PSIsContainer=$true;Parent=$null;Attributes=$(if($global:FixtureCase -eq 'reparse-ancestor'){[IO.FileAttributes]::ReparsePoint}else{[IO.FileAttributes]::Directory})}
+    $attributes=if(($isDirectory -and $global:FixtureCase -eq 'reparse-root') -or (-not $isDirectory -and $global:FixtureCase -eq 'reparse-file')){[IO.FileAttributes]::ReparsePoint}else{[IO.FileAttributes]::Normal}
+    [pscustomobject]@{PSIsContainer=$isDirectory;Parent=$ancestor;Directory=$ancestor;Attributes=$attributes}
 }
 function Test-Path {param($LiteralPath,$PathType)
     $name=[IO.Path]::GetFileName($LiteralPath)

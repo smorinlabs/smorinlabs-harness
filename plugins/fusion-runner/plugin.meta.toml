@@ -1,5 +1,5 @@
 name = "fusion-runner"
 version = "0.3.0"
-description = "Provision a Windows GitHub Actions runner in VMware Fusion on a Mac, then start, check, and stop its VM."
+description = "Provision a Windows GitHub Actions runner in VMware Fusion on a Mac, then start, check, stop, or explicitly reset its working VM."
 author = "Steve Morin"
 keywords = ["vmware", "fusion", "windows", "macos", "github-actions", "runner", "ci"]

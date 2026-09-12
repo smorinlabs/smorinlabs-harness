@@ -1,13 +1,16 @@
 # fusion-runner-run
 
-Start, inspect, and gracefully stop a Windows GitHub Actions runner already
+Start, inspect, gracefully stop, or explicitly reset a Windows VM already
 configured in VMware Fusion. It uses the setup handoff to identify the exact VM,
 Windows service, GitHub runner, and labels. It distinguishes a registered runner
 from a prepared VM whose prior one-job registration was retired. It checks VM
-power and GitHub readiness separately.
+power, Windows access, and GitHub readiness separately. Reset routes to the
+user's private recovery skill when available, otherwise to the public saved-
+baseline procedure.
 
 **Triggers on:** "start my Fusion runner", "is my Windows runner online?",
-"stop the Fusion CI VM".
+"stop the Fusion CI VM", "check Windows access", "reset the working Windows VM
+to its saved baseline".
 **Arguments:** none; describe the operation and give the setup handoff path when
 the session does not already have it.
 
@@ -34,6 +37,7 @@ Install `fusion-runner@smorinlabs-harness`, which contains this skill and
 | Start | Locate the recorded VM, start it if needed, and wait a bounded time for an existing registration to connect; a retired one-job profile needs fresh setup registration |
 | Status | Report VM power, runner connection, idle or busy status, and labels; inaccessible GitHub state remains unknown |
 | Stop | Check active work, stop the exact runner service, verify it is offline, then shut down the guest gracefully |
+| Explicit reset | Preserve requested results, retire the exact old runner, restore the designated working VM from the saved baseline, verify files/access and marker absence, then run the authorized test again |
 | Failed startup | Inspect Fusion, Windows, the service, and runner diagnostics without reinstalling or deleting the VM |
 | Completed or failed one-job diagnostic | Preserve evidence, prove the exact job ended and registration is retired, then remove only the owned stopped service registration and shut down gracefully |
 
@@ -102,3 +106,15 @@ checks; they do not turn those historical jobs into live tests of the new paths.
 See the [validation evidence and limits](../../plugins/fusion-runner/docs/validation.md),
 [operations reference](../../plugins/fusion-runner/skills/fusion-runner-run/references/operations.md),
 and [helper interface](../../plugins/fusion-runner/docs/cli-interface.md).
+
+## Public and private boundary
+
+This public skill contains reusable lifecycle and reset instructions. A private
+companion supplies its owner's VM, credentials, backup and machine-specific
+transport. No private repository is required or guessed. If no configured VM
+is available, the skill reports that fact and opens the separate
+[manual setup guide](../../plugins/fusion-runner/skills/fusion-runner-setup/references/create-your-own-runner.md).
+The [reset reference](../../plugins/fusion-runner/skills/fusion-runner-run/references/reset.md)
+is loaded only for an explicit reset. One unchanged baseline and one changing
+working VM are intentional; obsolete replacement copies can be retired after
+verification and scoped authorization.

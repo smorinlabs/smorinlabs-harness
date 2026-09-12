@@ -1,88 +1,95 @@
-# Windows diagnostic integration and recovery closeout
+# Windows execution and reset delivery
 
-Authorized by Steve: “All right, complete all of this.” Scope includes the
-previously enumerated R02, P45, P47-TS05, R03, polling, tracking, release, and
-public worktree cleanup. Source starts at public `02ace8a` and private `26f4fa6`.
+The owner approved Windows work and explicit restoration of a clean working VM.
+This delivery uses the existing Windows 11 Arm64 VM on one Apple Silicon Mac.
+The public integration is PR #68, based on public main at `02ace8a`.
 
-## Contract
+## Current contract
 
-`ci-fix` will discover a configured Fusion Windows runner and dispatch a trusted
-diagnostic job through GitHub Actions. This requires pushed code. It is distinct
-from host/Linux reproduction and never replaces applicable required CI.
-Fusion setup/run owns the VM, protected guest access, registration, and shutdown.
-First live coverage uses one-job Arm64 registrations on the existing Mac.
-Persistent and locked-host coverage remain separately evidenced.
+`ci-fix` discovers a configured Fusion runner and dispatches trusted, pushed
+source through GitHub Actions. The diagnostic supplements required CI. Fusion
+setup/run owns Windows access, fresh one-job registration, retirement and
+explicit reset. Starting Windows preserves its disk; retiring a one-job runner
+does not restore the disk.
 
-Owner scope decision, 2026-09-12: live acceptance uses this Mac's Windows 11
-Arm64 VM in Fusion. Intel Windows x64 and another-Mac recovery are excluded
-from the current delivery. They remain untested future coverage. Fresh Windows
-bootstrap validation will also use this Mac after resolving local storage.
+Public skills contain reusable instructions and secret-free lifecycle helpers.
+An optional private provider supplies the owner's image, credentials and
+protected transport. If it is absent, setup explains that fact and loads the
+separate manual create-your-own-runner reference. The public package must remain
+usable without access to a private repository.
 
-The public handoff remains secret-free. A registration intent and guest receipt
-preserve identity even if configuration succeeds but subsequent transport fails.
-Read-only survey distinguishes missing registration, stopped VM, offline, busy,
-incompatible and ready. Dispatch binds repository, workflow, revision, invocation,
-runner labels and expected runner identity. Collection binds run/job/report to
-those facts and distinguishes failure, environment failure, and no selection.
-Boot/queue/execution/collection have bounded waits. Cleanup requires current proof
-that the exact job ended and no new work can be admitted; it does not require a
-passing test. Unknown or active states preserve the machine and diagnostic evidence.
+Dispatch and collection bind repository, workflow, source SHA, invocation,
+runner identity, native architecture and selected tests. A failing test retains
+verified evidence and can be safely retired. An unknown or active job cannot.
+Empty execution is rejected. Registration, job verdict and reset are separate
+facts, each requiring its own evidence.
 
-## Delivery checklist
+## Owner decisions, 2026-09-12
 
-- [x] R02 implementation: partial registration receipt, failure evidence, guarded cleanup, fixture tests. Live acceptance remains below.
-- [x] P45 implementation: discovery, dispatch/collection, public one-job lifecycle, documentation. Live acceptance remains below.
-- [x] P47-T10: optional bounded power-state polling with one total deadline.
-- [ ] Live Windows red → repair → green, plus no-selection and failure cleanup.
-- [ ] P47-TS05: persistent reboot and locked-host observations on this Mac.
-- [ ] R03: supported prerequisite bootstrap and fresh-VM validation.
-- [x] Fresh Claude/Codex loading and six-case behavioral checks; content/CLI quality gates.
-- [ ] PR delivery and review, tagged harness release, tracker reconciliation.
-- [x] Repoint four Fusion skill placements to main; remove the merged PR #57 worktree and local branch. The unmerged integration checkout remains.
+- Keep ordinary Windows reboot and signed-out SSH/SFTP access. This passed on
+  the prepared working VM. Fusion GUI startup on an unlocked Mac is the
+  supported observed route; a zero `vmrun start` exit alone is insufficient.
+- Remove P47-TS05 persistent GitHub registration after reboot from this delivery.
+  It is neither passed nor deferred. Each diagnostic uses a fresh one-job runner.
+- Remove fresh Windows installation, formerly private R03, with no deferred
+  obligation. A future Windows refresh would be a separate request.
+- Use a fresh official, checksum-verified runner distribution for every elevated
+  registration. Never elevate retained programs writable by a prior CI job.
+- Preserve the baseline and the designated working VM. The approved obsolete
+  original VM was removed. During reset, retain the previous working copy until
+  its replacement passes before removing that exact obsolete copy.
+- Reserve one run → marker → reset → marker absent → run acceptance for an
+  independent fresh agent session. Two earlier full downloaded restores already
+  passed; do not repeat another full restore in the implementation session.
+- After that acceptance, finish review, merge, release and install. Authorization
+  is already given; the acceptance result is the remaining sequencing gate.
 
-## Resource constraints observed before implementation
+Intel Windows x64, another-Mac recovery and unattended locked-Mac startup are
+outside current acceptance. Reusable architecture checks still apply.
 
-The host has approximately 23 GiB free and no separate writable data volume.
-The owner subsequently limited testing to this Mac; the additional-hardware
-request is closed by that scope decision. Local Windows storage is being audited
-before the fresh-VM test. Cleanup candidates require a concrete reviewed scope.
-A hardware-dependent check is not complete merely because fixtures pass.
+## Implementation and acceptance
 
-The locked-host probe returned zero but three later inventories showed no
-running VM. Locked startup therefore remains unsupported. New Windows diagnostic,
-persistent-service and fresh-bootstrap commands have not been executed in the
-guest. No merge or tagged-release completion is claimed while their acceptance
-gates remain open. [Implementation validation](../validation/windows-integration.md)
-records the local and fresh-session results separately.
+- [x] P45 diagnostic discovery, dispatch, collection and bounded observations.
+- [x] R02 failure evidence, partial identity receipts and guarded cleanup.
+- [x] P47-T10 bounded VM power-state polling.
+- [x] P45-T23 fresh verified programs, protected parent permissions, runtime guard
+  and redirected-path refusal during retirement.
+- [x] Progressive public manual setup and explicit reset instructions, with the
+  private image/credential provider kept separate.
+- [x] GUI startup and ordinary signed-out Windows reboot/access.
+- [x] Record all native failure → repair → success and no-selection cleanup results.
+- [x] Final changed-source checks, generated metadata and private fresh-session handoff prepared for the reviewed commit/push delivery.
+- [ ] Fresh agent follows the skills to run work, reset and run again.
+- [ ] Complete PR review, merge, tagged release and installation after acceptance.
 
-## CLI review
+Current observations and their limits belong in
+[the validation record](../validation/windows-integration.md). Earlier offline
+skill scenarios remain historical evidence; they do not replace the fresh
+agent's actual reset acceptance.
 
-CLI Design Standard 1.4.14. Retain the existing minimal tier for bounded helpers;
-new diagnostic helpers add network requests, local receipts and bounded waiting.
-No credential flags or environment dumps. Machine output, exit distinctions,
-dry-run, explicit mutation scope, help/version and no flag abbreviation apply.
+## Registration trust boundary
 
-## Open runner-code preparation decision: P45-T23
+GitHub service configuration grants its standard CI account write access to the
+runner installation. Retirement preserves those job files. The
+[PR #68 finding](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242)
+therefore required new trusted programs before another administrator invocation.
 
-The registration helper runs `config.cmd` as administrator. GitHub's service
-configuration grants the standard CI account write access to the runner
-directory. Retirement deliberately preserves that directory. Its retained
-executable files therefore cannot be assumed trustworthy for a later elevated
-registration. This [architectural review thread](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242)
-stays open pending the owner's policy decision and implementation.
+The helper now verifies the official native release archive digest and extracts
+it into a previously unused invocation directory. Only administrators and SYSTEM
+can create or replace directories under the protected parent. The CI account can
+read and traverse that parent so its service can start. Older installations are
+never used for elevated configuration. Reparse paths are refused during owned
+registration-file cleanup.
 
-Recommended policy: verify the official architecture-specific runner archive's
-release digest, create an unused directory named for the registration invocation
-under an administrator-controlled parent, and extract there before elevated
-configuration. Never execute a previously used runner directory as administrator.
-Retain earlier checkouts and receipts. This uses additional disk space and starts
-each registration with a fresh checkout.
+This addresses retained job-modified programs in the trusted-job workflow. An
+actively compromised or uncertain guest requires a clean baseline before further
+administrator maintenance. Fresh runner programs alone do not establish a clean
+Windows system.
 
-Alternative: protect the existing executable tree from the CI account, separate
-writable job data, and introduce an administrator-owned runner update procedure.
-This retains one installation but changes GitHub's normal directory/update
-permissions and needs additional Windows validation.
+## CLI and release checks
 
-Do not start another elevated registration or merge/release this implementation
-until the chosen preparation policy is implemented and validated. Other review
-repairs and non-mutating validation can continue.
+Retain the existing minimal CLI tier and CLI Design Standard 1.4.14. Bound
+network requests, downloads and observations. Preserve identity receipts before
+mutation, distinct exit outcomes, explicit mutation scope and no credential
+arguments or environment dumps. Verify the changed source and generated
+manifests before pushing; refresh review and CI after the last push.

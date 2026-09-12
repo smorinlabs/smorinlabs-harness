@@ -6,16 +6,19 @@
 
 - `fusion-runner` provides Windows VM setup and operation skills. Three native
   Arm64 smoke jobs and two independent baseline restores established the
-  original one-job workflow on one Apple Silicon Mac. Intel, persistent-service
-  reboot and another-Mac recovery remain separate runtime coverage.
+  original one-job workflow on one Apple Silicon Mac. Intel and another-Mac
+  recovery remain outside this delivery. Persistent runner reboot testing was
+  removed from the delivery scope.
 - `repo-hygiene` 0.14.0 adds `ci-fix` Windows discovery and GitHub-scheduled
   diagnostics through a configured Fusion runner. Receipts bind the pushed
   revision, runner, selected tests, workflow attempt, logs and report. A zero-test
   or mismatched report cannot pass. Workflow and PowerShell report examples are included.
-- `fusion-runner` 0.3.0 adds protected one-job/persistent registration receipts,
-  guarded retirement helpers, and optional total-deadline power polling. New
-  diagnostic and lifecycle contracts have fixture coverage; their live Windows
-  acceptance checks remain pending in the integration plan.
+- `fusion-runner` 0.3.0 adds protected one-job registration from fresh SHA-256-
+  verified program directories, guarded retirement helpers, explicit reset
+  routing, a progressively disclosed manual setup path, and optional total-
+  deadline power polling. Native Arm64 failure/repair diagnostics, empty-selection
+  rejection, guarded cleanup and ordinary reboot/access passed. Fresh-agent
+  run → reset → run acceptance remains the final runtime delivery gate.
 
 ### Changed
 

@@ -50,7 +50,7 @@ foreach ($sample in @(
 
 $executable=[Environment]::ProcessPath
 $request=@{github_registration_absent=$true;runner_directory='C:\fixture';service_name=$null;configuration_finished=$true;runner_id=123;runner_name='fusion-ci-fixture';ephemeral=$true}
-foreach($case in @('partial','mismatch','worker','service-file','service-object','registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner','root')) {
+foreach($case in @('partial','mismatch','worker','service-file','service-object','registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner','root','reparse-root','reparse-ancestor','reparse-file')) {
   $request.runner_directory=if($case -eq 'root'){'C:\'}else{'C:\fixture'}
   $request.service_name=if($case -in @('registered','missing-named','registered-other','missing-identity-files','ephemeral-retired','persistent-missing-runner')){'actions.runner.fixture'}else{$null}
   $request.ephemeral=$case -ne 'persistent-missing-runner'
@@ -81,4 +81,4 @@ foreach($case in @('running','stopped','wrong-path','wrong-account')) {
   if($refused -ne ($case -ne 'running')){$failures.Add("Service verification failed: $case")}
 }
 if($failures.Count){throw ($failures -join '; ')}
-[ordered]@{probe='summary';parser_files=3;selection_cases=4;mode_cases=5;retirement_cases=12;service_cases=4;failures=0}|ConvertTo-Json -Compress
+[ordered]@{probe='summary';parser_files=3;selection_cases=4;mode_cases=5;retirement_cases=15;service_cases=4;failures=0}|ConvertTo-Json -Compress

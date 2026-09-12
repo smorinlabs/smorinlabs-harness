@@ -217,3 +217,9 @@ manual reconciliation and preservation of the VM.
 The runner's `_diag` directory contains diagnostic logs. Read only what is needed and redact credentials and private job data before sharing excerpts. Consult [GitHub troubleshooting](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/monitor-and-troubleshoot) and the [current Fusion feature matrix](https://knowledge.broadcom.com/external/article/315609) when behavior differs from the installed version.
 
 Do not revert snapshots or clone a registered VM during routine operation. A persistent runner keeps its registration, repository files, caches, and modifications after shutdown. Rebuilding from a baseline requires removing or replacing the old registration deliberately and creating a unique new runner identity.
+
+Retirement refuses reparse points in the installation, its ancestors, and
+registration files. These live checks assume the trusted-job policy and no
+hostile background process changing paths during maintenance. If guest
+integrity is uncertain, preserve required evidence and restore the verified
+baseline before administrator maintenance.

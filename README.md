@@ -43,8 +43,8 @@ For local development or direct copies, see the setup skill's install guide.
 
 | Skill | Does | Details |
 |---|---|---|
-| `fusion-runner-setup` | Prepares Fusion and Windows, verifies guest tools and the dedicated service account, and registers persistent or one-job runners through protected input. Records a secret-free handoff and distinguishes the working VM from its saved baseline. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
-| `fusion-runner-run` | Starts, checks, and gracefully stops the configured VM with optional bounded power polling. Verifies GitHub readiness separately and retires completed or failed one-job registrations only after work ends and new admission is blocked. Preserves working files. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
+| `fusion-runner-setup` | Prepares Fusion and Windows, or uses an available private recovery provider. Registers one-job runners from fresh checksum-verified programs under a standard account. A separate manual guide covers setup without a private provider. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
+| `fusion-runner-run` | Starts, checks, stops, or explicitly resets the designated Windows VM. Verifies Windows access and GitHub readiness separately, preserves failure evidence, and routes reset to the owner of the saved baseline. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
 
 ### repo-hygiene
 

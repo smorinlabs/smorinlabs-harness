@@ -1,8 +1,9 @@
 # Provision and verify the Windows runner
 
-Use this reference after Windows boots. Choose a persistent registration for
-repeated jobs or a fresh one-job registration for a bounded diagnostic. Both
-retain the VM's working files. This is a locally prepared Windows environment,
+Use this reference after Windows boots. The validated diagnostic path uses a
+fresh one-job registration. It retains the VM's working files. The older
+interactive persistent recipe remains available for separately chosen setups;
+persistent registration across reboot is outside this delivery's acceptance. This is a locally prepared Windows environment,
 not GitHub's hosted Windows image.
 
 ## 1. Establish which jobs may run
@@ -113,7 +114,11 @@ The group SID `S-1-5-32-545` identifies the standard Windows Users group across 
 
 ## 5. Register and install the service
 
-### Persistent registration
+### Existing interactive persistent option
+
+This separate option is not covered by the one-job diagnostic acceptance.
+Never reconfigure a job-writable program directory as administrator: prepare a
+new verified distribution first.
 
 Set `$ScopeUrl` to the established GitHub repository or organization URL, `$RunnerName` to the chosen unique name, and `$ServiceAccount` to the dedicated account. In elevated **Windows PowerShell**, change to the actual runner directory and invoke:
 
@@ -130,21 +135,24 @@ The Windows runner installs its service during configuration. The [runner's serv
 
 Use `scripts/register_service.ps1` for a prepared guest serving an authorized
 `ci-fix` diagnostic. This helper supports an exact repository on `github.com`.
-Run it in an elevated maintenance session using the user's established protected
-guest connection. It does not download Windows, install SSH, create a service
+Run it in native PowerShell 7.4 or later, in an elevated maintenance session
+using the user's established protected guest connection. Built-in Windows
+PowerShell 5.1 is rejected before mutation by the script's runtime requirement. It does not download Windows, install SSH, create a service
 account, or fetch a registration token. Verify those prerequisites first.
 
 1. Generate a fresh 32-character lowercase hexadecimal registration invocation.
    Set the runner name to `fusion-ci-` followed by that identifier. Establish
    admission for the trusted repository before the service can start; inspect
    existing workflows, queued jobs and runner labels.
-2. Verify the prepared distribution, dedicated local service account and its
-   Windows security identifier (SID). Preserve a host intent as described in
+2. Verify the dedicated local service account and its Windows security
+   identifier (SID). Select the official stable runner release matching the
+   observed native Windows architecture. Record its exact release asset URL
+   and published SHA-256; never derive trust from files left by an earlier job. Preserve a host intent as described in
    [the handoff reference](handoff.md#preserve-registration-identity-before-transport-can-fail).
    Choose an administrator-controlled guest receipt directory outside the
    runner's job checkout and a new receipt filename. The helper refuses a
-   directory writable by the CI account or other untrusted users. Existing registration files or
-   runner processes require reconciliation and deliberate retirement first.
+   directory writable by the CI account or other untrusted users. Existing runner processes or services require reconciliation and deliberate
+   retirement first. The requested installation directory must not exist.
 3. Transfer the public script through the established connection into a verified
    administrator-controlled staging directory and verify its hash in Windows.
    The CI account must not be able to replace those bytes between verification
@@ -160,10 +168,21 @@ account, or fetch a registration token. Verify those prerequisites first.
    | `invocation` | Fresh registration identifier from step 1 |
    | `name` | Exact `fusion-ci-<registration-id>` runner name |
    | `mode` | `ephemeral` for one diagnostic job |
-   | `runner_directory` | Absolute local Windows path to the verified runner distribution |
+   | `runner_directory` | `C:\ProgramData\FusionRunnerPrograms\` followed by the invocation; the directory must not exist |
+   | `runner_version` | Official stable release version, such as `2.332.0`; observe the current version rather than copying this example |
+   | `runner_archive_url` | Exact `https://github.com/actions/runner/releases/download/vVERSION/actions-runner-win-ARCH-VERSION.zip`, with observed version and `arm64` or `x64` |
+   | `runner_archive_sha256` | The selected official asset's published 64-character SHA-256 |
    | `receipt_path` | New absolute local Windows path for the secret-free guest receipt |
    | `service_account`, `service_account_sid` | Exact machine-qualified account name and matching local SID |
    | `token`, `password` | Short-lived registration token and dedicated account password, obtained through protected input |
+
+   The helper creates an administrator-owned `FusionRunnerPrograms` parent
+   with no untrusted writers. It refuses reparse paths, an existing invocation
+   directory, an unexpected release URL, or a digest mismatch. It downloads
+   with a 120-second / 256 MiB bound and extracts only the verified archive.
+   Failed preparation remains recorded and never executes `config.cmd`.
+   Each registration gets fresh programs; earlier directories are retained as
+   data and are never reused for elevated configuration.
 
    The helper passes credentials to `config.cmd` through its process-scoped
    `ACTIONS_RUNNER_INPUT_*` variables and clears those variables afterward.
@@ -184,11 +203,14 @@ registration's label. This prevents ordinary default-label jobs from selecting
 the one-job runner; it does not authorize untrusted code or replace repository
 access controls.
 
-The helper also accepts `mode: persistent` for an explicitly chosen persistent
-installation with the same exclusive routing. That mode requires its own
-post-registration reboot and ongoing admission checks. It does not inherit the
-one-job retirement guarantee. The normal interactive persistent recipe above
-retains GitHub's default labels and its shared `fusion-ci` selector.
+Fresh programs prevent reuse of persisted job-modified executables. This is
+not containment for a compromised guest or surviving hostile background
+processes. If prior work is untrusted or guest integrity is uncertain, restore
+the verified baseline before administrator maintenance. The supported job
+policy remains trusted code.
+
+The helper accepts only `mode: ephemeral`. Ordinary Windows reboot/access
+verification is separate from keeping a GitHub registration across reboot.
 
 After one job, GitHub retires an ephemeral registration. Inspect the actual
 job and current registration state, then follow
@@ -196,7 +218,8 @@ job and current registration state, then follow
 Preserve the receipt on a lost response or partial configuration. Never run
 configuration again merely because the transport failed to return success.
 The next diagnostic gets a fresh invocation, name, label and registration;
-the Windows VM, prepared runner distribution and working files remain in place.
+the Windows VM and earlier working files remain in place. The next registration
+gets a new verified program directory, not a new Windows installation.
 
 ## 6. Verify identity and a real job
 

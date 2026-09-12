@@ -95,7 +95,7 @@ codes are 0 success, 1 runtime error, 2 invalid invocation or missing consent,
 | `timeout`, `power_not_confirmed` | Power may have changed; inspect it before another mutation |
 | `runner_not_offline`, `confirmation_required`, `cancelled` | No shutdown was attempted |
 
-No helper reads credentials, registers runners, modifies workflows, performs
+Neither Python helper reads credentials, registers runners, modifies workflows, performs
 telemetry, or contacts a network service itself. The power helper is version
 0.2.0. The host probe is version 1.0.0: its major version and JSON schema 2
 replace the prototype `windows_architecture` key with
@@ -105,8 +105,10 @@ replace the prototype `windows_architecture` key with
 
 The PowerShell adapters are internal lifecycle scripts, separate from the
 Python command-line interfaces above. `register_service.ps1` accepts protected
-JSON on stdin, writes a durable secret-free receipt and registers one verified
-standard-account service. `retire_service.ps1` accepts a current host retirement
+JSON on stdin, writes a durable secret-free receipt, downloads and verifies the
+official native runner archive in a new administrator-controlled directory, and
+registers one ephemeral standard-account service. It refuses previously used
+program directories. Download is bounded to 120 seconds and 256 MiB. `retire_service.ps1` accepts a current host retirement
 attestation, checks guest identity/processes, deletes only the stopped matching
 service and its four registration files, and preserves the working directory.
 Their exact input and failure contracts are in [provisioning](../skills/fusion-runner-setup/references/runner-provisioning.md)
