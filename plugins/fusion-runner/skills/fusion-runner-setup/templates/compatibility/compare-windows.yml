@@ -1,0 +1,33 @@
+name: Compare Windows runners
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_fusion:
+        description: Also run on the prepared Fusion VM
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  hosted-arm64:
+    uses: ./.github/workflows/windows-smoke-job.yml
+    with:
+      runner_labels: '["windows-11-arm"]'
+      expected_architecture: ARM64
+      report_name: hosted-arm64
+  hosted-x64:
+    uses: ./.github/workflows/windows-smoke-job.yml
+    with:
+      runner_labels: '["windows-latest"]'
+      expected_architecture: X64
+      report_name: hosted-x64
+  fusion-arm64:
+    if: ${{ inputs.include_fusion }}
+    uses: ./.github/workflows/windows-smoke-job.yml
+    with:
+      runner_labels: '["self-hosted", "Windows", "ARM64", "fusion-validation"]'
+      expected_architecture: ARM64
+      report_name: fusion-arm64

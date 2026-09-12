@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-09-11",
+  "evidence_kind": "curated summary of private live validation",
+  "workload": {
+    "path": "plugins/fusion-runner/skills/fusion-runner-setup/templates/compatibility/windows-smoke.ps1",
+    "sha256": "d29b835fc9b8680b3b3f62df8baf351e3181097728494cfcdac4d1fe7507a7ff"
+  },
+  "platform": {
+    "host_architecture": "arm64",
+    "fusion_version": "26H1u1"
+  },
+  "cycles": [
+    {
+      "cycle": "original",
+      "runner_registration": "fresh ephemeral service",
+      "report": {
+        "status": "passed",
+        "nativeArchitecture": "ARM64",
+        "runtimeOSArchitecture": "Arm64",
+        "processArchitecture": "Arm64",
+        "windowsCaption": "Microsoft Windows 11 Pro",
+        "windowsVersion": "10.0.26200",
+        "windowsBuild": "26200.9445",
+        "windowsDisplayVersion": "25H2",
+        "windowsEdition": "Professional",
+        "powerShellVersion": "7.6.4",
+        "dotnetRuntime": ".NET 10.0.10",
+        "isAdministrator": false,
+        "gitVersion": "git version 2.55.0.windows.5",
+        "checks": [
+          "native-windows-and-runner-architecture",
+          "git-and-exact-commit-checkout",
+          "windows-file-permissions-unicode-spaces-and-zip",
+          "csharp-compile-and-native-windows-api",
+          "native-child-process-exit-status"
+        ]
+      }
+    },
+    {
+      "cycle": "restore1",
+      "runner_registration": "fresh ephemeral service",
+      "report": {
+        "status": "passed",
+        "nativeArchitecture": "ARM64",
+        "runtimeOSArchitecture": "Arm64",
+        "processArchitecture": "Arm64",
+        "windowsCaption": "Microsoft Windows 11 Pro",
+        "windowsVersion": "10.0.26200",
+        "windowsBuild": "26200.9445",
+        "windowsDisplayVersion": "25H2",
+        "windowsEdition": "Professional",
+        "powerShellVersion": "7.6.4",
+        "dotnetRuntime": ".NET 10.0.10",
+        "isAdministrator": false,
+        "gitVersion": "git version 2.55.0.windows.5",
+        "checks": [
+          "native-windows-and-runner-architecture",
+          "git-and-exact-commit-checkout",
+          "windows-file-permissions-unicode-spaces-and-zip",
+          "csharp-compile-and-native-windows-api",
+          "native-child-process-exit-status"
+        ]
+      },
+      "restore": {
+        "all_part_hashes_match": true,
+        "all_restored_files_match": true,
+        "boot_verified": true
+      }
+    },
+    {
+      "cycle": "restore2",
+      "runner_registration": "fresh ephemeral service",
+      "report": {
+        "status": "passed",
+        "nativeArchitecture": "ARM64",
+        "runtimeOSArchitecture": "Arm64",
+        "processArchitecture": "Arm64",
+        "windowsCaption": "Microsoft Windows 11 Pro",
+        "windowsVersion": "10.0.26200",
+        "windowsBuild": "26200.9445",
+        "windowsDisplayVersion": "25H2",
+        "windowsEdition": "Professional",
+        "powerShellVersion": "7.6.4",
+        "dotnetRuntime": ".NET 10.0.10",
+        "isAdministrator": false,
+        "gitVersion": "git version 2.55.0.windows.5",
+        "checks": [
+          "native-windows-and-runner-architecture",
+          "git-and-exact-commit-checkout",
+          "windows-file-permissions-unicode-spaces-and-zip",
+          "csharp-compile-and-native-windows-api",
+          "native-child-process-exit-status"
+        ]
+      },
+      "restore": {
+        "all_part_hashes_match": true,
+        "all_restored_files_match": true,
+        "boot_verified": true
+      }
+    }
+  ],
+  "preserved_baseline_unchanged": true,
+  "coverage_limits": [
+    "One Apple Silicon Mac; no Intel Fusion or other-host restore validation.",
+    "Ephemeral services only; persistent runner restart after post-registration reboot was not tested.",
+    "Encrypted startup used Fusion with an unlocked Mac; locked-Mac unattended startup was not established.",
+    "Private recovery execution does not establish every public helper path or fresh-agent setup behavior.",
+    "Smoke checks do not run an application build or full test suite."
+  ]
+}
