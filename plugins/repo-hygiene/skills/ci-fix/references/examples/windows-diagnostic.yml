@@ -1,0 +1,54 @@
+# Install as .github/workflows/windows-diagnostic.yml on the default branch.
+# Install the companion script as scripts/windows-diagnostic.ps1.
+name: Windows diagnostic
+run-name: Windows diagnostic ${{ inputs.diagnostic_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      diagnostic_id:
+        description: Unique invocation from windows_runner.py
+        type: string
+        required: true
+      runner_labels:
+        description: JSON array of the observed runner labels
+        type: string
+        required: true
+      test_ids:
+        description: JSON array of test IDs; [] runs the complete check
+        type: string
+        default: '[]'
+      expected_architecture:
+        description: Observed native Windows architecture
+        type: choice
+        options: [ARM64, X64]
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    name: Windows diagnostic
+    runs-on: ${{ fromJSON(inputs.runner_labels) }}
+    timeout-minutes: 10
+    steps:
+      - name: Check out the dispatched commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run the selected Windows checks
+        shell: pwsh
+        env:
+          DIAGNOSTIC_ID: ${{ inputs.diagnostic_id }}
+          DIAGNOSTIC_TEST_IDS: ${{ inputs.test_ids }}
+          DIAGNOSTIC_ARCHITECTURE: ${{ inputs.expected_architecture }}
+        run: ./scripts/windows-diagnostic.ps1
+      - name: Preserve the report, including failed tests
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-diagnostic-${{ inputs.diagnostic_id }}
+          path: artifacts/windows-diagnostic.json
+          if-no-files-found: error
+          retention-days: 14

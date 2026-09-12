@@ -43,8 +43,8 @@ For local development or direct copies, see the setup skill's install guide.
 
 | Skill | Does | Details |
 |---|---|---|
-| `fusion-runner-setup` | Guides Broadcom downloads and Windows installation, verifies the Windows login with `whoami`, records setup stages, distinguishes a saved baseline from the working VM, and compares CI with GitHub-hosted Windows. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
-| `fusion-runner-run` | Starts, checks, and gracefully stops the configured VM, verifying GitHub readiness separately from VM power and preserving the working VM's files. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
+| `fusion-runner-setup` | Prepares Fusion and Windows, verifies guest tools and the dedicated service account, and registers persistent or one-job runners through protected input. Records a secret-free handoff and distinguishes the working VM from its saved baseline. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
+| `fusion-runner-run` | Starts, checks, and gracefully stops the configured VM with optional bounded power polling. Verifies GitHub readiness separately and retires completed or failed one-job registrations only after work ends and new admission is blocked. Preserves working files. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
 
 ### repo-hygiene
 
@@ -52,7 +52,7 @@ Repo & release-readiness skills.
 
 | Skill | Does | Details |
 |---|---|---|
-| `ci-fix` | Repairs CI and hooks with pre/post-edit evidence, failing and affected tests, and a measured complete-bundle shortcut of approximately 30 seconds. Uses compatible timing history and existing Linux runners; verifies intended test selection and applicable required CI. Broad audits and prevention work remain optional; `--audit` reports and `--optimize` proposes evidence-based changes. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
+| `ci-fix` | Repairs CI and hooks with pre/post-edit evidence, selected and affected tests, and compatible timing history. Uses existing Linux runners or GitHub-scheduled Windows diagnostics on a prepared Fusion VM. Verifies intended tests and applicable required CI; `--audit` reports and `--optimize` proposes speed changes. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
 | `version-check` | Reports the project version across manifest, git tag, main branch, and (with `--full`) the registry, flagging mismatches. | [docs/skills/version-check.md](docs/skills/version-check.md) |
 | `readme-sync` | Audits README.md against the codebase (install steps, CLI usage, code examples, structure, links) and applies fixes with `--fix`. | [docs/skills/readme-sync.md](docs/skills/readme-sync.md) |
 | `manual-test-guide` | Generates a copy-pasteable manual testing guide, prioritizing recently changed areas. | [docs/skills/manual-test-guide.md](docs/skills/manual-test-guide.md) |

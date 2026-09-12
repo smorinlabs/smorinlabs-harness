@@ -1683,7 +1683,12 @@ PR-2 — Linux runner step (in progress 2026-09-10)
 - [x] [P45-T08] `scripts/detect_runners.py` → `~/.config/ci-fix/runners.toml`. Owner's rules (2026-09-10, two rounds): survey what is here and recommend using it, because that is easy, practical and recordable; recommend an install only when nothing is present, and then the easiest thing rather than the best. Then: rank by what is **installed**, not by what is running, since starting a stopped runner is one command while installing is a download; break ties on whether a runner already holds an image or VM on disk, because the other one downloads first; and order the rest podman → lima → docker, podman being the easiest and lima the right answer when a job needs a full VM. The sharp edge is deliberate and tested: a stopped lima holding a VM outranks a running but empty podman. act sits above the runtimes but is a driver, ready only when a runtime is. On the owner's own machine the rules pick lima, which is what they predicted. Read-only: bounded probes, no start, no pull, no install. Carries `recommend_start` (installed but stopped), `recommend_install` (nothing present: podman, with the Linux-host variant saying no VM is needed), `pinned` (the owner's own choice, honoured over the ranking and preserved across `--refresh`), `pinned_unavailable`, and `host.arch_note`. `limactl list --json` is JSONL, one object per line, not an array. TOML is written by hand so the script runs on any python3
 - [x] [P45-T09] `references/local-runners.md` (survey, per-failure runner choice, the three recipes, the toolchain-to-image map, bounds, and the no-local-path case) plus SKILL.md: step 1 runs the survey, the triage row becomes *Not reproducible on this host* and defers to it, `CI is the lab` now means no local path exists at all, rungs 0 and 1 name their environment, and `ladder_plan.py --local-env container` doubles an untested step's CI proxy. macOS and Windows jobs stay CI-only unless the host matches
 - [x] [P45-T10] Generalised past act: whenever the survey has no ready runner it offers the single `recommend_start` or `recommend_install` command once per machine via AskUserQuestion, quoting its reason and cost; a decline is recorded and the job becomes CI-only. Starting a VM, pulling an image and installing a tool are all mutations and none happens unasked
-- [ ] [P45-T11] Docs, PROJECTS, repo-hygiene 0.12.0, gen, skill-quality, closeout, PR
+- [x] [P45-T11] Linux phase docs, metadata, generated manifests, quality and delivery shipped in v0.25.0 with repo-hygiene 0.12.0. P46 subsequently updated the validation rules in repo-hygiene 0.13.0; this stale checkbox does not represent unfinished Linux implementation.
+- [x] [P45-T12] Add read-only Fusion Windows survey with explicit unregistered/offline/busy/power/architecture states.
+- [x] [P45-T13] Add trusted pushed-revision dispatch and collection bound to invocation, workflow attempt, commit, runner and nonempty selected tests; preserve failed-job logs.
+- [x] [P45-T14] Define protected one-job registration, partial receipts, guarded retirement and the concrete diagnostic workflow/report examples.
+- [x] [P45-T15] Verify helper fixtures, PowerShell selection/mode/retirement controls, and fresh Claude/Codex plugin loading. Live Windows evidence remains a separate gate.
+- [ ] [P45-T16] Execute Windows failure → source repair → success and no-selection cleanup, then merge the integration PR. The Mac is locked; no new live pass is claimed.
 - [ ] Regression Test Status
 
 ### Automated Verification
@@ -1772,11 +1777,11 @@ software and Windows images are downloaded from their official sources.
 - [x] [P47-T06] Record observed installation steps and later successful guest access and CI provisioning. The walkthrough distinguishes observed screens from user reports; intervening account/preference screens were not observed.
 - [x] [P47-T07] Explain install-once reuse, preserved baseline versus changing working VM, independent clones, and the required restoration verification; the private pre-registration baseline was preserved unchanged and two independent downloaded restores passed fresh jobs
 - [x] [P47-T08] Preserve the six original Windows-on-Mac research files, scrub local account paths, and distinguish the September 8 Parallels proposal from the later Fusion choice and validation
-- [ ] [P47-T04] Merge PR #57 after current package checks and review
+- [x] [P47-T04] PR #57 merged at `02ace8a`; local public main fast-forwarded to that commit, preserving unrelated audit files.
 - [x] [P47-TS06] Cover the host-probe JSON contract with mocked macOS success, Rosetta planning, unknown facts, absent/malformed Fusion metadata, invalid storage, and non-macOS cases; verify already-off stop remains observation-only. All 36 helper tests passed in 4.30 seconds after the review repairs.
-- [ ] [P47-T10] Consider bounded power-state polling inside the helper. Current commands perform one post-request observation and return `power_not_confirmed` while a transition is incomplete; operations then recheck actual state. Any polling enhancement must specify a total deadline separately from the existing per-call timeout and test delayed/stuck transitions. Deferred from PR #57 review comment 3994039466.
-- [ ] [P47-T09] Release the public plugin through the harness release process after separate release authorization
-- [ ] [P47-TS05] Extend runtime coverage when those deployment modes are needed: persistent service restart after registration, locked-Mac startup, Intel Fusion, and restore to another Mac. These are outside the completed ephemeral Arm64 validation.
+- [x] [P47-T10] VM power helper 0.2.0 adds optional `--wait-seconds` total-deadline polling. Four delayed/stuck transition fixtures verify a single mutation and a deadline that includes the initial inventory. The default remains one post-request observation.
+- [ ] [P47-T09] Tagged public release is authorized by the current closeout request and awaits the integration/release gates; do not request authorization again.
+- [ ] [P47-TS05] Persistent service restart after registration, Intel Windows x64, and recovery on another Mac remain unrun. The 2026-09-12 locked-Mac startup check returned zero but three inventories showed no running VM; locked startup remains unsupported. Persistent reboot orchestration is implemented; additional Macs and fresh-VM storage have been requested.
 
 **Validation boundary**: The [public validation record](plugins/fusion-runner/docs/validation.md)
 and its curated JSON summary describe the exact smoke workload and observed
@@ -1786,8 +1791,8 @@ marker preservation, and graceful shutdown passed. Private recovery scripts,
 credentials, VM files, account names, and job URLs are not part of this plugin.
 The public helper fixtures remain simulated vendor-response tests.
 
-**Related work**: P45's proposed Windows execution phase in `ci-fix` remains a
-separate integration task. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
+**Related work**: P45's Windows execution phase in `ci-fix` now has implementation
+and fixture coverage, with live diagnostic validation pending. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
 records the original direct-execution proposal and the owner's later choice of
 Fusion with a registered runner. Completing this plugin's live smoke validation
 does not implement that diagnostic workflow.
