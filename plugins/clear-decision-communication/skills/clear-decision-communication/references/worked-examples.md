@@ -42,8 +42,10 @@ Q1. Merge PR #142, the keyboard-focus fix for the search dialog?
 It implements the approved change. The keyboard-interaction test and all
 required checks passed on revision 9c8d7e6. CONTRIBUTING.md, the contribution rules, requires a human merge approval.
 I recommend merging the tested keyboard-focus fix (option 1, Q1.A).
-1. Merge (Q1.A; Recommended). the fix becomes eligible for the next deploy
-2. Hold (Q1.B). the PR stays open; say what to change
+
+1. Merge PR #142 (Q1.A; Recommended). The fix becomes eligible for the next deploy.
+2. Hold PR #142 (Q1.B). The PR stays open for changes.
+
 Reply with 1 or 2.
 ```
 
@@ -298,7 +300,7 @@ Q1. Merge commit 7b6c5d4, the tested retry-timing change for the nightly cache w
 I recommend merging the retry-timing change for the nightly cache warmer,
 the job that preloads the internal dashboard's data.
 The delay doubles before successive attempts and gains a random amount,
-subject to a 2-second cap. This spreads retries apart to reduce simultaneous
+subject to a 2-second cap. The randomized delay aims to reduce simultaneous
 requests (option 1, Q1.A).
 
 1. Merge the increasing, randomized retry delay (Q1.A; Recommended). This adds up to 3.25 s of scheduled waiting.

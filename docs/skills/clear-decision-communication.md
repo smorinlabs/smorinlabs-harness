@@ -115,7 +115,7 @@ Preselection and tool completion without an answer do not count as consent.
 > asking for the same permission again.
 
 The [project-policy example](../../plugins/clear-decision-communication/skills/clear-decision-communication/references/project-policy-example.md)
-shows the owner's preferred rewrite of a historical developer-tool question.
+adapts the owner's preferred rewrite of a historical developer-tool question.
 It names the proposed setup command and both installers before asking about the
 licence-policy scope. Its closing distinguishes a policy record from implementation
 and keeps deferral open. The historical facts are attributed to the research
@@ -133,7 +133,7 @@ session, not presented as current independent verification.
 | `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, and reply handling |
 | `references/decision-record.md` | when a record is due and its template |
 | `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent numbered options; illustrations, not behavioral validation |
-| `references/project-policy-example.md` | the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
+| `references/project-policy-example.md` | an adaptation of the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
 | `references/framework.md` | historical source framework preserved verbatim and provenance |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
 | `evals/run_evals.py` | bounded CLI runner that preserves inputs, source hashes, process evidence, and ungraded review records |

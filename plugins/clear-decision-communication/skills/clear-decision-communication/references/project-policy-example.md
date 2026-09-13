@@ -1,9 +1,10 @@
 # Project policy and a named development tool
 
-This historical example was rewritten from a research session for the planned
-`rs-launch-blueprint` Rust project template. The owner preferred this wording
-when reviewing the decision skill. Package versions, declared licences, and
-project constraints below are attributed to that session's research records;
+This example adapts the owner's preferred rewrite from a research session for
+the planned `rs-launch-blueprint` Rust project template. PR review clarified
+the recommendation's rationale, stable option ID, and alternative's status.
+Package versions, declared licences, and project constraints below are
+attributed to that session's research records;
 this is neither a fresh registry check nor a general legal conclusion.
 
 The form restores the project, proposed command, alternative tool, and policy
@@ -22,7 +23,7 @@ The project fixes its repository licence as `MIT OR Apache-2.0`. Its rule says "
 
 **Q4. Should `rs-launch-blueprint` apply its `MIT OR Apache-2.0` licence-compatibility check to standalone development tools such as `cargo-binstall`?**
 
-**I recommend applying the check and keeping the `cargo install` proposal: option 1.** The research also identifies `cargo-quickinstall` 0.3.53, another prebuilt-tool installer, as a compatible alternative to investigate if compiling tools proves too slow.
+**I recommend applying the check and keeping the `cargo install` proposal (option 1, Q4.A).** This retains R42's conservative interpretation while setup performance remains unmeasured. The research also identifies `cargo-quickinstall` 0.3.53, another prebuilt-tool installer, as a candidate to investigate if compiling tools proves too slow.
 
 1. **Apply the compatibility check to standalone development tools -- Q4.A.** Keep `cargo-binstall` excluded under R42's recorded interpretation and retain the proposed `cargo install` recipe. Future tools in this class must undergo the same check.
 2. **Exempt standalone development tools from this compatibility check -- Q4.B.** Record that exemption and revise R42 to recommend `cargo-binstall`. The exemption would also apply to future tools that run separately and are never linked into the shipped application or library.

@@ -19,7 +19,7 @@ open, and the closing action must agree with every option.
 
 The canonical template, tier guidance, delivery rules, existing examples, and
 documentation use the same form. The owner's preferred historical Q4 rewrite
-is preserved in `references/project-policy-example.md`. Its facts remain
+is adapted in `references/project-policy-example.md`. Its facts remain
 attributed to the historical research; it is an editorial target, not a raw
 model response or a fresh registry check.
 
@@ -112,6 +112,19 @@ framing in Q4, not a claim that the skill reliably meets every clarity rule.
   existing 15 warnings about the generator's ignored `_generated` field.
 - Whitespace and changed-file checks found no absolute personal paths or
   unfilled documentation placeholders.
+
+PR #71 review clarified the historical example's recommendation rationale,
+stable option ID, and alternative's status without changing its recorded
+licences or policy options. The fictional merge options now name PR #142, and
+the retry example states reduced simultaneous requests as an intended benefit.
+These are later editorial corrections, not newly sampled model behavior.
+
+The coverage check now requires CDC-21 through CDC-23 as well as the previous
+finding IDs. An inverse control kept all 25 cases but removed those three
+coverage identifiers: the old check passed incorrectly, and the corrected
+check rejected the omission. All 104 evaluation-runner tests passed after
+this repair. The full GitHub CI suite also passed on the preceding revision
+`5dac8c1`; later PR revisions require their own CI results.
 
 Raw native transcripts, frozen sources, prompts, hashes, extracted responses,
 and independent reviews are retained locally in `/private/tmp/cdc-applied-c7d7jp_9/`.
