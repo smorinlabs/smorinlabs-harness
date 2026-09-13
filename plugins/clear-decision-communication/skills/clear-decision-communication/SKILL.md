@@ -182,8 +182,9 @@ the output is the brief for that target.
    Use simple sentences with one primary assertion each.
    Distinguish agreed requirements, verified constraints, and proposed
    implementation choices. Check whether all options assume a design choice
-   the user has not approved. State the recommended action and its reason in
-   full before attaching its option ID. Then put the complete option list
+   the user has not approved. State the recommended action in full before
+   attaching its option ID. Give its reason in that sentence or the next.
+   Then put the complete option list
    immediately after the recommendation or neutral statement. Number the
    displayed options and retain their stable lettered IDs for later reference.
    Each option names the affected asset, scope, consequence, and immediate

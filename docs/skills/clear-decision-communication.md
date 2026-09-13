@@ -43,8 +43,8 @@ identify baseline and candidate values, preserve the direction of change, and
 distinguish quoted percentages from calculated changes. Missing absolute values
 remain explicit gaps.
 
-A recommendation states the action, named asset, scope, and reason before its
-option ID. The complete numbered option list follows immediately. Questions
+A recommendation states the action, named asset, and scope before its option
+ID, with the reason beside it. The complete numbered option list follows immediately. Questions
 use IDs such as `Q1`; options retain `Q1.A` and `Q1.B`, with display numbers
 `1` and `2` as local reply aliases. A supported recommendation is A and appears
 first. Neutral questions mark no recommendation. Numeric replies require an

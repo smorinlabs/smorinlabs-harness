@@ -48,11 +48,15 @@ Word counts are whitespace-separated words in the entire captured final
 response, including any preamble and closing narration. They are observations,
 not a quality score or evidence of a stable percentage improvement.
 
-The last small source edit aligned the mirrored tier tables with the new
-canonical order and removed the obsolete mandatory extra next-action section.
-It followed the model snapshots above. The resulting SKILL.md hash is
-`a7de8f7c17933bcd77dbf9c5c04586242a002396c15398c8315b658bfcf231ea`.
-Native behavior has not been separately sampled after that alignment edit.
+After those snapshots, the mirrored tier tables were aligned with the new
+canonical order and the obsolete mandatory extra next-action section was
+removed. The final review also clarified that the full action must precede
+its ID, while its reason can appear in the same or following sentence. This
+matches the owner-preferred editorial example; the purpose is to remove
+undefined option references, not impose an arbitrary position for the reason.
+The resulting SKILL.md hash is
+`a8474a20d3cf04040329349acfb805cad417d1c99ec0d77bb4e9cc0fb448accd`.
+Native behavior has not been separately sampled after those final edits.
 
 Two independent readers saw only the respective generated brief. Both could
 identify the project, policy choice, option effects, evidence limits, and reply.
@@ -71,10 +75,19 @@ context. These are communication simulations, not real approvals or mutations.
 | Case | Evidence preserved | Remaining issue |
 |---|---|---|
 | 7: verified local rename | Exact Unicode paths, checked revision, reversible local scope, and explicit choice remained clear. | The first run narrated internal sizing. The follow-up removed that preamble but retained an unnecessary delivery explanation. |
-| 20: opposing benchmark metrics | Both assets, lower measured latency, higher measured cost, absolute changes, and the owner's selection rule were retained. | Long drafting and delivery narration obscured the decision. This run does not establish broad presentation compliance. |
+| 20: opposing benchmark metrics | Both assets, lower measured latency, higher measured cost, absolute changes, and the owner's selection rule were retained. | The sensitivity sentence points a one-export change to option 4, which affects both exports. Long drafting and delivery narration also obscured the decision. |
 | 23: different development-tool policy | Named project, command and roles; preserved option meanings, individual review, metadata limits, and deferral. | Both runs repeated the options in another matrix and included process narration. This remains a failed concision/presentation check. |
 | 24: unavailable setup context | Requested the one setup proposal without inventing its command or installation role. | The 481-word response was too long for the required information request and narrated the workflow. |
-| 25: stale numeric reply | Recognized the original list as superseded, executed neither choice, and sought a current answer. | Added unsupported details about the unbuilt prototype and unnecessary process explanation. |
+| 25: stale numeric reply | Recognized the original list as superseded, executed neither choice, and sought a current answer. | The purportedly unchanged option adds an unsupported prohibition on branch work. Process explanation was also unnecessary. |
+
+A separate grader reviewed all seven fresh-control responses and both revised
+native responses against their exact sources and original criteria. One passed
+(the follow-up local rename); eight failed overall. Several failures preserved
+the requested facts but violated presentation rules. Others made unsupported
+claims or changed option scope. These counts include earlier attempts and do
+not mean eight distinct current scenarios failed. The upstream native baseline
+is reported separately above. Narrow criterion passes do not override those
+overall grades.
 
 The simulation prompt requests the immediate next action as well as the next
 response. That may contribute to separate delivery explanations; it does not
