@@ -77,18 +77,21 @@ rules apply at every tier and the axis never sets the tier by itself.
 - A decision record is not set by the tier. It is retained when at least two of
   these hold: hard to reverse, surprising without its context, the result of a
   real tradeoff.
-- Say the sizing out loud with a tag on the question line, naming the tier and
-  only the axes that set it, without levels: `[T1]`, `[T2: departure]`,
-  `[T3: reversibility, domain]`. An axis that is merely elevated inside a T3
-  is not listed; it shows up as the section it expands. The reader can dispute the sizing; when they do, the next ask on the
-  same subject honors their level as a standing preference and says so.
+- Keep sizing internal in ordinary requests. Omit tier tags and drafting or
+  batching logistics; describe the relevant consequences in the reader's terms.
+  When the reader asks to inspect sizing, give the tier and only the axes that
+  set it, for example `[T2: departure]`. An axis that is merely elevated inside
+  a T3 is explained in the section it expands. When the reader disputes sizing,
+  acknowledge the correction and honor their level as a standing preference
+  on the same subject. Do not repeat that sizing explanation in later asks
+  unless requested.
 
 This table mirrors the one in SKILL.md step 2; edit both together.
 
 | ID | Tier | Prepare | The initial view holds | Length signal |
 |---|---|---|---|---|
-| T1 | Confirm | the prepared result and its verification, nothing more | the question line, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
-| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | the question line, the recommendation or neutrality, the sections the elevated axes call for, the options, the next action; one comparison when the change is conditional | about 250 words |
+| T1 | Confirm | the prepared result and its verification, nothing more | a self-contained question, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
+| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | orientation when needed, the question, recommendation or neutrality, the sections the elevated axes call for, options, and next action; one comparison when the change is conditional | about 250 words |
 | T3 | Full brief | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
 
 The word counts are review targets, never caps. Past them, remove repetition,
@@ -112,11 +115,14 @@ one.
 | Review of completed work | what the prepared change does, how it matches the agreement, the relevant verification, material exceptions, and the specific revision under review | approval of the completed work, or merge of a particular revision |
 | Rollout or deployment | the target environment, the expected effects, the readiness evidence, and the recovery options | the exact rollout or deployment action, to a named environment |
 
-State which of these approval performs, in the "On Q1.A I will" line, which is
-required whenever tradeoff complexity is above low and a recommendation exists: selects an
-approach, authorizes a prototype or experiment, expands implementation scope,
-approves completed work, merges a particular revision, or deploys to a named
-environment. A neutral question states the exact action for each choice.
+State the relevant current condition and immediate commitment before presenting
+options: selects an approach, authorizes a prototype or experiment, expands
+implementation scope, approves completed work, merges a particular revision,
+or activates it in a named environment. Research fixtures, installed files,
+validated behavior, and active features are different states. Keep scope,
+timing, and conditions consistent through the question and the "On Q1.A I will"
+line, required whenever tradeoff complexity is above low and a recommendation
+exists. A neutral question states the exact action for each choice.
 Approval never expands the agent's authority beyond its stated scope.
 
 ## Two shapes of ask

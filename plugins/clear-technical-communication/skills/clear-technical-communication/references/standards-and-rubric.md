@@ -79,8 +79,12 @@ Rewrite before sending if any answer is no:
 
 - Can the intended reader state the message's purpose?
 - Are required local terms, identifiers, and symbols defined?
+- Can the reader identify each named artifact by its type and distinguish it
+  from artifacts that contain, invoke, configure, or authenticate it?
 - Are causes, contrasts, constraints, and consequences explicit?
 - Can the reader distinguish known facts from proposals and open decisions?
+- Does each simplified claim retain its subject, evidence scope, material
+  conditions, and unknowns?
 - Does the reader know the conclusion or exact response required?
 
 ### Strong review signals

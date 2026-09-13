@@ -1,10 +1,11 @@
 # Worked examples
 
-Eight fictional situations rendered through the workflow, one per shape the
+Nine fictional situations rendered through the workflow, one per shape the
 skill must handle. Every fact, revision, test result, and repository detail
 below is invented for illustration and is not a claim about any real project.
 Read the one closest to the situation at hand before drafting; the shape is the
-point, not the wording.
+point, not the wording. Sizing paragraphs are author notes; rendered briefs omit
+tier tags and start with orientation only when the question needs it.
 The outer code fences in this file quote each rendered message; the message
 itself is sent as ordinary text with pipe tables. Alignment-dependent diagrams
 retain their own inner fences. Behavioral edge cases and grading expectations
@@ -35,7 +36,7 @@ to approve every merge.
 Sizing: every axis low; the gate is the only reason to ask.
 
 ```
-Q1. Merge PR #142, the keyboard-focus fix for the search dialog?   [T1]
+Q1. Merge PR #142, the keyboard-focus fix for the search dialog?
 It implements the approved change. The keyboard-interaction test and all
 required checks passed on revision 9c8d7e6. CONTRIBUTING.md requires a human
 merge approval. Recommendation: Q1.A.
@@ -55,13 +56,16 @@ Sizing: departure elevated (scope the human has not seen), uncertainty elevated
 table.
 
 ```
-Q1. Include the shared date-validation fix in this PR?   [T2: departure, uncertainty]
+The CSV import repair changes a shared date validator, src/validate/date.ts,
+which also handles API uploads. The prepared fix passes both test suites, but
+changing API upload behavior exceeds the approved CSV-only scope.
+
+Q1. Include the shared date-validation fix in this PR?
 Recommendation: Q1.A, include it, so CSV imports and API uploads validate dates
 the same way. Q1.B wins if existing external caller behavior must be preserved.
 
-Why I am asking: the request covered CSV imports only. The fix I prepared lives
-in the shared date validator (src/validate/date.ts), so it also changes API
-uploads. That is a scope change you have not approved.
+Why I am asking: the next commit would include the API behavior change.
+Keeping it CSV-only preserves existing external caller behavior.
 
 What changes, same input on both paths (reproduced from the regression run on
 commit 3f2a9c1):
@@ -106,7 +110,7 @@ timing, so an event table with identical event order. Record: not due, only
 "real tradeoff" is arguable, and the change is one revert away.
 
 ```
-Q1. Approve the fix that lets only the latest search request update the results?   [T3: domain]
+Q1. Merge commit 6f5e4d3 into the release branch so only the latest search request updates the results?
 Recommendation: Q1.A, approve. Q1.B (hold) wins only if the search box must
 keep showing every response, which nothing in the product asks for.
 
@@ -137,7 +141,7 @@ production traffic; the controlled tests establish the two specified response
 orders, not every browser or network condition.
 
 Options:
-  Q1.A  Approve the sequence-number fix (Recommended)  -- ships on the next deploy; 14 lines in src/search/handler.ts
+  Q1.A  Merge the sequence-number fix (Recommended)  -- the release branch gains the tested change in src/search/handler.ts
   Q1.B  Hold                                           -- stale results keep appearing; say what evidence you want first
 
 Would change my recommendation: a requirement to show every response, or a
@@ -162,9 +166,15 @@ architectural, so a coded map with the change as ghosts. Record: due, hard to
 reverse and a real tradeoff.
 
 ```
-Q1. Which direction for report exports: a separate worker process, or streaming inside the web process?   [T3: reversibility, tradeoff]
-Recommendation: Q1.A, the worker process, because it removes the gateway limit
-entirely. Q1.B wins if a maintenance window cannot be scheduled this month.
+Report exports currently run inside the web request and exceed its 30-second
+gateway timeout. Neither alternative has been prototyped. This choice selects
+implementation work on a branch; running a database migration requires a
+separate maintenance-window approval.
+
+Q1. Which direction for report exports: a separate worker process, or streaming inside the web process?
+Recommendation: Q1.A, the worker process, because export execution would run
+outside the request's gateway timeout. Q1.B wins if a maintenance window cannot
+be scheduled this month.
 
 Why I am asking: this selects the next two weeks of work, and once the jobs
 migration ships the direction is expensive to undo. The approved plan assumed
@@ -184,7 +194,8 @@ Q1.B keeps the map as it is today and streams rows from W as they are produced.
 
 What you would be accepting:
   Q1.A  a new jobs table and a migration, which needs a maintenance window;
-        exports of any size; reversal means dropping the table and restoring
+        export execution outside the request timeout, with maximum size still
+        unmeasured; reversal means dropping the table and restoring
         the synchronous path, a day of work plus a second window.
   Q1.B  no migration; report size capped at what one request can carry,
         which the two largest customers already exceed (invoice sizes,
@@ -196,7 +207,7 @@ Not verified: neither approach is prototyped; I can build a throwaway worker
 in about a day if you want evidence before choosing.
 
 Options:
-  Q1.A  Move exports to a worker process with a jobs queue (Recommended)  -- migration and window required; no size limit
+  Q1.A  Move exports to a worker process with a jobs queue (Recommended)  -- migration and window required; maximum size unmeasured
   Q1.B  Stream exports from the web process                              -- no migration; size cap; two customers affected
   Q1.C  Prototype the worker for a day before choosing                   -- delays the decision one day; produces measured evidence
 
@@ -227,7 +238,7 @@ sentence suffices because the mechanism is not the difficulty. Record: due,
 hard to reverse and a real tradeoff.
 
 ```
-Q1. Lower log retention from 90 days to 30 days, which also shortens audit-log retention below the 90 days the compliance policy requires?   [T3: impact, reversibility]
+Q1. Split log-retention settings to reduce application-log storage cost while preserving the required 90 days of audit logs?
 Recommendation: Q1.A, split the setting first so application logs drop to 30
 days and audit logs stay at 90. Q1.B wins only if the 90-day policy no longer
 applies.
@@ -277,7 +288,7 @@ Sizing: domain complexity high for this reader, everything else low. Change
 type: algorithm, so a worked example with the boundary case and the invariant.
 
 ```
-Q1. Approve the new retry timing for the nightly cache warmer?   [T3: domain]
+Q1. Merge commit 7b6c5d4, the tested retry-timing change for the nightly cache warmer?
 Recommendation: Q1.A, approve. Q1.B wins if you want the fixed timing kept
 until the next incident review.
 
@@ -312,7 +323,7 @@ computed from the parameters, not recorded from a run. Not verified: maximum
 request duration; an end-to-end runtime bound needs a bound on each attempt.
 
 Options:
-  Q1.A  Approve exponential backoff with jitter (Recommended)  -- spreads retries; adds up to 3.25 s of scheduled waiting
+  Q1.A  Merge exponential backoff with jitter (Recommended)  -- spreads retries; adds up to 3.25 s of scheduled waiting
   Q1.B  Keep fixed 200 ms                                       -- no change; the incident review's concern stays open
 
 Would change my recommendation: a strict total cold-start deadline; measure or
@@ -336,7 +347,7 @@ elevated (a schema change undone by dropping the index). Every reference is
 defined where it is used.
 
 ```
-Q1. Add a database index on the jobs table's status column, a new migration outside the approved plan, or poll the table without it?   [T2: departure, reversibility]
+Q1. Add a database index on the jobs table's status column, a new migration outside the approved plan, or poll the table without it?
 Recommendation: Q1.A, add the index. Q1.B wins if a migration cannot be
 scheduled this week.
 
@@ -346,18 +357,19 @@ status quickly. The first phase's migration, which created the table that
 stores queued jobs, did not add an index on the status column. Adding one is a
 new migration the plan did not include, so it needs your approval.
 
-What changes: with the index, the status count runs in milliseconds; without
-it, the count scans the whole table, about 2 s at today's 400,000 rows
-(measured on a staging copy, 2026-09-06), and grows with the table.
+What changes: the current status count scans the whole table, about 2 s at
+today's 400,000 rows (measured on a staging copy, 2026-09-06). The index is
+intended to avoid that full scan; its effect on latency has not been measured.
 
 What you would be accepting: one more migration in this phase, run during a
 maintenance window; reversal is dropping the index.
 
 Evidence: Verified: the 2 s scan on staging at 400,000 rows. Inferred: growth
 with table size, from the query plan, not measured at larger sizes.
+Not verified: latency with the proposed index.
 
 Options:
-  Q1.A  Add the status index as a new migration (Recommended)  -- one window; fast health check; plan updated
+  Q1.A  Add the status index as a new migration (Recommended)  -- one window; intended to avoid the full scan; latency still to verify
   Q1.B  Poll the table on a timer instead of counting on demand -- no migration; the health check reports up to 60 s stale
   Q1.C  Defer the health check to the third phase              -- the worker rollout proceeds without it
 
@@ -366,3 +378,103 @@ Would change my recommendation: no maintenance window available this week.
 On Q1.A I will: write the migration, add it to the plan's second phase as a new
 task, and rerun the health-check test.
 ```
+
+## 9. Recover the artifact, then reassess the choice
+
+Situation: implementation of optional automation for the fictional public
+`library-starter` template is authorized. Two workflow candidates exist as
+`research/automation/review.yml` and `research/automation/assistant.yml`;
+neither is installed under `.github/workflows/`.
+The review candidate checks the pull-request author; the assistant candidate
+checks the author of the requesting comment. Question Q2 offered three planning
+choices: leave both inactive, prepare review
+activation after validation, or prepare both for activation after validation.
+The agent called them "lanes". The user asks, "Which files are these, and what
+would my answer change today?"
+
+The clarification below is an excerpt replacing the opening and comparison of
+Q2, not a complete risk-acceptance brief. The unchanged options retain their
+IDs. The artifact table answers the missing identity question before any token
+ordering trace.
+
+```
+This concerns optional GitHub Actions automation for `library-starter`, the
+public repository template we are building. These are two proposed workflow
+files. A workflow tells GitHub which event starts its jobs.
+
+| Existing research file | Proposed installed file | Role |
+|---|---|---|
+| `research/automation/review.yml` | `.github/workflows/review.yml` | Run Claude to review pull requests |
+| `research/automation/assistant.yml` | `.github/workflows/assistant.yml` | Run Claude when a collaborator requests help in a comment |
+
+Neither workflow is installed or running. Q2 chooses the activation plan I
+will record today. Activation would happen later, after implementation,
+validation, and the separately required activation approval.
+
+Both candidates currently assume a repository setting named `AI_ENABLED`,
+an on/off switch. Shipping optional automation is agreed; this manual switch
+is my proposed implementation. You can replace that proposal.
+
+For the same collaborator comment requesting help:
+
+| State | Result |
+|---|---|
+| Today, with no installed assistant workflow | No assistant job runs |
+| Proposed workflow installed, `AI_ENABLED` absent | Candidate condition prevents the assistant job; not tested on GitHub |
+| Proposed workflow installed, `AI_ENABLED=true` | Eligible to run, subject to the remaining checks; not tested on GitHub |
+
+This explains the proposed control. It does not establish that its safeguards
+work. The source inspection also found different permissions and restrictions:
+
+| Workflow | Declared contents permission | Separately acquired token | Bot exclusion in candidate |
+|---|---|---|---|
+| `review.yml` | read | Effective permissions not verified | Present; platform behavior not tested |
+| `assistant.yml` | write | Contents write requested; effective permissions not verified | Absent |
+
+The review workflow's read declaration therefore does not prove that all its
+credentials are read-only. A restriction in `review.yml` also does not protect
+`assistant.yml`. Both findings remain part of the decision.
+```
+
+Now the user says: "Use credential detection instead. Install both workflow
+files by default; missing credentials should produce a successful run with a
+visible explanation. Exclude bots and require both collaborator status and
+write access. Implement that, but do not activate either workflow here."
+
+The response changes because the user has supplied requirements and authority,
+not merely asked for a clearer account of the old options:
+
+```
+I will include the GitHub Actions workflow files `.github/workflows/review.yml`
+and `.github/workflows/assistant.yml` in the template by default, using
+credential detection. When credentials are missing, the required behavior is
+a successful run with a visible explanation.
+
+Both workflows must exclude bots and require collaborator status plus write
+access. The review workflow checks the pull-request author; the assistant
+workflow checks the author of the requesting comment.
+
+Q2 is superseded: its options assumed the `AI_ENABLED` manual switch, which you
+have replaced. I am recording decided Q3 with your requirements and your
+implementation approval. Neither workflow is authorized for activation here.
+
+I will now replace the candidate conditions, implement the missing bot check,
+and validate the missing-credential and author-permission cases. Those are
+requirements to prove; they are not yet observed platform behavior. The review
+workflow's exchanged-token permissions remain unverified and must be resolved
+before an activation decision can describe its access accurately.
+```
+
+The second reply does not re-offer obsolete options or ask the user to approve
+the same requirements again. It preserves the new implementation boundary and
+the unresolved permission fact. A further owner decision is needed only if the
+investigation discovers a tradeoff not covered by that approval.
+
+The user's final verb determines the authorized work; do not copy the approval
+scope from this example into a different conversation. If the reply instead
+says "Update the design and implementation plan accordingly", the response and
+record both say: "Q3 approves updating the design document and implementation
+plan. It does not authorize implementing, installing, or activating the workflow
+files." The requirements for the future workflows stay the same, but the
+immediate action is editing the planning documents. A decision record cannot
+grant broader authority than the reply that created it.

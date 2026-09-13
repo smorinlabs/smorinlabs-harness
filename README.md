@@ -152,7 +152,7 @@ Reader-centered technical communication — review, rewrite, and compose.
 
 | Skill | Does | Details |
 |---|---|---|
-| `clear-technical-communication` | Makes technical communication reader-centered and actionable by minimizing what the reader must infer. Detects missing purpose or context, undefined terms and identifiers, hidden logic, mixed status, false choices, absent option consequences, the wrong presentation form, stripped or unexplained names, and unframed code, diagrams, or examples — then rewrites without inventing facts. Audits against the four ISO 24495-1 reader outcomes and uses selected ASD-STE100 mechanics for sentence control. | [docs/skills/clear-technical-communication.md](docs/skills/clear-technical-communication.md) |
+| `clear-technical-communication` | Makes technical communication reader-centered and actionable by minimizing what the reader must infer. Detects missing context, undefined terms, hidden logic, mixed status, false choices, absent consequences, and unframed examples. Names each artifact by its type, exact identifier, and role; preserves scope, conditions, and uncertainty while rewriting. Audits against the four ISO 24495-1 reader outcomes and uses selected ASD-STE100 mechanics for sentence control. | [docs/skills/clear-technical-communication.md](docs/skills/clear-technical-communication.md) |
 
 ### clear-decision-communication
 
@@ -165,7 +165,7 @@ can render its output.
 
 | Skill | Does | Details |
 |---|---|---|
-| `clear-decision-communication` | Checks whether a decision is needed, prepares evidence, and sizes a self-contained brief using seven axes and three tiers. Shows the change through a focused example or ASCII diagram while preserving exact names and quotations. Keeps option meanings stable, supersedes revised questions, supports neutral choices, and names the action each answer authorizes. Silence and skip grant no authority. Adapts to the available question tool, preserves material caveats beyond length targets, and includes behavioral evaluation cases. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
+| `clear-decision-communication` | Checks whether a decision is needed and prepares a self-contained brief. Connects the goal to the exact artifact and its role, states current behavior and the action each answer authorizes, and chooses examples for the reader's missing understanding. Recovers context when the reader is confused and replaces obsolete options when requirements change. Checks the completed draft against sources and reports measurements with their assets, baselines, and absolute values when available. Keeps question meanings stable and adapts to available question tools. Includes twenty-two behavioral cases, an independent-reader procedure, and an optional evaluation experiment that separately reviews and revises captured drafts. | [docs/skills/clear-decision-communication.md](docs/skills/clear-decision-communication.md) |
 
 ### design-by-elements
 

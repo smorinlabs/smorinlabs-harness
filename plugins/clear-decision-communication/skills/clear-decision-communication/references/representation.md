@@ -12,6 +12,25 @@ MIT). Attribution and licenses are in `references/framework.md`.
 
 ## Assess the difficulty first
 
+Start with the immediate commitment, then identify the reader's missing
+understanding. A precise trace of internals cannot identify an unnamed feature.
+
+| Reader's missing understanding | Smallest useful form |
+|---|---|
+| What exact asset is this? | artifact type, exact name, and role in a sentence or table |
+| How does this relate to the project? | goal-to-component connection in prose, or a small relationship diagram when several connections matter |
+| What exists and what would my answer change now? | current condition and immediate action, with proposed or inactive parts labeled |
+| What requirement has changed before behavior is implemented? | stated old rule and revised requirement; keep implementation and test status separate |
+| What changes for the same event? | same-input or same-event comparison |
+| Why does the order matter? | event sequence or timing chart |
+
+Keep a workflow file distinct from its jobs, invoked actions or scripts,
+settings, and credentials. Include the exact artifact names the reader must
+identify; a short reference can follow once its meaning is clear. Do not
+invent a final name for an unnamed proposal.
+
+For behavior that still needs explanation, assess:
+
 - Interacting parts: how many concepts or components must be understood
   together?
 - Hidden conditions: does correctness depend on timing, ordering, state,
@@ -19,11 +38,12 @@ MIT). Attribution and licenses are in `references/framework.md`.
 - Reasoning effort: can the consequence be seen directly, or must the reader
   mentally simulate events?
 
-Provide the mental simulation when it is necessary to judge the change. Then
+Provide the mental simulation when it is necessary to judge the commitment. Then
 ask the one question that decides the channel: would the reader understand
-this better by seeing it than by reading it? A conceptual question ("should
-sessions auto-extend?") reads; a structural or sequential one ("where does the
-stale result overwrite the fresh one?") is seen.
+this better by seeing it than by reading it? A conceptual choice may need an
+artifact or behavior comparison too. Use the change-type table after resolving
+the missing project or artifact context; omit an artifact when a sentence fully
+explains the relationship.
 
 ## Change type to form
 
@@ -32,7 +52,7 @@ This table mirrors the one in SKILL.md step 4; edit both together.
 | Type of change | Show |
 |---|---|
 | Mechanical, such as a rename | one descriptive sentence naming the change and its purpose |
-| Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome, as a table (F1) |
+| Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome (F1); if only design rules are known, compare those rules and leave runtime outcomes unknown |
 | Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode (F2), a whole block (F7), or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
 | Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
 | Architectural, such as moving responsibilities | a small system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
@@ -113,12 +133,24 @@ was performed or is proposed.
 
 ### F1 Same-input table
 
+Use an outcome table only where its condition values and outcomes have support.
+For each row, name the event and independent inputs; then check each cell against
+evidence for those same inputs. Unknown values stay unknown. A result documented
+for one setting cannot fill a cell about a different setting or a credential.
+
 ```
 | Input                              | Today                          | With the fix                        |
 |------------------------------------|--------------------------------|-------------------------------------|
 | 2024-02-30 through CSV import      | corrected to 2024-03-01 silently | rejected: "day 30 is not valid"    |
 | 2024-02-30 through API upload      | corrected to 2024-03-01 silently | rejected with the same message     |
 ```
+
+When a clarification changes requirements before runtime behavior is known,
+compare the requirements instead. For example, a draft may require a manual
+deployment switch, while the user now requires deployment on an approved release.
+That identifies the policy change. It establishes neither draft's behavior when
+a credential is missing. Report that outcome as unknown if it matters; do not
+invent it to complete a before/after table.
 
 ### F2 Pseudocode
 
