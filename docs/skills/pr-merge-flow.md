@@ -91,7 +91,7 @@ the PR"
 | No override or trusted `mode: merge` | Complete the required flow and merge without routine arming or final confirmation. | Preserve required owner decisions and the non-convergence check-in. |
 | `--auto`, "merge it fully automated", or trusted `mode: auto` | Perform the same guarded merge without an arming question. | Report and stop at an unresolved owner decision or convergence bound. Separate browser consent still applies; an unattended run stops if required consent cannot be obtained. |
 | `--confirm`, "ask before merging", or trusted `mode: confirm` | Prepare the PR, then present one final merge menu. | Preserve the existing exceptional gates. |
-| `--ready` or "prepare only" | Evaluate and report; never merge. | Report blocked gates without claiming readiness. |
+| `--ready` or "prepare only" | Complete authorized preparation, including fixes, replies, and thread resolution, then report; never merge. | Report blocked gates without claiming readiness. |
 
 `--one-pass` runs one triage/fix pass over the threads present, skips the
 re-review cycle, and always ends as a ready-report without merging. It
@@ -115,12 +115,24 @@ question is added after each run. Existing `defer-target` discovery and
 recording continue, with the preferences file ignored via `.git/info/exclude`.
 
 Merge authorization comes from explicitly invoking this skill or asking to
-get the PR merged. If an agent routes a review-only or fix-only request here,
-that routing does not authorize merging; retain the requested scope with
-`ready` or one-pass behavior. For review-only work, inspect and report without
-changing code or PR state; `ready` does not authorize additional mutations.
+get the PR merged. An explicit "review only", "fix feedback only", or "do not
+merge" restriction takes precedence, even when you name the skill. An agent
+routing a review or feedback-fix request here cannot add merge consent.
+`ready` still performs authorized preparation before reporting. Review-only
+work takes an early read-only route: no draft promotion, repairs, replies,
+thread resolution, or preference writes. Requested deep-review findings return
+to you without PR comments. A plain `/pr-merge-flow PR 42` invocation retains
+the full default flow without requiring a separate merge request.
 Cleanup, local default-branch synchronization, and separate browser consent
 keep their existing authorization boundaries.
+
+Every merging mode verifies the actual GitHub result. A queued request is
+monitored within a fixed bound; head or review changes trigger authoritative
+collection, and invalidated pending requests must be canceled before returning
+to preparation. A final PR and thread check precedes completion reporting.
+An unmerged request at the bound is reported as pending or blocked. If GitHub
+already merged before a late change could be handled, the report names the
+merge and outstanding work without claiming clean completion or starting cleanup.
 
 ## Install
 

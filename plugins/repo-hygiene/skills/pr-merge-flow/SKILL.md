@@ -34,7 +34,8 @@ decline, or defer — and drive it to merge per the chosen end mode.
   the user, stop with the existing ready-report. Separate browser consent
   still applies; an unattended run stops if that consent cannot be obtained.
 - `--confirm` — explicit opt-in to the final merge-confirmation menu.
-- `--ready` — evaluate readiness and report; never execute a merge.
+- `--ready` — complete authorized preparation, including fixes, replies, and
+  thread resolution, then report readiness; never execute a merge.
 - `--one-pass` — single-pass override: run one triage/fix pass (steps 2–4)
   over the threads present, skip the re-review cycle (step 5), and end as a
   ready-report — never merging. Composes with every end mode, including
@@ -51,12 +52,14 @@ in every mode. A saved user-local `mode: confirm` is an explicit persistent
 opt-in; no preferences file is needed for the default merge behavior.
 
 Default merge authorization comes from the user explicitly invoking this
-skill or asking to get the PR merged. Merely routing a review-only or
-fix-only request through this skill does not expand that request to merging;
-preserve the limited scope with `ready` or the requested one-pass behavior.
-Completion modes do not widen the actions requested. For review-only work,
-inspect and report without changing code or PR state; `ready` does not
-authorize repairs, replies, or thread resolution beyond that scope.
+skill or asking to get the PR merged. An explicit restriction such as
+"review only", "fix feedback only", or "do not merge" overrides that consent,
+even when the user names the skill. Merely routing a review or feedback-fix
+request through this skill does not supply merge consent either. Use `ready`
+or the requested one-pass behavior for authorized preparation without merge;
+use step 1's read-only route for review-only work. Completion modes never
+widen the actions requested. A plain `/pr-merge-flow PR 42` invocation still
+authorizes the full default flow without requiring a separate merge request.
 
 Use the [shared repair validation contract](../ci-fix/references/validation-contract.md)
 for bot repairs and CI handoffs. It defines reproduction, post-edit evidence,
@@ -68,8 +71,16 @@ decision; a bot repair does not trigger an unrelated CI audit.
 
 - Target PR: an explicit number/URL, else the current branch's PR
   (`gh pr view --json number,title,url,state,isDraft`). No PR → stop and say
-  so. Invoking this skill on a draft PR explicitly approves it to proceed
-  toward production: mark it ready (`gh pr ready`) and continue without
+  so.
+- **Read-only route — before any mutation.** If the request is limited to
+  reviewing, announce that scope, inspect the PR and requested review evidence,
+  report findings to the user, then stop. Skip draft promotion, code changes,
+  preference writes, repair handoffs, replies, thread resolution, and every
+  merge path. Any requested deep review returns findings to the user without
+  posting PR comments. Do not enter the preparation flow below.
+- For the authorized preparation or merge flow, invoking this skill on a draft
+  PR approves marking it ready (`gh pr ready`), unless the user explicitly
+  holds draft status. Continue without
   asking for separate draft approval. The selected end mode, required
   checks, and review-resolution gates still apply.
 - Preferences: read `.claude/pr-merge-flow.local.md` if present (keys: `mode`,
@@ -89,7 +100,7 @@ decision; a bot repair does not trigger an unrelated CI audit.
 - **Invocation authorizes the selected flow.** The user's invocation is
   current authorization for in-scope fixes, commits, pushes, review replies,
   thread resolution, and merging the resolved PR after all required gates,
-  subject to the selected end mode and the `--one-pass` override.
+  subject to the requested action scope, selected end mode, and `--one-pass`.
   Do not add an arming question, including when trusted user-local preferences
   select `auto`. Explicit `confirm` and `ready` selections still apply.
   Cleanup, local default-branch synchronization, and separate browser consent
@@ -381,11 +392,7 @@ the guard. No check or owner hold is bypassed.
   `--match-head-commit "$REVIEWED_HEAD"` and the existing strategy precedence:
   user > repo CLAUDE.md/AGENTS.md > GitHub settings > default `--merge`.
   Preserve authorized `delete-branch` preferences. Respect the required merge
-  queue. A queued request is not a completed merge: monitor within the existing
-  polling bounds and verify GitHub reports the PR merged. If the bound expires,
-  do the final recheck; if the PR remains unmerged, report its pending or blocked
-  state and stop. Only after verified merge, report the actual result and every
-  deferral, then perform the steps 9–10 read-only survey.
+  queue and use the shared verification below before reporting completion.
   If policy blocks the merge, report the blocker; never force or bypass it.
   Survey findings require separate cleanup/sync authorization.
 - **auto** (explicit flag, plain request, or trusted preference) — perform
@@ -400,9 +407,10 @@ the guard. No check or owner hold is bypassed.
   escalated threads by id, checks, title), then **Merge now** (default) /
   **Run deep review first** (non-default) / **Don't merge**. After a
   **Merge now** choice, refresh step 6's gates and use its guarded merge
-  command without another approval for the same authorized merge. After a
-  completed merge, continue to step 9.
-- **ready** — report the evaluated state and, only when preflight is clear,
+  command and the shared verification below without another approval for the
+  same authorized merge.
+- **ready** — finish authorized preparation, then report the evaluated state
+  and, only when preflight is clear,
   the exact merge command. Include every deferral with its reference and
   mention deep review is available;
   include the step 9 survey as a post-merge preview; stop. Every
@@ -412,14 +420,28 @@ the guard. No check or owner hold is bypassed.
   literal reviewed SHA in `--match-head-commit`; a head change requires a
   refreshed review before use.
 
+### Verify completion in every merging mode
+
+`merge`, `auto`, and `confirm` after **Merge now** use the same verification.
+Command success or queue acceptance alone is not merge completion. Follow
+[pending merge monitoring](references/polling.md#pending-merge-monitoring)
+for bounded waits, head or review changes, and the final authoritative check.
+If the PR remains unmerged at the bound, report its pending or blocked state
+and stop. Only after verified merge with the ledger reconciled, report the
+actual merge result and every deferral, then perform the steps 9–10 read-only
+survey. Never report a pending request as merged or start post-merge cleanup
+from command success alone.
+
 ## 8. Deep review (opt-in, never default)
 
 Trigger surfaces: `--deep` or a plain ask at invocation (any mode) ·
 `deep-review: always` in the prefs file (any mode, silent) · the confirm-gate
 option (confirm mode only). Engines — offer whichever are installed, singly
 or as a panel: `/code-review` at high effort, a Codex adversarial pass, the
-pr-review-toolkit review agents. Findings land as PR comments and feed
-straight back into step 3's loop; when the pass is clean, return to step 7.
+pr-review-toolkit review agents. In the preparation flow, findings land as PR
+comments and feed straight back into step 3's loop; when the pass is clean,
+return to step 7.
+Step 1's read-only route instead returns findings to the user and stops.
 
 Deep-review findings enter the same ledger with the same scope-and-value
 classification and count toward the same ratchet — dispatched reviewers
