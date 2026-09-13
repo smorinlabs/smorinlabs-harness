@@ -230,7 +230,8 @@ in every mode.
   once and retry only failed operations. A reopen can require a new reply.
 - **Human authors**: never auto-post a refutation in `--auto` mode — leave
   the thread open and downgrade the run to a ready-report naming it. In
-  `confirm`/`ready` modes, gate refutations of human comments on the user.
+  `merge`/`confirm`/`ready` modes, gate refutations of human comments on the
+  user. Default merge authorization does not authorize that separate judgment.
 
 ## Resolve mutation
 

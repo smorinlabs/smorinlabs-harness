@@ -207,6 +207,8 @@ Route contract:
 Ask before the browser opens. **`--auto` asks too.** `--auto`'s "never ask" is
 a rule about review judgment, not a licence to drive the user's logged-in
 Chrome while they may be using it.
+If an unattended run cannot obtain the required consent, report the blocker
+and stop with a ready-report; unattended mode never supplies browser consent.
 
 State in the ask: that a new tab will open on the PR, and that declining means
 a ready-report. Include the thread count **when it is known** — at preflight it

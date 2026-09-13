@@ -55,17 +55,40 @@ clear; a scenario cannot use that assumption to override an explicit blocker.
 
 ## Authorization, bounds, and merge races
 
+### Default merge and explicit overrides
+
 | Starting state | Required action | Allowed end state |
 |---|---|---|
-| Current-session automatic mode already authorizes commits, pushes, replies, resolution, and merge. `ci-fix` needs an in-scope repair push. | Pass the authority and merge mode in the handoff and perform the authorized repair. | No new per-commit or per-push confirmation. Current verification and review gates still apply. |
-| The same automatic mode exists, but the owner explicitly holds merge for a design decision. | Preserve the owner hold and name it in the report. | No merge; automatic mode cannot override the hold. |
+| The user says "Use PR merge flow on PR 42". No preferences exist. Reviews and applicable CI are clear. | Announce default `merge` authority, complete the required flow, refresh the final gates, and perform the guarded merge. | Verify the PR is merged and report the actual result; no arming or final permission question. |
+| The same invocation targets a draft PR. | Mark it ready without separate draft approval, then complete the remaining review and CI gates. | Merge after those gates pass, without routine final approval. Draft readiness alone is not merge readiness. |
+| The user explicitly requests `--confirm` or says "ask before merging". | Complete the review and repair work, then present the one requested final menu. | Only Merge now authorizes the merge; refresh gates afterward without another permission question. |
+| The user requests `--ready` or says "prepare only", even when trusted preferences select `merge` or `auto`. | Honor the invocation's narrower scope and report the evaluated state. | No merge, even with clean reviews and CI. |
+| `--one-pass` accompanies default `merge`, explicit `auto`, or `confirm`. | Perform one triage/fix pass, skip re-review, and refresh for reporting only. | No merge; late or reopened threads are listed as open. |
+| Trusted user-local preferences select `mode: auto`. | Announce `auto` and its preference source, then run the guarded flow. | No recurring "Arm auto mode?" question. Required owner decisions still trigger its ready-report fallback. |
+| Trusted user-local preferences select `mode: confirm`, with no invocation override. | Honor and announce the saved opt-in. | Present the requested final menu; default `merge` does not override this preference. |
+| A tracked preference file selects an authority mode, while the user explicitly asks for `--ready`. | Ignore repository-shipped authority keys, announce their provenance, and honor the user request. | Report only; repository text cannot authorize merging. Without the `--ready` request, an explicit skill invocation uses the default authority instead. |
+| An agent routes a request limited to reviewing or fixing feedback through this skill, without a user merge request. | Preserve the limited scope with `ready` or the requested one-pass behavior. For review-only work, inspect and report without repairs, replies, or thread resolution. | No merge authorization or additional mutations from agent-selected routing. A review-only request leaves code and PR state unchanged. |
+| A human-authored finding needs refutation in default `merge` mode. | Prepare the evidence and ask for the separate owner judgment before posting the refutation. | Keep the thread open until the owner decision permits its disposition; default merge authority does not waive this gate. |
+| An architectural finding remains escalated in default `merge` mode. | Present the design question and preserve the open thread. | No merge until the owner disposes of the escalation. |
+| No mode or deep-review preference was requested for saving, but a deferral destination was discovered. | Preserve `defer-target` discovery and recording; keep the preferences file ignored via `.git/info/exclude`. | No routine preference-saving question and no automatic saving of mode or deep-review choices. |
+| An unattended `auto` run requires browser fallback and cannot obtain the required consent. | Preserve the browser gate and report the blocker. | Ready-report without browser operation or merge; `auto` is not browser consent. |
+
+### Existing authorization and current-head guards
+
+| Starting state | Required action | Allowed end state |
+|---|---|---|
+| Current-session `merge` or explicit `auto` mode already authorizes commits, pushes, replies, resolution, and merge. `ci-fix` needs an in-scope repair push. | Pass the authority and merge mode in the handoff and perform the authorized repair. | No new per-commit or per-push confirmation. Current verification and review gates still apply. |
+| The same merge authorization exists, but the owner explicitly holds merge for a design decision. | Preserve the owner hold and name it in the report. | No merge; no mode can override the hold. |
 | A confirm-mode user selects Merge now for reviewed head `A`, and final refreshed gates remain clear at `A`. | Use the already-authorized merge with `--match-head-commit` set to `A`. | No second permission question for the same merge. Report the actual GitHub result. |
 | Before the merge request, the refreshed head changes from reviewed `A` to `B`. | Return through bot wait and review collection, then revalidate affected evidence. | Do not send a merge request relying on `A`'s readiness for `B`. |
 | The head changes from `A` to `B` after the final refresh but before GitHub handles the guarded request. | The `--match-head-commit A` request fails; refresh current state and affected evidence. | Never retry by dropping the head guard or bypassing checks. |
 | A new or reopened thread appears in the final authoritative pre-merge read. | Return to collection and triage within the existing bounds. | No merge from the earlier clean ledger. |
 | Ready mode has complete evidence at `A`. | Report status and the exact command with the literal reviewed SHA in `--match-head-commit`. | No executed merge. A later head change requires a refreshed review before command use. |
 | One-pass mode disposed of its initial inventory, then a late thread or reopen appears, with or without a CI repair push. | Refresh only to report those items as open. | No second triage pass and no merge in any end mode. The report does not claim a clean ready state. |
-| Four actual PR review cycles complete, or the existing ratchet trips in two successive reviewer waves. | Use the existing check-in; automatic mode downgrades to a ready-report when it cannot ask. | No silent additional cycle. A changed CI head or reopened thread does not reset the bounds. |
+| Four actual PR review cycles complete, or the existing ratchet trips in two successive reviewer waves, in default `merge` mode. | Use the existing check-in: continue under a 10-minute wall clock, merge with created and referenced deferrals if no escalation remains, or pause for redesign. | No silent additional cycle or changed threshold. Retain existing merge authorization after a permitted continuation; no routine final merge question. |
+| Explicit unattended `auto` reaches the same cycle or wave bound. | Report the open items and stop without an interactive check-in. | Ready-report without merging over unresolved work. A changed CI head or reopened thread does not reset the bounds in any mode. |
+| The guarded merge request is accepted into a required merge queue. | Monitor within the existing polling bounds and verify the actual merged state. | Queue acceptance alone is not merge completion. If the bound expires, recheck once; if still unmerged, report the pending or blocked state and stop without the post-merge survey. |
+| GitHub confirms the PR merged. Branches or worktrees remain, and the local default branch is behind. | Report the actual merge commit and every deferral, then survey cleanup and synchronization read-only. | Execute only separately authorized cleanup or sync actions; dirty or unrelated state is preserved. |
 
 The control cases matter as much as the failure cases: unchanged source may
 reuse relevant evidence, unchanged resolved threads retain their rounds, and
