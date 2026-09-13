@@ -1876,6 +1876,12 @@ The trigger description, tool grant, and stable installation targets are unchang
 - [x] Attribute evidence to the property it establishes; distinguish individual candidate results from policy scope, preserve defer, and qualify unmeasured comparisons
 - [x] Align the template and existing examples; add the owner-preferred historical Q4 rewrite with explicit source limits
 - [x] Add cases 23-25 for a different developer-tool proposal, missing setup context, and a numeric reply to a superseded option list
+- [ ] [P48-T09] Rewrite the option consequences in fictional examples 3, 4, 5,
+  6, and 8 as complete sentences, and name the sequence-number fix in example
+  4's hold option. Qualify the documentation's example-file description so
+  numbered options apply where a decision is needed. Preserve each option's
+  meaning, IDs, and evidence. Deferred from [PR #71's second review](https://github.com/smorinlabs/smorinlabs-harness/pull/71#pullrequestreview-5191380254)
+  under the merge-flow convergence rule; this copy-edit follow-up is not complete.
 
 **Validation and activation**: See the [0.3.1 validation record](docs/validation/clear-decision-communication-0.3.1.md)
 for exact source snapshots, native session-fork outcomes, semantic limitations,
