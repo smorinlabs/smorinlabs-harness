@@ -1,6 +1,6 @@
 # Behavioral evaluations
 
-Use these twenty-two scenarios to review how the skill handles approvals, facts,
+Use these twenty-five scenarios to review how the skill handles approvals, facts,
 evidence, option identity, and communication. The runner records each CLI
 session. A human or an independent agent must review the actual output before
 assigning a behavioral verdict. For the context and clarification cases, also
@@ -32,7 +32,7 @@ uv run --no-project plugins/clear-decision-communication/skills/clear-decision-c
   --tool both --cases 1 2 4 --output /tmp/cdc-live --run
 ```
 
-Use `--tool claude` or `--tool codex` for one tool. Omit `--cases` to run all twenty-two.
+Use `--tool claude` or `--tool codex` for one tool. Omit `--cases` to run all twenty-five.
 Model calls use the existing account's authentication and may consume its usage
 allowance. Each call defaults to a 120-second runtime limit and a combined
 1,048,576-byte stdout/stderr limit. Change those bounds with `--timeout` and
@@ -219,6 +219,15 @@ exits; that record retains the CLI's exit code alongside `status: timeout`.
 Output that arrives from descendants within the bound is retained. Review any
 completed response even when process capture times out; an incomplete capture
 does not by itself establish incorrect skill behavior.
+
+Cases 23-25 test the concrete-language correction: a development-tool policy
+using different names from the worked example, an unavailable setup proposal,
+and a numeric reply to a superseded list. Check roles as well as names; an
+invented description can fail even when no exact identifier is fabricated.
+For policy cases, distinguish a class's review requirement from one tool's
+result and keep deferred policy open. Compare every evidence claim with the
+source that supports that particular property. A concise information request
+is the expected form when the essential source artifact is unavailable.
 
 ## Independent-reader check
 

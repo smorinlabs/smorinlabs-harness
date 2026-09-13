@@ -178,7 +178,7 @@ def test_timeout_kills_the_spawned_process_group(tmp_path):
 
 def test_case_suite_has_separate_expectations_and_covers_reviewed_behaviors():
     cases = runner.read_cases(SCRIPT.with_name("evals.json"))
-    assert len(cases) == 22
+    assert len(cases) == 25
     findings = {finding for item in cases for finding in item["covered_findings"]}
     behavioral_findings = (*range(1, 11), *range(13, 21))
     assert {f"CDC-{number:02}" for number in behavioral_findings} <= findings

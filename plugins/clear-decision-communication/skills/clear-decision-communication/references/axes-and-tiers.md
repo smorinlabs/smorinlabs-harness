@@ -90,8 +90,8 @@ This table mirrors the one in SKILL.md step 2; edit both together.
 
 | ID | Tier | Prepare | The initial view holds | Length signal |
 |---|---|---|---|---|
-| T1 | Confirm | the prepared result and its verification, nothing more | a self-contained question, the recommendation or explicit neutrality, two or three options with consequences; two or three sentences in all | about 80 words |
-| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | orientation when needed, the question, recommendation or neutrality, the sections the elevated axes call for, options, and next action; one comparison when the change is conditional | about 250 words |
+| T1 | Confirm | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 80 words |
+| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | orientation when needed, question, full recommendation or neutrality, complete option list, relevant evidence or comparison, and exact reply | about 250 words |
 | T3 | Full brief | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
 
 The word counts are review targets, never caps. Past them, remove repetition,
@@ -120,9 +120,9 @@ options: selects an approach, authorizes a prototype or experiment, expands
 implementation scope, approves completed work, merges a particular revision,
 or activates it in a named environment. Research fixtures, installed files,
 validated behavior, and active features are different states. Keep scope,
-timing, and conditions consistent through the question and the "On Q1.A I will"
-line, required whenever tradeoff complexity is above low and a recommendation
-exists. A neutral question states the exact action for each choice.
+timing, and conditions consistent through the question, each option's immediate
+action, and the closing reply instruction. State the exact action for every
+choice, including defer; do not duplicate it in an extra section when already clear.
 Approval never expands the agent's authority beyond its stated scope.
 
 ## Two shapes of ask

@@ -1847,3 +1847,22 @@ R1's preserved operational failures or establish general reliability.
 PR #67 remains draft; this work does not activate either skill.
 Model scenarios simulate communication and intended actions. They do not prove
 real workflow security, perform activation, or establish a future reliability rate.
+
+
+### P48 follow-up: concrete language and evidence in developer-tool questions
+
+**Scope**: The owner approved applying the fourth editorial rewrite from the
+local Q4 clarity review. Correct `clear-decision-communication` in plugin
+0.3.1 while preserving 0.3.0's context, source-checking, and authorization rules.
+The trigger description, tool grant, and stable installation targets are unchanged.
+
+- [x] State the complete recommendation before its ID; display numbered options together while preserving stable question and option meanings
+- [x] Name commands, tools, artifacts, and roles; request one missing source artifact instead of inventing names or setup behavior
+- [x] Attribute evidence to the property it establishes; distinguish individual candidate results from policy scope, preserve defer, and qualify unmeasured comparisons
+- [x] Align the template and existing examples; add the owner-preferred historical Q4 rewrite with explicit source limits
+- [x] Add cases 23-25 for a different developer-tool proposal, missing setup context, and a numeric reply to a superseded option list
+
+**Validation and activation**: See the [0.3.1 validation record](docs/validation/clear-decision-communication-0.3.1.md)
+for exact source snapshots, native session-fork outcomes, semantic limitations,
+and package checks. The task branch is separate from the installed development
+placements, which still resolve to the stable main checkout.
