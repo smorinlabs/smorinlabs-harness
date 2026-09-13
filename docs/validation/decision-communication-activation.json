@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "kind": "local development-placement activation record",
+  "recorded_at_utc": "2026-09-13T06:32:31.302928+00:00",
+  "repository": "smorinlabs/smorinlabs-harness",
+  "merge_pr": 67,
+  "merged_revision": "91dd09a1b9428b1d0c58e0a094b22bce6b5bd45b",
+  "authorization": "Owner explicitly requested Git cleanup, fast-forward of main, project-status correction, and activation of the updated skills.",
+  "scope": "Local observations from the authorized activation. Existing sessions were not restarted; no runtime skill-discovery or model-adherence claim is made.",
+  "redactions": "~ denotes the user home directory. Private checkout prefixes, untracked filenames and contents, and unrelated installed plugins are omitted. Local source-artifact hashes retain their identities. The local placement-manager and validator identities are omitted from this public record.",
+  "fast_forward": {
+    "before": "02ace8a29edccb12edeb363aadb58064a7f4c351",
+    "after": "91dd09a1b9428b1d0c58e0a094b22bce6b5bd45b",
+    "mode": "git merge --ff-only of the fetched commit",
+    "incoming_paths_overlap_untracked_files": false,
+    "untracked_file_count_before": 194,
+    "untracked_file_count_after": 194,
+    "untracked_bytes_and_modes_equal": true,
+    "untracked_manifest_sha256_before": "afc759115bda45b955ee51f6de7fd9674237d6a0c428b5e53d28e4e3612c93c5",
+    "manifest_method": "SHA-256 of sorted compact JSON mapping untracked repository-relative paths to file mode and SHA-256. The fast-forward helper compared the complete before and after maps and returned success only after equality. The private after map was not separately persisted."
+  },
+  "placements": [
+    {
+      "skill": "clear-decision-communication",
+      "plugin_version": "0.3.0",
+      "tool": "claude-code",
+      "placement": "~/.claude/skills/clear-decision-communication",
+      "enabled": "on",
+      "method": "existing symlink",
+      "repository_source": "plugins/clear-decision-communication/skills/clear-decision-communication",
+      "matching_enabled_placements": 1,
+      "all_instruction_bytes_match_merged_revision": true
+    },
+    {
+      "skill": "clear-decision-communication",
+      "plugin_version": "0.3.0",
+      "tool": "codex",
+      "placement": "~/.agents/skills/clear-decision-communication",
+      "enabled": "on",
+      "method": "existing symlink",
+      "repository_source": "plugins/clear-decision-communication/skills/clear-decision-communication",
+      "matching_enabled_placements": 1,
+      "all_instruction_bytes_match_merged_revision": true
+    },
+    {
+      "skill": "clear-technical-communication",
+      "plugin_version": "0.2.3",
+      "tool": "claude-code",
+      "placement": "~/.claude/skills/clear-technical-communication",
+      "enabled": "on",
+      "method": "existing symlink",
+      "repository_source": "plugins/clear-technical-communication/skills/clear-technical-communication",
+      "matching_enabled_placements": 1,
+      "all_instruction_bytes_match_merged_revision": true
+    },
+    {
+      "skill": "clear-technical-communication",
+      "plugin_version": "0.2.3",
+      "tool": "codex",
+      "placement": "~/.agents/skills/clear-technical-communication",
+      "enabled": "on",
+      "method": "existing symlink",
+      "repository_source": "plugins/clear-technical-communication/skills/clear-technical-communication",
+      "matching_enabled_placements": 1,
+      "all_instruction_bytes_match_merged_revision": true
+    }
+  ],
+  "duplicate_check": {
+    "tools": [
+      "claude-code",
+      "codex"
+    ],
+    "matching_enabled_placements": 4,
+    "matching_installed_plugins": {
+      "claude-code": 0,
+      "codex": 0
+    },
+    "placement_inventory_method": "Local placement-manager enumeration for the two named skills and tools; its output identity is retained below.",
+    "plugin_inventory_commands": [
+      "claude plugin list --json",
+      "codex plugin list --json"
+    ]
+  },
+  "instruction_sha256": {
+    "plugins/clear-decision-communication/skills/clear-decision-communication/SKILL.md": "c0ffe5a76975d1bf87df91b9e92b051c553c9bce3f854f935460a6101cb6cbb6",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/axes-and-tiers.md": "f01eff6f45ed58d8c16dc7aa93bc9ff4a23e4ebc5103db77fd03c7a34baba7b3",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/clarity.md": "33c0b958ae2831d9480ef3cb9c856544b4cad1a6fb0ee8e0394c1be367837d53",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/decision-record.md": "6db29417e46559fdf3e3f62b8789553f5bca8dc400a2c73309f4c63e3ba74f37",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/delivery.md": "e3936d099f2a254f6085b7ccfc502adbd40099eca4b0cdf51f893467129330b0",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/framework.md": "c829bd8c2db1fdb2bf17b8a849ee271418590bc3cb2a50f11218b5136e16b6c6",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/representation.md": "950c1f7c70a2841da88b60672285f24de4b192ac6e6f71d85d5c80dd3672e326",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/standards.md": "fdb6517d7ccc72dff5ba37cf726193c041ff5d816cc0f1f07395548ef576eabb",
+    "plugins/clear-decision-communication/skills/clear-decision-communication/references/worked-examples.md": "f379ce75a8ea9f464a6c078caacdd29e88c818b4429a2a5cfd413bbbf5caa3ed",
+    "plugins/clear-technical-communication/skills/clear-technical-communication/SKILL.md": "cf7b69d693dcc067bc1b8618b00c18fd70265aa9b2c3a0c9562cfe4dd386823f",
+    "plugins/clear-technical-communication/skills/clear-technical-communication/references/artifact-forms.md": "44ebe1c8deafe2ba3ea288097d2794df303120f534c6b71430a077b58fb30a77",
+    "plugins/clear-technical-communication/skills/clear-technical-communication/references/common-errors.md": "b6edf0593cb81db804a20d823c74bb9063081217335482ecf05d7c5494e9dea8",
+    "plugins/clear-technical-communication/skills/clear-technical-communication/references/standards-and-rubric.md": "f7518fafebec945804d3d75255d0206bd1d6eaf2bf6c6d2e3172b0c7ffed2610",
+    "plugins/clear-technical-communication/skills/clear-technical-communication/references/worked-examples.md": "992e2d86dac521793a1ee2cf39ea86e2d45cee2e1649e37be87fe23bbb04086a"
+  },
+  "static_verification": [
+    {
+      "plugin": "clear-decision-communication",
+      "tool": "claude-code",
+      "tool_version": "2.1.269",
+      "verdict": "warn",
+      "modes": [
+        {
+          "mode": "static",
+          "status": "ran",
+          "coverage": {
+            "manifest": true,
+            "skills": true
+          },
+          "findings": [
+            {
+              "checkId": "claude._generated",
+              "normalizedSeverity": "warning",
+              "message": "Unknown field '_generated'. Claude Code ignores it at load time.",
+              "file": ".claude-plugin/plugin.json",
+              "subject": "manifest",
+              "raw": "\u276f _generated: Unknown field '_generated'. Claude Code ignores it at load time."
+            },
+            {
+              "checkId": "claude.version-drift",
+              "normalizedSeverity": "info",
+              "message": "claude 2.1.269 differs from verified 2.1.202; parsing may be less reliable",
+              "file": null,
+              "subject": "plugin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "plugin": "clear-decision-communication",
+      "tool": "codex",
+      "tool_version": "0.145.0",
+      "verdict": "pass",
+      "modes": [
+        {
+          "mode": "static",
+          "status": "ran",
+          "coverage": {
+            "manifest": true,
+            "skills": false
+          },
+          "findings": [
+            {
+              "checkId": "codex.static-coverage",
+              "normalizedSeverity": "info",
+              "message": "codex static checked the manifest only; run --deep for skill validation",
+              "file": null,
+              "subject": "plugin"
+            },
+            {
+              "checkId": "codex.version-drift",
+              "normalizedSeverity": "info",
+              "message": "codex 0.145.0 differs from verified 0.142.5; parsing may be less reliable",
+              "file": null,
+              "subject": "plugin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "plugin": "clear-technical-communication",
+      "tool": "claude-code",
+      "tool_version": "2.1.269",
+      "verdict": "warn",
+      "modes": [
+        {
+          "mode": "static",
+          "status": "ran",
+          "coverage": {
+            "manifest": true,
+            "skills": true
+          },
+          "findings": [
+            {
+              "checkId": "claude._generated",
+              "normalizedSeverity": "warning",
+              "message": "Unknown field '_generated'. Claude Code ignores it at load time.",
+              "file": ".claude-plugin/plugin.json",
+              "subject": "manifest",
+              "raw": "\u276f _generated: Unknown field '_generated'. Claude Code ignores it at load time."
+            },
+            {
+              "checkId": "claude.version-drift",
+              "normalizedSeverity": "info",
+              "message": "claude 2.1.269 differs from verified 2.1.202; parsing may be less reliable",
+              "file": null,
+              "subject": "plugin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "plugin": "clear-technical-communication",
+      "tool": "codex",
+      "tool_version": "0.145.0",
+      "verdict": "pass",
+      "modes": [
+        {
+          "mode": "static",
+          "status": "ran",
+          "coverage": {
+            "manifest": true,
+            "skills": false
+          },
+          "findings": [
+            {
+              "checkId": "codex.static-coverage",
+              "normalizedSeverity": "info",
+              "message": "codex static checked the manifest only; run --deep for skill validation",
+              "file": null,
+              "subject": "plugin"
+            },
+            {
+              "checkId": "codex.version-drift",
+              "normalizedSeverity": "info",
+              "message": "codex 0.145.0 differs from verified 0.142.5; parsing may be less reliable",
+              "file": null,
+              "subject": "plugin"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "local_source_artifact_sha256": {
+    "placements-before.json": "dd62197368d00a059a2c6bd85d4f1498df13e211bece5c1685ee5e9730b5b6a1",
+    "placements-after.json": "3b66269c17a1d4411be9f803b7341d0bd2f027986e0bb7101a643a2a3a4bb696",
+    "claude-plugins-before.json": "f8964e97d8cc0dd14c5ba662787569d1b996b346a0f0e0624edff05deb92a6ce",
+    "codex-plugins-before.json": "5ebedb84524574847910ec790abc0f0b69917d2a604bad8e9b0ca56864eb86f8",
+    "activation-before.json": "f237bf137ffe1f82c5d526b5c29d8345df6a47a10a88c8ed313201751d73407c",
+    "activation-result.json": "f6186ac22bc1b0877aeeb948d337265d56a6a2f8648fcaf455c823457a9f1c3f",
+    "activation-verification.json": "f4cb283d783751a9d578d40d5f0982969d27bd1b118ea9cbcb121f3652e2b624",
+    "clear-decision-communication-claude-static.json": "197d9735e1a5d3b3415003e45cdba03c6e48f5789e360ac926cd1137aec5e668",
+    "clear-decision-communication-codex-static.json": "ef97617df6ff9fd47b411e2c05d7a370d71df4a168f723a2de42e7d8b48bc11b",
+    "clear-technical-communication-claude-static.json": "b607fb0d06568919398589ded392273b3d7daa52b05d04cf380d46708572de45",
+    "clear-technical-communication-codex-static.json": "b37c917aca5f5d9ae06d6b9326021faf89da78da29468aef73e414508a198066"
+  },
+  "limits": [
+    "This records source activation and static checks, not a new behavioral evaluation.",
+    "Claude static verification covers manifest and skill files; Codex static verification covers manifests only.",
+    "Historical F/R1/R2 results remain tied to their original source and runner snapshots."
+  ],
+  "static_verification_method": "The local validator ran separately for each plugin and tool. Claude invoked plugin validate; Codex used manifest validation. The normalized results and raw-result identities are retained above and below."
+}

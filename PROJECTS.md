@@ -1832,7 +1832,9 @@ frontmatter descriptions, tool grants, and installation targets remain stable.
 [O1 audit with the P48-T08 closeout draft](docs/validation/clear-decision-communication-0.3.0-o1.md),
 the [exact source-check changes and F results](docs/validation/clear-decision-communication-source-check.md),
 and the [separate-review experiment, remaining dispositions, and closeout draft](docs/validation/clear-decision-communication-source-review-experiment.md).
-**Closeout**: PR #67 merged as `91dd09a`. The owner then authorized the
+**Closeout**: The [activation record](docs/validation/decision-communication-activation.json)
+retains the placement observations, source hashes, preservation check, and
+static verification results described below. PR #67 merged as `91dd09a`. The owner then authorized the
 stable-main fast-forward and activation. The four existing enabled development
 placements now supply `clear-decision-communication` 0.3.0 and
 `clear-technical-communication` 0.2.3 to Claude Code and Codex. All instruction
