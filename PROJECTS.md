@@ -1863,3 +1863,28 @@ Model scenarios simulate communication and intended actions. They do not prove
 real workflow security or establish a future reliability rate. Historical
 validation reports retain the draft status and source identities of their
 original runs; this closeout records the later merge and local activation.
+
+### P48 follow-up: concrete language and evidence in developer-tool questions
+
+**Scope**: The owner approved applying the fourth editorial rewrite from the
+local Q4 clarity review. Correct `clear-decision-communication` in plugin
+0.3.1 while preserving 0.3.0's context, source-checking, and authorization rules.
+The trigger description, tool grant, and stable installation targets are unchanged.
+
+- [x] State the complete recommendation before its ID; display numbered options together while preserving stable question and option meanings
+- [x] Name commands, tools, artifacts, and roles; request one missing source artifact instead of inventing names or setup behavior
+- [x] Attribute evidence to the property it establishes; distinguish individual candidate results from policy scope, preserve defer, and qualify unmeasured comparisons
+- [x] Align the template and existing examples; add the owner-preferred historical Q4 rewrite with explicit source limits
+- [x] Add cases 23-25 for a different developer-tool proposal, missing setup context, and a numeric reply to a superseded option list
+- [ ] [P48-T09] Rewrite the option consequences in fictional examples 3, 4, 5,
+  6, and 8 as complete sentences, and name the sequence-number fix in example
+  4's hold option. Qualify the documentation's example-file description so
+  numbered options apply where a decision is needed. Preserve each option's
+  meaning, IDs, and evidence. Deferred from [PR #71's second review](https://github.com/smorinlabs/smorinlabs-harness/pull/71#pullrequestreview-5191380254)
+  under the merge-flow convergence rule; this copy-edit follow-up is not complete.
+
+**Validation and activation**: See the [0.3.1 validation record](docs/validation/clear-decision-communication-0.3.1.md)
+for exact source snapshots, native session-fork outcomes, semantic limitations,
+and package checks. Development placements resolve to the stable main checkout
+and load the update after that checkout is fast-forwarded. The validation
+record distinguishes instruction edits from repository merge and local activation.

@@ -102,13 +102,15 @@ continue only independent work already authorized.
 ## Replies
 
 Accept the reply in any wording and match it to one open question with unchanged
-options. A bare letter is sufficient only when it unambiguously identifies one
-live choice. When a batch, a quoted old brief, or multiple open questions makes
+options. A displayed list number or bare letter is sufficient only when it
+unambiguously identifies one live choice. Numbers alias the stable lettered IDs
+in that question's current list. A number from a superseded list never selects
+a replacement option. When a batch, a quoted old brief, or multiple open questions makes
 the mapping unclear, ask which question was meant in one line; do not act yet.
 
 | Reply | Meaning | Handling |
 |---|---|---|
-| `A`, `Q1.A`, "go with your recommendation" | pick | validate the live question and unchanged option, restate `Q1: decided A, <date>`, then proceed; the recommendation phrase is not a choice on a neutral question |
+| `1`, `A`, `Q1.A`, "go with your recommendation" | pick | validate the displayed live question and unchanged option, restate `Q1: decided A, <date>`, then proceed; the recommendation phrase is not a choice on a neutral question |
 | `Q1.B, but <condition>` | pick with a condition | restate the conditional action; when action or approval scope changes, record the clearly authorized revised decision under a new ID with Q1 as history, without asking again; clarify only an unresolved commitment |
 | `Q1: skip`, "not now" | park | mark skipped without selecting its fallback or advancing its deadline; continue only independent authorized work |
 | `Q1: ask <question>` | information needed first | answer with facts and reassess; keep the ID only if options, recommendation, and scope are unchanged, otherwise supersede it before asking for the revised choice |
@@ -128,7 +130,8 @@ history. A banner over a stale claim about the current plan is not a fix.
 
 ## Plain-text form on tools without a dialog
 
-Send the canonical text form. Number the questions, letter the options, and
-mark the recommendation only when supported. State a reply grammar using the
-actual offered IDs, for example: `Reply with Q1.A or Q1.B, add a condition, or
-say skip.` Wait on dependent work and interpret the reply with the table above.
+Send the canonical text form. Number the questions and use a numbered option
+list with each stable lettered ID beside its action. Mark the recommendation
+only when supported. For one displayed question, a reply instruction can say
+`Reply with 1 or 2, add a condition, or say skip.` For a batch, use the actual
+full IDs. Wait on dependent work and interpret the reply with the table above.

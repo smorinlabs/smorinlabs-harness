@@ -33,14 +33,22 @@ only design rules, the brief compares requirements and leaves unsupported
 runtime outcomes unknown. A separate pass checks the completed draft against
 its sources, including option consequences and decision records: documented
 behavior is distinct from an exercised test, aggregate results stay aggregate,
-and missing evidence stays unknown. Measurements name the exact asset, metric,
+and missing evidence stays unknown. Registry metadata supports declared package
+fields, not installation speed or suitability. A policy that requires individual
+review does not predetermine every tool's result, and an exemption from one
+check does not waive other requirements. Each closing action is checked against
+its option, including defer. Measurements name the exact asset, metric,
 unit, statistic or denominator, source, and relevant conditions. Comparisons
 identify baseline and candidate values, preserve the direction of change, and
 distinguish quoted percentages from calculated changes. Missing absolute values
 remain explicit gaps.
 
-Questions use IDs such as `Q1`; options use `Q1.A` and `Q1.B`. A supported
-recommendation is A and appears first. Neutral questions mark no recommendation.
+A recommendation states the action, named asset, and scope before its option
+ID, with the reason beside it. The complete numbered option list follows immediately. Questions
+use IDs such as `Q1`; options retain `Q1.A` and `Q1.B`, with display numbers
+`1` and `2` as local reply aliases. A supported recommendation is A and appears
+first. Neutral questions mark no recommendation. Numeric replies require an
+unambiguous current question; a stale number never selects a replacement option.
 Options keep their meanings under their IDs; revised choices supersede the old
 question, and stale replies authorize no action. Conditions, redirects, skips,
 and requests for explanation have explicit handling. Confusion triggers a
@@ -95,22 +103,23 @@ Preselection and tool completion without an answer do not count as consent.
 
 ## Example session
 
-> An agent fixing CSV date validation finds the clean fix lives in a shared
-> validator that API uploads also use.
-> → The gate fires (a departure from the agreed scope, and caller
-> compatibility cannot be verified from the repository). The agent sends a
-> compact brief that first names the shared validator and explains how the CSV
-> fix would also change API uploads. It then asks whether to include that
-> additional scope: "Recommendation: Q1.A, include it ... Q1.B wins if
-> existing external caller behavior must be preserved", a same-input table
-> showing `2024-02-30` corrected today and rejected with the fix on both
-> paths, what accepting means for API callers, "Verified: regression tests pass
-> on commit 3f2a9c1. Not verified: third-party caller compatibility", three
-> lettered options each naming its consequence, what would change the
-> recommendation, and the exact action on approval. The user replies "A, but
-> behind a flag for the API". Because that changes the action's scope, the agent
-> records "Q2: decided A, supersedes Q1; API path flag-gated, default off" and
-> proceeds under that explicit conditional approval without asking again.
+> An agent fixing comma-separated value (CSV) date imports discovers that the
+> shared validator also handles application programming interface (API) uploads.
+> The brief names `src/validate/date.ts`, the shared validation file, and explains
+> the additional scope. It recommends including the shared fix in plain words,
+> then lists the three options together. A comparison shows the same invalid
+> date corrected today and rejected with the fix. The evidence distinguishes
+> passing regression tests from unknown third-party caller compatibility.
+> The user replies "1, but behind a flag for the API." The agent records the
+> clearly authorized condition under the next question ID and proceeds without
+> asking for the same permission again.
+
+The [project-policy example](../../plugins/clear-decision-communication/skills/clear-decision-communication/references/project-policy-example.md)
+adapts the owner's preferred rewrite of a historical developer-tool question.
+It names the proposed setup command and both installers before asking about the
+licence-policy scope. Its closing distinguishes a policy record from implementation
+and keeps deferral open. The historical facts are attributed to the research
+session, not presented as current independent verification.
 
 ## Files
 
@@ -123,7 +132,8 @@ Preselection and tool completion without an answer do not count as consent.
 | `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
 | `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, and reply handling |
 | `references/decision-record.md` | when a record is due and its template |
-| `references/worked-examples.md` | nine fictional situations across the tiers, including clarification and a replaced implementation premise; illustrations, not behavioral validation |
+| `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent numbered options; illustrations, not behavioral validation |
+| `references/project-policy-example.md` | an adaptation of the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
 | `references/framework.md` | historical source framework preserved verbatim and provenance |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
 | `evals/run_evals.py` | bounded CLI runner that preserves inputs, source hashes, process evidence, and ungraded review records |
@@ -139,11 +149,12 @@ Runs that invoke a CLI also retain its output and version. Process completion
 is not a behavioral pass: a reviewer
 must judge the actual response against the expectations, including positive
 and negative controls for approval, silence, skip, and superseded replies.
-The twenty-two scenarios include artifact identification, recovery of project
+The twenty-five scenarios include artifact identification, recovery of project
 context, approval stage, confusion, changed implementation requirements, and
 permission-preserving simplification. Measurement cases cover opposing metric
 directions, missing absolute values, and documented workflow usage and author
-restrictions. A separate reader receives only the
+restrictions. Three further cases cover a development-tool policy with registry
+evidence, unavailable setup context and roles, and a stale numeric reply. A separate reader receives only the
 generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.
@@ -154,6 +165,9 @@ writer captures for paired comparison. Reviewer findings are advisory, and
 independent graders assess the original and final responses under the same
 frozen criteria. This is an evaluation mechanism; ordinary skill invocation
 does not automatically launch that reviewer.
+
+The [0.3.1 validation record](../validation/clear-decision-communication-0.3.1.md)
+records the concrete-language correction and its focused checks.
 
 See [the evaluation guide](../../plugins/clear-decision-communication/skills/clear-decision-communication/evals/README.md)
 for commands. The scenarios simulate decision communication and intended next

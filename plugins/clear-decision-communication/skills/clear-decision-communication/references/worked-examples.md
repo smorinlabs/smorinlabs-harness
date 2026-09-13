@@ -10,6 +10,8 @@ The outer code fences in this file quote each rendered message; the message
 itself is sent as ordinary text with pipe tables. Alignment-dependent diagrams
 retain their own inner fences. Behavioral edge cases and grading expectations
 live separately in `../evals/evals.json`; examples alone are not validation.
+The historical tool-policy rewrite in `project-policy-example.md` is a tenth
+example with its source status stated separately.
 
 ## 1. Routine authorized work: the gate says no ask
 
@@ -38,10 +40,13 @@ Sizing: every axis low; the gate is the only reason to ask.
 ```
 Q1. Merge PR #142, the keyboard-focus fix for the search dialog?
 It implements the approved change. The keyboard-interaction test and all
-required checks passed on revision 9c8d7e6. CONTRIBUTING.md requires a human
-merge approval. Recommendation: Q1.A.
-  Q1.A  Merge (Recommended)  -- the fix ships on the next deploy
-  Q1.B  Hold                 -- the PR stays open; say what to change
+required checks passed on revision 9c8d7e6. CONTRIBUTING.md, the contribution rules, requires a human merge approval.
+I recommend merging the tested keyboard-focus fix (option 1, Q1.A).
+
+1. Merge PR #142 (Q1.A; Recommended). The fix becomes eligible for the next deploy.
+2. Hold PR #142 (Q1.B). The PR stays open for changes.
+
+Reply with 1 or 2.
 ```
 
 ## 3. Scope deviation with a compatibility tradeoff: T2
@@ -61,8 +66,12 @@ which also handles API uploads. The prepared fix passes both test suites, but
 changing API upload behavior exceeds the approved CSV-only scope.
 
 Q1. Include the shared date-validation fix in this PR?
-Recommendation: Q1.A, include it, so CSV imports and API uploads validate dates
-the same way. Q1.B wins if existing external caller behavior must be preserved.
+I recommend including the shared date-validation fix for both CSV imports and
+API uploads, so they reject the same invalid dates (option 1, Q1.A).
+
+1. Include the shared fix (Q1.A; Recommended). both paths reject impossible dates; the PR gains one file
+2. Keep the fix to CSV imports (Q1.B). the API keeps silently correcting; validator logic is duplicated
+3. Include the shared fix behind a flag (Q1.C). default off for the API; no caller change now; a setting to retire later
 
 Why I am asking: the next commit would include the API behavior change.
 Keeping it CSV-only preserves existing external caller behavior.
@@ -82,11 +91,6 @@ Evidence: Verified: regression tests pass for both paths on commit 3f2a9c1.
 Not verified: whether any third-party caller depends on silent correction; the
 repository holds no caller inventory.
 
-Options:
-  Q1.A  Include the shared fix (Recommended)      -- both paths reject impossible dates; the PR gains one file
-  Q1.B  Keep the fix to CSV imports               -- the API keeps silently correcting; validator logic is duplicated
-  Q1.C  Include the shared fix behind a flag      -- default off for the API; no caller change now; a setting to retire later
-
 Would change my recommendation: a rule that existing external caller behavior
 must be preserved favors Q1.B.
 
@@ -94,6 +98,8 @@ On Q1.A I will: add the shared change to PR #57 and rerun the API upload suite.
 Nothing merges.
 
 Details: diff at src/validate/date.ts; test output in ci/run-4412.log.
+
+Reply with 1, 2, or 3.
 ```
 
 ## 4. Race condition: T3 by domain complexity, no record
@@ -111,8 +117,12 @@ timing, so an event table with identical event order. Record: not due, only
 
 ```
 Q1. Merge commit 6f5e4d3 into the release branch so only the latest search request updates the results?
-Recommendation: Q1.A, approve. Q1.B (hold) wins only if the search box must
-keep showing every response, which nothing in the product asks for.
+I recommend merging the sequence-number check in `src/search/handler.ts`, the
+search response handler, so older responses cannot replace newer results
+(option 1, Q1.A).
+
+1. Merge the sequence-number fix (Q1.A; Recommended). the release branch gains the tested change in src/search/handler.ts
+2. Hold (Q1.B). stale results keep appearing; say what evidence you want first
 
 Why I am asking: CONTRIBUTING.md requires approval for any user-visible
 behavior change. This one changes what the search box shows when responses
@@ -140,10 +150,6 @@ interleaving can update the display with an older response. Not verified:
 production traffic; the controlled tests establish the two specified response
 orders, not every browser or network condition.
 
-Options:
-  Q1.A  Merge the sequence-number fix (Recommended)  -- the release branch gains the tested change in src/search/handler.ts
-  Q1.B  Hold                                           -- stale results keep appearing; say what evidence you want first
-
 Would change my recommendation: a requirement to show every response, or a
 failing error-path test.
 
@@ -151,6 +157,8 @@ On Q1.A I will: merge the verified commit 6f5e4d3 into the release branch.
 Deployment remains outside this approval.
 
 Details: diff at src/search/handler.ts; both tests in test/search/order.test.ts.
+
+Reply with 1 or 2.
 ```
 
 ## 5. Architectural direction during planning: T3 with a record
@@ -172,9 +180,12 @@ implementation work on a branch; running a database migration requires a
 separate maintenance-window approval.
 
 Q1. Which direction for report exports: a separate worker process, or streaming inside the web process?
-Recommendation: Q1.A, the worker process, because export execution would run
-outside the request's gateway timeout. Q1.B wins if a maintenance window cannot
-be scheduled this month.
+I recommend moving report exports to a separate worker process so they run
+outside the web request's gateway timeout (option 1, Q1.A).
+
+1. Move exports to a worker process with a jobs queue (Q1.A; Recommended). migration and window required; maximum size unmeasured
+2. Stream exports from the web process (Q1.B). no migration; size cap; two customers affected
+3. Prototype the worker for a day before choosing (Q1.C). delays the decision one day; produces measured evidence
 
 Why I am asking: this selects the next two weeks of work, and once the jobs
 migration ships the direction is expensive to undo. The approved plan assumed
@@ -206,11 +217,6 @@ Inferred: the size cap under Q1.B, from the request limit, not measured.
 Not verified: neither approach is prototyped; I can build a throwaway worker
 in about a day if you want evidence before choosing.
 
-Options:
-  Q1.A  Move exports to a worker process with a jobs queue (Recommended)  -- migration and window required; maximum size unmeasured
-  Q1.B  Stream exports from the web process                              -- no migration; size cap; two customers affected
-  Q1.C  Prototype the worker for a day before choosing                   -- delays the decision one day; produces measured evidence
-
 Would change my recommendation: no maintenance window available this month, or
 a measured streaming result that clears the largest reports.
 
@@ -222,6 +228,8 @@ section in docs/plan.md.
 
 Record: this decision will be retained as Decision Q1 in docs/adr/ once you
 answer, because it is hard to reverse and the result of a real tradeoff.
+
+Reply with 1, 2, or 3.
 ```
 
 ## 6. Short change with a major consequence: T3 by impact and reversibility
@@ -239,9 +247,12 @@ hard to reverse and a real tradeoff.
 
 ```
 Q1. Split log-retention settings to reduce application-log storage cost while preserving the required 90 days of audit logs?
-Recommendation: Q1.A, split the setting first so application logs drop to 30
-days and audit logs stay at 90. Q1.B wins only if the 90-day policy no longer
-applies.
+I recommend splitting the retention setting so application logs are kept for
+30 days and audit logs for the required 90 days (option 1, Q1.A).
+
+1. Split the setting: application logs 30 days, audit logs 90 (Q1.A; Recommended). most of the saving; policy kept; one extra config key
+2. Lower retention for all logs to 30 days (Q1.B). full saving; audit logs breach the written policy; deleted logs are gone
+3. Defer changes pending clarification of the policy (Q1.C). existing retention stays in place
 
 Why I am asking: you asked me to cut storage cost. The one-line change in
 config/retention.yaml does that, but the same setting governs audit logs, and
@@ -257,11 +268,6 @@ line 41). Inferred: about 1,800 USD per month saved, estimated from last
 month's invoice, not confirmed against a quote. Not verified: whether the
 policy is still in force; docs/policies.md was last edited 2025-11-03.
 
-Options:
-  Q1.A  Split the setting: application logs 30 days, audit logs 90 (Recommended)  -- most of the saving; policy kept; one extra config key
-  Q1.B  Lower retention for all logs to 30 days                                  -- full saving; audit logs breach the written policy; deleted logs are gone
-  Q1.C  Defer changes pending clarification of the policy                        -- existing retention stays in place
-
 Would change my recommendation: confirmation that the 90-day policy is retired.
 
 On Q1.A I will: add a separate audit-retention key, keep it at 90 days, and
@@ -275,6 +281,8 @@ Record: retained as Decision Q1 in docs/adr/ once you answer.
 
 Details: the one-line diff in config/retention.yaml; the policy text in
 docs/policies.md; last month's storage invoice in finance/2026-08-storage.pdf.
+
+Reply with 1, 2, or 3.
 ```
 
 ## 7. Unfamiliar mechanism with low impact: T3 by domain complexity
@@ -289,8 +297,14 @@ type: algorithm, so a worked example with the boundary case and the invariant.
 
 ```
 Q1. Merge commit 7b6c5d4, the tested retry-timing change for the nightly cache warmer?
-Recommendation: Q1.A, approve. Q1.B wins if you want the fixed timing kept
-until the next incident review.
+I recommend merging the retry-timing change for the nightly cache warmer,
+the job that preloads the internal dashboard's data.
+The delay doubles before successive attempts and gains a random amount,
+subject to a 2-second cap. The randomized delay aims to reduce simultaneous
+requests (option 1, Q1.A).
+
+1. Merge the increasing, randomized retry delay (Q1.A; Recommended). This adds up to 3.25 s of scheduled waiting.
+2. Keep a 200 ms delay before each attempt (Q1.B). The incident review's concern stays open.
 
 Why I am asking: CONTRIBUTING.md requires approval for any change to retry
 logic since the March incident. This one changes how long the warmer waits
@@ -322,16 +336,14 @@ inside its window, and the attempt cap. The timing table above is illustrative,
 computed from the parameters, not recorded from a run. Not verified: maximum
 request duration; an end-to-end runtime bound needs a bound on each attempt.
 
-Options:
-  Q1.A  Merge exponential backoff with jitter (Recommended)  -- spreads retries; adds up to 3.25 s of scheduled waiting
-  Q1.B  Keep fixed 200 ms                                       -- no change; the incident review's concern stays open
-
 Would change my recommendation: a strict total cold-start deadline; measure or
 bound request duration before approving a schedule against that deadline.
 
 On Q1.A I will: merge commit 7b6c5d4.
 
 Details: diff at src/cache/warmer.ts; timing test in test/cache/backoff.test.ts.
+
+Reply with 1 or 2.
 ```
 
 ## 8. Identifiers that must be defined locally: T2
@@ -348,8 +360,12 @@ defined where it is used.
 
 ```
 Q1. Add a database index on the jobs table's status column, a new migration outside the approved plan, or poll the table without it?
-Recommendation: Q1.A, add the index. Q1.B wins if a migration cannot be
-scheduled this week.
+I recommend adding `jobs_status`, an index on the jobs table's status column,
+to avoid scanning the whole table for the worker health check (option 1, Q1.A).
+
+1. Add the status index as a new migration (Q1.A; Recommended). one window; intended to avoid the full scan; latency still to verify
+2. Poll the table on a timer instead of counting on demand (Q1.B). no migration; the health check reports up to 60 s stale
+3. Defer the health check to the third phase (Q1.C). the worker rollout proceeds without it
 
 Why I am asking: the worker health-check endpoint (Task 4 of the second phase,
 which moves report exports into background workers) needs to count jobs by
@@ -368,15 +384,12 @@ Evidence: Verified: the 2 s scan on staging at 400,000 rows. Inferred: growth
 with table size, from the query plan, not measured at larger sizes.
 Not verified: latency with the proposed index.
 
-Options:
-  Q1.A  Add the status index as a new migration (Recommended)  -- one window; intended to avoid the full scan; latency still to verify
-  Q1.B  Poll the table on a timer instead of counting on demand -- no migration; the health check reports up to 60 s stale
-  Q1.C  Defer the health check to the third phase              -- the worker rollout proceeds without it
-
 Would change my recommendation: no maintenance window available this week.
 
 On Q1.A I will: write the migration, add it to the plan's second phase as a new
 task, and rerun the health-check test.
+
+Reply with 1, 2, or 3.
 ```
 
 ## 9. Recover the artifact, then reassess the choice
