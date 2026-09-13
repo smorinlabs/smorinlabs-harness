@@ -121,7 +121,7 @@ retains the source identities and observed limits. The prior diagnostic work
 remains in its separate local experiment directory and is not reclassified as
 validation of this implementation.
 
-This change is prepared on its own branch. Installed development placements
-continue to resolve to the stable main checkout. Repository merge, local
-activation, and release are separate from the instruction edits and tests
-recorded here.
+At validation closeout, this change remained on its task branch and installed
+development placements resolved to the stable main checkout. This report
+records the instruction edits and tests; it does not establish a later
+repository merge, local activation, or release.
