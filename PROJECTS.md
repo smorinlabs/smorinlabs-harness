@@ -1690,7 +1690,7 @@ PR-3 — Fusion Windows diagnostics
 - [x] [P45-T19] Add trusted pushed-revision dispatch and collection bound to invocation, workflow attempt, commit, runner and nonempty selected tests; preserve failed-job logs.
 - [x] [P45-T20] Define protected one-job registration, partial receipts, guarded retirement and the concrete diagnostic workflow/report examples.
 - [x] [P45-T21] Verify helper fixtures, PowerShell selection/mode/retirement controls, and fresh Claude/Codex plugin loading. Live Windows evidence remains a separate gate.
-- [~] [P45-T22] Native Windows failure → unchanged assertion with source repair → success and no-selection cleanup passed on 2026-09-12. All three exact runners retired and Windows shut down gracefully. Fresh-agent run → reset → run acceptance and PR integration remain open; see [validation](docs/validation/windows-integration.md).
+- [~] [P45-T22] Native Windows failure → unchanged assertion with source repair → success and no-selection cleanup passed on 2026-09-12. Fresh-agent run → reset → run acceptance passed on 2026-09-13 UTC: four assertions before and after, verified marker absence, distinct standard-account runners, exact source binding, unchanged baseline and final shutdown. PR #68 integration remains the delivery step; see [validation](docs/validation/windows-integration.md).
 - [x] [P45-T23] Owner selected fresh official checksum-verified programs per elevated registration. Implemented new invocation directories under an administrator-controlled parent, read/traverse-only parent access for the CI account, runtime guards and retirement reparse refusal. Three native one-job diagnostics and the standard-account parent-write rejection passed. Refresh the [PR #68 review](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242) against this evidence before merge.
 - [ ] Regression Test Status
 
@@ -1790,7 +1790,7 @@ software and Windows images are downloaded from their official sources.
 - [x] [P47-TS06] Cover the host-probe JSON contract with mocked macOS success, Rosetta planning, unknown facts, absent/malformed Fusion metadata, invalid storage, and non-macOS cases; verify already-off stop remains observation-only. All 36 helper tests passed in 4.30 seconds after the review repairs.
 - [x] [P47-T10] VM power helper 0.2.0 adds optional `--wait-seconds` total-deadline polling. Four delayed/stuck transition fixtures verify a single mutation and a deadline that includes the initial inventory. The default remains one post-request observation.
 - [ ] [P47-T09] Tagged public release is authorized by the current closeout request and awaits the integration/release gates; do not request authorization again.
-- **Removed [P47-TS05]:** Owner removed persistent GitHub registration after reboot from this delivery on 2026-09-12; neither passed nor deferred. Ordinary signed-out Windows reboot/access passed. Fresh-agent run → reset → run acceptance remains open and gates release.
+- **Removed [P47-TS05]:** Owner removed persistent GitHub registration after reboot from this delivery on 2026-09-12; neither passed nor deferred. Ordinary signed-out Windows reboot/access passed. Fresh-agent run → reset → run acceptance passed on 2026-09-13 UTC; see the [curated receipt](docs/validation/windows-acceptance-2026-09-13.json).
 
 **Validation boundary**: The [public validation record](plugins/fusion-runner/docs/validation.md)
 and its curated JSON summary describe the exact smoke workload and observed
@@ -1801,7 +1801,7 @@ credentials, VM files, account names, and job URLs are not part of this plugin.
 The public helper fixtures remain simulated vendor-response tests.
 
 **Related work**: P45's Windows execution phase in `ci-fix` now has implementation
-and fixture coverage; native failure/repair and no-selection cleanup passed on 2026-09-12. Fresh-agent skill-driven reset acceptance remains open. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
+and fixture coverage; native failure/repair and no-selection cleanup passed on 2026-09-12. Fresh-agent skill-driven reset acceptance passed on 2026-09-13 UTC. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
 records the original direct-execution proposal and the owner's later choice of
 Fusion with a registered runner. Completing this plugin's live smoke validation
 does not implement that diagnostic workflow.

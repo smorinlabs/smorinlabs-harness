@@ -2,9 +2,13 @@
 
 The Windows diagnostic implementation passed an actual failure → source repair
 → success cycle and rejection/cleanup of an empty test selection on 2026-09-12.
-Ordinary signed-out Windows reboot/access also passed. A fresh agent following
-the revised skills through run → reset → run remains the acceptance gate before
-review, merge, release and installation finish.
+Ordinary signed-out Windows reboot/access also passed. A fresh agent followed
+the revised skills through run → reset → run on 2026-09-13 UTC. Both four-assertion
+jobs passed on different standard-account runners. The restored guest lacked
+the marker and earlier runner state, and Windows shut down after retirement.
+The [curated acceptance record](windows-acceptance-2026-09-13.json) binds these
+observations to the public source hashes. Review, merge and publication follow
+this completed runtime gate.
 
 The [curated native record](windows-native-2026-09-12.json) binds current public
 helper hashes to allowlisted observations. Raw reports, identities and job URLs
@@ -17,7 +21,7 @@ does not establish that the new reset instructions were followed.
 | PowerShell contracts | Three parsers, four selection cases, five mode cases, fifteen retirement cases and four service-verification cases; a real-filesystem probe verifies ancestor traversal and symlink refusal |
 | Full suite on earlier integration source | 257 tests passed initially; 28 existing repo-finder tests needed a writable UV cache, then passed. All 285 then-collected tests were verified across those runs. |
 | Generated manifests | Current; Fusion 0.3.0 and repo-hygiene 0.14.0 |
-| Current static loading | Both plugins had no errors in Claude/Codex. Claude retains the ignored generated-metadata warning; Codex static coverage is manifest-only. |
+| Current loading | Both plugins passed session-backed skill loading in Claude and Codex on 2026-09-13. Static checks found no errors; Claude retains the ignored generated-metadata warning. |
 | Earlier fresh loading and offline skill scenarios | Both tools loaded the initial integration and produced inspected artifacts for the six scenarios below. These predate the revised reset instructions. |
 | Independent review | No concrete blocker in the reviewed helpers, public routing or private diagnostic/reset instructions |
 | Public boundary | Generic manual setup is a progressive reference. Credentials, images and protected transport stay in the optional private provider. |
@@ -89,13 +93,15 @@ Retirement refuses reparse paths before protected file operations. These control
 address retained job-modified programs. A compromised or uncertain guest must
 be restored before administrator maintenance.
 
-## Remaining acceptance and explicit exclusions
+## Completed acceptance and explicit exclusions
 
-- A fresh agent must follow setup/run, `ci-fix`, and the optional private provider
+- A fresh agent followed setup/run, `ci-fix`, and the optional private provider
   to run Windows work, create a marker, reset the designated working VM, prove
-  the marker is absent and run again. The two earlier downloaded restores passed;
-  no full restore was repeated during this implementation session.
-- After that acceptance: refresh review and CI, merge, release and install.
+  the marker was absent and run again. All 35 baseline files and disk dependencies
+  matched, the replacement had separate inodes, and the baseline was rehashed
+  unchanged after both jobs. Only the accepted replacement's obsolete predecessor
+  was removed. This local reset required no new image download.
+- After acceptance: refresh review and CI, merge, release and install.
   Delivery authorization is already recorded. Review comments require current
   source and evidence after the final push.
 - Persistent GitHub registration after reboot, P47-TS05, is removed from this

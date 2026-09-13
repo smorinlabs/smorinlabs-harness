@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.26.0 — 2026-09-13
+
 ### Added
 
 - `fusion-runner` provides Windows VM setup and operation skills. Three native
@@ -18,7 +20,8 @@
   routing, a progressively disclosed manual setup path, and optional total-
   deadline power polling. Native Arm64 failure/repair diagnostics, empty-selection
   rejection, guarded cleanup and ordinary reboot/access passed. Fresh-agent
-  run → reset → run acceptance remains the final runtime delivery gate.
+  run → reset → run acceptance passed with four assertions before and after
+  restoration, verified marker absence, new runner identities and final shutdown.
 
 ### Changed
 

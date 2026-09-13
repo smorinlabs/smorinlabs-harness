@@ -74,7 +74,9 @@ loading or successful skill following.
 
 The subsequent [integration validation](../../../docs/validation/windows-integration.md)
 separately records fresh verified program preparation, ordinary Windows reboot,
-failure → source repair → success, and cleanup after empty selection. Its final
-acceptance is a fresh agent following the skills through run → reset → run.
-That instruction-following check remains open until observed; the two earlier
-downloaded restores do not establish that the revised instructions were followed.
+failure → source repair → success, and cleanup after empty selection. A fresh
+agent followed the revised skills through run → reset → run on 2026-09-13 UTC.
+Four assertions passed before and after reset on different standard-account
+runners. The marker and previous runner state were absent after restoration,
+all baseline files remained unchanged, and Windows shut down after retirement.
+The integration record keeps this evidence separate from the earlier downloads.
