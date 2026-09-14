@@ -27,7 +27,9 @@ use an information-question tool for permission when the host forbids it.
 
 Put the decision, necessary context, consequences, uncertainty, and exact
 approval scope inside the payload the reader will see. Accompanying prose may
-not render. Every option carries its ID, outcome, and consequence. If a field
+not render. When the question needs orientation, put the goal-to-component
+connection, current condition, and immediate commitment before it in that same
+payload. Every option carries its ID, outcome, and consequence. If a field
 is unavailable, combine its content into a supported field instead of sending
 an invented argument. If the tool cannot carry essential information, use
 ordinary text; never truncate a material caveat to fit the tool.
@@ -73,6 +75,7 @@ until the required answer arrives; continue other work under existing authority.
   own ID, options, and supported recommendation or explicit neutrality. Each
   stands alone. The host may impose a smaller batch or a one-question limit.
 - A T3 always goes alone.
+  Apply that batching rule without announcing tiers or drafting logistics.
 - Coupled questions state the dependency and are asked in order: a question
   whose answer depends on another still open waits for the next message.
 - A tally line precedes a batch or follows an answer when more than one
@@ -99,19 +102,21 @@ continue only independent work already authorized.
 ## Replies
 
 Accept the reply in any wording and match it to one open question with unchanged
-options. A bare letter is sufficient only when it unambiguously identifies one
-live choice. When a batch, a quoted old brief, or multiple open questions makes
+options. A displayed list number or bare letter is sufficient only when it
+unambiguously identifies one live choice. Numbers alias the stable lettered IDs
+in that question's current list. A number from a superseded list never selects
+a replacement option. When a batch, a quoted old brief, or multiple open questions makes
 the mapping unclear, ask which question was meant in one line; do not act yet.
 
 | Reply | Meaning | Handling |
 |---|---|---|
-| `A`, `Q1.A`, "go with your recommendation" | pick | validate the live question and unchanged option, restate `Q1: decided A, <date>`, then proceed; the recommendation phrase is not a choice on a neutral question |
+| `1`, `A`, `Q1.A`, "go with your recommendation" | pick | validate the displayed live question and unchanged option, restate `Q1: decided A, <date>`, then proceed; the recommendation phrase is not a choice on a neutral question |
 | `Q1.B, but <condition>` | pick with a condition | restate the conditional action; when action or approval scope changes, record the clearly authorized revised decision under a new ID with Q1 as history, without asking again; clarify only an unresolved commitment |
 | `Q1: skip`, "not now" | park | mark skipped without selecting its fallback or advancing its deadline; continue only independent authorized work |
 | `Q1: ask <question>` | information needed first | answer with facts and reassess; keep the ID only if options, recommendation, and scope are unchanged, otherwise supersede it before asking for the revised choice |
 | `Q1: do <X> first` | redirect | do X within authorization; re-assess, then re-ask only if still needed; supersede the question if its options, recommendation, or approval scope changed |
 | a reply to a superseded question | stale answer | explain which current question replaced it; execute neither choice from that reply |
-| "I don't get this" | the ask failed | re-ask with a concrete example, never a rephrase of the same sentence |
+| "I don't get this" | the ask failed | diagnose the missing artifact, project connection, current condition, or commitment first; then terminology and mechanism; rewrite around the gap and reassess whether a decision is still needed |
 | a reply naming an option not offered | revised choice | preserve the user's direction under a new question ID, with its consequence and scope; record it directly if the reply already clearly authorizes that action, otherwise clarify only the missing commitment |
 
 A reply that overrides a supported recommendation is recorded as `overrode`;
@@ -125,7 +130,8 @@ history. A banner over a stale claim about the current plan is not a fix.
 
 ## Plain-text form on tools without a dialog
 
-Send the canonical text form. Number the questions, letter the options, and
-mark the recommendation only when supported. State a reply grammar using the
-actual offered IDs, for example: `Reply with Q1.A or Q1.B, add a condition, or
-say skip.` Wait on dependent work and interpret the reply with the table above.
+Send the canonical text form. Number the questions and use a numbered option
+list with each stable lettered ID beside its action. Mark the recommendation
+only when supported. For one displayed question, a reply instruction can say
+`Reply with 1 or 2, add a condition, or say skip.` For a batch, use the actual
+full IDs. Wait on dependent work and interpret the reply with the table above.

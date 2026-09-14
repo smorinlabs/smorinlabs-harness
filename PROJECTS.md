@@ -1810,3 +1810,95 @@ Loader note: Claude reports the generator's existing `_generated` manifest
 field as an ignored unknown field. Static Codex manifest validation does not
 establish runtime loading. Additional provider-backed skill-following scenarios
 remain unrun.
+
+---
+
+## [x] Project P48: Concrete context in decision requests
+
+**Goal**: Make an isolated decision understandable during a long coding task:
+connect the goal to the affected artifact, explain its current state, and state
+exactly what the user's answer changes.
+
+**Scope**: The owner approved ten communication corrections after a read-only
+review. Update `clear-decision-communication` to 0.3.0 and the shared precision
+rules in `clear-technical-communication` to 0.2.3. Existing skill names,
+frontmatter descriptions, tool grants, and installation targets remain stable.
+
+### Tests & Tasks
+
+- [x] [P48-T01] Identify the artifact by type, exact name, and role; restore the goal-to-component connection before an unfamiliar question
+- [x] [P48-T02] State current condition and immediate commitment; separate owner judgment from discoverable facts and explain why the answer is needed now
+- [x] [P48-T03] Detect unapproved implementation premises, retire obsolete choices, and honor the user's revised authorization without repeating approval
+- [x] [P48-T04] Choose representations by missing understanding; diagnose confusion and rewrite the question's context before explaining more internals
+- [x] [P48-T05] Preserve claim scope, conditions, and uncertainty; keep tier calculations and drafting logistics out of ordinary requests
+- [x] [P48-T06] Add six behavioral cases and an independent-reader procedure; update examples, both skill pages, README, and affected plugin metadata
+- [x] [P48-TS01] Evaluation-runner tests: 21 passed in 1.53 seconds after the final fixture expansion; generated manifests and both tools' isolated loading checks passed, with the existing Claude `_generated` warning
+- [x] [P48-TS02] Independent content review: repaired internal-sizing contradictions and missing current paths and actor distinctions in the new worked example; re-review passed
+- [x] [P48-TS03] Initial draft: review 28 model responses and two independent-reader checks, with 16 overall passes, 12 failures, and eight inconclusive environment attempts; preserve remaining Claude source-fidelity failures and source-snapshot limits
+- [x] [P48-TS04] Complete O1's remaining-failure audit: distinguish older candidates from final D, apply the focused evidence/comparison correction, review five affected-case responses (three passes, two failures) and one fresh-reader check, and record a resolution or proposed disposition for every remaining failure
+- [x] [P48-TS05] Review exact source-check and measurement wording before editing; test candidate F on the two retained Claude cases and three new controls on both tools: eight responses, three overall passes (one qualified), five failures, and one fresh-reader check. Preserve the original failures, additional limitations, and grading amendment; 21 runner tests pass after the amendment
+- [x] [P48-TS06] Implement the optional separate reviewer and one-revision experiment with exact F-draft reuse. R1: eight pairs, five final passes, one failure, two report-format blocks. R2: rerun only the two blocked cases after a parser correction; both yield qualified passes. Latest mixed R1/R2 results: seven material-validity passes with recorded qualifications and one failure, versus three original passes and five failures. Preserve all attempts, fifteen new model calls, one fresh-reader check, 88 runner tests, and a disposition for each residual issue
+- [x] [P48-TS07] Repair PR #67's confirmed review findings: restore the complete rendered table example and verify retained captures against hashes recorded by their original writer run. All 104 runner tests and generated-manifest checks pass; GitHub rendering verifies the complete four-cell row. Historical F/R1/R2 evidence remains unchanged, and no model behavior is claimed for the later reference-format revision
+- [x] [P48-T07] Prepare the implementation and validation record for draft-PR review; keep the installed skill sources on stable main
+- [x] [P48-T08] Resolve or explicitly disposition the remaining behavioral failures before promotion; after an authorized merge, refresh stable main to activate development placements
+
+**Evidence**: [0.3.0 validation record](docs/validation/clear-decision-communication-0.3.0.md),
+[O1 audit with the P48-T08 closeout draft](docs/validation/clear-decision-communication-0.3.0-o1.md),
+the [exact source-check changes and F results](docs/validation/clear-decision-communication-source-check.md),
+and the [separate-review experiment, remaining dispositions, and closeout draft](docs/validation/clear-decision-communication-source-review-experiment.md).
+**Closeout**: The [activation record](docs/validation/decision-communication-activation.json)
+retains the placement observations, source hashes, preservation check, and
+static verification results described below. PR #67 merged as `91dd09a`. The owner then authorized the
+stable-main fast-forward and activation. The four existing enabled development
+placements now supply `clear-decision-communication` 0.3.0 and
+`clear-technical-communication` 0.2.3 to Claude Code and Codex. All instruction
+bytes match the merged revision; no duplicate installation was added. The
+fast-forward preserved all 194 unrelated untracked files byte-for-byte.
+O1's review, delivery, and activation are complete within P48-T08.
+
+Static verification reports no errors for either plugin on either tool.
+Claude checks manifests and skill files with the existing ignored `_generated`
+warning; Codex checks manifests only. These checks verify the installed source
+and static metadata, not runtime adherence. No new model scenarios or
+session-backed loading checks were run for activation.
+
+F's instruction-only check did not resolve the retained failures. The optional
+runner experiment now executes a separate review and at most one revision. The
+observed revisions repair the two original material errors, but a valid
+no-findings report still misses production and rollback guarantees in Claude
+Case 20. Qualified outputs retain smaller wording defects. Ordinary skill
+invocation does not launch the reviewer. The disposition is to retain these
+limitations and keep the experiment optional; a no-findings report does not
+establish that a response is supported by its sources. A comparison using a
+different reviewer remains proposed future work. The R2 reruns resample only
+two cases and do not replace
+R1's preserved operational failures or establish general reliability.
+Model scenarios simulate communication and intended actions. They do not prove
+real workflow security or establish a future reliability rate. Historical
+validation reports retain the draft status and source identities of their
+original runs; this closeout records the later merge and local activation.
+
+### P48 follow-up: concrete language and evidence in developer-tool questions
+
+**Scope**: The owner approved applying the fourth editorial rewrite from the
+local Q4 clarity review. Correct `clear-decision-communication` in plugin
+0.3.1 while preserving 0.3.0's context, source-checking, and authorization rules.
+The trigger description, tool grant, and stable installation targets are unchanged.
+
+- [x] State the complete recommendation before its ID; display numbered options together while preserving stable question and option meanings
+- [x] Name commands, tools, artifacts, and roles; request one missing source artifact instead of inventing names or setup behavior
+- [x] Attribute evidence to the property it establishes; distinguish individual candidate results from policy scope, preserve defer, and qualify unmeasured comparisons
+- [x] Align the template and existing examples; add the owner-preferred historical Q4 rewrite with explicit source limits
+- [x] Add cases 23-25 for a different developer-tool proposal, missing setup context, and a numeric reply to a superseded option list
+- [ ] [P48-T09] Rewrite the option consequences in fictional examples 3, 4, 5,
+  6, and 8 as complete sentences, and name the sequence-number fix in example
+  4's hold option. Qualify the documentation's example-file description so
+  numbered options apply where a decision is needed. Preserve each option's
+  meaning, IDs, and evidence. Deferred from [PR #71's second review](https://github.com/smorinlabs/smorinlabs-harness/pull/71#pullrequestreview-5191380254)
+  under the merge-flow convergence rule; this copy-edit follow-up is not complete.
+
+**Validation and activation**: See the [0.3.1 validation record](docs/validation/clear-decision-communication-0.3.1.md)
+for exact source snapshots, native session-fork outcomes, semantic limitations,
+and package checks. Development placements resolve to the stable main checkout
+and load the update after that checkout is fast-forwarded. The validation
+record distinguishes instruction edits from repository merge and local activation.

@@ -15,15 +15,21 @@ missing facts.
 
 Its governing principle is that **every embedded artifact carries a frame**: the
 artifact supplies precision, the prose supplies meaning, and neither ships
-alone. A verbatim technical name is reproduced exactly and paired with a
-description at first use; established domain terms are defined at first use;
-only invented local metaphors are replaced. Quotations, commands, and captured
-output are never restyled. The bundled common errors catalog gives detection
+alone. A verbatim technical name is reproduced exactly and paired with its
+actual artifact type and a short role at first use. Later references stay
+concise and unambiguous. A workflow, its contained jobs, their invoked actions
+or scripts, behavior settings, and access credentials remain distinct.
+Established domain terms are defined at first use; only invented local
+metaphors are replaced. Real technical names keep their exact spelling even
+when they contain metaphor words. Simplification preserves each claim's subject,
+scope, conditions, and unknowns. Quotations, commands, and captured output are
+never restyled. The bundled common errors catalog gives detection
 signals, prescribed corrections, and compact before/after examples; a companion
 artifact-forms reference covers the diagram catalog and selection rule,
 annotation markers, before-and-after pairs, counterexamples, and units with
-reference scale; two full worked examples cover coverage-matrix prose and
-owner-decision requests.
+reference scale. Three worked examples cover coverage-matrix prose,
+owner-decision requests, and a fictional workflow status report that separates
+job behavior from credential availability.
 
 **Triggers on:** "make this draft clearer", "this message is not
 understandable", "rewrite this technical message", "review this for clarity"; and proactively before dense artifacts such as design
