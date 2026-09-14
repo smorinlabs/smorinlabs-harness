@@ -107,10 +107,12 @@ fixed deadline, and final recheck above; a state change never resets the wait.
   wait or start another triage pass after expiry. Only an unchanged pending
   request may be left in place without attempting cancellation. If GitHub
   merged before a late thread or head change could be handled, report the
-  actual merge and unresolved work explicitly; do not claim a clean completion
-  or start cleanup. A completed merge cannot be canceled or returned to the
-  pre-merge loop. Report the final pending, canceled, or blocked state and stop
-  when still unmerged at the deadline.
+  actual merge and unresolved work explicitly. Include step 9's inline
+  cleanup section, marked blocked, with retention recommendations.
+  Do not claim clean completion or execute cleanup or synchronization.
+  A completed merge cannot be canceled or returned to the pre-merge loop.
+  Report the final pending, canceled, or blocked state and stop when still
+  unmerged at the deadline.
 
 ## Canonical bounded monitor
 

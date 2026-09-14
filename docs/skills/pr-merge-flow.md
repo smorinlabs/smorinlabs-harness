@@ -70,11 +70,20 @@ screenshot policy remain in effect, including in automatic mode.
 
 Before a permitted merge, the skill refreshes the current head and review
 state, verifies applicable CI coverage and owner holds, checks the title
-against repo conventions, and binds the merge to the reviewed commit. After
-a successful merge, it surveys branches, worktrees, dirty state, and possible
-local default-branch synchronization. Cleanup and synchronization execute only
-when specifically authorized. Dirty state is reported and preserved, and a
-permitted synchronization is guarded and fast-forward-only.
+against repo conventions, and binds the merge to the reviewed commit.
+
+After a confirmed merge, the final chat response always includes an inline
+cleanup survey with explicit recommendations and stable C1, C2, ... IDs.
+It distinguishes direct PR cleanup, supporting work, other work, and items
+of unknown relationship. Session origin is labeled separately.
+
+Retained, blocked, and already-clean items remain visible. Supporting
+documents and unrelated work are retained by default. The survey and its
+follow-up results are shown in chat, never delivered as a cleanup file.
+
+Cleanup and synchronization actions require explicit authorization.
+Dirty state is preserved, and permitted synchronization remains guarded
+and fast-forward-only.
 
 The [validation scenarios](../../plugins/repo-hygiene/skills/pr-merge-flow/references/validation-scenarios.md)
 trace these instruction-level transitions without posting comments, dispatching
@@ -132,7 +141,9 @@ collection, and invalidated pending requests must be canceled before returning
 to preparation. A final PR and thread check precedes completion reporting.
 An unmerged request at the bound is reported as pending or blocked. If GitHub
 already merged before a late change could be handled, the report names the
-merge and outstanding work without claiming clean completion or starting cleanup.
+actual merge and outstanding work. It includes an inline cleanup section
+marked blocked, with retention recommendations. No cleanup or synchronization
+executes, and the report does not claim clean completion.
 
 ## Install
 
@@ -163,8 +174,40 @@ skills location).
 > `--match-head-commit` bound to the reviewed SHA using the merge-method
 > precedence: user, repository conventions, GitHub settings, then `--merge`.
 > It waits within the polling bounds for any required merge queue and verifies
-> the PR is merged. No final confirmation is requested. The cleanup
-> survey lists
-> `git branch -d feat/rate-limiter` and one stale worktree as needs-cleanup
-> (the remote branch was auto-deleted — already clean); nothing runs until
-> selected.
+> the PR is merged. No final confirmation is requested. The final response
+> includes the cleanup survey inline:
+>
+> Cleanup for PR #42 in `/work/example`.
+>
+> **Direct PR cleanup**
+>
+> - **C1 — Remove the PR worktree.** Origin: current session.
+>   Evidence: `/tmp/rate-limiter-review` is clean and its head is merged.
+>   Command: `git -C /work/example worktree remove /tmp/rate-limiter-review`.
+> - **C2 — Remove the local PR branch.** Origin: current session.
+>   Evidence: `feat/rate-limiter` is merged. Depends on C1.
+>   Command: `git -C /work/example branch -d feat/rate-limiter`.
+> - **C3 — Remote PR branch: already clean.** Origin: current session.
+>   GitHub deleted `feat/rate-limiter`; no action.
+> - **C4 — Local default branch: already current.** Origin: unknown.
+>   `/work/example` is clean on `main`; its head equals `origin/main`,
+>   which contains PR #42's merge. No synchronization is needed.
+>
+> **Supporting work**
+>
+> - **C5 — Retain `docs/handoffs/rate-limiter.md`.**
+>   Origin: current session. It records decisions supporting PR #42.
+>
+> **Other work**
+>
+> - **C6 — Retain `/tmp/report-export`.** Origin: another session.
+>   Session records associate this worktree with a separate export task.
+>
+> **Unknown relationship**
+>
+> - **C7 — Retain `/work/example/scratch.txt`.** Origin: unknown.
+>   Its relationship to PR #42 is unverified.
+>
+> Recommendation: approve C1 and C2; retain C5, C6, and C7.
+> C3 and C4 need no action. No cleanup runs until authorized.
+> Results retain these same C IDs.

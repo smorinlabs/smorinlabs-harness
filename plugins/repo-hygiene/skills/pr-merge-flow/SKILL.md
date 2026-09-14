@@ -400,8 +400,8 @@ the guard. No check or owner hold is bypassed.
   or non-convergence questions. Preserve the separate browser-consent
   requirement; if required consent cannot be obtained during an unattended
   run, report the blocker and stop. Preserve the existing ready-report fallback
-  for an unresolved owner decision or convergence bound. The post-merge cleanup
-  survey remains report-only.
+  for an unresolved owner decision or convergence bound. Show the post-merge
+  cleanup survey inline; execute only explicitly authorized cleanup under step 9.
 - **confirm** (explicit opt-in only) — one final menu: a summary line (threads
   fixed/refuted/declined/deferred — each deferral with its reference — any
   escalated threads by id, checks, title), then **Merge now** (default) /
@@ -427,10 +427,19 @@ Command success or queue acceptance alone is not merge completion. Follow
 [pending merge monitoring](references/polling.md#pending-merge-monitoring)
 for bounded waits, head or review changes, and the final authoritative check.
 If the PR remains unmerged at the bound, report its pending or blocked state
-and stop. Only after verified merge with the ledger reconciled, report the
-actual merge result and every deferral, then perform the steps 9–10 read-only
-survey. Never report a pending request as merged or start post-merge cleanup
-from command success alone.
+and stop. Any cleanup shown for an unmerged PR must be labeled as a preview.
+
+After GitHub confirms a merge, report each merged PR's URL, actual merge
+commit, and every deferral. The same final chat response must include the
+steps 9–10 cleanup survey and explicit recommendations, inline.
+Do not ask whether to perform the read-only survey; execution requires
+the authorization described in step 9.
+
+If outstanding work prevents clean completion, show the cleanup section
+inline with its blockers and retention recommendations. Execute no cleanup
+or synchronization while that completion gate remains blocked.
+A clean-completion claim still requires the reconciled ledger.
+Command success or queue acceptance alone never establishes a merge.
 
 ## 8. Deep review (opt-in, never default)
 
@@ -448,11 +457,51 @@ classification and count toward the same ratchet — dispatched reviewers
 produce 8–33 findings per round against the bots' 1–5, so they get no
 exemption.
 
-## 9. Post-merge cleanup (survey → confirm; never unasked)
+## 9. Post-merge cleanup — mandatory inline recommendations
 
-After a successful merge, survey — read-only — then present every finding as
-a named action with its exact command, in two lists: **needs cleanup** and
-**already clean** (state what is done; never silently omit it).
+After a confirmed merge, survey read-only and present the complete cleanup
+recommendations inline in chat. Do not create a cleanup-plan or survey file.
+A file link, attachment, or selection widget does not replace the inline
+survey. Subsequent selections and results also remain inline.
+
+Begin by naming the repository and every PR whose merge was verified.
+For a batch, distinguish merged PRs from targets that remain unmerged.
+
+Group findings by relationship to the verified merged PRs:
+
+1. Direct PR cleanup — branches, worktrees, and synchronization associated
+   with the named merged PRs.
+2. Supporting work — plans, handoffs, review notes, or evidence supporting
+   those PRs.
+3. Other work — separate tasks or PRs outside the merged set.
+4. Unknown relationship — insufficient evidence to associate the item.
+
+For every item, separately label its origin: current session, another
+session, or unknown. Identify another session when the available evidence
+supports it. Do not infer relationship or origin from location, filename,
+or modification time alone.
+
+Assign C1, C2, C3, ... across the entire survey, including retained,
+blocked, and already-clean items. Do not restart numbering per group or PR.
+Keep IDs stable across updates and never reuse an ID for a different target.
+List a shared action once and name every affected PR.
+
+Each item must include:
+
+- Exact target and evidence establishing its relationship and observed state.
+- Session origin, including uncertainty.
+- Recommendation: remove, synchronize, retain, or no action, with a reason.
+- Exact command and working directory when actionable.
+- Any blocker or dependency on another C item.
+
+End with the recommended selection, such as "Recommend C1 and C2;
+retain C4 and C5." Explicitly say when no cleanup is recommended.
+If inspection is incomplete, name the missing evidence; do not report
+unknown state as already clean.
+
+Survey the target repositories, their registered worktrees, and supporting
+files already known from the task or session. Do not expand this into a
+machine-wide cleanup audit.
 
 Typical needs-cleanup findings:
 
@@ -465,23 +514,45 @@ Typical needs-cleanup findings:
 - Other local branches already merged into the default branch
   (`git branch --merged <default-branch>`, minus the default itself).
 
-Always report, never touch: dirty uncommitted state anywhere (main checkout
-or any worktree) — list it as needs-attention and leave it to the user.
+Always report and preserve dirty uncommitted state in the main checkout
+or any worktree. Give each finding a C ID and mark it needs-attention.
 
-The gate: one multi-select menu of the needs-cleanup actions (name +
-command). Run only what is selected; a note can adjust any item (a different
-branch name, a different worktree path). `--auto` prints the same two lists
-and runs nothing — cleanup never executes without an explicit selection or
-ask.
+Recommend retaining supporting documents unless their retirement is
+explicitly requested. A merged PR does not establish that its plan,
+handoff, or review evidence is disposable. Recommend retaining unrelated
+work and items whose relationship or ownership is uncertain.
 
-## 10. Sync the local default branch (ask; guarded, double-checked)
+Present the inline survey before requesting action selections. Execute only
+actions covered by existing explicit authorization or the user's selected
+C IDs. Do not ask again for an already-authorized, unchanged action.
 
-After the merge, offer — never assume — to bring the local default branch up
-to date with the merged remote; the offer joins the step 9 menu as its own
-named action. Guards run read-only at survey time and are **re-run
-immediately before execution** — state can change between the survey and the
-click; a guard tripping at either moment blocks the action and downgrades it
-to a needs-attention report:
+Authorization for "PR cleanup" covers direct cleanup for the named PRs.
+It does not automatically include supporting files, other work, or unknown
+items. Those require an explicit named selection or instruction.
+
+Selecting an item does not implicitly select its dependencies. If C2
+requires unselected C1, report C2 as blocked. Before execution, recheck
+the target, relevant cleanliness and merge evidence, active use, and Git
+operation state. Changed targets or failed guards invalidate execution.
+
+Do not use broad removal or pruning commands unless their complete affected
+set has been shown and authorized. Never force a refused deletion.
+
+`--auto` shows the same inline recommendations and executes no cleanup
+without explicit cleanup authorization. After authorized actions, report
+each C ID inline as done, retained, blocked, or failed, with verification.
+
+## 10. Sync the local default branch (authorized; guarded, double-checked)
+
+After the merge, include local default-branch synchronization as its own
+C item in the inline step 9 survey. Name the affected checkout and merged
+PRs, show the exact command and working directory, and recommend synchronize,
+retain, or no action according to the observed state.
+
+Surveying does not authorize synchronization. Preserve existing explicit
+authorization and run only the authorized action. Guards run read-only at
+survey time and are re-run immediately before execution. A guard tripping
+at either moment marks that same C item blocked:
 
 - Dirty state where the sync would act (`git status --porcelain`).
 - The default branch checked out in another worktree (`git worktree list`) —
@@ -520,7 +591,7 @@ this skill's.
 | "We already replied once, so a reopen needs no reply" | Deduplicate within the current disposition round. A failed resolve retries only resolution; a reopen may need a new disposition. |
 | "CI was green before this push, so merge now" | CI and review readiness belong to the evaluated head. Refresh state and bind the merge with `--match-head-commit`. |
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
-| "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
+| "Merged — I'll just tidy the branches too" | Always show the C-numbered survey inline. Execute only explicitly authorized actions; preserve dirty state and unapproved targets. |
 | "I'll quickly pull main while I'm at it" | The sync is offered, guarded, re-checked at execution, and ff-only — never a side effect. |
 | "GraphQL is rate-limited — nothing to do but report" | The two thread ops have no REST equivalent, but the web UI is a different quota pool. Check the reset clock, then wait or use the gated browser fallback. |
 | "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
