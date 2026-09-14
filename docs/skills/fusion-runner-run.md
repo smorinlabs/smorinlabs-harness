@@ -1,5 +1,10 @@
 # fusion-runner-run
 
+For unpushed local checks, the skill provides native SSH/SFTP transport and a
+standard-account Windows executor. `ci-fix` selects the workload, captures the
+current source and compares preparation plus execution time. This path needs no
+GitHub registration. See [local commands](../../plugins/fusion-runner/skills/fusion-runner-run/references/local-commands.md).
+
 Start, inspect, gracefully stop, or explicitly reset a Windows VM already
 configured in VMware Fusion. It uses the setup handoff to identify the exact VM,
 Windows service, GitHub runner, and labels. It distinguishes a registered runner

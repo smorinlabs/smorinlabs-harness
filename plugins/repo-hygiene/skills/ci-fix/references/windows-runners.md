@@ -1,4 +1,10 @@
-# Windows diagnostics through a Fusion runner
+# GitHub-scheduled Windows diagnostics through Fusion
+
+For unpushed worktree changes, first consider the suitability and time tradeoff
+in [local Windows execution](windows-local.md). Begin Fusion discovery only
+after workflow inventory identifies a Windows job or resolved matrix cell.
+The path below remains useful when the diagnostic needs GitHub scheduling,
+Actions context or checkout metadata.
 
 Use this path when a Windows failure needs an actual Windows guest and the
 user has a suitable Fusion installation. GitHub Actions schedules the diagnostic

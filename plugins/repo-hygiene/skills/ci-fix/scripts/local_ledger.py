@@ -43,7 +43,11 @@ def context_key(path: Path) -> str:
     The caller supplies a non-secret execution description, not environment
     variable contents. Version-1 samples lack this identity and are not reused.
     """
-    data = json.loads(path.read_text())
+    return context_digest(json.loads(path.read_text()))
+
+
+def context_digest(data: dict) -> str:
+    """Shared identity for a declared command, selection and environment."""
     if (
         not isinstance(data, dict)
         or not all(

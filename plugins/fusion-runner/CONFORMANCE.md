@@ -23,7 +23,7 @@ helper review, not a claim of the publishable-tier Appendix C audit.
 | R7.2, R9.3 | Host probe 1.0.0 / schema 2 explicitly version the rename to `expected_windows_architecture`; VM power 0.2.0 adds optional total-deadline polling without changing the default single observation |
 | Bounded waiting | Four delayed/stuck transition fixtures prove one mutation and a deadline covering the initial inventory and all polls |
 
-N/A: persistent configuration and config discovery, network authentication,
+For the host probe and VM power helpers, N/A: persistent configuration and config discovery, network authentication,
 pagination, remote waiting, caching, plugins, updates, and streaming. The full
 standard-tier verbosity/configuration options are outside the minimal-tier
 helper scope. No telemetry is collected.
@@ -42,3 +42,13 @@ receipts. They are internal administrative operations rather than standalone
 minimal-tier CLIs. Parser and source-derived fixture checks are separate from
 Windows service runtime validation; the latter remains explicitly recorded in
 the current validation plan.
+
+The 2026-09-14 local-command addition keeps these power interfaces unchanged.
+`guest_session.py` is an internal native SSH/SFTP library with an explicit
+owner-only access file and protected password prompt. Network authentication
+therefore applies to that library: host keys are pinned, agent forwarding is
+disabled, temporary connection state is private, and failures do not repeat a
+command. `local_job.ps1` is a standard-account adapter with structured stdin,
+per-invocation paths, hash checks, exclusive admission and bounded process waits.
+Its host-facing CLI belongs to repo-hygiene; see that helper's
+[interface review](../repo-hygiene/skills/ci-fix/references/windows-local-interface.md).

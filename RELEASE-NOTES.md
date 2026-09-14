@@ -15,6 +15,12 @@
   diagnostics through a configured Fusion runner. Receipts bind the pushed
   revision, runner, selected tests, workflow attempt, logs and report. A zero-test
   or mismatched report cannot pass. Workflow and PowerShell report examples are included.
+- `ci-fix` can also test unpushed worktree files in a suitable Fusion Windows
+  guest. Discovery requires a Windows job in workflow inventory. The helper
+  delegates VM operations, verifies source hashes and standard-account execution,
+  and compares remaining startup, transfer, setup, execution and collection cost.
+  Stale files, missing tests and uncertain execution remain visible; required CI
+  still runs after the validated push.
 - `fusion-runner` 0.3.0 adds protected one-job registration from fresh SHA-256-
   verified program directories, guarded retirement helpers, explicit reset
   routing, a progressively disclosed manual setup path, and optional total-

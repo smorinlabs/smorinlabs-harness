@@ -44,7 +44,7 @@ For local development or direct copies, see the setup skill's install guide.
 | Skill | Does | Details |
 |---|---|---|
 | `fusion-runner-setup` | Prepares Fusion and Windows, or uses an available private recovery provider. Registers one-job runners from fresh checksum-verified programs under a standard account. A separate manual guide covers setup without a private provider. | [docs/skills/fusion-runner-setup.md](docs/skills/fusion-runner-setup.md) |
-| `fusion-runner-run` | Starts, checks, stops, or explicitly resets the designated Windows VM. Verifies Windows access and GitHub readiness separately, preserves failure evidence, and routes reset to the owner of the saved baseline. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
+| `fusion-runner-run` | Starts, checks, stops, or explicitly resets the designated Windows VM. Supplies standard-account transport for local checks, verifies GitHub readiness separately, and preserves failure evidence and the saved baseline. | [docs/skills/fusion-runner-run.md](docs/skills/fusion-runner-run.md) |
 
 ### repo-hygiene
 
@@ -52,7 +52,7 @@ Repo & release-readiness skills.
 
 | Skill | Does | Details |
 |---|---|---|
-| `ci-fix` | Repairs CI and hooks with pre/post-edit evidence, selected and affected tests, and compatible timing history. Uses existing Linux runners or GitHub-scheduled Windows diagnostics on a prepared Fusion VM. Verifies intended tests and applicable required CI; `--audit` reports and `--optimize` proposes speed changes. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
+| `ci-fix` | Repairs CI and hooks with pre/post-edit evidence, selected and affected tests, and compatible timing history. Uses existing Linux runners or suitable Fusion Windows execution of local files when the time tradeoff supports it. Pushed-code diagnostics and ordinary required CI remain available. `--audit` reports; `--optimize` proposes speed changes. | [docs/skills/ci-fix.md](docs/skills/ci-fix.md) |
 | `version-check` | Reports the project version across manifest, git tag, main branch, and (with `--full`) the registry, flagging mismatches. | [docs/skills/version-check.md](docs/skills/version-check.md) |
 | `readme-sync` | Audits README.md against the codebase (install steps, CLI usage, code examples, structure, links) and applies fixes with `--fix`. | [docs/skills/readme-sync.md](docs/skills/readme-sync.md) |
 | `manual-test-guide` | Generates a copy-pasteable manual testing guide, prioritizing recently changed areas. | [docs/skills/manual-test-guide.md](docs/skills/manual-test-guide.md) |
