@@ -1,7 +1,7 @@
 # pr-merge-flow
 
 Drives an open GitHub PR through evidence-based review, verified repairs, and
-merge readiness. It waits a bounded few minutes for reviewer bots, collects
+merge by default. It waits a bounded few minutes for reviewer bots, collects
 all unresolved threads, and checks each claim locally where feasible. A bot
 comment is a claim to investigate; failure to reproduce alone does not refute
 it.
@@ -54,8 +54,10 @@ counts, or a wave mostly targeting review-added code. Four cycles, or two
 successive ratchet waves, trigger the check-in. Its endings are continuation
 under a 10-minute wall clock, merge with tracked deferrals, or pause for
 redesign. Internal CI diagnostic pushes are not separate completed PR review
-cycles. Automatic mode honors existing commit/push authority and downgrades
-to a ready-report when a required owner decision or hold prevents progress.
+cycles. Default `merge` mode uses the interactive check-in and retains merge
+authorization after a permitted continuation. Explicit unattended `auto` mode
+downgrades to a ready-report at the convergence bound or when a required owner
+decision prevents progress. Explicit owner holds remain binding in every mode.
 
 All polling remains quota-safe: rate-limit preflight, 20–30-second intervals,
 and bounded waits with one manual recheck on expiry. GraphQL reads thread
@@ -68,11 +70,20 @@ screenshot policy remain in effect, including in automatic mode.
 
 Before a permitted merge, the skill refreshes the current head and review
 state, verifies applicable CI coverage and owner holds, checks the title
-against repo conventions, and binds the merge to the reviewed commit. After
-a successful merge, it surveys branches, worktrees, dirty state, and possible
-local default-branch synchronization. Cleanup and synchronization execute only
-when specifically authorized. Dirty state is reported and preserved, and a
-permitted synchronization is guarded and fast-forward-only.
+against repo conventions, and binds the merge to the reviewed commit.
+
+After a confirmed merge, the final chat response always includes an inline
+cleanup survey with explicit recommendations and stable C1, C2, ... IDs.
+It distinguishes direct PR cleanup, supporting work, other work, and items
+of unknown relationship. Session origin is labeled separately.
+
+Retained, blocked, and already-clean items remain visible. Supporting
+documents and unrelated work are retained by default. The survey and its
+follow-up results are shown in chat, never delivered as a cleanup file.
+
+Cleanup and synchronization actions require explicit authorization.
+Dirty state is preserved, and permitted synchronization remains guarded
+and fast-forward-only.
 
 The [validation scenarios](../../plugins/repo-hygiene/skills/pr-merge-flow/references/validation-scenarios.md)
 trace these instruction-level transitions without posting comments, dispatching
@@ -82,22 +93,57 @@ CI, or merging a PR.
 comments", "address review feedback and merge", "close out this PR", "babysit
 the PR"
 
-**Arguments:** `--auto` (merge when clean, no questions) · `--confirm` (final
-merge gate; the default) · `--ready` (prepare everything, you merge) ·
-`--one-pass` (one triage/fix pass over the threads present — skips the
-re-review cycle and always ends as a ready-report, never merging; composes
-with any mode) · `--deep` (opt-in deep review via `/code-review`, a Codex
-adversarial pass, or the pr-review-toolkit agents). Precedence: invocation flag or plain ask >
-`.claude/pr-merge-flow.local.md` (git-ignored per-repo preferences: `mode`,
-`deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
-`continue-until-clean`, `defer-target`) > default (confirm, no deep).
-Every run opens with an arming line naming the resolved mode, its source,
-and what it authorizes. `mode: auto` read from the prefs file asks a
-one-line arming confirmation each run (an explicit `--auto` flag never
-does — that is current consent, and scheduled runs pass the flag). A prefs
-file that is tracked by git arrived with the repo, not from you: its
-authority keys (`mode`, `merge-method`, `delete-branch`) are ignored with
-a warning.
+**Arguments and completion modes:**
+
+| Selection | Completion | Exceptional decisions |
+|---|---|---|
+| No override or trusted `mode: merge` | Complete the required flow and merge without routine arming or final confirmation. | Preserve required owner decisions and the non-convergence check-in. |
+| `--auto`, "merge it fully automated", or trusted `mode: auto` | Perform the same guarded merge without an arming question. | Report and stop at an unresolved owner decision or convergence bound. Separate browser consent still applies; an unattended run stops if required consent cannot be obtained. |
+| `--confirm`, "ask before merging", or trusted `mode: confirm` | Prepare the PR, then present one final merge menu. | Preserve the existing exceptional gates. |
+| `--ready` or "prepare only" | Complete authorized preparation, including fixes, replies, and thread resolution, then report; never merge. | Report blocked gates without claiming readiness. |
+
+`--one-pass` runs one triage/fix pass over the threads present, skips the
+re-review cycle, and always ends as a ready-report without merging. It
+overrides every completion mode. `--deep` opts into `/code-review`, a Codex
+adversarial pass, or the pr-review-toolkit agents; deep review is never the
+default.
+
+Precedence: invocation flag or plain ask > trusted user-local preferences in
+`.claude/pr-merge-flow.local.md` > default (`merge`, no deep review). Preference
+keys are `mode`, `deep-review`, `merge-method`, `delete-branch`, `cycle-bound`,
+`continue-until-clean`, and `defer-target`. A saved user-local `mode: confirm`
+is an explicit persistent opt-in. No preferences file is needed for the
+default merge behavior. A file tracked by git arrived with the repo, not from
+you: its authority keys (`mode`, `merge-method`, `delete-branch`) are ignored
+with a warning.
+
+Every run announces the resolved mode, its source, and the actions authorized.
+There is no arming question, including for trusted `mode: auto`. Mode and
+deep-review choices are saved only when requested; no preference-saving
+question is added after each run. Existing `defer-target` discovery and
+recording continue, with the preferences file ignored via `.git/info/exclude`.
+
+Merge authorization comes from explicitly invoking this skill or asking to
+get the PR merged. An explicit "review only", "fix feedback only", or "do not
+merge" restriction takes precedence, even when you name the skill. An agent
+routing a review or feedback-fix request here cannot add merge consent.
+`ready` still performs authorized preparation before reporting. Review-only
+work takes an early read-only route: no draft promotion, repairs, replies,
+thread resolution, or preference writes. Requested deep-review findings return
+to you without PR comments. A plain `/pr-merge-flow PR 42` invocation retains
+the full default flow without requiring a separate merge request.
+Cleanup, local default-branch synchronization, and separate browser consent
+keep their existing authorization boundaries.
+
+Every merging mode verifies the actual GitHub result. A queued request is
+monitored within a fixed bound; head or review changes trigger authoritative
+collection, and invalidated pending requests must be canceled before returning
+to preparation. A final PR and thread check precedes completion reporting.
+An unmerged request at the bound is reported as pending or blocked. If GitHub
+already merged before a late change could be handled, the report names the
+actual merge and outstanding work. It includes an inline cleanup section
+marked blocked, with retention recommendations. No cleanup or synchronization
+executes, and the report does not claim clean completion.
 
 ## Install
 
@@ -115,7 +161,7 @@ skills location).
 ## Example session
 
 > Get PR #42 merged — resolve whatever the bots found.
-> → Reads `.claude/pr-merge-flow.local.md` (none → confirm mode), waits up to
+> → Reads `.claude/pr-merge-flow.local.md` (none → default merge mode), waits up to
 > ~5 minutes polling every 30s for pending bot reviews, collects 7 unresolved
 > threads, verifies each claim (running the failing case where feasible),
 > fixes 5, reruns each reproducer with intended-test evidence, and checks the
@@ -124,10 +170,44 @@ skills location).
 > reasons, and resolves all 7. It waits out one re-review cycle, confirms
 > required CI coverage for the current head and the title
 > `feat(api): add rate limiter`,
-> then presents the final gate: **Merge now (squash)** / Run deep review
-> first / Don't merge. After approval it refreshes the head and threads,
-> then merges with `--match-head-commit` bound to the reviewed SHA. The cleanup
-> survey lists
-> `git branch -d feat/rate-limiter` and one stale worktree as needs-cleanup
-> (the remote branch was auto-deleted — already clean); nothing runs until
-> selected.
+> announces readiness, refreshes the head and threads, and merges with
+> `--match-head-commit` bound to the reviewed SHA using the merge-method
+> precedence: user, repository conventions, GitHub settings, then `--merge`.
+> It waits within the polling bounds for any required merge queue and verifies
+> the PR is merged. No final confirmation is requested. The final response
+> includes the cleanup survey inline:
+>
+> Cleanup for PR #42 in `/work/example`.
+>
+> **Direct PR cleanup**
+>
+> - **C1 — Remove the PR worktree.** Origin: current session.
+>   Evidence: `/tmp/rate-limiter-review` is clean and its head is merged.
+>   Command: `git -C /work/example worktree remove /tmp/rate-limiter-review`.
+> - **C2 — Remove the local PR branch.** Origin: current session.
+>   Evidence: `feat/rate-limiter` is merged. Depends on C1.
+>   Command: `git -C /work/example branch -d feat/rate-limiter`.
+> - **C3 — Remote PR branch: already clean.** Origin: current session.
+>   GitHub deleted `feat/rate-limiter`; no action.
+> - **C4 — Local default branch: already current.** Origin: unknown.
+>   `/work/example` is clean on `main`; its head equals `origin/main`,
+>   which contains PR #42's merge. No synchronization is needed.
+>
+> **Supporting work**
+>
+> - **C5 — Retain `docs/handoffs/rate-limiter.md`.**
+>   Origin: current session. It records decisions supporting PR #42.
+>
+> **Other work**
+>
+> - **C6 — Retain `/tmp/report-export`.** Origin: another session.
+>   Session records associate this worktree with a separate export task.
+>
+> **Unknown relationship**
+>
+> - **C7 — Retain `/work/example/scratch.txt`.** Origin: unknown.
+>   Its relationship to PR #42 is unverified.
+>
+> Recommendation: approve C1 and C2; retain C5, C6, and C7.
+> C3 and C4 need no action. No cleanup runs until authorized.
+> Results retain these same C IDs.

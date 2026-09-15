@@ -65,12 +65,54 @@ of `proceed` / `wait <seconds>` / `browser` / `stop <reason>`.
 Poll the cheapest signal, not the full state:
 
 ```bash
-gh api "repos/$OWNER/$REPO/pulls/$N" --jq '{updated_at, head: .head.sha}'
+gh api "repos/$OWNER/$REPO/pulls/$N" --jq '{merged, state, updated_at, head: .head.sha}'
 gh api "repos/$OWNER/$REPO/pulls/$N/reviews?per_page=100" --jq 'length'
 ```
 
 Review count or `updated_at` moved → run the full thread collection once.
 Quote any URL containing `?` or `&` (zsh globs otherwise).
+
+## Pending merge monitoring
+
+Use this for every authorized merge that returns before GitHub reports the PR
+merged, including `confirm` after **Merge now**. Preserve the interval floor,
+fixed deadline, and final recheck above; a state change never resets the wait.
+
+- Poll the PR's REST `merged`, `state`, `head.sha`, and `updated_at` fields
+  with the cheap review signal above. A change to `head.sha`, `updated_at`,
+  or review count exits the poll loop for one full collection with
+  authoritative thread state. `merged: true` enters final verification
+  immediately; a closed, unmerged PR is reported as such and ends the wait.
+  GraphQL is not polled. An unchanged head and ledger may resume the remaining
+  wait; a cosmetic timestamp change does not restart triage.
+- If the head changed or a thread is new or reopened while the request is
+  pending, cancel the pending merge or queue entry through a supported GitHub
+  action and verify removal before returning through steps 2–3. Preserve
+  existing review-cycle bounds. GitHub's
+  [queue removal instructions](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/merging-a-pull-request-with-a-merge-queue#removing-a-pull-request-from-a-merge-queue)
+  document the PR page's **Remove from queue** action. The separate
+  [browser consent gate](browser-fallback.md) still applies.
+  Queue cancellation is a separate PR-level browser action, even with healthy
+  quotas: reuse that consent gate and verify the exact PR's identity, not the
+  fallback's exhaustion trigger or thread-resolution procedure. State the
+  cancellation action in the consent request and verify removal on the PR page.
+  `gh pr merge --disable-auto` disables auto-merge; it is not proof of queue
+  removal. If cancellation is unavailable, report the still-pending request
+  and blocker promptly, then stop without claiming completion.
+- At the merged signal or deadline, recheck the PR and authoritative thread
+  state once and reconcile the ledger before reporting the result. If the
+  deadline recheck finds a changed head or new/reopened thread while the request
+  is still pending, use the cancellation-and-removal path above before reporting
+  and stopping. Report any unavailable cancellation explicitly; do not re-arm the
+  wait or start another triage pass after expiry. Only an unchanged pending
+  request may be left in place without attempting cancellation. If GitHub
+  merged before a late thread or head change could be handled, report the
+  actual merge and unresolved work explicitly. Include step 9's inline
+  cleanup section, marked blocked, with retention recommendations.
+  Do not claim clean completion or execute cleanup or synchronization.
+  A completed merge cannot be canceled or returned to the pre-merge loop.
+  Report the final pending, canceled, or blocked state and stop when still
+  unmerged at the deadline.
 
 ## Canonical bounded monitor
 
