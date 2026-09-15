@@ -423,15 +423,15 @@ def run(args, spec):
                 raise
             raise Failure("invocation_incomplete", "inspect the retained receipt and collect its exact invocation; do not assume a retry is safe") from None
         write_receipt(args.receipt, receipt)
+        # Measure through collection before recording the cost sample. Include
+        # host preflight and SSH session overhead; exclude the ledger write itself.
+        receipt['timings']['total_s'] = time.monotonic() - invocation_start
+        accounted = sum(receipt['timings'][name] for name in ('snapshot_s', 'startup_s', 'transfer_s', 'checks_s', 'collect_s'))
+        receipt['timings']['setup_s'] = max(0.0, receipt['timings']['total_s'] - accounted)
         try:
             record_timing(args, receipt)
         except (OSError, ValueError, subprocess.SubprocessError):
             receipt["ledger"] = {"recorded": False, "reason": "ledger write failed; invocation evidence remains valid"}
-        # Include host preflight, SSH process/session overhead and receipt/ledger
-        # work rather than presenting only the guest's stopwatch as total cost.
-        receipt['timings']['total_s'] = time.monotonic() - invocation_start
-        accounted = sum(receipt['timings'][name] for name in ('snapshot_s', 'startup_s', 'transfer_s', 'checks_s', 'collect_s'))
-        receipt['timings']['setup_s'] = max(0.0, receipt['timings']['total_s'] - accounted)
         write_receipt(args.receipt, receipt)
     return receipt
 
