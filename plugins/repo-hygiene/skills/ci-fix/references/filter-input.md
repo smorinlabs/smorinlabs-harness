@@ -5,7 +5,7 @@ step, so a dispatched run executes only those tests: the remote mirror of
 rung 0. This is the one rendering; step 6's offer (`offer-filter` in the
 plan) and `optimize.md`'s lever 11 both use it.
 
-Two rules make it safe and honest:
+Three rules make it safe and honest:
 
 - **The input is data, never code.** Its value reaches the shell through an
   environment variable and is parsed according to the runner's input grammar
@@ -18,6 +18,15 @@ Two rules make it safe and honest:
   set the input, so the workflow must behave exactly as before on those
   events. Verify the actual ordinary command and current-revision test
   selection; a historical test count alone cannot prove unchanged coverage.
+- **A filtered run never wears the required check's name.** The job renames
+  itself `<job> (diagnostic)` exactly when filtering is active, so a person
+  reading the pull request, a status-API consumer, and any future required
+  status check rule all see a different name from the unfiltered run. On a
+  push or pull request the name is unchanged, because the expression is
+  guarded on the event before it consults `inputs`. Verified 2026-09-14 on
+  one commit: the `pull_request` run's job was `pytest`, the filtered
+  `workflow_dispatch` run's job was `pytest (diagnostic)`, and an empty-input
+  dispatch reverted to `pytest`.
 
 ## The rendering
 
@@ -36,8 +45,34 @@ on:
         default: ""
 ```
 
-The test step reads it through `env:` and splits it on newlines. `mapfile` is
-bash: on a Windows runner (`pwsh` by default) add `shell: bash` to the step.
+The job takes a guarded conditional name, and the test step reads the input
+through `env:` and splits it on newlines. `mapfile` is bash: on a Windows
+runner (`pwsh` by default) add `shell: bash` to the step.
+
+```yaml
+  pytest:
+    name: pytest${{ github.event_name == 'workflow_dispatch' && inputs.filter != '' && ' (diagnostic)' || '' }}
+```
+
+`github.event_name` is always defined, so on a push or pull request the
+chain short-circuits to an empty suffix before `inputs` is consulted; only a
+filtered dispatch renames the job. `needs:` references use the job key, not
+the display name, so nothing downstream changes.
+
+Pair the input with a concurrency group so an iteration's stale run stops
+paying for itself the moment a newer commit supersedes it, with no
+inference about whether a filtered red predicts a full red:
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+```
+
+The event in the key keeps the filtered diagnostic and the pull-request run
+for the same commit in separate groups, so they never cancel each other.
+Cancellation applies only to pull requests, so a push to the default branch
+always runs to completion. Dispatches on one branch queue one at a time.
 
 ```yaml
       - name: Run tests

@@ -83,6 +83,12 @@ trigger requires re-reading the branch workflow; a missing required input
 requires supplying it; an unresolved file/ref requires correcting identity or
 using ordinary CI. Do not generate an empty commit as generic recovery.
 
+When the workflow uses `filter-input.md`'s guarded name, the job to inspect
+in that run is `<job> (diagnostic)`, not `<job>`; the unfiltered job name
+appears only on the ordinary push or pull-request run for the same commit.
+Waiting on `<job>` inside a filtered dispatch waits for a job that will not
+exist there.
+
 Verify that the intended tests ran. Zero or different selected tests require
 selector correction. A diagnostic success then returns to ordinary required
 coverage on the evaluated code, following `ci-coverage.md`. Neither a skip
