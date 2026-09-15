@@ -2,32 +2,52 @@
 
 ## Unreleased
 
-## v0.26.0 — 2026-09-13
+## v0.27.0 — 2026-09-15
 
 ### Added
 
-- `fusion-runner` provides Windows VM setup and operation skills. Three native
-  Arm64 smoke jobs and two independent baseline restores established the
-  original one-job workflow on one Apple Silicon Mac. Intel and another-Mac
-  recovery remain outside this delivery. Persistent runner reboot testing was
-  removed from the delivery scope.
-- `repo-hygiene` 0.14.0 adds `ci-fix` Windows discovery and GitHub-scheduled
-  diagnostics through a configured Fusion runner. Receipts bind the pushed
-  revision, runner, selected tests, workflow attempt, logs and report. A zero-test
-  or mismatched report cannot pass. Workflow and PowerShell report examples are included.
-- `ci-fix` can also test unpushed worktree files in a suitable Fusion Windows
-  guest. Discovery requires a Windows job in workflow inventory. The helper
-  delegates VM operations, verifies source hashes and standard-account execution,
-  and compares remaining startup, transfer, setup, execution and collection cost.
-  Stale files, missing tests and uncertain execution remain visible; required CI
-  still runs after the validated push.
-- `fusion-runner` 0.3.0 adds protected one-job registration from fresh SHA-256-
-  verified program directories, guarded retirement helpers, explicit reset
-  routing, a progressively disclosed manual setup path, and optional total-
-  deadline power polling. Native Arm64 failure/repair diagnostics, empty-selection
-  rejection, guarded cleanup and ordinary reboot/access passed. Fresh-agent
-  run → reset → run acceptance passed with four assertions before and after
-  restoration, verified marker absence, new runner identities and final shutdown.
+- `repo-hygiene` 0.15.0 adds Windows diagnostics for pushed revisions and local
+  execution of unpushed worktree files. Windows discovery requires a matching
+  workflow job, delegates Fusion operations, reports preparation gaps, and
+  compares full remaining feedback cost. Receipts bind source, account, selected
+  tests and artifacts. Filtered diagnostics remain separate from required CI.
+- `fusion-runner` 0.3.0 adds fresh checksum-verified one-job runner programs,
+  guarded retirement, explicit baseline reset routing, and local commands under
+  a verified standard Windows account. A separate maintenance identity can
+  supply the fixed read-only service/process inventory that Windows denies to
+  a standard SSH network token.
+
+### Fixed
+
+- Image creation now prepares standard-account SSH and verifies both accounts
+  before clean capture. Startup verifies existing access. A reset acceptance
+  check cannot conceal missing image settings by repairing them afterward.
+- Native Arm64 validation covered failing and repaired local source, unchanged
+  test selection before and after reset, timeout and empty-selection rejection,
+  stale-source collection, and signed-out ordinary reboot access. Fresh Windows
+  installation and persistent-runner reboot testing remain outside this delivery.
+
+## v0.26.0 — 2026-09-15
+
+### Added
+
+- **`fusion-runner` 0.2.12, a new plugin.** Two skills for a Windows GitHub
+  Actions runner in VMware Fusion on a Mac. `fusion-runner-setup` walks the
+  Broadcom download and Windows installation, verifies the Windows login,
+  records each setup checkpoint, keeps a reusable Windows baseline distinct
+  from the working VM, and ships hosted-compatibility smoke tests that
+  compare the VM with GitHub-hosted Windows. `fusion-runner-run` starts,
+  checks, and gracefully stops the configured VM, verifying GitHub readiness
+  separately from VM power and preserving the working VM's files.
+- **`repo-hygiene` 0.14.1 — a filtered CI diagnostic can no longer wear the
+  required check's name.** `ci-fix`'s filter-input rendering gives the job a
+  guarded conditional name, `<job> (diagnostic)`, that applies exactly when
+  filtering is active; a push or pull-request run keeps the unfiltered name,
+  so any required status check keeps matching it. Verified on real runs. The
+  rendering also carries a concurrency group that supersedes a pull request's
+  stale run on the next push, with every other run in a group of its own,
+  because GitHub keeps at most one pending run per group and replaces it on
+  arrival (reproduced, then verified fixed with three rapid dispatches).
 
 ### Changed
 
@@ -46,6 +66,17 @@
   commits no longer stand in for full coverage. PR repair pushes restart review
   collection, reopened threads receive a new disposition when needed, and merges
   are bound to the reviewed head. Optimization advice preserves supported coverage.
+- `repo-hygiene` 0.14.0: `pr-merge-flow` merges by default once the required
+  gates pass, treats the merge flow as draft approval, verifies queued merges,
+  cancels a merge invalidated at its deadline, and requires inline, scoped
+  cleanup recommendations after a merge.
+- `clear-decision-communication` 0.3.1: decision drafts are evaluated against
+  a separately executed review of their sources, retained evaluation captures
+  are verified against their original hashes, evidence boundaries are
+  preserved in comparisons, options are made concrete with their evidence
+  scoped, and concrete context and scope are restored to decision requests.
+- `clear-technical-communication` 0.2.3: concrete context and scope restored
+  in decision requests, shared with the change above.
 
 ## v0.25.0 — 2026-09-10
 

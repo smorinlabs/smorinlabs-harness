@@ -25,18 +25,41 @@ decline, or defer — and drive it to merge per the chosen end mode.
 
 ## Arguments
 
-- `--auto` | `--confirm` | `--ready` — end-mode override for this run
+- Without an explicit end-mode override → `merge` mode: invoking
+  this skill authorizes the resolved PR to merge after the required flow.
+  Do not ask for routine arming or final merge confirmation. Required owner
+  decisions, explicit holds, and the existing non-convergence check-in remain.
+- `--auto` — merge when clean without interactive review-judgment or
+  non-convergence questions; if a required decision cannot be settled without
+  the user, stop with the existing ready-report. Separate browser consent
+  still applies; an unattended run stops if that consent cannot be obtained.
+- `--confirm` — explicit opt-in to the final merge-confirmation menu.
+- `--ready` — complete authorized preparation, including fixes, replies, and
+  thread resolution, then report readiness; never execute a merge.
 - `--one-pass` — single-pass override: run one triage/fix pass (steps 2–4)
   over the threads present, skip the re-review cycle (step 5), and end as a
-  ready-report — never merging. Composes with any end mode, but under
-  `--auto` or `--confirm` the ending downgrades to the ready-report: merging
+  ready-report — never merging. Composes with every end mode, including
+  default `merge`, `--auto`, and `--confirm`; each ends as a ready-report: merging
   right after a push without re-checking would merge over reviews still
   being written, which the Iron Law forbids.
 - `--deep` — run the deep-review pass this run
 
-Precedence: invocation (flag or plain ask) > `.claude/pr-merge-flow.local.md` >
-default (`confirm`, no deep review). Natural language counts as the flag
-("merge it fully automated", "deep review first").
+Precedence: invocation (flag or plain ask) > trusted user-local preferences >
+default (`merge`, no deep review). Natural language counts as a flag:
+"ask before merging" selects `confirm`; "prepare only" selects `ready`;
+"merge it fully automated" selects `auto`. Explicit owner holds apply
+in every mode. A saved user-local `mode: confirm` is an explicit persistent
+opt-in; no preferences file is needed for the default merge behavior.
+
+Default merge authorization comes from the user explicitly invoking this
+skill or asking to get the PR merged. An explicit restriction such as
+"review only", "fix feedback only", or "do not merge" overrides that consent,
+even when the user names the skill. Merely routing a review or feedback-fix
+request through this skill does not supply merge consent either. Use `ready`
+or the requested one-pass behavior for authorized preparation without merge;
+use step 1's read-only route for review-only work. Completion modes never
+widen the actions requested. A plain `/pr-merge-flow PR 42` invocation still
+authorizes the full default flow without requiring a separate merge request.
 
 Use the [shared repair validation contract](../ci-fix/references/validation-contract.md)
 for bot repairs and CI handoffs. It defines reproduction, post-edit evidence,
@@ -48,8 +71,16 @@ decision; a bot repair does not trigger an unrelated CI audit.
 
 - Target PR: an explicit number/URL, else the current branch's PR
   (`gh pr view --json number,title,url,state,isDraft`). No PR → stop and say
-  so. Invoking this skill on a draft PR explicitly approves it to proceed
-  toward production: mark it ready (`gh pr ready`) and continue without
+  so.
+- **Read-only route — before any mutation.** If the request is limited to
+  reviewing, announce that scope, inspect the PR and requested review evidence,
+  report findings to the user, then stop. Skip draft promotion, code changes,
+  preference writes, repair handoffs, replies, thread resolution, and every
+  merge path. Any requested deep review returns findings to the user without
+  posting PR comments. Do not enter the preparation flow below.
+- For the authorized preparation or merge flow, invoking this skill on a draft
+  PR approves marking it ready (`gh pr ready`), unless the user explicitly
+  holds draft status. Continue without
   asking for separate draft approval. The selected end mode, required
   checks, and review-resolution gates still apply.
 - Preferences: read `.claude/pr-merge-flow.local.md` if present (keys: `mode`,
@@ -60,23 +91,26 @@ decision; a bot repair does not trigger an unrelated CI audit.
   keys (`mode`, `merge-method`, `delete-branch`), warn that a repo-shipped
   prefs file was found, and keep the defaults for those keys. An untracked
   file applies without further ceremony — no warning and no per-key
-  questions; the arming rules below still govern `auto`. No file
-  and no flag → `confirm`
-  mode; after the first completed run, offer to save the choices there and
-  ensure the file is ignored via `.git/info/exclude` — never edit
-  `.gitignore` mid-flow, which injects an unrelated change into the very PR
-  being merged.
-- **Arming confirmation — auto from prefs only.** When mode resolves to
-  `auto` *from the prefs file*, ask one yes/no before proceeding ("Arm auto
-  mode for this run?"); declining downgrades the run to `confirm`. An
-  explicit `--auto` flag or plain ask is current consent and never asks —
-  scheduled and unattended runs pass the flag.
-- **Arming line — every run, every mode.** Once the mode is final
-  (including the confirmation above), print one line naming it, its source,
-  and what it authorizes, before anything else runs:
-  `mode: auto (from prefs) — push, reply, resolve, merge, delete-branch` ·
-  `mode: confirm (default) — final gate before merge`. Authority is stated
-  at the moment it is armed, never exercised invisibly.
+  questions. No file and no explicit override → `merge` mode. Preserve the
+  provenance gate above: tracked preferences never supply owner consent.
+  Do not offer to save mode or deep-review choices after each run. Save those
+  choices only when the user asks. Preserve the existing `defer-target`
+  discovery and recording rules. Ensure the preferences file is ignored via
+  `.git/info/exclude`; do not edit `.gitignore` during the PR flow.
+- **Invocation authorizes the selected flow.** The user's invocation is
+  current authorization for in-scope fixes, commits, pushes, review replies,
+  thread resolution, and merging the resolved PR after all required gates,
+  subject to the requested action scope, selected end mode, and `--one-pass`.
+  Do not add an arming question, including when trusted user-local preferences
+  select `auto`. Explicit `confirm` and `ready` selections still apply.
+  Cleanup, local default-branch synchronization, and separate browser consent
+  retain their existing authorization boundaries.
+- **Arming line — every run, every mode.** Before work, announce the mode,
+  its source, and the actions authorized. This is a statement, not a question:
+  `mode: merge (default invocation) — fix, commit, push, reply, resolve, merge; cleanup separate`
+  or `mode: confirm (explicit request) — final gate before merge`.
+  An invocation never authorizes bypassing review, CI, an owner hold, or a
+  convergence limit.
 - Conventions: read the repo's CLAUDE.md — commit/PR-title format and
   merge-method conventions there override the defaults below.
 - Carry the current session's authorized actions and resolved merge mode into
@@ -186,8 +220,10 @@ technical rigor, no performative agreement:
      repo convention — resolve · **architectural** → one
      design-question comment, mark **escalated**; it stays open and holds
      the merge at the gate.
-   - **Unclear** → `confirm`/`ready` modes: ask the user, one question at a
-     time. `--auto` never asks: make the call if verification can settle it;
+   - **Unclear** → `merge`/`confirm`/`ready` modes: research first, then ask
+     one question when a required owner decision remains. This is not a
+     routine merge-confirmation gate. `--auto` never asks: make the call if
+     verification can settle it;
      if genuinely undecidable, leave the thread open and downgrade the run to
      a ready-report — the Iron Law forbids merging over it.
 
@@ -268,9 +304,14 @@ dispositions. Then ask the user, one question, three endings:
 - **Pause for redesign** — the escalated threads become the agenda;
   ready-report naming them and hand back.
 
-`--auto` cannot ask: when the check-in fires (the bound, or the ratchet
-tripping in two successive waves) or a thread is escalated, downgrade the
-run to a ready-report naming the open items.
+Default `merge` mode uses the check-in above when its existing bounds fire.
+Ask about non-convergence or an escalated owner decision, not whether a clean
+PR may merge. After the user chooses a permitted continuation, retain that
+choice and existing merge authorization; do not add a final merge question.
+
+Explicit `auto` mode remains unattended: when the check-in fires (the bound,
+or the ratchet tripping in two successive waves) or a thread is escalated,
+downgrade the run to a ready-report naming the open items.
 
 `cycle-bound` and `continue-until-clean` may be set in
 `.claude/pr-merge-flow.local.md` to skip the check-in for a repo that always
@@ -320,8 +361,9 @@ not work to do.
   Commits `type(scope): subject` — under the default merge-commit strategy
   the branch's own commits are what release tooling parses, and the title
   lands as the merge subject where the repo sets `merge_commit_title=PR_TITLE`.
-  Fix via `gh pr edit --title`; `--auto` fixes silently, `confirm` shows
-  old → new at the gate.
+  Fix via `gh pr edit --title`; `merge` and `auto` correct a nonconforming
+  title within scope without a permission question. `confirm` shows old → new
+  at its explicitly requested final gate.
 
 The return transition depends on the actual head, not whether `ci-fix` says
 its work is done:
@@ -344,22 +386,31 @@ the guard. No check or owner hold is bypassed.
 
 ## 7. End per mode
 
-- **auto** — merge now (`gh pr merge` with `--match-head-commit "$REVIEWED_HEAD"`
-  and the merge strategy chosen via the CLAUDE.md
-  merge-strategy precedence — user > repo CLAUDE.md/AGENTS.md > repo GitHub settings >
-  global default (defaults to `--merge`); `delete-branch` per prefs), then report what was done
-  — including every deferral with its reference — and run
-  the step 9 survey — report-only in this mode. If GitHub rejects the merge
-  (branch protection — required approvals, etc.), downgrade to the
-  ready-report; never force.
-- **confirm** (default) — one final menu: a summary line (threads
+- **merge** (default) — after preflight is clear, announce the evaluated
+  head, review dispositions, checks, and title, then merge without another
+  permission question. Use `gh pr merge` with
+  `--match-head-commit "$REVIEWED_HEAD"` and the existing strategy precedence:
+  user > repo CLAUDE.md/AGENTS.md > GitHub settings > default `--merge`.
+  Preserve authorized `delete-branch` preferences. Respect the required merge
+  queue and use the shared verification below before reporting completion.
+  If policy blocks the merge, report the blocker; never force or bypass it.
+  Survey findings require separate cleanup/sync authorization.
+- **auto** (explicit flag, plain request, or trusted preference) — perform
+  the same guarded merge and verification without interactive review-judgment
+  or non-convergence questions. Preserve the separate browser-consent
+  requirement; if required consent cannot be obtained during an unattended
+  run, report the blocker and stop. Preserve the existing ready-report fallback
+  for an unresolved owner decision or convergence bound. Show the post-merge
+  cleanup survey inline; execute only explicitly authorized cleanup under step 9.
+- **confirm** (explicit opt-in only) — one final menu: a summary line (threads
   fixed/refuted/declined/deferred — each deferral with its reference — any
   escalated threads by id, checks, title), then **Merge now** (default) /
   **Run deep review first** (non-default) / **Don't merge**. After a
   **Merge now** choice, refresh step 6's gates and use its guarded merge
-  command without another approval for the same authorized merge. After a
-  completed merge, continue to step 9.
-- **ready** — report the evaluated state and, only when preflight is clear,
+  command and the shared verification below without another approval for the
+  same authorized merge.
+- **ready** — finish authorized preparation, then report the evaluated state
+  and, only when preflight is clear,
   the exact merge command. Include every deferral with its reference and
   mention deep review is available;
   include the step 9 survey as a post-merge preview; stop. Every
@@ -369,25 +420,88 @@ the guard. No check or owner hold is bypassed.
   literal reviewed SHA in `--match-head-commit`; a head change requires a
   refreshed review before use.
 
+### Verify completion in every merging mode
+
+`merge`, `auto`, and `confirm` after **Merge now** use the same verification.
+Command success or queue acceptance alone is not merge completion. Follow
+[pending merge monitoring](references/polling.md#pending-merge-monitoring)
+for bounded waits, head or review changes, and the final authoritative check.
+If the PR remains unmerged at the bound, report its pending or blocked state
+and stop. Any cleanup shown for an unmerged PR must be labeled as a preview.
+
+After GitHub confirms a merge, report each merged PR's URL, actual merge
+commit, and every deferral. The same final chat response must include the
+steps 9–10 cleanup survey and explicit recommendations, inline.
+Do not ask whether to perform the read-only survey; execution requires
+the authorization described in step 9.
+
+If outstanding work prevents clean completion, show the cleanup section
+inline with its blockers and retention recommendations. Execute no cleanup
+or synchronization while that completion gate remains blocked.
+A clean-completion claim still requires the reconciled ledger.
+Command success or queue acceptance alone never establishes a merge.
+
 ## 8. Deep review (opt-in, never default)
 
 Trigger surfaces: `--deep` or a plain ask at invocation (any mode) ·
 `deep-review: always` in the prefs file (any mode, silent) · the confirm-gate
 option (confirm mode only). Engines — offer whichever are installed, singly
 or as a panel: `/code-review` at high effort, a Codex adversarial pass, the
-pr-review-toolkit review agents. Findings land as PR comments and feed
-straight back into step 3's loop; when the pass is clean, return to step 7.
+pr-review-toolkit review agents. In the preparation flow, findings land as PR
+comments and feed straight back into step 3's loop; when the pass is clean,
+return to step 7.
+Step 1's read-only route instead returns findings to the user and stops.
 
 Deep-review findings enter the same ledger with the same scope-and-value
 classification and count toward the same ratchet — dispatched reviewers
 produce 8–33 findings per round against the bots' 1–5, so they get no
 exemption.
 
-## 9. Post-merge cleanup (survey → confirm; never unasked)
+## 9. Post-merge cleanup — mandatory inline recommendations
 
-After a successful merge, survey — read-only — then present every finding as
-a named action with its exact command, in two lists: **needs cleanup** and
-**already clean** (state what is done; never silently omit it).
+After a confirmed merge, survey read-only and present the complete cleanup
+recommendations inline in chat. Do not create a cleanup-plan or survey file.
+A file link, attachment, or selection widget does not replace the inline
+survey. Subsequent selections and results also remain inline.
+
+Begin by naming the repository and every PR whose merge was verified.
+For a batch, distinguish merged PRs from targets that remain unmerged.
+
+Group findings by relationship to the verified merged PRs:
+
+1. Direct PR cleanup — branches, worktrees, and synchronization associated
+   with the named merged PRs.
+2. Supporting work — plans, handoffs, review notes, or evidence supporting
+   those PRs.
+3. Other work — separate tasks or PRs outside the merged set.
+4. Unknown relationship — insufficient evidence to associate the item.
+
+For every item, separately label its origin: current session, another
+session, or unknown. Identify another session when the available evidence
+supports it. Do not infer relationship or origin from location, filename,
+or modification time alone.
+
+Assign C1, C2, C3, ... across the entire survey, including retained,
+blocked, and already-clean items. Do not restart numbering per group or PR.
+Keep IDs stable across updates and never reuse an ID for a different target.
+List a shared action once and name every affected PR.
+
+Each item must include:
+
+- Exact target and evidence establishing its relationship and observed state.
+- Session origin, including uncertainty.
+- Recommendation: remove, synchronize, retain, or no action, with a reason.
+- Exact command and working directory when actionable.
+- Any blocker or dependency on another C item.
+
+End with the recommended selection, such as "Recommend C1 and C2;
+retain C4 and C5." Explicitly say when no cleanup is recommended.
+If inspection is incomplete, name the missing evidence; do not report
+unknown state as already clean.
+
+Survey the target repositories, their registered worktrees, and supporting
+files already known from the task or session. Do not expand this into a
+machine-wide cleanup audit.
 
 Typical needs-cleanup findings:
 
@@ -400,23 +514,45 @@ Typical needs-cleanup findings:
 - Other local branches already merged into the default branch
   (`git branch --merged <default-branch>`, minus the default itself).
 
-Always report, never touch: dirty uncommitted state anywhere (main checkout
-or any worktree) — list it as needs-attention and leave it to the user.
+Always report and preserve dirty uncommitted state in the main checkout
+or any worktree. Give each finding a C ID and mark it needs-attention.
 
-The gate: one multi-select menu of the needs-cleanup actions (name +
-command). Run only what is selected; a note can adjust any item (a different
-branch name, a different worktree path). `--auto` prints the same two lists
-and runs nothing — cleanup never executes without an explicit selection or
-ask.
+Recommend retaining supporting documents unless their retirement is
+explicitly requested. A merged PR does not establish that its plan,
+handoff, or review evidence is disposable. Recommend retaining unrelated
+work and items whose relationship or ownership is uncertain.
 
-## 10. Sync the local default branch (ask; guarded, double-checked)
+Present the inline survey before requesting action selections. Execute only
+actions covered by existing explicit authorization or the user's selected
+C IDs. Do not ask again for an already-authorized, unchanged action.
 
-After the merge, offer — never assume — to bring the local default branch up
-to date with the merged remote; the offer joins the step 9 menu as its own
-named action. Guards run read-only at survey time and are **re-run
-immediately before execution** — state can change between the survey and the
-click; a guard tripping at either moment blocks the action and downgrades it
-to a needs-attention report:
+Authorization for "PR cleanup" covers direct cleanup for the named PRs.
+It does not automatically include supporting files, other work, or unknown
+items. Those require an explicit named selection or instruction.
+
+Selecting an item does not implicitly select its dependencies. If C2
+requires unselected C1, report C2 as blocked. Before execution, recheck
+the target, relevant cleanliness and merge evidence, active use, and Git
+operation state. Changed targets or failed guards invalidate execution.
+
+Do not use broad removal or pruning commands unless their complete affected
+set has been shown and authorized. Never force a refused deletion.
+
+`--auto` shows the same inline recommendations and executes no cleanup
+without explicit cleanup authorization. After authorized actions, report
+each C ID inline as done, retained, blocked, or failed, with verification.
+
+## 10. Sync the local default branch (authorized; guarded, double-checked)
+
+After the merge, include local default-branch synchronization as its own
+C item in the inline step 9 survey. Name the affected checkout and merged
+PRs, show the exact command and working directory, and recommend synchronize,
+retain, or no action according to the observed state.
+
+Surveying does not authorize synchronization. Preserve existing explicit
+authorization and run only the authorized action. Guards run read-only at
+survey time and are re-run immediately before execution. A guard tripping
+at either moment marks that same C item blocked:
 
 - Dirty state where the sync would act (`git status --porcelain`).
 - The default branch checked out in another worktree (`git worktree list`) —
@@ -455,7 +591,7 @@ this skill's.
 | "We already replied once, so a reopen needs no reply" | Deduplicate within the current disposition round. A failed resolve retries only resolution; a reopen may need a new disposition. |
 | "CI was green before this push, so merge now" | CI and review readiness belong to the evaluated head. Refresh state and bind the merge with `--match-head-commit`. |
 | "One clean pass, merge" | A push can spawn new reviews. Re-check after every push; merge only from a clean, current pass. |
-| "Merged — I'll just tidy the branches too" | Cleanup is survey-then-confirm. Nothing is deleted without an explicit selection. |
+| "Merged — I'll just tidy the branches too" | Always show the C-numbered survey inline. Execute only explicitly authorized actions; preserve dirty state and unapproved targets. |
 | "I'll quickly pull main while I'm at it" | The sync is offered, guarded, re-checked at execution, and ff-only — never a side effect. |
 | "GraphQL is rate-limited — nothing to do but report" | The two thread ops have no REST equivalent, but the web UI is a different quota pool. Check the reset clock, then wait or use the gated browser fallback. |
 | "GraphQL 403 — open Chrome" | 403 alone is not the trigger. Quota resets hourly; a near reset makes a bounded wait cheaper and safer. `decide_fallback_route` makes the call. |
@@ -474,7 +610,7 @@ this skill's.
 | "One more fix for the fix and this thread class is closed" | Fix-of-fix is the divergence engine. Consider reverting to spec semantics first. |
 | "It is a one-word fix, cheaper to just do it" | Cheap to type is not cheap in system cost: each commit carries regression risk and draws a fresh wave. The value floor applies. |
 | "Fixing the nit is more polite than declining it" | A reasoned decline is the etiquette — bots accept it and have withdrawn findings. Fixing nits trains the loop that nits earn commits. |
-| "Prefs said auto — no need to announce it" | The arming line prints in every mode, and auto-from-prefs asks once per run. Authority is never exercised invisibly. |
+| "No confirmation means no announcement" | Announce the resolved mode and its source in every run. Do not ask an arming question. In `merge` and `auto` modes, do not ask for final merge confirmation. In `confirm` mode, retain the requested final menu. |
 | "The repo came with a prefs file — same as mine" | Tracked = repo-shipped = someone else's consent. Its authority keys are ignored; only an untracked, user-local file arms anything. |
 | "One pass finished and every thread resolved — just merge it" | `--one-pass` never merges: the fixes just pushed may be drawing new reviews right now. Rerun without the flag, or merge manually with the reported command. |
 

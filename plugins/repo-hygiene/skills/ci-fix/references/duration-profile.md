@@ -127,6 +127,11 @@ overlooked.
   successful sample. Never wait unbounded.
 - **Matrix cells are jobs.** `pytest (3.12)` and `pytest (3.13)` profile
   separately. When only one cell is red, target that cell's toolchain locally.
+- **A `<job> (diagnostic)` row is expected, and is not the job.** A workflow
+  using `filter-input.md`'s guarded name produces that row from filtered
+  dispatches. It is a separate job to the profile, which is correct: a
+  two-test run must not pollute the real job's median. Never pass it as
+  `--job` to the planner, and never read its duration as the job's.
 - **A cache hit and a cache miss are both samples.** The median absorbs one
   miss; `max_s` shows it. A wide gap between the two is itself an `--optimize`
   finding.

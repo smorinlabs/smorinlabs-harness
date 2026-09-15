@@ -69,4 +69,6 @@ then ask one question with three endings — continue until clean (10-minute
 wall clock), merge and defer the residue, or pause for redesign. Merge and
 defer is offered only when no thread is escalated — escalations hold the
 merge until the user disposes of them. Details and mode behavior live in
-SKILL.md step 5.
+SKILL.md step 5. Default `merge` mode uses this interactive check-in and retains
+merge authorization after a permitted continuation. Explicit unattended `auto`
+mode reports the open items and stops instead of asking.

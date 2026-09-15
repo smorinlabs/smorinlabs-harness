@@ -200,6 +200,30 @@ accepted overlap with superpowers receiving-code-review recorded).
 - [x] [P14-T04] Docs: per-skill page docs/skills/pr-merge-flow.md + README table row; accepted-overlap baseline entry added in smorin-harness docs/doctor-baseline.md
 - [x] [P14-TS01] skill-quality gate PASS — 4 layers green (982-char description, no collisions, no placeholders/PII, verify pass claude-code+codex); skill-reviewer deep pass: 3 majors + 5 minors found, all fixed (thread-reply recipe + databaseId, pulls/comments data model, .git/info/exclude-only, per_page=100 probes, draft/mergeable-null/branch-protection handling, Iron Law label, close-without-merge disambiguation)
 - [x] [P14-T05] Commit ce8329a ✓; pushed to public main via partial push ✓; v0.9.0 tag + RELEASE-NOTES cut as part of the P15-T06 release flow (deferred bookkeeping folded in as planned)
+- [x] [P14-T06] Follow-up, 2026-09-12: prepare default `merge` mode in
+  repo-hygiene 0.14.0. Explicit invocation authorizes guarded merge without
+  routine arming or final confirmation. Preserve opt-in `confirm`, unattended
+  review handling in `auto`, non-merging `ready` and one-pass, owner decisions,
+  convergence bounds, browser consent, and separate cleanup authorization.
+  Refresh the skill, companion docs, validation scenarios, and manifests.
+  Follow-up, 2026-09-14: require inline cleanup recommendations with stable
+  C IDs, PR relationship groups, separate session-origin labels, retention
+  defaults, and action-specific authorization. Keep blocked and already-clean
+  findings visible; never deliver the cleanup survey as a file.
+  Release publication and live installation remain outside this update.
+- [x] [P14-TS02] Follow-up validation: manifest generation, repository static
+  checks, and Claude/Codex static load verification pass. Claude session-backed
+  loading passes; the Codex session-backed check reports an execution error
+  and provides no load result. An independent review of 15 instruction
+  scenarios has no introduced findings remaining after clarifying read-only
+  scope and queue timeout. Traces cover mode precedence and retained owner
+  gates; no live PR operation is used as a test.
+  Cleanup follow-up validation, 2026-09-14: eight instruction fixtures cover
+  merging modes, partial batches, session origin, existing authorization,
+  stable selections, missing evidence, late review changes, and dirty targets.
+  The example includes synchronization and ends with its recommended selection.
+  Manifest generation, public-content checks, relative links, and static
+  verification pass; Codex static verification covers the manifest only.
 
 ---
 
