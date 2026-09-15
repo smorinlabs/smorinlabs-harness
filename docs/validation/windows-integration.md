@@ -1,5 +1,13 @@
 # Windows integration implementation validation
 
+The pre-push local Windows path passed native acceptance on 2026-09-15.
+Unpushed failing source failed, its local repair passed unchanged assertions,
+and the same three assertions passed before and after a clean reset. Both SSH
+accounts survived ordinary signed-out reboot. Standard-account SSH/SFTP worked
+after restoration without access repair. Timeout, empty-selection and stale-source
+controls were rejected. See [the local execution record](windows-local-2026-09-15.json)
+and [the current release candidate](windows-release-0.27.0.md).
+
 The Windows diagnostic implementation passed an actual failure → source repair
 → success cycle and rejection/cleanup of an empty test selection on 2026-09-12.
 Ordinary signed-out Windows reboot/access also passed. A fresh agent followed
@@ -20,8 +28,8 @@ does not establish that the new reset instructions were followed.
 | Windows collector, Fusion Python helpers and PowerShell regression | 89 tests passed in 17.26 seconds on the revised registration/retirement helpers |
 | PowerShell contracts | Three parsers, four selection cases, five mode cases, fifteen retirement cases and four service-verification cases; a real-filesystem probe verifies ancestor traversal and symlink refusal |
 | Full suite on earlier integration source | 257 tests passed initially; 28 existing repo-finder tests needed a writable UV cache, then passed. All 285 then-collected tests were verified across those runs. |
-| Generated manifests | Current; Fusion 0.3.0 and repo-hygiene 0.14.0 |
-| Current loading | Both plugins passed session-backed skill loading in Claude and Codex on 2026-09-13. Static checks found no errors; Claude retains the ignored generated-metadata warning. |
+| Generated manifests | Current; Fusion 0.3.0 and repo-hygiene 0.15.0 |
+| Current loading | Both plugins passed session-backed skill loading in Claude and Codex; the September 15 local-execution changes were also checked. Static checks found no errors; Claude retains the ignored generated-metadata warning. |
 | Earlier fresh loading and offline skill scenarios | Both tools loaded the initial integration and produced inspected artifacts for the six scenarios below. These predate the revised reset instructions. |
 | Independent review | No concrete blocker in the reviewed helpers, public routing or private diagnostic/reset instructions |
 | Public boundary | Generic manual setup is a progressive reference. Credentials, images and protected transport stay in the optional private provider. |
@@ -114,6 +122,6 @@ be restored before administrator maintenance.
 
 Four installed Fusion placements still target stable main. The merged PR #57
 worktree and local branch were removed, as was the specifically approved
-obsolete original VM. Preserve the integration checkout, private recovery
-checkouts, baseline, working VM and unrelated public audit files until the
-remaining acceptance and deliberate post-merge cleanup.
+obsolete original VM. Preserve the private recovery asset root, baseline, designated working VM and
+unrelated public audit files. Retain the public integration checkout until its
+authorized post-merge cleanup.

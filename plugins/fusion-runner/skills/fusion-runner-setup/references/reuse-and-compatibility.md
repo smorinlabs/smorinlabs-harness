@@ -181,7 +181,11 @@ checkout, Windows storage, Unicode data and paths, ZIP archives, C# compilation,
 a native Windows API, and child-process exit codes. Add the project's build and
 tests before claiming that project's CI is compatible.
 
-Reboot the guest, confirm the same runner returns without an interactive login,
-and repeat the local job. For a cloneable image, also boot and test an independent
-clone. Retain the commit, run URLs, reports, baseline identity, and differences
+For the separate persistent-runner option, reboot the guest, confirm that the
+same runner returns without an interactive login, and repeat the local job.
+An ephemeral one-job runner retires after its job. Another diagnostic requires
+a fresh registration and checksum-verified program directory. Ordinary Windows
+reboot/access checks can run with no GitHub runner registered. For image recovery,
+boot a working copy of the unregistered baseline and verify access before fresh
+registration. Retain the commit, run URLs, reports, baseline identity, and differences
 locally. Refresh the baseline and repeat relevant tests after OS or tool updates.
