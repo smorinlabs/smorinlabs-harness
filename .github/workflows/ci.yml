@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      filter:
+        description: "test IDs to run, one per line; empty runs the whole suite"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -21,6 +26,7 @@ jobs:
       - run: uv run harness-kit gen --check
 
   pytest:
+    name: pytest${{ github.event_name == 'workflow_dispatch' && inputs.filter != '' && ' (diagnostic)' || '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
