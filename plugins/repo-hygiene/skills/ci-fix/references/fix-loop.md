@@ -84,10 +84,11 @@ requires supplying it; an unresolved file/ref requires correcting identity or
 using ordinary CI. Do not generate an empty commit as generic recovery.
 
 When the workflow uses `filter-input.md`'s guarded name, the job to inspect
-in that run is `<job> (diagnostic)`, not `<job>`; the unfiltered job name
-appears only on the ordinary push or pull-request run for the same commit.
-Waiting on `<job>` inside a filtered dispatch waits for a job that will not
-exist there.
+in a filtered dispatch is `<job> (diagnostic)`, not `<job>`. The unfiltered
+name `<job>` appears on the ordinary push or pull-request run for the same
+commit and on a dispatch whose input is empty. Waiting on `<job>` inside a
+filtered dispatch, or on `<job> (diagnostic)` inside an empty-input one,
+waits for a job that will not exist there.
 
 Verify that the intended tests ran. Zero or different selected tests require
 selector correction. A diagnostic success then returns to ordinary required
