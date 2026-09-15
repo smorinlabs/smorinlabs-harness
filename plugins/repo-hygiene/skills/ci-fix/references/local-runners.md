@@ -181,6 +181,10 @@ is *not reproducible on this host*, `CI is the lab`, and the remote rules in
 SKILL.md step 6 take over. Say which runner would have worked and what it
 would have cost, so the choice is visible rather than a silent fallback.
 
-macOS and Windows jobs stay not reproducible unless the host matches: a Linux
-container cannot run them, and Windows has its own path (a self-hosted runner
-VM), which is not this file's subject.
+A Linux container cannot execute a Windows or macOS job. When inventory contains
+a Windows target, read [local Windows execution](windows-local.md) for testing
+current worktree files in a suitable Fusion guest. Compare its full remaining
+feedback cost and retain hosted-image limitations. A
+[GitHub-scheduled diagnostic](windows-runners.md) uses pushed code and separate
+queue/registration timing. Neither route replaces required CI. macOS jobs still
+require a suitable macOS environment.

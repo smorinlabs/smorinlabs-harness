@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## v0.27.0 — 2026-09-15
+
+### Added
+
+- `repo-hygiene` 0.15.0 adds Windows diagnostics for pushed revisions and local
+  execution of unpushed worktree files. Windows discovery requires a matching
+  workflow job, delegates Fusion operations, reports preparation gaps, and
+  compares full remaining feedback cost. Receipts bind source, account, selected
+  tests and artifacts. Filtered diagnostics remain separate from required CI.
+- `fusion-runner` 0.3.0 adds fresh checksum-verified one-job runner programs,
+  guarded retirement, explicit baseline reset routing, and local commands under
+  a verified standard Windows account. A separate maintenance identity can
+  supply the fixed read-only service/process inventory that Windows denies to
+  a standard SSH network token.
+
+### Fixed
+
+- Image creation now prepares standard-account SSH and verifies both accounts
+  before clean capture. Startup verifies existing access. A reset acceptance
+  check cannot conceal missing image settings by repairing them afterward.
+- Native Arm64 validation covered failing and repaired local source, unchanged
+  test selection before and after reset, timeout and empty-selection rejection,
+  stale-source collection, and signed-out ordinary reboot access. Fresh Windows
+  installation and persistent-runner reboot testing remain outside this delivery.
+
 ## v0.26.0 — 2026-09-15
 
 ### Added

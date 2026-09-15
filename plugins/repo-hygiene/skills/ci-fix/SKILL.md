@@ -89,6 +89,14 @@ Fix-mode flags:
   here (podman, docker, lima, act, devcontainer), ranked by readiness before
   fidelity. It starts, pulls, and installs nothing. Fields and recipes:
   `references/local-runners.md`.
+- Windows discovery begins only when this inventory contains a Windows job or
+  resolved Windows matrix cell. For current worktree changes, follow
+  [local Windows execution](references/windows-local.md): check guest suitability,
+  compare remaining preparation/execution cost, and call `windows_local.py plan`.
+  Fusion setup/run owns VM and guest access operations. With no Windows job,
+  perform no Fusion probe. For a pushed-code GitHub diagnostic, use
+  [Windows runners](references/windows-runners.md). Preserve image and architecture
+  differences; neither route replaces ordinary required CI.
 - Runs on this commit, the fix-target set — listed by `head_sha`, not by
   branch, so every workflow's run on HEAD is present however many the branch
   has:
@@ -219,7 +227,7 @@ Classify before fixing anything. `references/fix-loop.md` has the signals.
 | **Workflow or config** | actionlint finding, bad `uses:`, missing permission, YAML typo, a secret name that does not exist | Edit the workflow; `actionlint <file>` locally is a relevant validation check. Verify affected commands if behavior changed, then push |
 | **Code or test** | a test ID or compile error in the failed step's log | Steps 5–6, the targeted loop |
 | **Flake or infrastructure** | runner lost, network timeout, the same commit green on another attempt | Rerun the failed job once on the same commit (`references/fix-loop.md`). Green → record it as a flake; do not "fix" it. Red again → inspect evidence and reclassify; do not assume the cause |
-| **Not reproducible on this host** | needs secrets, a service container, or a matrix OS this machine lacks | An `ubuntu-*` job is only *CI-only* once the runner survey says so: with a ready runner in `runners.toml`, rungs 0 and 1 run there (`references/local-runners.md`, `--local-env container`) and this is an ordinary code-or-test failure. With none — nothing ready and the owner declined the one start or install command — there is no local rung for this job: fix from the evidence, retain the local limitation, verify affected checks that can run, and use supplemental CI diagnosis if useful. macOS and Windows jobs stay CI-only unless the host matches |
+| **Not reproducible on this host** | needs secrets, a service container, or a matrix OS this machine lacks | Survey Linux runners before declaring an `ubuntu-*` job CI-only (`references/local-runners.md`). After inventory proves a Windows target, inspect a configured Fusion guest and the cost of testing current local files (`references/windows-local.md`). Retain unsuitable requirements and use CI when it provides the useful route. A Linux container cannot execute a Windows or macOS job |
 
 A red **commit status** needs producer identification: external CI can use
 statuses without check-runs. Inspect its context, description and target.
@@ -251,8 +259,12 @@ still be required by repository policy; preserve that gate in the handoff.
 ## 6. Reproduce, fix, and verify affected behavior
 
 Apply `references/validation-contract.md` and `references/targeted-repro.md`.
-The local stages remain host or Linux-runner execution; a runner does not
-change the evidence requirements or make a full suite mandatory.
+Local stages can run on the host, a Linux runner, or a suitable Windows VM.
+The environment does not change evidence or scope requirements. Follow
+[local Windows execution](references/windows-local.md) for a hash-verified
+snapshot of current worktree files before a push. The
+[GitHub-scheduled Windows diagnostic](references/windows-runners.md) remains
+available for pushed code. Neither establishes a hosted-image match by itself.
 
 Build the plan from facts already established:
 
@@ -263,7 +275,8 @@ python3 <skill-dir>/scripts/ladder_plan.py --profile "$SCRATCH/profile/profile.j
   --job "<jobs-API job name>" --step "<failed step display name>" \
   --ids <extracted count> --dispatchable|--not-dispatchable \
   --local-step|--no-local-step --ci-is-lab|--not-ci-is-lab \
-  [--local-env host|container] [--filter-input <resolved input name>] \
+  [--local-env host|container|windows-vm] [--filter-input <resolved input name>] \
+  [--windows-plan <fresh Windows plan JSON>] \
   [--bundle-seconds <compatible measured total>] [--full-step-reason <affected behavior>]
 ```
 
@@ -311,6 +324,20 @@ Rules:
   ranking and owner pin. Respect architecture, shell, toolchain and services.
   For a start/install outside existing authority, make the concrete offer once,
   record a decline, and proceed with the appropriate remote path.
+- For local Windows execution, bind the selected workflow/cell, current source
+  snapshot, command, standard account, native architecture and report to one
+  receipt. Count startup, transfer, setup and collection in the cost decision.
+  Reconcile lost responses by collecting that invocation. New Mac edits require
+  a new reviewed snapshot. Use the existing ledger only for verified compatible
+  successes; preserve separate phase timings and ordinary required CI.
+- For a GitHub-scheduled Windows diagnostic, bind the trusted repository, workflow, pushed
+  revision, selected tests and exact Fusion registration to the invocation
+  receipt. Use fresh one-job registration and actual labels, then collect
+  the matching run/job/report with `scripts/windows_runner.py`. Prove native
+  architecture, non-administrator execution and selected test outcomes. An
+  uncertain dispatch response resumes collection; it does not justify a
+  duplicate dispatch. Follow Fusion's lifecycle operations, retaining
+  failure evidence and requiring a real admission barrier before shutdown.
 - After local success use an ordinary push. `dispatch-filtered` is supplemental
   diagnosis on the same pushed code when CI is the lab and isolation pays;
   preserve the runner-specific `INPUT`/`VALUE` formats in `filter-input.md`.
@@ -388,7 +415,7 @@ pointer to `--optimize` is a proposal, not a required extra phase.
 - `references/ci-coverage.md` — expected-check reconciliation and acceptance cases.
 - `references/duration-profile.md` · `references/targeted-repro.md` ·
   `references/fix-loop.md` · `references/filter-input.md` ·
-  `references/local-runners.md` · `references/shift-left.md` ·
+  `references/local-runners.md` · `references/windows-local.md` · `references/windows-runners.md` · `references/shift-left.md` ·
   `references/optimize.md`.
 - `superpowers:systematic-debugging` — root-cause diagnosis.
 - `factor-architect`, `factor-scan` — code refactoring rather than CI optimization.

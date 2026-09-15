@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "kind": "offline-skill-following",
+  "live_windows_validation": false,
+  "results": [
+    {
+      "tool": "codex",
+      "cases": [
+        {
+          "id": "A",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "B",
+          "may_dispatch": false,
+          "may_stop_vm": true,
+          "evidence_verified": true
+        },
+        {
+          "id": "C",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "D",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "E",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "F",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        }
+      ],
+      "requires_pushed_code": true,
+      "replaces_required_ci": false,
+      "artifact_sha256": "0f2b41741c26043fd69dc706173b5770ca4e99af5544c30d48b1e1997d6ed9ad"
+    },
+    {
+      "tool": "claude",
+      "cases": [
+        {
+          "id": "A",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "B",
+          "may_dispatch": false,
+          "may_stop_vm": true,
+          "evidence_verified": true
+        },
+        {
+          "id": "C",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "D",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "E",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        },
+        {
+          "id": "F",
+          "may_dispatch": false,
+          "may_stop_vm": false,
+          "evidence_verified": false
+        }
+      ],
+      "requires_pushed_code": true,
+      "replaces_required_ci": false,
+      "artifact_sha256": "aacb9160f0df5c1bcce2a4b29e9aae6b5132fd3b48d5784e702e59bc44459417"
+    }
+  ]
+}

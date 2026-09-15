@@ -2,7 +2,8 @@
 
 Install VMware Fusion on a Mac, create a Windows 11 virtual machine, install the
 tools required by a GitHub Actions workflow, and register a Windows runner
-service. The companion `fusion-runner-run` skill operates the resulting VM.
+service. The diagnostic helper registers one job at a time from fresh verified
+programs. Persistent registration remains a separate, unvalidated setup option. The companion `fusion-runner-run` skill operates the resulting VM.
 
 **Triggers on:** "set up a Windows runner on my Mac", "install Fusion for CI",
 "prepare a Fusion runner VM".
@@ -37,6 +38,28 @@ SDKs, a dedicated runner account, runner registration, service startup, and
 verification. It writes a local JSON handoff containing the VM path, architecture,
 runner identity, exact Windows service name, and evidence. Credentials are not
 stored in that handoff.
+
+For a prepared diagnostic guest, the public `register_service.ps1` helper accepts
+protected JSON on standard input in an elevated native PowerShell 7.4+ session. It verifies
+the dedicated non-administrator account by name and Windows security identifier
+(SID), refuses an
+existing installation directory or active runner process, and records a guest
+receipt before preparing programs. It downloads the exact official native
+release, verifies SHA-256, and extracts into an unused invocation directory
+under an administrator-owned parent before configuring the service. It never
+executes an earlier job's modifiable programs as administrator. A separate host intent preserves the intended
+identity if the transport response is lost. No private recovery repository is
+required; guest access and credentials follow the user's established local
+method.
+
+One-job registration uses `--ephemeral --no-default-labels` and an exclusive
+`fusion-ci-<registration-id>` label. Jobs route using that actual label list,
+then prove the guest's architecture inside the job. The next diagnostic gets a
+fresh registration after the previous one is retired. Working files remain in
+the VM. The registration procedure and its exact protected-input contract are
+in [runner provisioning](../../plugins/fusion-runner/skills/fusion-runner-setup/references/runner-provisioning.md#one-job-diagnostic-registration).
+`ci-fix` composes this lifecycle with a targeted GitHub-scheduled diagnostic on
+the pushed revision; it still verifies ordinary required CI.
 
 The agent performs the available operations and hands back individual interactive
 steps when necessary. Broadcom account access, administrator prompts, Windows
@@ -127,8 +150,9 @@ separate actions taken when authorized. It reports whether a real CI job ran.
 
 ## Scope and validation
 
-The default is one reusable runner in a VM that is powered on when needed. Jobs
-must be trusted to run on that Mac. A publicly distributed skill does not make
+The default is one reusable VM that is powered on when needed. Persistent
+registration accepts repeated jobs; the diagnostic mode registers for one job
+at a time. Jobs must be trusted to run on that Mac. A publicly distributed skill does not make
 the machine appropriate for arbitrary public pull requests. A custom runner
 label selects the machine; repository permissions and runner-group access
 control who can use it.
@@ -153,8 +177,23 @@ private recovery does not validate every helper path or fresh-agent setup
 scenario. Another persistent installation must still pass the setup skill's
 own reboot and real-job checks.
 
+The protected registration helper and the `ci-fix` diagnostic adapter are
+additional interfaces. Their simulated or static checks do not extend the
+historical three-job evidence into new live coverage. Record a current job,
+failed-job retirement, and any persistent or locked-host test separately before
+claiming those scenarios pass.
+
 Implementation details and current primary sources:
 [installation](../../plugins/fusion-runner/skills/fusion-runner-setup/references/installation.md),
 [runner provisioning](../../plugins/fusion-runner/skills/fusion-runner-setup/references/runner-provisioning.md),
 [reuse and compatibility](../../plugins/fusion-runner/skills/fusion-runner-setup/references/reuse-and-compatibility.md),
 [handoff](../../plugins/fusion-runner/skills/fusion-runner-setup/references/handoff.md).
+
+## Setup without a private recovery skill
+
+A private companion may supply its owner's saved VM and credentials. This public
+plugin works independently: it reports when that provider or configured VM is
+unavailable and loads [create your own runner](../../plugins/fusion-runner/skills/fusion-runner-setup/references/create-your-own-runner.md)
+for the manual installation, access, baseline, registration and verification
+steps. No personal VM image or private-repository access is bundled. Existing
+prepared VMs are reused; setup does not reinstall Windows merely to run another job.

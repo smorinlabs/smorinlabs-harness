@@ -488,7 +488,7 @@ the prepared installer ISO, observed its contents in Windows, and loaded its
 checksum manifest. A later window lookup failure interrupted entry of the
 hash-check command before it was submitted. On resume, inspect and clear any
 partial command before continuing; an interrupted entry is not an executed
-check. Follow [runner provisioning](runner-provisioning.md#3-download-the-runner-and-prepare-a-baseline)
+check. Follow [runner provisioning](runner-provisioning.md#4-download-the-runner-and-prepare-a-baseline)
 for transfer-media and checksum requirements.
 
 Record subsequent edition, licensing, storage, and first-run screens as they

@@ -27,10 +27,40 @@ scope. Check architecture, toolchain, shell and services. A new start, install
 or pull outside current authority needs a concrete decision; inherited approval
 is honored without repeat questions.
 
-Six scripts provide timing profiles (`ci_profile.py`), failure extraction
+Unpushed Windows changes can run through
+[`windows_local.py`](../../plugins/repo-hygiene/skills/ci-fix/scripts/windows_local.py).
+Workflow inventory must first identify a Windows job or matrix cell. The helper
+delegates discovery and power operations to Fusion, captures current worktree
+files, and verifies their hashes before standard-account execution. It compares
+remaining startup, transfer, setup, check and collection cost with a suitable
+additional CI round. Unknown timing permits a bounded useful measurement.
+Changing local files while a snapshot runs does not make its result evidence
+for newer edits. See [local Windows execution](../../plugins/repo-hygiene/skills/ci-fix/references/windows-local.md).
+
+Pushed Windows revisions can still use a prepared Fusion guest through
+[`windows_runner.py`](../../plugins/repo-hygiene/skills/ci-fix/scripts/windows_runner.py).
+Its read-only survey checks the exact VM, repository, runner ID, labels and
+recorded guest architecture. An authorized diagnostic dispatch binds the pushed
+revision and selected test IDs to a receipt. Collection verifies the actual
+run, attempt, job, runner and report, including native architecture,
+non-administrator execution and the tests that ran. A real failing result is
+retained as reproduction evidence; zero tests or a mismatched report cannot pass.
+
+GitHub schedules this Windows job even though the VM runs on the Mac. The
+`fusion-runner` plugin supplies the public registration and operating procedures;
+no private recovery repository is required. One-job registrations use exclusive
+labels and retain the VM's working files. Failure cleanup preserves evidence and
+requires completed work plus a barrier against new jobs. The procedure is in
+[Windows runners](../../plugins/repo-hygiene/skills/ci-fix/references/windows-runners.md).
+Ordinary required CI remains part of completion, including hosted Windows
+coverage when its architecture or Windows image differs.
+
+The helper scripts provide timing profiles (`ci_profile.py`), failure extraction
 (`extract_failures.py`), workflow facts (`workflow_inventory.py`), scope planning
-(`ladder_plan.py`), compatible timing history (`local_ledger.py`) and runner
-survey (`detect_runners.py`). Inventory retains raw conditions, job environments,
+(`ladder_plan.py`), compatible timing history (`local_ledger.py`), runner
+survey (`detect_runners.py`), local Windows capture/execution (`windows_local.py`),
+and GitHub-scheduled Windows survey/dispatch/collection (`windows_runner.py`).
+Inventory retains raw conditions, job environments,
 tag filters and effective step context. Its validation hints require inspection;
 `run` plus `setup: false` never authorizes local execution.
 
@@ -89,6 +119,19 @@ location) as well.
 > "Fix CI" for a Linux-specific failure with a suitable runner already available
 > → run the selected tests in that runner, verify environment and selected IDs,
 > record compatible timings, and report ordinary CI coverage for the pushed code.
+
+>
+> "Fix the Windows failure using my Fusion runner"
+> → inventory identifies the Windows target; compare guest suitability and
+> remaining feedback cost, run the selected local-file snapshot without a push,
+> repair and verify it, then push and reconcile ordinary required CI.
+
+>
+> "Run this pushed Windows diagnostic through GitHub on my Fusion runner"
+> → compare the actual guest with the failing job, prepare a fresh one-job
+> registration, dispatch the selected tests on the pushed revision, and verify
+> the matching report. Preserve failure logs, retire safely, then repeat on the
+> repaired revision and reconcile ordinary required CI.
 
 >
 > "Fix CI" with no adequate local equivalent

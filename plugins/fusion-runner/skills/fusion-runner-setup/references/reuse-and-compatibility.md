@@ -26,7 +26,7 @@ can change as jobs run and Windows, tools, or the runner update.
 
 | Later need | What to use | What must happen again |
 | --- | --- | --- |
-| Run more CI jobs | The existing registered working VM | Start it and verify runner readiness; no Windows installation or registration |
+| Run more CI jobs | The existing working VM | Start Windows and verify access; a retired one-job runner needs fresh verified registration, while an existing persistent runner retains its identity |
 | Return to the prepared state | The preserved pre-registration baseline | Restore the designated working VM and configure a fresh runner registration; no Windows or tool reinstall |
 | Create independent Windows machines | A generalized reference VM prepared for cloning | Complete first-run Windows setup and give each machine a separate runner identity; use the clone procedure below |
 
@@ -92,8 +92,11 @@ Do not assume every attached disk lives inside the bundle: Fusion can
    did not run or failed. Register and test the working runner only after this
    baseline verification; retain the unchanged baseline for future recovery.
 
-Register the working VM once. Normal shutdown and startup preserve its runner
-identity. Do not run Sysprep or restore a baseline just to turn the runner on.
+Normal shutdown and startup preserve Windows and any still-valid runner
+registration. A completed one-job registration has retired and requires a fresh
+verified program directory and new registration for the next GitHub job.
+A separately configured persistent runner retains its identity. Do not run
+Sysprep or restore a baseline just to turn Windows on.
 
 Restoring a baseline discards later guest changes and can roll back credentials.
 Establish what will be lost before restoring. For a pre-registration baseline,
@@ -178,7 +181,11 @@ checkout, Windows storage, Unicode data and paths, ZIP archives, C# compilation,
 a native Windows API, and child-process exit codes. Add the project's build and
 tests before claiming that project's CI is compatible.
 
-Reboot the guest, confirm the same runner returns without an interactive login,
-and repeat the local job. For a cloneable image, also boot and test an independent
-clone. Retain the commit, run URLs, reports, baseline identity, and differences
+For the separate persistent-runner option, reboot the guest, confirm that the
+same runner returns without an interactive login, and repeat the local job.
+An ephemeral one-job runner retires after its job. Another diagnostic requires
+a fresh registration and checksum-verified program directory. Ordinary Windows
+reboot/access checks can run with no GitHub runner registered. For image recovery,
+boot a working copy of the unregistered baseline and verify access before fresh
+registration. Retain the commit, run URLs, reports, baseline identity, and differences
 locally. Refresh the baseline and repeat relevant tests after OS or tool updates.

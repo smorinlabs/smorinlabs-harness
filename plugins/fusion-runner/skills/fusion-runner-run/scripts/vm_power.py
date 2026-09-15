@@ -8,9 +8,10 @@ import re
 import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 DEFAULT_VMRUN = "/Applications/VMware Fusion.app/Contents/Library/vmrun"
 
 
@@ -88,7 +89,21 @@ def execute(args):
         raise Failure(
             "invalid_options", "--runner-offline and --yes apply only to stop", 2
         )
-    running = is_running(vmrun, vmx, args.timeout)
+    if args.action == "status" and args.wait_seconds:
+        raise Failure("invalid_options", "--wait-seconds applies only to start or stop", 2)
+    # An optional total budget covers every vendor call, the request, and polls.
+    # The default retains the original single post-request observation.
+    deadline = time.monotonic() + args.wait_seconds if args.wait_seconds else None
+
+    def call_timeout():
+        if deadline is None:
+            return args.timeout
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise Failure("power_not_confirmed", "total power-operation deadline expired; inspect actual state", 5)
+        return min(args.timeout, remaining)
+
+    running = is_running(vmrun, vmx, call_timeout())
     result = {
         "schema_version": 1,
         "action": args.action,
@@ -118,7 +133,7 @@ def execute(args):
         if not args.runner_offline:
             raise Failure(
                 "runner_not_offline",
-                "stop requires --runner-offline after verifying the exact runner service is stopped and GitHub reports it offline",
+                "stop requires --runner-offline after verifying the exact runner service is stopped and GitHub reports it offline or its registration is verifiably retired",
                 5,
             )
         if not args.yes:
@@ -136,8 +151,14 @@ def execute(args):
             )
             if sys.stdin.readline().strip().lower() not in {"y", "yes"}:
                 raise Failure("cancelled", "shutdown cancelled", 5)
-    invoke(vmrun, command, args.timeout)
-    observed = is_running(vmrun, vmx, args.timeout)
+    invoke(vmrun, command, call_timeout())
+    observed = is_running(vmrun, vmx, call_timeout())
+    while deadline is not None and observed != (args.action == "start"):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        time.sleep(min(1, remaining))
+        observed = is_running(vmrun, vmx, call_timeout())
     if observed != (args.action == "start"):
         raise Failure(
             "power_not_confirmed",
@@ -184,9 +205,13 @@ def main(argv=None):
         help="seconds per vmrun call, 1 to 300 (default: 30)",
     )
     parser.add_argument(
+        "--wait-seconds", type=positive_seconds, default=0,
+        help="optional total operation deadline, 1 to 300 seconds, including all calls and power-state polls",
+    )
+    parser.add_argument(
         "--runner-offline",
         action="store_true",
-        help="attest that the runner service is stopped and GitHub reports it offline",
+        help="attest that the runner service is stopped and GitHub reports it offline or verifiably retired",
     )
     parser.add_argument(
         "--yes",

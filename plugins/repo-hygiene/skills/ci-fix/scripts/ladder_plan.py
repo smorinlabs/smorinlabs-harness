@@ -115,6 +115,9 @@ def local_plan(args, floor_s, job_entry, workflow, workflow_path):
         None,
     )
     source = "profile" if step_median is not None else "none"
+    if args.local_env == "windows-vm":
+        # Hosted x64/ARM timing does not measure this prepared local Windows VM.
+        step_median, source = None, "none"
     led, n = ledger_median(
         args.ledger, workflow, workflow_path, args.job, args.step, args.context_key
     )
@@ -340,11 +343,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.set_defaults(local_step=True)
     ap.add_argument(
         "--local-env",
-        choices=["host", "container"],
+        choices=["host", "container", "windows-vm"],
         default="host",
         help="where the local rungs would run: on this host, or in a Linux container or VM from "
         "runners.toml (detect_runners.py). A container's first run is estimated at twice the CI "
         "median, because CI's number excludes the image pull and start-up this machine pays.",
+    )
+    ap.add_argument(
+        "--windows-plan", type=Path,
+        help="fresh windows_local.py plan --json output; required for windows-vm; no Fusion probe runs here",
     )
     g3 = ap.add_mutually_exclusive_group()
     g3.add_argument(
@@ -373,6 +380,20 @@ def main(argv: list[str] | None = None) -> int:
         args.context_key = context_key(args.context) if args.context else None
     except (OSError, ValueError) as exc:
         ap.error(f"cannot read execution context: {exc}")
+    windows = None
+    if args.local_env == "windows-vm":
+        if not args.windows_plan:
+            ap.error("windows-vm requires --windows-plan from the inventory-gated Windows planner")
+        try:
+            windows = json.loads(args.windows_plan.read_text())
+            if windows.get("state") != "planned" or windows.get("context") != args.context_key:
+                ap.error("Windows plan must be applicable and match --context; refresh its current VM state and cost evidence")
+            if windows["cost"]["decision"] == "remote":
+                args.local_step, args.ci_is_lab = False, True
+        except (OSError, ValueError, KeyError, AttributeError) as exc:
+            ap.error(f"cannot read Windows cost plan: {exc}")
+    elif args.windows_plan:
+        ap.error("--windows-plan requires --local-env windows-vm")
     parse_duration = _load_parse_duration()
     try:
         local_floor = parse_duration(args.isolate_local)
@@ -407,6 +428,10 @@ def main(argv: list[str] | None = None) -> int:
         "local": local_plan(args, local_floor, job_entry, workflow, workflow_path),
         "remote": remote_plan(args, remote_floor, job_entry),
     }
+    if windows is not None:
+        plan["local"]["windows_cost"] = windows["cost"]
+        if windows["cost"]["decision"] == "remote":
+            plan["local"]["reason"] = windows["cost"]["reason"]
     print(json.dumps(plan, indent=2) if args.json else render(plan))
     return 0
 

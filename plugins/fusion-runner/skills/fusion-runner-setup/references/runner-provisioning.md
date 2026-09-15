@@ -1,6 +1,10 @@
 # Provision and verify the Windows runner
 
-Use this reference after Windows boots. The resulting persistent runner retains its working files between jobs. It is a locally prepared Windows environment, not GitHub's hosted Windows image.
+Use this reference after Windows boots. The validated diagnostic path uses a
+fresh one-job registration. It retains the VM's working files. The older
+interactive persistent recipe remains available for separately chosen setups;
+persistent registration across reboot is outside this delivery's acceptance. This is a locally prepared Windows environment,
+not GitHub's hosted Windows image.
 
 ## 1. Establish which jobs may run
 
@@ -53,7 +57,44 @@ Install tools for the service account or system-wide as appropriate. A tool foun
 
 Keep the runner directory and checkouts on the Windows filesystem, normally under `C:\actions-runner`. On an Arm64 guest, distinguish native Arm64 tools from emulated x64 applications and record the artifact target separately. Microsoft's [emulation documentation](https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation) limits emulation to user-mode applications; kernel components require Arm64 builds. Preserve the original hosted CI check when its different architecture or Windows edition matters.
 
-## 3. Download the runner and prepare a baseline
+## 3. Configure a dedicated Windows service account
+
+Use a non-administrator account dedicated to this runner unless a demonstrated workflow requirement needs additional permissions. Do not casually select `LocalSystem` or add the runner account to Administrators to fix missing tools. Install privileged prerequisites with the setup administrator instead.
+
+When a new local account is needed, set `$RunnerAccount` to the chosen unused account name. Run this in an elevated, native 64-bit PowerShell session inside Windows. Have the user enter the password directly at the secure prompt and retain it in their credential store:
+
+```powershell
+$RunnerPassword = Read-Host 'Password for the dedicated runner account' -AsSecureString
+$RunnerUser = New-LocalUser -Name $RunnerAccount -Password $RunnerPassword -Description 'GitHub Actions runner service'
+Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $RunnerUser
+Remove-Variable RunnerPassword
+$ServiceAccount = "$env:COMPUTERNAME\$RunnerAccount"
+```
+
+The group SID `S-1-5-32-545` identifies the standard Windows Users group across display languages. These commands use Microsoft's [local-user](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/new-localuser?view=powershell-5.1) and [group-membership](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember?view=powershell-5.1) interfaces. Do not reset an existing account's password or disable password-expiry policy without a reason established by the task.
+
+### Prepare access before saving the image
+
+For local snapshot execution, configure the dedicated standard account for the
+owner's chosen SSH authentication. Keep maintenance administration separate.
+Verify the actual account SID, native architecture, command exit status and a
+hashed SFTP round trip through that standard account. Configure the Windows
+`sshd` service for automatic startup and verify both accounts after an ordinary
+unregistered Windows reboot. Service state alone does not establish access.
+
+Windows SSH can issue a network logon token that cannot read system services or
+other processes. When this occurs, supply the existing maintenance account as
+the local adapter's read-only admission observer. Its fixed query verifies that
+no runner service or active command exists. Tested source still executes only
+as the standard account. See [local commands](../../fusion-runner-run/references/local-commands.md).
+Do not give the test account administrator rights to enable these observations.
+
+Keep the selected account restrictions, nonempty credentials and existing
+firewall boundary. Validate SSH configuration before reloading it. Reapplying
+image preparation should leave already-correct access settings unchanged.
+Record the procedure version and successful access checks for image capture.
+
+## 4. Download the runner and prepare a baseline
 
 Open the target repository or organization's GitHub runner registration page. Derive the URL from the actual scope, then use **Settings ▸ Actions ▸ Runners** to add a self-hosted runner. Select **Windows** and the architecture observed in the guest. Use the current download instructions and checksum for that exact asset. The [official runner releases](https://github.com/actions/runner/releases) are a secondary source; do not embed a stale release URL or substitute a different server's required runner version.
 
@@ -82,31 +123,30 @@ if ((Get-FileHash -LiteralPath $RunnerZip -Algorithm SHA256).Hash -ine $Expected
 
 Use a new, empty installation directory. Set `$RunnerDir` to its actual path; `C:\actions-runner` is GitHub's documented Windows recommendation. If it contains an existing runner, inspect that identity and resume it or plan an explicit replacement. Do not extract over it blindly. Extract with `Expand-Archive -LiteralPath $RunnerZip -DestinationPath $RunnerDir`, then retain the asset name, version, and verified digest for the handoff.
 
-If a reusable baseline is wanted, take it after Windows and tools are ready and **before GitHub registration**. This baseline can contain Windows account and license state and must remain local. Never publish the installed Windows image as part of this skill. Never clone a VM containing an active runner registration: each independent VM needs a unique runner identity and a fresh registration.
+If a reusable baseline is wanted, take it after Windows, tools, the dedicated
+account and the preceding access checks are ready, and **before GitHub registration**.
+Require evidence for both intended SSH accounts and automatic service startup
+before capture. Exclude runner registration files and local test workspaces.
+Save each update as a new version with its file hashes and preparation evidence.
+Keep the previous version until the replacement passes a clean restore with
+access available without repair. Update any private download archive and the
+selected recovery version together so a future restore retains these settings. This baseline can contain Windows account and license state; keep it in owner-approved private storage. Never publish the installed Windows image as part of this skill. Never clone a VM containing an active runner registration: each independent VM needs a unique runner identity and a fresh registration.
 
-Normal startup reuses the existing VM and registration. Independent clones also
+Normal startup reuses the existing VM; a persistent service reuses its
+registration, while a completed one-job runner needs fresh registration.
+Independent clones also
 need Windows image preparation with Sysprep; a snapshot alone does not supply
 new Windows identities. Follow [reuse and compatibility](reuse-and-compatibility.md)
 for the two procedures and a workflow comparing identical tests on hosted
 Windows and Fusion.
 
-## 4. Configure a dedicated Windows service account
-
-Use a non-administrator account dedicated to this runner unless a demonstrated workflow requirement needs additional permissions. Do not casually select `LocalSystem` or add the runner account to Administrators to fix missing tools. Install privileged prerequisites with the setup administrator instead.
-
-When a new local account is needed, set `$RunnerAccount` to the chosen unused account name. Run this in an elevated, native 64-bit PowerShell session inside Windows. Have the user enter the password directly at the secure prompt and retain it in their credential store:
-
-```powershell
-$RunnerPassword = Read-Host 'Password for the dedicated runner account' -AsSecureString
-$RunnerUser = New-LocalUser -Name $RunnerAccount -Password $RunnerPassword -Description 'GitHub Actions runner service'
-Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $RunnerUser
-Remove-Variable RunnerPassword
-$ServiceAccount = "$env:COMPUTERNAME\$RunnerAccount"
-```
-
-The group SID `S-1-5-32-545` identifies the standard Windows Users group across display languages. These commands use Microsoft's [local-user](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/new-localuser?view=powershell-5.1) and [group-membership](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember?view=powershell-5.1) interfaces. Do not reset an existing account's password or disable password-expiry policy without a reason established by the task.
-
 ## 5. Register and install the service
+
+### Existing interactive persistent option
+
+This separate option is not covered by the one-job diagnostic acceptance.
+Never reconfigure a job-writable program directory as administrator: prepare a
+new verified distribution first.
 
 Set `$ScopeUrl` to the established GitHub repository or organization URL, `$RunnerName` to the chosen unique name, and `$ServiceAccount` to the dedicated account. In elevated **Windows PowerShell**, change to the actual runner directory and invoke:
 
@@ -118,6 +158,96 @@ Set-Location -LiteralPath $RunnerDir
 Obtain the short-lived registration token from the exact target's registration page and enter it at the runner's prompt. Enter the service password at its prompt. Do not place either value in command arguments, chat, shell history, the handoff, or a shared script. If the environment cannot supply protected interactive input, hand that prompt to the user in the Windows console. Resume after it completes. Keep organization runner-group selection within the established access scope, and do not replace a colliding runner name automatically.
 
 The Windows runner installs its service during configuration. The [runner's service implementation](https://github.com/actions/runner/blob/main/src/Runner.Listener/Configuration/WindowsServiceControlManager.cs) grants the selected account service-logon and runner-directory permissions, writes the exact service name to `.service`, and starts the service. Do not run `run.cmd` alongside it. If an existing runner was configured without a service, follow GitHub's [reconfiguration procedure](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/configure-the-application); do not invent a Linux-style `svc.sh` procedure for Windows.
+
+### One-job diagnostic registration
+
+Use `scripts/register_service.ps1` for a prepared guest serving an authorized
+`ci-fix` diagnostic. This helper supports an exact repository on `github.com`.
+Run it in native PowerShell 7.4 or later, in an elevated maintenance session
+using the user's established protected guest connection. Built-in Windows
+PowerShell 5.1 is rejected before mutation by the script's runtime requirement. It does not download Windows, install SSH, create a service
+account, or fetch a registration token. Verify those prerequisites first.
+
+1. Generate a fresh 32-character lowercase hexadecimal registration invocation.
+   Set the runner name to `fusion-ci-` followed by that identifier. Establish
+   admission for the trusted repository before the service can start; inspect
+   existing workflows, queued jobs and runner labels.
+2. Verify the dedicated local service account and its Windows security
+   identifier (SID). Select the official stable runner release matching the
+   observed native Windows architecture. Record its exact release asset URL
+   and published SHA-256; never derive trust from files left by an earlier job. Preserve a host intent as described in
+   [the handoff reference](handoff.md#preserve-registration-identity-before-transport-can-fail).
+   Choose an administrator-controlled guest receipt directory outside the
+   runner's job checkout and a new receipt filename. The helper refuses a
+   directory writable by the CI account or other untrusted users. Existing runner processes or services require reconciliation and deliberate
+   retirement first. The requested installation directory must not exist.
+3. Transfer the public script through the established connection into a verified
+   administrator-controlled staging directory and verify its hash in Windows.
+   The CI account must not be able to replace those bytes between verification
+   and execution. Obtain a short-lived registration token for the exact
+   repository through authenticated GitHub tooling. Supply the following JSON
+   object to the script on protected standard input. Never place the object
+   or its credential values in arguments, chat, shell history, a public file,
+   a transcript, or the secret-free handoff.
+
+   | Input key | Value |
+   | --- | --- |
+   | `repository` | Exact `owner/repository` |
+   | `invocation` | Fresh registration identifier from step 1 |
+   | `name` | Exact `fusion-ci-<registration-id>` runner name |
+   | `mode` | `ephemeral` for one diagnostic job |
+   | `runner_directory` | `C:\ProgramData\FusionRunnerPrograms\` followed by the invocation; the directory must not exist |
+   | `runner_version` | Official stable release version, such as `2.332.0`; observe the current version rather than copying this example |
+   | `runner_archive_url` | Exact `https://github.com/actions/runner/releases/download/vVERSION/actions-runner-win-ARCH-VERSION.zip`, with observed version and `arm64` or `x64` |
+   | `runner_archive_sha256` | The selected official asset's published 64-character SHA-256 |
+   | `receipt_path` | New absolute local Windows path for the secret-free guest receipt |
+   | `service_account`, `service_account_sid` | Exact machine-qualified account name and matching local SID |
+   | `token`, `password` | Short-lived registration token and dedicated account password, obtained through protected input |
+
+   The helper creates an administrator-owned `FusionRunnerPrograms` parent
+   with no untrusted writers. It refuses reparse paths, an existing invocation
+   directory, an unexpected release URL, or a digest mismatch. It downloads
+   with a 120-second / 256 MiB bound and extracts only the verified archive.
+   Failed preparation remains recorded and never executes `config.cmd`.
+   Each registration gets fresh programs; earlier directories are retained as
+   data and are never reused for elevated configuration.
+
+   The helper passes credentials to `config.cmd` through its process-scoped
+   `ACTIONS_RUNNER_INPUT_*` variables and clears those variables afterward.
+   This avoids password-bearing command arguments; it does not make an
+   untrusted guest transport or captured stdin safe. Use a protected console
+   workflow when the available transport cannot keep those values out of logs.
+4. Retrieve the guest receipt even when the command failed. Match its
+   invocation, repository, name, numeric runner ID, service name, account/SID
+   and installation directory to the host intent and observed guest state.
+   Inspect the actual service executable and GitHub runner entry. Update the
+   local handoff only from those observations.
+
+The helper configures `--ephemeral --runasservice --no-default-labels`. Its
+exclusive custom label equals the runner name. It does not include the
+`self-hosted`, `Windows`, `ARM64` or `X64` default labels, so use the exact label
+list returned by GitHub for workflow routing. No other runner should share the
+registration's label. This prevents ordinary default-label jobs from selecting
+the one-job runner; it does not authorize untrusted code or replace repository
+access controls.
+
+Fresh programs prevent reuse of persisted job-modified executables. This is
+not containment for a compromised guest or surviving hostile background
+processes. If prior work is untrusted or guest integrity is uncertain, restore
+the verified baseline before administrator maintenance. The supported job
+policy remains trusted code.
+
+The helper accepts only `mode: ephemeral`. Ordinary Windows reboot/access
+verification is separate from keeping a GitHub registration across reboot.
+
+After one job, GitHub retires an ephemeral registration. Inspect the actual
+job and current registration state, then follow
+[one-job completion and failure recovery](../../fusion-runner-run/references/operations.md#one-job-completion-and-failure-recovery).
+Preserve the receipt on a lost response or partial configuration. Never run
+configuration again merely because the transport failed to return success.
+The next diagnostic gets a fresh invocation, name, label and registration;
+the Windows VM and earlier working files remain in place. The next registration
+gets a new verified program directory, not a new Windows installation.
 
 ## 6. Verify identity and a real job
 
@@ -132,15 +262,30 @@ Get-CimInstance Win32_Service | Where-Object Name -eq $ServiceName |
 
 Verify its executable belongs to this runner directory, its account matches the chosen account, and automatic startup is configured. Verify GitHub's runner entry by name, architecture, labels, and numeric ID. Capture the ID from the target's runner list through the authenticated API or UI. API results may require pagination. Never copy `.credentials` or other runner credential files into the handoff.
 
-GitHub must report this runner **Idle**, or API `status` equal to `online` with `busy` equal to `false`, before calling it ready for another job. See [GitHub monitoring guidance](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/monitor-and-troubleshoot). Reboot the guest and verify that the same service and runner recover without an interactive Windows login.
+GitHub must report this runner **Idle**, or API `status` equal to `online` with
+`busy` equal to `false`, before calling it ready for a job. See
+[GitHub monitoring guidance](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/monitor-and-troubleshoot).
+For a persistent registration, reboot the guest and verify that the same service
+and runner recover without an interactive Windows login. Record this separately
+from a pre-registration reboot or a one-job execution.
 
-Use `templates/fusion-smoke.yml` for an authorized CI smoke test. Its explicit `pwsh` shell requires PowerShell 7 in the service account's environment. Render its target labels from the recorded runner. For an Arm64 guest, the relevant job selector is:
+Use `templates/fusion-smoke.yml` for an authorized CI smoke test. Its explicit
+`pwsh` shell requires PowerShell 7 in the service account's environment. Render
+its target labels from the recorded runner. For an Arm64 persistent runner
+registered with the interactive recipe and default labels, the selector is:
 
 ```yaml
 runs-on: [self-hosted, Windows, ARM64, fusion-ci]
 ```
 
 For an x64 guest, replace `ARM64` with `X64`. Keep the selector specific and verify the job's actual runner ID/name after execution. A shared custom label can select more than one VM. GitHub documents [self-hosted label routing](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/use-in-a-workflow).
+
+For the protected helper's exclusive registration, use only its actual custom
+label list. A `ci-fix` workflow takes that JSON label list and the selected tests
+through the
+[Windows diagnostic contract](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/repo-hygiene/skills/ci-fix/references/windows-runners.md).
+Verify the job's actual OS/process architecture and non-administrator token;
+the label name alone supplies none of those observations.
 
 Prepare the exact workflow change before requesting any missing authorization to publish or dispatch it. GitHub requires a manual `workflow_dispatch` workflow to [exist on the default branch](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow). Do not merge or modify that branch just to make the smoke test run. Use an existing authorized diagnostic workflow if suitable. Do not retarget production `windows-latest` jobs silently.
 

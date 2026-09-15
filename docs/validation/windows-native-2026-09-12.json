@@ -1,0 +1,97 @@
+{
+  "kind": "curated-native-windows-diagnostic-validation",
+  "checked_at": "2026-09-12T23:26:55.244936+00:00",
+  "platform": "Windows 11 Arm64 in Fusion on one Apple Silicon Mac",
+  "native_architecture": "ARM64",
+  "process_architecture": "ARM64",
+  "job_is_administrator": false,
+  "ordinary_signed_out_reboot_access": "passed",
+  "gui_startup": "observed on unlocked Mac",
+  "persistent_registration_reboot": "removed from delivery; not deferred",
+  "fresh_windows_installation": "removed from delivery; not deferred",
+  "fresh_session_run_reset_run": "open",
+  "full_restore_this_session": false,
+  "runner_distribution": {
+    "version": "2.337.0",
+    "asset": "actions-runner-win-arm64-2.337.0.zip",
+    "url": "https://github.com/actions/runner/releases/download/v2.337.0/actions-runner-win-arm64-2.337.0.zip",
+    "sha256": "7ee1a72a0e0ad384ac7871ffc2356063a116e20d1db3ea41000eb49272cf0030",
+    "verified": true
+  },
+  "public_source_sha256": {
+    "plugins/fusion-runner/skills/fusion-runner-setup/scripts/register_service.ps1": "d5e2e3a8d19c107c8398b869ad594df26a34835216a23d1bb6822033efe188d0",
+    "plugins/fusion-runner/skills/fusion-runner-run/scripts/retire_service.ps1": "d4b0f1c7053c0c66dbce93c4c7243b1da35d8665aabb88cbf7c0f8e80f948516",
+    "plugins/fusion-runner/skills/fusion-runner-run/scripts/vm_power.py": "48c5dfc4c8665974c428fb3945d815fbd407c23b7ab8a5c9623deae6ea28e6a6",
+    "plugins/repo-hygiene/skills/ci-fix/scripts/windows_runner.py": "70e06b6030a50c45858f748a9d9772bf22cb5fbca2ebe6ad06bce99d6edf2ba7"
+  },
+  "public_tests": {
+    "passed": 89,
+    "seconds": 17.26
+  },
+  "private_tests": {
+    "passed": 76,
+    "subtests_passed": 17,
+    "seconds": 2.82
+  },
+  "cases": {
+    "failure": {
+      "report_status": "failed",
+      "tests": [
+        {
+          "id": "windows-path-leaf",
+          "status": "failed",
+          "error": "Windows path leaf extraction returned the wrong filename."
+        }
+      ],
+      "selection_verified": true,
+      "expected_rejection": false,
+      "runner_retired": true,
+      "registration_files_removed": true,
+      "job_logs_saved": true,
+      "working_files_preserved": true
+    },
+    "repair": {
+      "report_status": "passed",
+      "tests": [
+        {
+          "id": "runner-program-parent",
+          "status": "passed"
+        },
+        {
+          "id": "windows-path-leaf",
+          "status": "passed"
+        },
+        {
+          "id": "windows-file-roundtrip",
+          "status": "passed"
+        },
+        {
+          "id": "native-child-exit",
+          "status": "passed"
+        }
+      ],
+      "selection_verified": true,
+      "expected_rejection": false,
+      "runner_retired": true,
+      "registration_files_removed": true,
+      "job_logs_saved": true,
+      "working_files_preserved": true
+    },
+    "no_selection": {
+      "report_status": "failed",
+      "tests": [],
+      "selection_verified": false,
+      "expected_rejection": true,
+      "runner_retired": true,
+      "registration_files_removed": true,
+      "job_logs_saved": true,
+      "working_files_preserved": true
+    }
+  },
+  "privacy": "Allowlisted observations only; raw identities, URLs, credentials, VM assets and reports remain private.",
+  "limits": [
+    "Trusted private jobs; uncertain or compromised guests require a clean baseline before administrator maintenance.",
+    "Fixtures and static loading do not complete fresh-agent run-reset-run acceptance.",
+    "Intel x64, another Mac and unattended locked-Mac startup are outside this delivery."
+  ]
+}

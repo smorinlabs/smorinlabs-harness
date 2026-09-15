@@ -1,0 +1,96 @@
+{
+  "kind": "curated-fresh-session-run-reset-run",
+  "checked_at": "2026-09-13T06:33:35.634282+00:00",
+  "status": "passed",
+  "public_commit": "6efd48e0e5fd948d10697a031d710f263ebed9d7",
+  "public_source_sha256": {
+    "plugins/fusion-runner/skills/fusion-runner-run/SKILL.md": "b1a69a142e40e9f335b70bbf328e2f06dbca765212b22ff15b78acd437ddc751",
+    "plugins/fusion-runner/skills/fusion-runner-run/references/operations.md": "6b0288c47608de31602357b235f19f83f1d773a405da499bbb0111ed387e0327",
+    "plugins/fusion-runner/skills/fusion-runner-run/references/reset.md": "df450c668161f3cd9efc45386eadff73cd1868ac9e59f6c7299d5cdcd9b32de4",
+    "plugins/fusion-runner/skills/fusion-runner-run/scripts/retire_service.ps1": "d4b0f1c7053c0c66dbce93c4c7243b1da35d8665aabb88cbf7c0f8e80f948516",
+    "plugins/fusion-runner/skills/fusion-runner-run/scripts/vm_power.py": "48c5dfc4c8665974c428fb3945d815fbd407c23b7ab8a5c9623deae6ea28e6a6",
+    "plugins/fusion-runner/skills/fusion-runner-setup/SKILL.md": "c02a60c8309683d67c9a1e15b1e12b50f6ff4585fa188fa97d299b74f1c93420",
+    "plugins/fusion-runner/skills/fusion-runner-setup/references/runner-provisioning.md": "36bd496d69d9c16e26fb676de6593de5d095ce2179712661e1691ae9e5e5fcd1",
+    "plugins/fusion-runner/skills/fusion-runner-setup/scripts/register_service.ps1": "d5e2e3a8d19c107c8398b869ad594df26a34835216a23d1bb6822033efe188d0",
+    "plugins/repo-hygiene/skills/ci-fix/SKILL.md": "8e04e0074ce79d5493d323505da7dfa168fb964975de50c8fbd63e7f40aff059",
+    "plugins/repo-hygiene/skills/ci-fix/references/windows-runners.md": "e12aef583a424a783096252decf75ab7957c2436ed6ca0bc797f4e64c61c0b83",
+    "plugins/repo-hygiene/skills/ci-fix/scripts/windows_runner.py": "70e06b6030a50c45858f748a9d9772bf22cb5fbca2ebe6ad06bce99d6edf2ba7"
+  },
+  "platform": "Windows 11 Arm64 in Fusion on one Apple Silicon Mac",
+  "architecture": "ARM64",
+  "process_architecture": "ARM64",
+  "job_is_administrator": false,
+  "before_reset": {
+    "tests": [
+      {
+        "id": "runner-program-parent",
+        "status": "passed"
+      },
+      {
+        "id": "windows-path-leaf",
+        "status": "passed"
+      },
+      {
+        "id": "windows-file-roundtrip",
+        "status": "passed"
+      },
+      {
+        "id": "native-child-exit",
+        "status": "passed"
+      }
+    ],
+    "result": "passed"
+  },
+  "reset": {
+    "local_baseline_clone": true,
+    "baseline_files_verified": 35,
+    "all_hashes_and_disk_dependencies_match": true,
+    "separate_file_inodes": true,
+    "previous_working_copy_preserved_until_acceptance": true,
+    "post_baseline_marker_absent": true,
+    "previous_runner_state_absent": true,
+    "windows_identity_and_tools_match": true,
+    "ssh_sftp_and_child_exit_verified": true
+  },
+  "after_reset": {
+    "tests": [
+      {
+        "id": "runner-program-parent",
+        "status": "passed"
+      },
+      {
+        "id": "windows-path-leaf",
+        "status": "passed"
+      },
+      {
+        "id": "windows-file-roundtrip",
+        "status": "passed"
+      },
+      {
+        "id": "native-child-exit",
+        "status": "passed"
+      }
+    ],
+    "result": "passed",
+    "new_registration_and_program_directory": true
+  },
+  "final": {
+    "baseline_unchanged": true,
+    "both_runners_retired": true,
+    "windows_gracefully_powered_off": true,
+    "obsolete_previous_bundle_removed_after_acceptance": true
+  },
+  "loaders": {
+    "claude": "deep loading passed for both plugins",
+    "codex": "deep loading passed for both plugins",
+    "static_warning": "Claude ignores the existing _generated field"
+  },
+  "exclusions": [
+    "fresh Windows installation",
+    "persistent-runner reboot testing",
+    "Intel Fusion",
+    "another Mac",
+    "unattended locked-host startup"
+  ],
+  "privacy": "Raw job reports, runner identities, credentials, VM paths and job URLs remain private."
+}

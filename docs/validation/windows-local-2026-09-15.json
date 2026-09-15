@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "observed_date": "2026-09-15",
+  "native_tested_commit": "1d87705686e705eb8392555a93cefa8b66a66db1",
+  "integrated_commit": "625d9a78421a4fd1cd6853f6e86664db3077c904",
+  "public_source_sha256": {
+    "plugins/fusion-runner/skills/fusion-runner-run/scripts/guest_session.py": "81beb571283aec8473a6309e610fe043ff5fd2b778514fbce6576fe14545c3fc",
+    "plugins/fusion-runner/skills/fusion-runner-run/scripts/local_job.ps1": "dd66d30a18a82c0aca575cbf868b0ced0f013f32f833367db3e9defced924bc5",
+    "plugins/repo-hygiene/skills/ci-fix/scripts/windows_local.py": "dd74a9a0c966f89550d24bb4c396b4f03b6196819af21b9d2ef4d9e1a382cad4",
+    "plugins/repo-hygiene/skills/ci-fix/scripts/windows_snapshot.py": "b88a8a7c3305e7b0a47ffaf0b0ab49bdf25e68555a2213b77cb479d8724f2c0a",
+    "plugins/repo-hygiene/skills/ci-fix/scripts/windows_cost.py": "5adac965d4f964dfe783d47dca0fd2e7f0e5ffcdb30ee2783a145e87fd4618ee"
+  },
+  "architecture": "ARM64",
+  "standard_account_is_administrator": false,
+  "unpushed_failure_then_repair_verified": true,
+  "unchanged_assertions_before_after_reset": true,
+  "source_snapshot_identical_before_after": true,
+  "reset_marker_absent": true,
+  "standard_ssh_sftp_after_reset": true,
+  "access_repair_after_reset": false,
+  "standard_and_maintenance_ssh_after_signed_out_reboot": true,
+  "negative_controls": [
+    "command timeout",
+    "empty test selection",
+    "stale source at collection"
+  ],
+  "tests": [
+    "windows-path-leaf",
+    "windows-file-roundtrip",
+    "native-child-exit"
+  ],
+  "full_feedback_seconds": [
+    22.92128949984908,
+    26.017908750101924
+  ],
+  "remote_speedup_measured": false,
+  "host_tests": 447,
+  "fresh_windows_installation_tested": false,
+  "persistent_runner_reboot_tested": false,
+  "raw_evidence": "retained by the separate private recovery provider"
+}
