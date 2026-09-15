@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## v0.26.0 — 2026-09-15
+
+### Added
+
+- **`fusion-runner` 0.2.12, a new plugin.** Two skills for a Windows GitHub
+  Actions runner in VMware Fusion on a Mac. `fusion-runner-setup` walks the
+  Broadcom download and Windows installation, verifies the Windows login,
+  records each setup checkpoint, keeps a reusable Windows baseline distinct
+  from the working VM, and ships hosted-compatibility smoke tests that
+  compare the VM with GitHub-hosted Windows. `fusion-runner-run` starts,
+  checks, and gracefully stops the configured VM, verifying GitHub readiness
+  separately from VM power and preserving the working VM's files.
+- **`repo-hygiene` 0.14.1 — a filtered CI diagnostic can no longer wear the
+  required check's name.** `ci-fix`'s filter-input rendering gives the job a
+  guarded conditional name, `<job> (diagnostic)`, that applies exactly when
+  filtering is active; a push or pull-request run keeps the unfiltered name,
+  so any required status check keeps matching it. Verified on real runs. The
+  rendering also carries a concurrency group that supersedes a pull request's
+  stale run on the next push, with every other run in a group of its own,
+  because GitHub keeps at most one pending run per group and replaces it on
+  arrival (reproduced, then verified fixed with three rapid dispatches).
+
 ### Changed
 
 - `repo-hygiene` 0.13.0 shares repair validation between `ci-fix` and
@@ -19,6 +41,17 @@
   commits no longer stand in for full coverage. PR repair pushes restart review
   collection, reopened threads receive a new disposition when needed, and merges
   are bound to the reviewed head. Optimization advice preserves supported coverage.
+- `repo-hygiene` 0.14.0: `pr-merge-flow` merges by default once the required
+  gates pass, treats the merge flow as draft approval, verifies queued merges,
+  cancels a merge invalidated at its deadline, and requires inline, scoped
+  cleanup recommendations after a merge.
+- `clear-decision-communication` 0.3.1: decision drafts are evaluated against
+  a separately executed review of their sources, retained evaluation captures
+  are verified against their original hashes, evidence boundaries are
+  preserved in comparisons, options are made concrete with their evidence
+  scoped, and concrete context and scope are restored to decision requests.
+- `clear-technical-communication` 0.2.3: concrete context and scope restored
+  in decision requests, shared with the change above.
 
 ## v0.25.0 — 2026-09-10
 
