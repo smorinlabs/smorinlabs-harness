@@ -7,6 +7,7 @@ effects. Access files stay private; passwords only enter a hidden SSH prompt.
 from __future__ import annotations
 
 import base64
+from contextlib import nullcontext
 import ipaddress
 import json
 import os
@@ -29,7 +30,10 @@ def load_access(path):
     info = path.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077 or info.st_uid != os.getuid():
         raise GuestError("access file must be an owner-only regular file")
-    data = json.loads(path.read_text(encoding="utf-8"))
+    return validate_access(json.loads(path.read_text(encoding="utf-8")))
+
+
+def validate_access(data, *, allow_admission=True):
     required = ("address", "username", "password", "host_public_key", "account_sid")
     if not isinstance(data, dict) or any(not isinstance(data.get(k), str) or not data[k] for k in required):
         raise GuestError("access file needs address, username, password, host_public_key and account_sid")
@@ -54,7 +58,15 @@ def load_access(path):
     port = data.get("port", 22)
     if type(port) is not int or not 1 <= port <= 65535:
         raise GuestError("invalid SSH port")
-    return dict(data, port=port)
+    result = dict(data, port=port)
+    if "admission_access" in data:
+        if not allow_admission:
+            raise GuestError("admission access cannot contain another observer")
+        observer = validate_access(data["admission_access"], allow_admission=False)
+        if any(observer[k] != result[k] for k in ("address", "port", "host_public_key")) or observer["account_sid"] == result["account_sid"]:
+            raise GuestError("the admission observer must be a separate account on the same pinned Windows guest")
+        result["admission_access"] = observer
+    return result
 
 
 def ps_literal(value):
@@ -159,8 +171,6 @@ $principal=[Security.Principal.WindowsPrincipal]::new($id)
   is_windows=$IsWindows; powershell=$PSVersionTable.PSVersion.ToString()
   work_root=(Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'FusionLocalJobs')
   runner_processes=@(Get-Process -Name 'Runner.Listener','Runner.Worker' -ErrorAction SilentlyContinue).Count
-  runner_services=@(Get-Service | Where-Object Name -like 'actions.runner.*').Count
-  local_processes=@(Get-CimInstance Win32_Process -Filter "Name='pwsh.exe'" | Where-Object {$_.CommandLine -like '*FusionLocalJobs*command.ps1*'}).Count
 } | ConvertTo-Json -Compress
 """)
         if response.returncode:
@@ -172,11 +182,40 @@ $principal=[Security.Principal.WindowsPrincipal]::new($id)
             raise GuestError("local execution requires the exact standard account and matching native Windows architecture")
         if require_idle and result.get("runner_processes") != 0:
             raise GuestError("a GitHub runner process is present; local execution requires an idle unregistered guest")
-        if require_idle and result.get("runner_services") != 0:
-            raise GuestError("a GitHub runner service is present; reconcile its registration before local execution")
-        if require_idle and result.get("local_processes") != 0:
-            raise GuestError("a previous local command is still running; inspect its invocation before starting another")
+        if require_idle:
+            admission = self.check_admission(architecture)
+            result.update({k: admission[k] for k in ("runner_services", "local_processes")})
+            result["admission_account_sid"] = admission["account_sid"]
         return result
+
+    def check_admission(self, architecture):
+        # Windows SSH network tokens may lack SCM/WMI read access. An optional
+        # maintenance observer runs only this fixed query, never tested source.
+        access = self.access.get("admission_access")
+        with (SSH(access) if access else nullcontext(self)) as observer:
+            response = observer.powershell(r"""
+$ErrorActionPreference='Stop'
+$id=[Security.Principal.WindowsIdentity]::GetCurrent()
+[ordered]@{
+  account_sid=$id.User.Value
+  is_administrator=([Security.Principal.WindowsPrincipal]::new($id)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+  os_arch=[Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToUpperInvariant()
+  process_arch=[Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToUpperInvariant()
+  runner_services=@(Get-Service | Where-Object Name -like 'actions.runner.*').Count
+  runner_processes=@(Get-Process -Name 'Runner.Listener','Runner.Worker' -ErrorAction SilentlyContinue).Count
+  local_processes=@(Get-CimInstance Win32_Process -Filter "Name='pwsh.exe'" | Where-Object {$_.CommandLine -like '*FusionLocalJobs*command.ps1*'}).Count
+} | ConvertTo-Json -Compress
+""")
+            if response.returncode:
+                raise GuestError("service/process admission could not be verified; configure a permitted read-only maintenance observer in admission_access")
+            result = json.loads(response.stdout.decode("utf-8-sig"))
+            if (result.get("account_sid") != observer.access["account_sid"]
+                    or result.get("is_administrator") is not bool(access)
+                    or result.get("os_arch") != architecture or result.get("process_arch") != architecture):
+                raise GuestError("the admission observer identity or native architecture does not match")
+            if any(result.get(k) != 0 for k in ("runner_services", "runner_processes", "local_processes")):
+                raise GuestError("registered runner services or active commands prevent local admission")
+            return result
 
     def close(self):
         try:

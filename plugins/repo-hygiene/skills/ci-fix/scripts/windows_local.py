@@ -332,6 +332,7 @@ def collect_with(client, module, receipt, path):
     receipt.update(evidence=verified, source_matches_snapshot=matches(receipt["repository"], receipt["snapshot"], spec["snapshot_exclude"]))
     if type(report.get("exit_code")) is not int or type(report.get("timed_out")) is not bool:
         raise Failure("invalid_report", "guest result must preserve integer exit status and boolean timeout state")
+    receipt['admission_after'] = client.check_admission(spec['architecture'])
     passed = report["exit_code"] == 0 and report["timed_out"] is False and all(t["status"] != "failed" for t in verified["tests"])
     receipt["status"] = "passed" if passed else "failed"
     if not receipt["source_matches_snapshot"]:
@@ -340,6 +341,7 @@ def collect_with(client, module, receipt, path):
 
 
 def run(args, spec):
+    invocation_start = time.monotonic()
     if not args.receipt:
         raise Failure("missing_receipt", "run requires a new --receipt path", 2)
     if args.receipt.exists():
@@ -425,6 +427,11 @@ def run(args, spec):
             record_timing(args, receipt)
         except (OSError, ValueError, subprocess.SubprocessError):
             receipt["ledger"] = {"recorded": False, "reason": "ledger write failed; invocation evidence remains valid"}
+        # Include host preflight, SSH process/session overhead and receipt/ledger
+        # work rather than presenting only the guest's stopwatch as total cost.
+        receipt['timings']['total_s'] = time.monotonic() - invocation_start
+        accounted = sum(receipt['timings'][name] for name in ('snapshot_s', 'startup_s', 'transfer_s', 'checks_s', 'collect_s'))
+        receipt['timings']['setup_s'] = max(0.0, receipt['timings']['total_s'] - accounted)
         write_receipt(args.receipt, receipt)
     return receipt
 

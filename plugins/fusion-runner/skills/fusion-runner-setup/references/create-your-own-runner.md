@@ -25,12 +25,18 @@ already meets the requirements, resume it and perform only missing steps.
 3. **Prepare Windows access and tools.** Follow
    [runner provisioning](runner-provisioning.md): verify the actual Windows
    username and architecture, install VMware Tools and the workflow's native
-   tools, and establish an appropriate protected maintenance connection.
+   tools, and establish an appropriate protected maintenance connection. Create
+   or verify the dedicated standard execution account before image capture.
+   For local SSH execution, verify that account's login, commands and SFTP,
+   automatic SSH startup and both accounts after an ordinary Windows reboot.
    Use your own credential storage. Keep credentials outside the public repo
    and the secret-free handoff. Verify command results and file-transfer hashes.
 4. **Save your clean baseline.** Before GitHub registration, gracefully power
    off Windows and preserve the complete VM and every required disk using
    [reuse and compatibility](reuse-and-compatibility.md#reuse-the-same-vm).
+   Capture requires successful access evidence and no runner registration or
+   test workspace. Give updates a new version, preserve the preceding baseline,
+   and verify access after restoration without running a repair procedure.
    Record the baseline path and file hashes. Keep one changing working copy
    and one unchanged recovery baseline; these have different purposes.
 5. **Register and test one authorized job.** Use a standard Windows service

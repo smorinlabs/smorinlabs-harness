@@ -57,7 +57,44 @@ Install tools for the service account or system-wide as appropriate. A tool foun
 
 Keep the runner directory and checkouts on the Windows filesystem, normally under `C:\actions-runner`. On an Arm64 guest, distinguish native Arm64 tools from emulated x64 applications and record the artifact target separately. Microsoft's [emulation documentation](https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation) limits emulation to user-mode applications; kernel components require Arm64 builds. Preserve the original hosted CI check when its different architecture or Windows edition matters.
 
-## 3. Download the runner and prepare a baseline
+## 3. Configure a dedicated Windows service account
+
+Use a non-administrator account dedicated to this runner unless a demonstrated workflow requirement needs additional permissions. Do not casually select `LocalSystem` or add the runner account to Administrators to fix missing tools. Install privileged prerequisites with the setup administrator instead.
+
+When a new local account is needed, set `$RunnerAccount` to the chosen unused account name. Run this in an elevated, native 64-bit PowerShell session inside Windows. Have the user enter the password directly at the secure prompt and retain it in their credential store:
+
+```powershell
+$RunnerPassword = Read-Host 'Password for the dedicated runner account' -AsSecureString
+$RunnerUser = New-LocalUser -Name $RunnerAccount -Password $RunnerPassword -Description 'GitHub Actions runner service'
+Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $RunnerUser
+Remove-Variable RunnerPassword
+$ServiceAccount = "$env:COMPUTERNAME\$RunnerAccount"
+```
+
+The group SID `S-1-5-32-545` identifies the standard Windows Users group across display languages. These commands use Microsoft's [local-user](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/new-localuser?view=powershell-5.1) and [group-membership](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember?view=powershell-5.1) interfaces. Do not reset an existing account's password or disable password-expiry policy without a reason established by the task.
+
+### Prepare access before saving the image
+
+For local snapshot execution, configure the dedicated standard account for the
+owner's chosen SSH authentication. Keep maintenance administration separate.
+Verify the actual account SID, native architecture, command exit status and a
+hashed SFTP round trip through that standard account. Configure the Windows
+`sshd` service for automatic startup and verify both accounts after an ordinary
+unregistered Windows reboot. Service state alone does not establish access.
+
+Windows SSH can issue a network logon token that cannot read system services or
+other processes. When this occurs, supply the existing maintenance account as
+the local adapter's read-only admission observer. Its fixed query verifies that
+no runner service or active command exists. Tested source still executes only
+as the standard account. See [local commands](../../fusion-runner-run/references/local-commands.md).
+Do not give the test account administrator rights to enable these observations.
+
+Keep the selected account restrictions, nonempty credentials and existing
+firewall boundary. Validate SSH configuration before reloading it. Reapplying
+image preparation should leave already-correct access settings unchanged.
+Record the procedure version and successful access checks for image capture.
+
+## 4. Download the runner and prepare a baseline
 
 Open the target repository or organization's GitHub runner registration page. Derive the URL from the actual scope, then use **Settings ▸ Actions ▸ Runners** to add a self-hosted runner. Select **Windows** and the architecture observed in the guest. Use the current download instructions and checksum for that exact asset. The [official runner releases](https://github.com/actions/runner/releases) are a secondary source; do not embed a stale release URL or substitute a different server's required runner version.
 
@@ -86,7 +123,14 @@ if ((Get-FileHash -LiteralPath $RunnerZip -Algorithm SHA256).Hash -ine $Expected
 
 Use a new, empty installation directory. Set `$RunnerDir` to its actual path; `C:\actions-runner` is GitHub's documented Windows recommendation. If it contains an existing runner, inspect that identity and resume it or plan an explicit replacement. Do not extract over it blindly. Extract with `Expand-Archive -LiteralPath $RunnerZip -DestinationPath $RunnerDir`, then retain the asset name, version, and verified digest for the handoff.
 
-If a reusable baseline is wanted, take it after Windows and tools are ready and **before GitHub registration**. This baseline can contain Windows account and license state and must remain local. Never publish the installed Windows image as part of this skill. Never clone a VM containing an active runner registration: each independent VM needs a unique runner identity and a fresh registration.
+If a reusable baseline is wanted, take it after Windows, tools, the dedicated
+account and the preceding access checks are ready, and **before GitHub registration**.
+Require evidence for both intended SSH accounts and automatic service startup
+before capture. Exclude runner registration files and local test workspaces.
+Save each update as a new version with its file hashes and preparation evidence.
+Keep the previous version until the replacement passes a clean restore with
+access available without repair. Update any private download archive and the
+selected recovery version together so a future restore retains these settings. This baseline can contain Windows account and license state; keep it in owner-approved private storage. Never publish the installed Windows image as part of this skill. Never clone a VM containing an active runner registration: each independent VM needs a unique runner identity and a fresh registration.
 
 Normal startup reuses the existing VM; a persistent service reuses its
 registration, while a completed one-job runner needs fresh registration.
@@ -95,22 +139,6 @@ need Windows image preparation with Sysprep; a snapshot alone does not supply
 new Windows identities. Follow [reuse and compatibility](reuse-and-compatibility.md)
 for the two procedures and a workflow comparing identical tests on hosted
 Windows and Fusion.
-
-## 4. Configure a dedicated Windows service account
-
-Use a non-administrator account dedicated to this runner unless a demonstrated workflow requirement needs additional permissions. Do not casually select `LocalSystem` or add the runner account to Administrators to fix missing tools. Install privileged prerequisites with the setup administrator instead.
-
-When a new local account is needed, set `$RunnerAccount` to the chosen unused account name. Run this in an elevated, native 64-bit PowerShell session inside Windows. Have the user enter the password directly at the secure prompt and retain it in their credential store:
-
-```powershell
-$RunnerPassword = Read-Host 'Password for the dedicated runner account' -AsSecureString
-$RunnerUser = New-LocalUser -Name $RunnerAccount -Password $RunnerPassword -Description 'GitHub Actions runner service'
-Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $RunnerUser
-Remove-Variable RunnerPassword
-$ServiceAccount = "$env:COMPUTERNAME\$RunnerAccount"
-```
-
-The group SID `S-1-5-32-545` identifies the standard Windows Users group across display languages. These commands use Microsoft's [local-user](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/new-localuser?view=powershell-5.1) and [group-membership](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember?view=powershell-5.1) interfaces. Do not reset an existing account's password or disable password-expiry policy without a reason established by the task.
 
 ## 5. Register and install the service
 

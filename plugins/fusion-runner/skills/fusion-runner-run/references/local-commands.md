@@ -23,6 +23,18 @@ A temporary mode-0700 directory holds a pinned known-hosts file and connection
 socket. There is no agent forwarding, alternate host-key acceptance, VM discovery,
 installation, power change or GitHub registration in this library.
 
+When the standard account cannot enumerate Windows services or processes,
+`admission_access` in that same private file supplies an existing maintenance
+account. It uses the same address, port and pinned host key with its own SID and
+credential. The adapter uses that account only for a fixed read-only inventory
+before execution and before accepting completed evidence. It never sends tested
+source or a user-selected command to the maintenance session. The execution
+account remains non-administrative. Unknown inventory blocks admission.
+
+Prepare both accounts before image capture. Normal startup verifies the saved
+access contract, automatic SSH startup and the current address. A validated
+clean reset must provide access immediately without an access-repair step.
+
 `scripts/local_job.ps1` is the internal standard-account executor. Its structured
 stdin identifies one invocation, expected account/architecture, source snapshot,
 specification and archive hashes. The host transfers fresh copies and verifies

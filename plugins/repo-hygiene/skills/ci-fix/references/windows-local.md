@@ -57,6 +57,14 @@ The access file must be a regular file owned by the current Mac user with mode
 guest identity after startup or reset. Preserve normal encryption and account
 separation. A reset restores baseline access settings, so recheck preparation.
 
+If Windows denies service/process inventory to the standard SSH token, add an
+`admission_access` object with the same access fields for the existing maintenance
+account. Its address, port and host key must match the standard account's guest;
+its SID must differ. This account performs only a fixed read-only inventory.
+Tested source and commands always run under the standard account. Keep both
+credentials in the same owner-only file outside captured source. Include the
+observer connection in local setup and collection timings.
+
 ## Describe the actual command
 
 Create a non-secret execution specification outside the captured repository.

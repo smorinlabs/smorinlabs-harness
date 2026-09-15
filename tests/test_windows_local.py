@@ -206,6 +206,23 @@ def test_sftp_paths_preserve_windows_drive_and_literal_metacharacters():
     with pytest.raises(guest.GuestError): guest.sftp_quote('file\nget unrelated')
 
 
+@pytest.mark.parametrize('field,value', [('address', '192.0.2.9'), ('host_public_key', 'ssh-ed25519 AQID'),
+                                       ('account_sid', 'S-1-5-21-1-2-3-1001')])
+def test_admission_observer_must_match_guest_and_use_separate_identity(field, value):
+    access = {'address': '192.0.2.1', 'username': 'fixture', 'password': 'fixture-value',
+              'host_public_key': 'ssh-ed25519 AAAA', 'account_sid': 'S-1-5-21-1-2-3-1001'}
+    observer = dict(access, username='maintenance', account_sid='S-1-5-21-1-2-3-1002')
+    assert guest.validate_access(dict(access, admission_access=observer))['admission_access']['username'] == 'maintenance'
+    observer[field] = value
+    with pytest.raises(guest.GuestError, match='same pinned'): guest.validate_access(dict(access, admission_access=observer))
+
+
+def test_missing_inventory_permissions_cannot_be_treated_as_idle(monkeypatch):
+    session = guest.SSH({'account_sid': 'expected'})
+    monkeypatch.setattr(session, 'powershell', lambda *_: SimpleNamespace(returncode=1, stdout=b''))
+    with pytest.raises(guest.GuestError, match='admission could not be verified'): session.check_admission('ARM64')
+
+
 @pytest.mark.parametrize("field,value", [("is_administrator", True), ("account_sid", "another"), ("process_arch", "X64"), ("local_processes", 1), ("runner_processes", 1), ("runner_services", 1)])
 def test_guest_probe_rejects_identity_or_active_work(field, value, monkeypatch):
     access = {"account_sid": "expected"}
@@ -255,6 +272,8 @@ def collected(repository, tmp_path):
     report.update(status="completed", architecture="ARM64", is_administrator=False,
                   timed_out=False, exit_code=0, evidence_sha256=w.hashlib.sha256(evidence).hexdigest())
     class Client:
+        def check_admission(self, _architecture):
+            return {'runner_services': 0, 'runner_processes': 0, 'local_processes': 0}
         def probe(self, *_args, **_kwargs):
             return {"account_sid": "fixture-sid", "work_root": directory.rsplit("\\", 1)[0]}
         def powershell(self, _code):
@@ -271,6 +290,15 @@ def test_collection_pass_binds_source_and_changed_source_stays_visible(collected
     result = w.collect_with(client, guest, receipt, path)
     assert result["status"] == "source-changed"
     assert result["evidence"]["selection_verified"] is True
+
+
+def test_pass_requires_a_fresh_post_run_admission_check(collected, monkeypatch):
+    receipt, _, client, path, _ = collected
+    def blocked(_architecture):
+        raise guest.GuestError('new runner service requires reconciliation')
+    monkeypatch.setattr(client, 'check_admission', blocked)
+    with pytest.raises(guest.GuestError): w.collect_with(client, guest, receipt, path)
+    assert receipt['status'] == 'evidence-unverified'
 
 
 @pytest.mark.parametrize("change", ["spec", "snapshot", "invocation", "account_sid", "exit_code"])

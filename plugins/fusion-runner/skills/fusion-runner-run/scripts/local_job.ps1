@@ -54,8 +54,9 @@ try {
     }
     $lease = [IO.File]::Open((Join-Path $root 'active.lock'), [IO.FileMode]::OpenOrCreate,
         [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
-    if (@(Get-Process -Name 'Runner.Listener','Runner.Worker' -ErrorAction SilentlyContinue).Count -or
-        @(Get-Service | Where-Object Name -like 'actions.runner.*').Count) {
+    # The host's fixed maintenance query checks services before admission and
+    # collection. The standard SSH token cannot enumerate Windows services.
+    if (@(Get-Process -Name 'Runner.Listener','Runner.Worker' -ErrorAction SilentlyContinue).Count) {
         throw 'GitHub runner work is present; local execution refused.'
     }
     $archive = Join-Path $jobDirectory 'input.zip'
@@ -138,8 +139,7 @@ try {
         Copy-Item -LiteralPath $evidence -Destination (Join-Path $jobDirectory 'evidence')
         $result.evidence_sha256 = (Get-FileHash -LiteralPath (Join-Path $jobDirectory 'evidence') -Algorithm SHA256).Hash.ToLowerInvariant()
     }
-    if (@(Get-Process -Name 'Runner.Listener','Runner.Worker' -ErrorAction SilentlyContinue).Count -or
-        @(Get-Service | Where-Object Name -like 'actions.runner.*').Count) {
+    if (@(Get-Process -Name 'Runner.Listener','Runner.Worker' -ErrorAction SilentlyContinue).Count) {
         throw 'GitHub runner work appeared during local execution; shared execution is not accepted.'
     }
     $result.status = 'completed'
