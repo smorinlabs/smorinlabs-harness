@@ -65,14 +65,21 @@ inference about whether a filtered red predicts a full red:
 
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 ```
 
-The event in the key keeps the filtered diagnostic and the pull-request run
-for the same commit in separate groups, so they never cancel each other.
-Cancellation applies only to pull requests, so a push to the default branch
-always runs to completion. Dispatches on one branch queue one at a time.
+A pull request's runs share one group and the newest wins. Every other run,
+a push to the default branch or a filtered diagnostic, gets a group of its
+own keyed on `run_id`, so it never waits behind another run and is never
+replaced. That last clause is the reason for the `run_id`: GitHub keeps at
+most **one pending run per group** and cancels it when a newer run arrives,
+regardless of `cancel-in-progress`. A group shared across dispatches would
+silently drop a queued diagnostic under rapid dispatches, and a group shared
+across pushes to the default branch would drop a queued merge or release run.
+Reproduced 2026-09-14 with three dispatches two seconds apart on a shared
+group: the second was cancelled while pending. With a unique group per run
+there is nothing to replace.
 
 ```yaml
       - name: Run tests

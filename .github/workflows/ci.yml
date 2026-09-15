@@ -8,14 +8,18 @@ on:
 
 # Supersede a pull request's own in-flight run when a newer commit arrives, so
 # an iteration's stale run stops paying for itself. Scoped deliberately:
-#   - the group includes the event, so a workflow_dispatch diagnostic and the
-#     pull_request run that gates the same commit never cancel each other
-#   - cancel-in-progress is true only for pull_request, so a push to main -- a
-#     merge or a release commit -- always runs to completion
-#   - dispatches on one branch share a group without cancellation, so they
-#     queue one at a time rather than run in parallel
+#   - a pull request's runs share one group and the newest wins, running or
+#     pending alike
+#   - every other run -- a push to main, a workflow_dispatch diagnostic -- is
+#     its own group, keyed on run_id, so it never waits behind another run and
+#     is never replaced. GitHub keeps at most ONE pending run per group and
+#     cancels it when a newer run arrives, even with cancel-in-progress false;
+#     a shared group would therefore drop a queued merge or release run under
+#     rapid pushes, and drop a queued diagnostic under rapid dispatches
+#     (reproduced 2026-09-14: three dispatches two seconds apart, the second
+#     cancelled while pending). A unique group has nothing to replace.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
