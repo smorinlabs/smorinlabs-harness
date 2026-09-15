@@ -6,6 +6,18 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Supersede a pull request's own in-flight run when a newer commit arrives, so
+# an iteration's stale run stops paying for itself. Scoped deliberately:
+#   - the group includes the event, so a workflow_dispatch diagnostic and the
+#     pull_request run that gates the same commit never cancel each other
+#   - cancel-in-progress is true only for pull_request, so a push to main -- a
+#     merge or a release commit -- always runs to completion
+#   - dispatches on one branch share a group without cancellation, so they
+#     queue one at a time rather than run in parallel
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
