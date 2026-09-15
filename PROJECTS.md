@@ -1714,9 +1714,9 @@ PR-3 — Fusion Windows diagnostics
 - [x] [P45-T19] Add trusted pushed-revision dispatch and collection bound to invocation, workflow attempt, commit, runner and nonempty selected tests; preserve failed-job logs.
 - [x] [P45-T20] Define protected one-job registration, partial receipts, guarded retirement and the concrete diagnostic workflow/report examples.
 - [x] [P45-T21] Verify helper fixtures, PowerShell selection/mode/retirement controls, and fresh Claude/Codex plugin loading. Live Windows evidence remains a separate gate.
-- [~] [P45-T22] Native Windows failure → unchanged assertion with source repair → success and no-selection cleanup passed on 2026-09-12. Fresh-agent run → reset → run acceptance passed on 2026-09-13 UTC: four assertions before and after, verified marker absence, distinct standard-account runners, exact source binding, unchanged baseline and final shutdown. PR #68 integration remains the delivery step; see [validation](docs/validation/windows-integration.md).
-- [x] [P45-T23] Owner selected fresh official checksum-verified programs per elevated registration. Implemented new invocation directories under an administrator-controlled parent, read/traverse-only parent access for the CI account, runtime guards and retirement reparse refusal. Three native one-job diagnostics and the standard-account parent-write rejection passed. Refresh the [PR #68 review](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242) against this evidence before merge.
-- [x] [P45-T24] Owner approved the additive pre-push local Windows path on 2026-09-14. Implementation adds inventory-gated Fusion delegation, current-file snapshots, standard-account execution, compatible phase timing and exact result collection. Host controls and native unpushed failure/repair passed. The same three assertions passed before/after reset without SSH repair on 2026-09-15. PR #68 review, release and installation remain separate delivery gates.
+- [x] [P45-T22] Native Windows failure → unchanged assertion with source repair → success and no-selection cleanup passed on 2026-09-12. Fresh-agent run → reset → run acceptance passed on 2026-09-13 UTC: four assertions before and after, verified marker absence, distinct standard-account runners, exact source binding, unchanged baseline and final shutdown. PR #68 merged at `f13af62` on 2026-09-15 and shipped in v0.27.0; see [validation](docs/validation/windows-integration.md).
+- [x] [P45-T23] Owner selected fresh official checksum-verified programs per elevated registration. Implemented new invocation directories under an administrator-controlled parent, read/traverse-only parent access for the CI account, runtime guards and retirement reparse refusal. Three native one-job diagnostics and the standard-account parent-write rejection passed. The [PR #68 review](https://github.com/smorinlabs/smorinlabs-harness/pull/68#discussion_r3995475242) was reconciled and resolved before merge.
+- [x] [P45-T24] Owner approved the additive pre-push local Windows path on 2026-09-14. Implementation adds inventory-gated Fusion delegation, current-file snapshots, standard-account execution, compatible phase timing and exact result collection. Host controls and native unpushed failure/repair passed. The same three assertions passed before/after reset without SSH repair on 2026-09-15. PR #68 review and merge, v0.27.0 publication, and the existing Claude Code/Codex development installations completed on 2026-09-15. The installed sources and both loaders were verified.
 - [ ] Regression Test Status
 
 ### Automated Verification
@@ -1774,7 +1774,7 @@ The complete evidence, reviewer provenance and limitations are recorded in
 
 ---
 
-## [~] Project P47: Fusion Windows runner setup and operation skills
+## [x] Project P47: Fusion Windows runner setup and operation skills
 
 **Goal**: Publish a reusable `fusion-runner` plugin with `fusion-runner-setup`
 for installing Fusion, Windows, workflow tools, and a GitHub runner service, and
@@ -1814,7 +1814,7 @@ software and Windows images are downloaded from their official sources.
 - [x] [P47-T04] PR #57 merged at `02ace8a`; local public main fast-forwarded to that commit, preserving unrelated audit files.
 - [x] [P47-TS06] Cover the host-probe JSON contract with mocked macOS success, Rosetta planning, unknown facts, absent/malformed Fusion metadata, invalid storage, and non-macOS cases; verify already-off stop remains observation-only. All 36 helper tests passed in 4.30 seconds after the review repairs.
 - [x] [P47-T10] VM power helper 0.2.0 adds optional `--wait-seconds` total-deadline polling. Four delayed/stuck transition fixtures verify a single mutation and a deadline that includes the initial inventory. The default remains one post-request observation.
-- [ ] [P47-T09] Tagged public release is authorized by the current closeout request and awaits the integration/release gates; do not request authorization again.
+- [x] [P47-T09] Published [v0.27.0](https://github.com/smorinlabs/smorinlabs-harness/tree/v0.27.0) at PR #68 merge commit `f13af62` on 2026-09-15, including Fusion 0.3.0 and repo-hygiene 0.15.0. Merge CI and generation checks passed. The existing development installations resolve the released sources; Claude Code loaded both plugins, and the Codex read-only loader verified the qualified skill names and source paths with a malformed-skill rejection control.
 - **Removed [P47-TS05]:** Owner removed persistent GitHub registration after reboot from this delivery on 2026-09-12; neither passed nor deferred. Ordinary signed-out Windows reboot/access passed. Fresh-agent run → reset → run acceptance passed on 2026-09-13 UTC; see the [curated receipt](docs/validation/windows-acceptance-2026-09-13.json).
 
 **Validation boundary**: The [public validation record](plugins/fusion-runner/docs/validation.md)
@@ -1825,11 +1825,13 @@ marker preservation, and graceful shutdown passed. Private recovery scripts,
 credentials, VM files, account names, and job URLs are not part of this plugin.
 The public helper fixtures remain simulated vendor-response tests.
 
-**Related work**: P45's Windows execution phase in `ci-fix` now has implementation
-and fixture coverage; native failure/repair and no-selection cleanup passed on 2026-09-12. Fresh-agent skill-driven reset acceptance passed on 2026-09-13 UTC. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
-records the original direct-execution proposal and the owner's later choice of
-Fusion with a registered runner. Completing this plugin's live smoke validation
-does not implement that diagnostic workflow.
+**Related work**: P45's Windows diagnostics and unpushed local execution shipped
+in repo-hygiene 0.15.0 with the same release. Native failure/repair, ordinary
+signed-out reboot, and unchanged assertions before and after reset passed; the
+[local execution receipt](docs/validation/windows-local-2026-09-15.json) records
+the accepted scope. The [research decision history](research/topics/windows-on-mac-ci/DECISION.md)
+preserves the earlier proposals and owner decisions. P45's unrelated remaining
+coverage is unchanged.
 
 Loader note: Claude reports the generator's existing `_generated` manifest
 field as an ignored unknown field. Static Codex manifest validation does not
