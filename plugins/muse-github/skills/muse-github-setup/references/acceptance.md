@@ -19,6 +19,10 @@
    block outside writers with bypass limited to the approved member team.
    Inspect pending PRs for earlier workflow changes. Do not rely on merge-time
    review to stop a modified workflow running from a PR branch.
+   Inspect secret-file conventions before enabling manual fixes. Preparation
+   refuses tracked credential-like files, including common package-manager,
+   cloud, SSH, and certificate stores. Extend `sensitive()` for repository-specific
+   names and review source for embedded credentials; filenames alone are incomplete.
 3. Configure active GitHub workflow execution policies for
    `.github/workflows/opencode-pr-review.yml` with `pull_request`, and when used,
    `.github/workflows/opencode-fix-pr.yml` with `workflow_dispatch`. Select the
@@ -64,6 +68,7 @@ Source: [workflows triggered by workflows](https://docs.github.com/en/actions/ho
 | Rapid PR update | Old run is cancelled or fails the final stale-head check; its run summary records the old input SHA even if the model omitted it from its comment |
 | Malicious PR OpenCode plugin/config | Project discovery disabled and review has no model tools; configuration comes from the protected base |
 | Member manually requests a fix | Fresh runner-created branch, ordinary-file diff, and new PR for human review; no approval/merge |
+| Default branch contains a credential-like file | Manual preparation refuses before the model step; additional secret-file conventions require a reviewed policy |
 | CI on generated fix PR | Actual check state recorded; maintainer approves pending workflows if GitHub requires it |
 
 Use offline fixtures for unsafe negative cases when possible. Never recruit an

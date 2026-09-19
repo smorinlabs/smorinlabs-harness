@@ -118,7 +118,14 @@ def protected(path: str) -> bool:
 
 def sensitive(path: str) -> bool:
     name = PurePosixPath(path).name.lower()
-    return ".env" in name or name.endswith((".pem", ".key"))
+    return (
+        ".env" in name
+        or name.endswith((".pem", ".key", ".p12", ".pfx", ".jks", ".keystore"))
+        or name in {
+            ".npmrc", ".pypirc", ".netrc", ".git-credentials", "credentials", "credentials.json",
+            "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519",
+        }
+    )
 
 
 def validate_tree(root: Path, mode: str) -> None:
@@ -128,6 +135,8 @@ def validate_tree(root: Path, mode: str) -> None:
         for entry in git(root, "ls-files", "--stage", "-z").split("\0"):
             if entry and entry.split(" ", 1)[0] in ("120000", "160000"):
                 raise Refusal("Manual fix template does not support symlinks or submodules")
+            if entry and sensitive(entry.split("\t", 1)[1]):
+                raise Refusal("Manual fix checkout contains credential-like files; review its secret-file policy first")
 
 
 def freeze_branch(root: Path, branch: str, sha: str) -> None:
@@ -284,8 +293,8 @@ def finish(mode: str, environ=os.environ) -> None:
         if not branch.startswith("opencode/dispatch-"):
             raise Refusal("Fix did not stay on the runner-created branch")
         changes = git(root, "diff", "--name-only", "-z", state["base"], "HEAD").split("\0")
-        if any(protected(path) for path in changes if path):
-            raise Refusal("Fix changed protected configuration; do not merge its PR")
+        if any(protected(path) or sensitive(path) for path in changes if path):
+            raise Refusal("Fix changed protected configuration or credential-like files; do not merge its PR")
     print(f"Completed {mode} workspace checks; inspect the run's comment or PR separately")
 
 

@@ -22,7 +22,7 @@ dependencies by deliberate design. No replacement installer was authored.
 
 | Check | Result and scope |
 |---|---|
-| `uv run pytest -q tests/test_muse_github.py` | 24 passed; preservation/conflicts/idempotence, actors/membership, stale inputs, exact-commit checkout, isolated configuration preparation, case variants, size limits, and event/token separation |
+| `uv run pytest -q tests/test_muse_github.py` | 39 passed after PR review; preservation/conflicts/idempotence, actors/membership, stale inputs, exact-commit checkout, isolated configuration preparation, credential-path refusal, case variants, size limits, and event/token separation |
 | `actionlint` on both templates | Passed |
 | `harness-kit gen` and `gen --check` | Passed; both manifests and marketplace entry generated |
 | System skill-creator `quick_validate.py` | Passed for the new skill |
@@ -75,6 +75,21 @@ The final review corrected the SHA claim: prompts cannot guarantee a model
 writes a particular label. The helper records prepared/verified commits in the
 trusted run summary. The stock Action links its comment to that run. Model
 wording is requested; the helper's commit record is authoritative.
+
+PR review found that the manual fix profile could read additional conventional
+credential files. Fourteen filename fixtures failed before the repair, while
+an ordinary source-file control passed. Preparation now refuses those tracked
+paths case-insensitively before the model step. The full targeted file passed
+39 tests in 233.76 seconds on this local run. Installation guidance requires
+review of additional repository-specific secret paths and embedded credentials.
+The final diagnostic also rejects credential-like output files.
+
+CodeQL classified the literal environment-variable name as a secret. Two
+focused tests and probes of both generated profiles confirmed that only the
+unresolved environment reference is serialized, even with synthetic credentials
+present. The alert was dismissed as a false positive with this evidence.
+The accepted upstream composite-action trust boundary now explicitly names
+credential inheritance by its setup steps; no custom wrapper was introduced.
 
 **Verdict:** locally validated and ready for review. Live acceptance remains
 pending a target repository and authorization for its settings, credentials,

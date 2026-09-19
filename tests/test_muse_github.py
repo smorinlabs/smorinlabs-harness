@@ -269,6 +269,25 @@ def test_fix_refuses_symlink(repo_pair):
         ci.validate_tree(runner, "fix")
 
 
+@pytest.mark.parametrize("path", [
+    ".npmrc", "config/.PyPiRc", ".NETRC", "keys/credentials.json",
+    ".aws/credentials", ".git-credentials", "keys/id_rsa", "keys/id_ED25519",
+    "certs/signing.P12", "certs/signing.PFX", "certs/signing.JKS",
+    "certs/signing.KEYSTORE", "config/prod.EnV", "keys/private.PEM",
+])
+def test_fix_refuses_tracked_credential_paths_before_model_access(tmp_path, monkeypatch, path):
+    monkeypatch.setattr(ci, "git", lambda *_: "100644 " + "a" * 40 + " 0\t" + path)
+    with pytest.raises(ci.Refusal, match="credential-like"):
+        ci.validate_tree(tmp_path, "fix")
+    assert ci.sensitive(path)  # The same paths must also stay out of review diffs.
+
+
+def test_fix_accepts_ordinary_tracked_project_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(ci, "git", lambda *_: "100644 " + "a" * 40 + " 0\tsrc/app.py")
+    ci.validate_tree(tmp_path, "fix")
+    assert not ci.sensitive("src/app.py")
+
+
 def test_fix_rules_cover_mixed_case_sensitive_paths_and_preserve_normal_edits():
     config = ci.configuration(SKILL / "templates", "fix")
     # Exercise the documented last-match wildcard policy on the generated rules.

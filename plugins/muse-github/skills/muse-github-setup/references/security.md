@@ -57,7 +57,7 @@ The additional write boundary is described by
 | Control | Review | Manual fix |
 |---|---|---|
 | Token | `contents: read`, `pull-requests: write` | `contents: write`, `pull-requests: write` |
-| Model tools | All denied; supplied diff only | File read/edit only; protected configuration and credential-like paths denied |
+| Model tools | All denied; supplied diff only | File read/edit only; protected configuration denied; credential-like tracked files block preparation |
 | Base | Event's exact base/head commits | Dispatch's exact default-branch commit |
 | Output | Feedback comment linked to a run summary recording the input SHA | New `opencode/dispatch-...` branch and PR |
 | Job limit | 10 minutes; newer PR run cancels older | 15 minutes; one running fix per repository |
@@ -77,8 +77,10 @@ rules also apply to its default agent. The installer preserves root
 `opencode.json` for normal discovery, but CI uses its separate trusted profile.
 
 Review input is a complete textual diff limited to 60,000 bytes, not a
-silently truncated diff. Credential-like `.env*`, `.pem`, and `.key` changes
-are refused for human review. Binary changes and context outside the diff
+silently truncated diff. Credential-like changes are refused for human review.
+The case-insensitive filename policy includes `.env*`, key/certificate stores,
+`.npmrc`, `.pypirc`, `.netrc`, `.git-credentials`, `credentials`, `credentials.json`,
+and conventional SSH private-key names. Binary changes and context outside the diff
 need human inspection. The model cannot load PR instruction files as agent
 configuration or read beyond the supplied diff. Changed instructions can appear
 in that diff as untrusted data. It cannot execute a project plugin because it
@@ -96,8 +98,14 @@ final PR SHAs in the run summary, which the stock comment links to. That summary
 is the authoritative commit record. Concurrency cancels older runs where
 possible. Do not claim atomic current-head publication.
 
-The fix profile edits regular project files. It refuses symlinks and submodules
-until a repository-specific policy has been reviewed. It starts from the trusted
+The fix profile edits regular project files. Preparation refuses symlinks,
+submodules, and any tracked credential-like file before the model step. This
+includes nonsecret example files with those names: the starting policy is
+deliberately conservative. Before activation, inspect the target repository's
+actual secret-file conventions and extend the helper's `sensitive()` predicate
+for additional names. Filename rules cannot identify secrets embedded in
+arbitrarily named source files; inspect that separately. Do not activate a
+manual fix workflow with unreviewed secret paths. It starts from the trusted
 default branch, disables hooks, formatters and language servers, and leaves
 test execution to ordinary PR CI. Protected-path tool permissions are the
 preventive control; the final diff check is diagnostic and runs after the stock
@@ -117,6 +125,11 @@ CLI, runs the upstream installer, and uses `actions/cache@v4`. This is the
 accepted direct-Action tradeoff. It does not pin the entire runtime. Refresh
 source inspection and credential-free compatibility checks before activation
 or updating templates. Do not replace it with a custom installer silently.
+The credentials supplied to this composite Action are inherited by its version
+lookup, cache, and installer steps as well as the final OpenCode command.
+Trust in those upstream components is therefore part of the accepted boundary.
+Isolating credentials from setup and pinning every nested dependency would
+require an upstream capability or a separately approved wrapper/vendor design.
 
 Source: [inspected Action](https://github.com/anomalyco/opencode/blob/a97622c801f4ca571530ddc51076af659a9c32cd/github/action.yml),
 [GitHub runner](https://github.com/anomalyco/opencode/blob/a97622c801f4ca571530ddc51076af659a9c32cd/packages/opencode/src/cli/cmd/github.handler.ts),
