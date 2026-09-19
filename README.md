@@ -1,8 +1,8 @@
 # smorinlabs-harness
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
-Claude Code marketplace and an OpenAI Codex marketplace from one tree. Fifteen
-plugins, thirty-three skills. Plugin metadata lives in a single source of truth
+Claude Code marketplace and an OpenAI Codex marketplace from one tree. Sixteen
+plugins, thirty-four skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -34,6 +34,15 @@ ln -s "$(pwd)/smorinlabs-harness/plugins/<plugin>/skills/<skill>" ~/.claude/skil
 
 Codex users: dev-symlink the same skill into `~/.agents/skills` (Codex's current
 skills location) as well.
+
+### muse-github
+
+Install with `/plugin install muse-github@smorinlabs-harness` after adding this marketplace.
+The skill's guide also covers development symlinks and direct copies.
+
+| Skill | Does | Details |
+|---|---|---|
+| `muse-github-setup` | Prepares organization-member Muse Spark PR feedback and optional manual fix PRs with the OpenCode Action, scoped credentials, execution protections, and explicit live acceptance checks. | [docs/skills/muse-github-setup.md](docs/skills/muse-github-setup.md) |
 
 ### fusion-runner
 

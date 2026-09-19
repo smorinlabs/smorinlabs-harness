@@ -154,6 +154,24 @@
       ]
     },
     {
+      "name": "muse-github",
+      "source": "./plugins/muse-github",
+      "description": "Install organization-member PR reviews and optional manual fix PRs with the OpenCode GitHub Action and Meta Muse Spark",
+      "version": "0.1.0",
+      "author": {
+        "name": "Steve Morin"
+      },
+      "keywords": [
+        "github",
+        "actions",
+        "muse",
+        "meta",
+        "opencode",
+        "review",
+        "setup"
+      ]
+    },
+    {
       "name": "project-harness",
       "source": "./plugins/project-harness",
       "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
