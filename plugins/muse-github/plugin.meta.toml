@@ -1,0 +1,9 @@
+name = "muse-github"
+version = "0.1.0"
+description = "Install organization-member PR reviews and optional manual fix PRs with the OpenCode GitHub Action and Meta Muse Spark"
+author = "Steve Morin"
+keywords = ["github", "actions", "muse", "meta", "opencode", "review", "setup"]
+
+[interface]
+displayName = "Muse GitHub"
+category = "Developer Tools"

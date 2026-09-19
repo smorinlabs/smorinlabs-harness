@@ -1929,3 +1929,28 @@ for exact source snapshots, native session-fork outcomes, semantic limitations,
 and package checks. Development placements resolve to the stable main checkout
 and load the update after that checkout is fast-forwarded. The validation
 record distinguishes instruction edits from repository merge and local activation.
+
+---
+
+## [x] Project P49: Muse GitHub setup skill — local authoring
+
+**Goal:** Provide a reusable installer for organization-member Muse PR feedback
+and optional manual fix PRs using the upstream OpenCode Action.
+
+**Scope:** New public `muse-github-setup` skill in `muse-github` 0.1.0. Support
+the optional private `repo-secrets --app muse-ci` interface with a public
+fallback. Use Muse Spark 1.3 Contributor and a distinct repository key named
+`META_MUSE_CI_API_KEY`. Author and validate locally; activation and live paid
+acceptance require a separately selected target and authorization.
+
+- [x] Check global name/trigger space and route the public installer separately from private credential handling
+- [x] Preserve existing instructions and OpenCode configuration; supply automatic-review and manual-new-PR templates
+- [x] Define membership, workflow-writer restrictions, trusted profiles, credential boundaries, immutable review input, and failure behavior
+- [x] Add 24 offline behavior tests, workflow lint, generated manifests, and skill-quality review
+- [x] Exercise credential-free configuration loading in the installed OpenCode version with an inverse project-config control
+- [x] Record exact validation coverage, upstream moving-runtime tradeoff, and unrun live acceptance
+
+**Evidence:** [0.1.0 validation record](docs/validation/muse-github-setup-0.1.0.md).
+The local authoring scope is complete. Publishing, live placement, target
+installation, secret provisioning, and live review/fix validation remain
+separate future work; no such activation is claimed here.
