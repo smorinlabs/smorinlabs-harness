@@ -2,7 +2,7 @@
 
 The public cross-platform plugin marketplace for **smorinlabs** — publishing a
 Claude Code marketplace and an OpenAI Codex marketplace from one tree. Fifteen
-plugins, thirty-three skills. Plugin metadata lives in a single source of truth
+plugins, thirty-four skills. Plugin metadata lives in a single source of truth
 (`plugin.meta.toml` per plugin); the per-platform manifests are generated, so
 they can't drift.
 
@@ -57,6 +57,7 @@ Repo & release-readiness skills.
 | `readme-sync` | Audits README.md against the codebase (install steps, CLI usage, code examples, structure, links) and applies fixes with `--fix`. | [docs/skills/readme-sync.md](docs/skills/readme-sync.md) |
 | `manual-test-guide` | Generates a copy-pasteable manual testing guide, prioritizing recently changed areas. | [docs/skills/manual-test-guide.md](docs/skills/manual-test-guide.md) |
 | `pr-merge-flow` | Completes PR review and merge by default, with bounded waits, verified repairs shared with `ci-fix`, evidence replies, and a merge bound to the reviewed head. Refreshes reviews after repair pushes and verifies the actual merge result. Always shows cleanup recommendations inline with stable C IDs, grouped by PR relationship and labeled by session origin. Preserves owner decisions, non-convergence check-ins, explicit auto/confirm/ready modes, one-pass without merging, and separate cleanup authorization. Review-only or fix-only routing does not authorize merging. | [docs/skills/pr-merge-flow.md](docs/skills/pr-merge-flow.md) |
+| `dependabot-sweep` | Clears open Dependabot PRs across configured GitHub orgs with one discovery search per org, then one subagent per repo-with-PRs; auto-fix by default, red CI delegated to `ci-fix`, involved merges to `pr-merge-flow`. `--check` reports only. | [docs/skills/dependabot-sweep.md](docs/skills/dependabot-sweep.md) |
 
 ### factor-harness
 

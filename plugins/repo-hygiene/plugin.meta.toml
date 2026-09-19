@@ -1,5 +1,5 @@
 name = "repo-hygiene"
-version = "0.15.0"
-description = "Repo & release-readiness checks — CI fix and audit (measured, targeted, escalating), version drift, README sync, manual test guides, and a PR merge flow that resolves every review thread before merging."
+version = "0.16.0"
+description = "Repo & release-readiness checks — CI fix and audit (measured, targeted, escalating), version drift, README sync, manual test guides, a PR merge flow that resolves every review thread before merging, and a Dependabot sweep that clears open dependency PRs across configured orgs."
 author = "Steve Morin"
-keywords = ["ci", "fix", "release", "readme", "version", "testing", "hygiene", "audit", "pr", "merge", "review"]
+keywords = ["ci", "fix", "release", "readme", "version", "testing", "hygiene", "audit", "pr", "merge", "review", "dependabot", "dependencies", "sweep"]
