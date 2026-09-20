@@ -20,7 +20,7 @@ documented reason to keep them separate. It does not refactor
 anything. The output is a consolidation spec the user feeds to
 Superpowers `writing-plans`.
 
-See [`../​_conventions.md`](../_conventions.md) for the shared
+See [`../_conventions.md`](../_conventions.md) for the shared
 factor-harness conventions.
 
 ---
@@ -266,3 +266,16 @@ prevents.
   — comparator subagent dispatched in parallel by this skill.
 - [`../../agents/factor-researcher.md`](../../agents/factor-researcher.md)
   — researcher subagent for ecosystem patterns.
+
+## Resolving shared references
+
+This skill cites shared files relative to the citing file:
+`../_conventions.md`, `../using-factor-harness/SKILL.md`,
+`../factor-scan/SKILL.md`, `../factor-architect/SKILL.md`, and
+`../../agents/factor-comparator.md`,
+`../../agents/factor-researcher.md`. In symlink placements the
+`../` segments resolve via the OS to the install source. When
+computing paths lexically, anchor on the `realpath` of this
+SKILL.md first. In sibling-absent copies (no shared files
+beside the skill directory), fall back to locating the install
+source that provides the factor-harness plugin.

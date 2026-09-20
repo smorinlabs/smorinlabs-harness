@@ -19,7 +19,7 @@ plan (pre-execution) or shipped code (post-execution). It surfaces
 findings classified into four buckets, walks the user through each,
 and produces a refactor spec ready for Superpowers `writing-plans`.
 
-See [`../​_conventions.md`](../_conventions.md) for the shared
+See [`../_conventions.md`](../_conventions.md) for the shared
 factor-harness conventions.
 
 ---
@@ -266,3 +266,16 @@ The spec content is what the user feeds to
   — researcher subagent for external canonical patterns.
 - [`../../agents/factor-scanner.md`](../../agents/factor-scanner.md)
   — scanner subagent for structural surveys of large inputs.
+
+## Resolving shared references
+
+This skill cites shared files relative to the citing file:
+`../_conventions.md`, `../using-factor-harness/SKILL.md`,
+`../factor-scan/SKILL.md`, `../factor-dedup/SKILL.md`, and
+`../../agents/factor-scanner.md`, `../../agents/factor-comparator.md`,
+`../../agents/factor-researcher.md`. In symlink placements the `../`
+segments resolve via the OS to the install source. When computing
+paths lexically, anchor on the `realpath` of this SKILL.md first.
+In sibling-absent copies (no shared files beside the skill
+directory), fall back to locating the install source that provides
+the factor-harness plugin.

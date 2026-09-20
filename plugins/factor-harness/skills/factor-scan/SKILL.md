@@ -17,7 +17,7 @@ anything. The output is a list of findings (walked one at a time
 with the user) and an inline spec the user can hand to Superpowers
 `writing-plans` for the actual fixes.
 
-See [`../​_conventions.md`](../_conventions.md) for the
+See [`../_conventions.md`](../_conventions.md) for the
 conventions every factor-harness skill follows: pure workflow
 shape, per-finding interactive UX, inline output, read-only
 discipline, and the iron law layout.
@@ -213,3 +213,15 @@ Tell the user this content is ready to feed to
 - [`../_conventions.md`](../_conventions.md) — shared conventions.
 - [`../../agents/factor-scanner.md`](../../agents/factor-scanner.md)
   — the subagent this skill dispatches.
+
+## Resolving shared references
+
+This skill cites shared files relative to the citing file:
+`../_conventions.md`, `../using-factor-harness/SKILL.md`,
+`../factor-architect/SKILL.md`, `../factor-dedup/SKILL.md`, and
+`../../agents/factor-scanner.md`. In symlink placements the `../`
+segments resolve via the OS to the install source. When computing
+paths lexically, anchor on the `realpath` of this SKILL.md first.
+In sibling-absent copies (no shared files beside the skill
+directory), fall back to locating the install source that provides
+the factor-harness plugin.
