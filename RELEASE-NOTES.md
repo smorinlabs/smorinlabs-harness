@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## v0.28.0 — 2026-09-20
+
+### Added
+
+- `muse-github` 0.1.0 adds the `muse-github-setup` skill: organization-member
+  Muse Spark PR feedback and optional manual fix PRs via the OpenCode Action.
+- `repo-hygiene` 0.16.0 adds the `dependabot-sweep` skill: clears open
+  Dependabot PRs across configured GitHub orgs with one discovery search per
+  org, a sweep gate, and one subagent per repo-with-PRs delegating red CI to
+  `ci-fix` and involved merges to `pr-merge-flow`. Merges run through a
+  bounded SHA-pinned helper with defer/quarantine semantics (24 fixture
+  tests); validated by two live pilot sweeps (26 merged, 8 deferred).
+
 ## v0.27.0 — 2026-09-15
 
 ### Added
