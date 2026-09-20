@@ -38,14 +38,14 @@ Captured in `<consolidated-dir>/.source-sha256-pre-merge.txt` by Phase 1.
 - [ ] Commit
 
 ### Task 3: Validation script
-- [ ] Copy `scripts/validate_round_trip.sh` (from skill) into `<consolidated-dir>/validate.sh`, parameterized for these docs
+- [ ] Copy `<skill-path>/scripts/validate_round_trip.sh` (from skill) into `<consolidated-dir>/validate.sh`, parameterized for these docs
 - [ ] Run it (expect PASS with 0 markers / 0 entries)
 - [ ] Commit
 
 ### Task 4..(3+M): Merge each output doc
 For each output doc:
 - [ ] Fill skeleton from source ranges per Task 2 map
-- [ ] Log every non-trivial synthesis/conflict/judgment as a CFL entry (use `assets/cfl_entry_template.md`)
+- [ ] Log every non-trivial synthesis/conflict/judgment as a CFL entry (use `<skill-path>/assets/cfl_entry_template.md`)
 - [ ] Place inline `<!-- CONFLICT: CFL-XXX -->` markers at end of synthesized blocks
 - [ ] Spec-compliance review (or self-review): every CFL marker has a log entry; nothing in the map is silently dropped
 - [ ] Code-quality review (or self-review): cross-references resolve, code samples compile, version pins consistent, no duplication across sections
@@ -53,7 +53,7 @@ For each output doc:
 - [ ] Commit
 
 ### Task (4+M): Coverage audit
-- [ ] Run `scripts/coverage_audit.sh` to dump every source heading
+- [ ] Run `<skill-path>/scripts/coverage_audit.sh` to dump every source heading
 - [ ] For each heading not in the topic-to-source map, add an entry to "Intentionally omitted source sections" with a one-sentence reason
 - [ ] Run validation script (expect PASS)
 - [ ] Commit
