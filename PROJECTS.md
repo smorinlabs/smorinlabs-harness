@@ -1954,3 +1954,25 @@ acceptance require a separately selected target and authorization.
 The local authoring scope is complete. Publishing, live placement, target
 installation, secret provisioning, and live review/fix validation remain
 separate future work; no such activation is claimed here.
+## [~] Project P50: dependabot-sweep skill (repo-hygiene) (v0.16.0)
+**Goal**: New `dependabot-sweep` skill in `plugins/repo-hygiene/` — clear the
+Dependabot backlog across configured GitHub orgs/repos: TOML scope config
+(`~/.config/dependabot-sweep/config.toml`, GitHub + `gh` assumed), one open-only
+author-search discovery per org (~1 search-API call, 0 core), a sweep gate,
+then one Task subagent per repo-with-PRs delegating red CI to `ci-fix` and
+involved merges to `pr-merge-flow`. Auto-fix default with `--no-auto-fix`
+opt-out, `--pause-on-conflict`, `--check` report-only. Verdict: create-new (no
+fleet collision; single-vs-multi-repo boundary to ci-fix/pr-merge-flow; no
+neighbor edits).
+
+### Tests & Tasks
+- [x] [P50-T01] Author SKILL.md (6-step workflow, args) + references/config.md + templates/agent-brief.md
+- [x] [P50-T02] plugin.meta.toml 0.15.0 → 0.16.0 (description + keywords); `just gen` + gen-check green
+- [x] [P50-T03] Dev placement both tools (claude-code, then codex); step-5 symlink + ledger verify green
+- [x] [P50-T04] Docs: per-skill page docs/skills/dependabot-sweep.md + README table row (33 → 34 skills)
+- [x] [P50-TS01] skill-quality gate PASS — independent content review (1 blocker + 4 advisories, all fixed and re-verified); docs/conventions green; static verify pass claude-code+codex; --deep pass both tools; Codex headless --check E2E found 6/6 PRs, changed nothing (claude-code E2E blocked by weekly model limit)
+- [ ] [P50-T05] PR, merge, main fast-forward, worktree cleanup
+- [x] [P50-T06] Run-1 pilot (15 merged, 2 conflicts deferred) + 3-way stall review (Muse + Codex + local; Gemini blocked on browser auth)
+- [x] [P50-T07] Implement stall fixes per Codex-approved plan (6 required changes): bounded dispatcher, scripts/gh_merge.py, hardened brief, [budgets]
+- [x] [P50-TS02] Behavioral fixture suite 16/16 green (timeout, eligibility incl. review-comment rules, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes
+- [x] [P50-T08] Run-2 pilot on hardened skill (11 merged, 6 deferred with reasons, 0 unknown, 0 hangs) + F6 repair-scope boundary fix
