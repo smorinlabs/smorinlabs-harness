@@ -75,14 +75,17 @@ the per-repo mutation slot, quarantine records, and post-crash reconciliation.
   `GH_MERGE_*`. Exit `0` merged; `10` deferred (reason logged); `11` unknown
   (hold the repo slot, reconcile read-only, quarantine across restarts —
   never auto-retry an uncertain mutation).
-- **Freshness**: the helper runs one preflight per invocation — there is no
-  second evidence read between preflight and PUT. Protection against head
-  movement is the SHA-bound PUT, which GitHub rejects with `409` (a
-  definitive defer). After each merge or repair push, sibling cached evidence
-  is stale. Base movement races settle server-side the same way.
+- **Freshness**: the helper preflights, then re-reads volatile evidence
+  (PR state, head, mergeable, reviews, check-runs) immediately before the
+  PUT — any change, gap, or unreadable state defers. The SHA-bound PUT is
+  the backstop: GitHub rejects a moved head with `409` (a definitive
+  defer). After each merge or repair push, sibling cached evidence is stale.
 - **Repair loop** (bounded): red PRs go to `ci-fix` with the PR's remaining
   budget, then return to classification exactly once; a repaired PR may merge
-  in the same sweep only after a fresh helper preflight passes. Repairs never
+  in the same sweep only after a fresh helper preflight passes. The
+  dispatcher computes one absolute deadline per PR and passes it
+  (`GH_MERGE_DEADLINE_EPOCH`) through repair and helper phases — a fresh
+  helper invocation never restarts the clock. Repairs never
   change repo settings — if one is needed, the PR goes to needs-human with
   the exact enable path. Involved PRs
   go to `pr-merge-flow` with a preparation-only instruction (triage and fix,

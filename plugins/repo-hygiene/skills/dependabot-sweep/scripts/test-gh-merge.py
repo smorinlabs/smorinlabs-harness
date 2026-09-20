@@ -86,6 +86,9 @@ class Handler(BaseHTTPRequestHandler):
             if SCENARIO["merged"]:
                 pull["state"] = "closed"
                 pull["merged"] = True
+            if (SCENARIO.get("move_head_on_call") and
+                    SCENARIO["pull_calls"] >= SCENARIO["move_head_on_call"]):
+                pull["head"] = {"sha": "moved2"}
             return self._send(pull)
         if path == "/repos/o/r/pulls/1/files":
             query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
@@ -99,11 +102,22 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(SCENARIO["files"], headers=headers)
             return self._send([])
         if path == "/repos/o/r/pulls/1/reviews":
+            SCENARIO["review_calls"] = SCENARIO.get("review_calls", 0) + 1
+            if (SCENARIO.get("reviews_flip_on_call") and
+                    SCENARIO["review_calls"] >=
+                    SCENARIO["reviews_flip_on_call"]):
+                return self._send([{"user": {"login": "rev"},
+                                    "state": "CHANGES_REQUESTED",
+                                    "submitted_at": "2026-01-03T00:00:00Z"}])
             return self._send(SCENARIO["reviews"])
         if path == "/repos/o/r/pulls/1/comments":
             return self._send(SCENARIO["inline_comments"])
         if path == "/repos/o/r/commits/abc123/check-runs":
-            return self._send({"check_runs": SCENARIO["check_runs"]})
+            total = SCENARIO.get("checkruns_total")
+            if total is None:
+                total = len(SCENARIO["check_runs"])
+            return self._send({"total_count": total,
+                               "check_runs": SCENARIO["check_runs"]})
         if path == "/repos/o/r/commits/abc123/status":
             return self._send(SCENARIO["combined"])
         if path == "/repos/o/r/branches/main/protection":
@@ -122,7 +136,10 @@ class Handler(BaseHTTPRequestHandler):
             self.rfile.read(length)
             nodes = [{"isResolved": False}] * SCENARIO["threads_unresolved"]
             return self._send({"data": {"repository": {"pullRequest": {
-                "reviewThreads": {"nodes": nodes}}}}})
+                "reviewThreads": {
+                    "pageInfo": {"hasNextPage": bool(
+                        SCENARIO.get("threads_truncated"))},
+                    "nodes": nodes}}}}})
         return self._send({"message": "no mock route"}, status=404)
 
     def do_PUT(self):  # noqa: N802
@@ -320,6 +337,41 @@ class HelperTest(unittest.TestCase):
         code, out, _ = self.run_helper()
         self.assertEqual(code, 10, out)
         self.assertEqual(SCENARIO["put_calls"], 1)
+
+    def test_threads_truncated_defers(self):
+        SCENARIO["threads_truncated"] = True
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 10, out)
+        self.assertEqual(SCENARIO["put_calls"], 0)
+
+    def test_checkruns_truncated_defers(self):
+        SCENARIO["checkruns_total"] = 150
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 10, out)
+        self.assertEqual(SCENARIO["put_calls"], 0)
+
+    def test_refresh_head_move_defers(self):
+        SCENARIO["move_head_on_call"] = 2
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 10, out)
+        self.assertIn("head changed", out)
+        self.assertEqual(SCENARIO["put_calls"], 0)
+
+    def test_refresh_change_request_defers(self):
+        SCENARIO["reviews_flip_on_call"] = 2
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 10, out)
+        self.assertIn("at refresh", out)
+        self.assertEqual(SCENARIO["put_calls"], 0)
+
+    def test_expired_deadline_refuses(self):
+        os.environ["GH_MERGE_DEADLINE_EPOCH"] = "1"
+        try:
+            code, out, _ = self.run_helper()
+        finally:
+            del os.environ["GH_MERGE_DEADLINE_EPOCH"]
+        self.assertEqual(code, 12, out)
+        self.assertEqual(SCENARIO["put_calls"], 0)
 
     def test_head_change_rejected(self):
         SCENARIO["pull"] = green_pull()

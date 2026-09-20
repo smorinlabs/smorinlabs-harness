@@ -21,10 +21,11 @@ visibility = "all"       # all | public | private; ignored when repos is set
 visibility = "private"
 
 # Execution budgets, enforced by scripts/gh_merge.py (never by prompt text).
-# The orchestrator exports each key as GH_MERGE_<UPPER> before rendering briefs.
+# The orchestrator exports op_timeout_secs as GH_MERGE_OP_TIMEOUT, and
+# computes GH_MERGE_DEADLINE_EPOCH = now + pr_budget_secs once per PR.
 [budgets]
 op_timeout_secs = 30    # per HTTP call inside the helper (connect+transfer)
-pr_budget_secs = 600    # absolute per-PR deadline; retries cannot reset it
+pr_budget_secs = 600    # per-PR deadline span; one absolute epoch per PR
 ```
 
 - Each scope table takes `visibility` or `repos`. If both appear, `repos`

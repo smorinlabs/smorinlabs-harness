@@ -19,9 +19,9 @@ Flags for this sweep:
 - auto_fix = {{AUTO_FIX}} (false: triage and report only, change nothing)
 - pause_on_conflict = {{PAUSE_ON_CONFLICT}} (true: on any merge conflict, stop
   this repo's work and report back immediately)
-- Budgets: `GH_MERGE_OP_TIMEOUT={{OP_TIMEOUT}}`,
-  `GH_MERGE_PR_BUDGET_SECS={{PR_BUDGET}}` (export both; one absolute deadline
-  per PR that retries and delegation cannot reset). Also export
+- Budgets: `GH_MERGE_OP_TIMEOUT={{OP_TIMEOUT}}` and
+  `GH_MERGE_DEADLINE_EPOCH={{DEADLINE_EPOCH}}` (one absolute epoch per PR,
+  supplied by the orchestrator; never recompute it). Also export
   `UV_CACHE_DIR={{UV_CACHE}}` and `GH_PROMPT_DISABLED=1`.
 - Helper: `{{HELPER}}` (scripts/gh_merge.py). Progress log: `{{LOG}}`.
 

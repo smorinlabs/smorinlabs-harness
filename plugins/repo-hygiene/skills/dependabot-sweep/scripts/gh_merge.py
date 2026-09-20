@@ -188,13 +188,17 @@ def preflight(owner, repo, pr, token, assert_trivial, deadline, progress_log):
         "POST", "/graphql", token,
         body={"query": (
             "query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){"
-            "pullRequest(number:$n){reviewThreads(first:100){nodes{isResolved}}}}}"
+            "pullRequest(number:$n){reviewThreads(first:100){"
+            "pageInfo{hasNextPage}nodes{isResolved}}}}}"
         ), "variables": {"o": owner, "r": repo, "n": int(pr)}})
     try:
-        nodes = (threads["data"]["repository"]["pullRequest"]
-                 ["reviewThreads"]["nodes"])
+        thread_data = (threads["data"]["repository"]["pullRequest"]
+                       ["reviewThreads"])
+        nodes = thread_data["nodes"]
     except (TypeError, KeyError) as exc:
         raise DefinitiveFailure("review-thread state unreadable") from exc
+    if thread_data.get("pageInfo", {}).get("hasNextPage"):
+        raise DefinitiveFailure("review threads exceed one page: defer")
     if any(not node.get("isResolved", True) for node in nodes):
         raise DefinitiveFailure("unresolved review threads")
 
@@ -202,7 +206,11 @@ def preflight(owner, repo, pr, token, assert_trivial, deadline, progress_log):
     _, runs, _ = api_request(
         "GET", f"/repos/{owner}/{repo}/commits/{head_sha}/check-runs", token,
         params={"per_page": "100"})
-    run_list = runs.get("check_runs", []) if isinstance(runs, dict) else []
+    if not isinstance(runs, dict):
+        raise DefinitiveFailure("check-run state unreadable")
+    run_list = runs.get("check_runs", [])
+    if runs.get("total_count", len(run_list)) > len(run_list):
+        raise DefinitiveFailure("check runs exceed one page: defer")
     pending, failed = [], []
     for run in run_list:
         if run.get("status") != "completed":
@@ -277,6 +285,53 @@ def preflight(owner, repo, pr, token, assert_trivial, deadline, progress_log):
              phase="ok", head=head_sha[:12], deadline=int(deadline),
              outcome="pass", reason="eligible")
     return head_sha, base_ref, base_sha
+
+
+def refresh_volatile(owner, repo, pr, head_sha, token, deadline):
+    """Re-read volatile evidence immediately before the PUT.
+
+    SHA binding stops head movement but not review/check flips. Any change,
+    gap, or unreadable state defers — the PUT never runs on stale evidence.
+    """
+    check_deadline(deadline, "refresh/pull")
+    _, pull, _ = api_request(
+        "GET", f"/repos/{owner}/{repo}/pulls/{pr}", token)
+    if pull.get("state") != "open" or pull.get("merged"):
+        raise DefinitiveFailure("PR closed during preflight")
+    if pull.get("head", {}).get("sha") != head_sha:
+        raise DefinitiveFailure("head changed during preflight")
+    if not pull.get("mergeable") or pull.get("mergeable_state") != "clean":
+        raise DefinitiveFailure(
+            f"no longer mergeable: {pull.get('mergeable_state')}")
+
+    check_deadline(deadline, "refresh/reviews")
+    reviews, truncated = paged_get(
+        f"/repos/{owner}/{repo}/pulls/{pr}/reviews", token,
+        params={"per_page": "100"})
+    if truncated:
+        raise DefinitiveFailure("review list too large to verify (page cap)")
+    latest = {}
+    for review in sorted(reviews, key=lambda r: r.get("submitted_at", "")):
+        user = (review.get("user") or {}).get("login", "?")
+        latest[user] = review.get("state")
+    if any(s == "CHANGES_REQUESTED" for s in latest.values()):
+        raise DefinitiveFailure("change requests outstanding at refresh")
+
+    check_deadline(deadline, "refresh/checks")
+    _, runs, _ = api_request(
+        "GET", f"/repos/{owner}/{repo}/commits/{head_sha}/check-runs", token,
+        params={"per_page": "100"})
+    if not isinstance(runs, dict):
+        raise DefinitiveFailure("check-run state unreadable at refresh")
+    run_list = runs.get("check_runs", [])
+    if runs.get("total_count", len(run_list)) > len(run_list):
+        raise DefinitiveFailure("check runs exceed one page at refresh")
+    for run in run_list:
+        if run.get("status") != "completed":
+            raise DefinitiveFailure("checks pending at refresh")
+        if run.get("conclusion") not in ("success", "skipped", "neutral"):
+            raise DefinitiveFailure(
+                f"failing checks at refresh: {run.get('name', '?')}")
 
 
 def merge_put(owner, repo, pr, head_sha, method, token):
@@ -386,7 +441,18 @@ def main(argv):
     if method not in ("merge", "squash", "rebase"):
         print(f"refusing: unknown method {method}")
         return 12
-    deadline = time.time() + DEFAULT_PR_BUDGET
+    inherited = os.environ.get("GH_MERGE_DEADLINE_EPOCH", "").strip()
+    if inherited:
+        try:
+            deadline = float(inherited)
+        except ValueError:
+            print("refusing: bad GH_MERGE_DEADLINE_EPOCH")
+            return 12
+        if deadline <= time.time():
+            print("refusing: inherited deadline already expired")
+            return 12
+    else:
+        deadline = time.time() + DEFAULT_PR_BUDGET
     repo_id = f"{owner}/{repo}"
     try:
         token = get_token()
@@ -417,6 +483,21 @@ def main(argv):
     log_line(progress_log, event="start", repo=repo_id, pr=pr,
              phase="merge", head=head_sha[:12], deadline=int(deadline),
              outcome="?", reason="put")
+    try:
+        check_deadline(deadline, "merge")
+        refresh_volatile(owner, repo, pr, head_sha, token, deadline)
+    except AmbiguousFailure as exc:
+        log_line(progress_log, event="result", repo=repo_id, pr=pr,
+                 phase="refresh", head=head_sha[:12], deadline=int(deadline),
+                 outcome="deferred", reason=f"transport:{exc}".replace(" ", "_"))
+        print(f"DEFERRED (transport, safe: nothing submitted): {exc}")
+        return 10
+    except DefinitiveFailure as exc:
+        log_line(progress_log, event="result", repo=repo_id, pr=pr,
+                 phase="refresh", head=head_sha[:12], deadline=int(deadline),
+                 outcome="deferred", reason=str(exc).replace(" ", "_"))
+        print(f"DEFERRED: {exc}")
+        return 10
     try:
         check_deadline(deadline, "merge")
         merge_put(owner, repo, pr, head_sha, method, token)
