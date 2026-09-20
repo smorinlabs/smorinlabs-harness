@@ -33,12 +33,15 @@ Rules (all mandatory):
    (triage and fix, do not merge), then re-classify exactly once.
 3. Red CI goes to `ci-fix` with the PR's remaining budget, then re-classify
    exactly once. A repaired PR merges only after a fresh helper preflight.
-4. For each PR number N in order: if the diff is dependency-only, run the
+4. Repair scope boundary: never change repo settings (branch protection,
+   rulesets, vulnerability alerts, dependency graph, required checks, apps).
+   If a repair needs one, report needs-human with the exact enable path.
+5. For each PR number N in order: if the diff is dependency-only, run the
    helper (`python3 {{HELPER}} {{OWNER}} {{REPO}} N merge {{LOG}}
    --assert-trivial`) and transcribe its single-line verdict. Exit 0 merged;
    10 deferred (record the reason, continue); 11 unknown (stop this repo,
    hold the mutation slot, report for quarantine — never retry).
-5. If pause_on_conflict is true, stop the repo at the first conflict instead
+6. If pause_on_conflict is true, stop the repo at the first conflict instead
    of recording and continuing.
 
 Report back exactly one line per PR:

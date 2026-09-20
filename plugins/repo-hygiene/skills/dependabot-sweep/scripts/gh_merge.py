@@ -171,7 +171,12 @@ def preflight(owner, repo, pr, token, assert_trivial, deadline, progress_log):
     if blockers:
         raise DefinitiveFailure(f"change requests outstanding: {blockers}")
     if any(s == "COMMENTED" for s in latest.values()):
-        raise DefinitiveFailure("unresolved review feedback possible")
+        _, inline, _ = api_request(
+            "GET", f"/repos/{owner}/{repo}/pulls/{pr}/comments", token,
+            params={"per_page": "1"})
+        if inline:
+            raise DefinitiveFailure(
+                "inline review comments need human reading")
 
     check_deadline(deadline, "preflight/threads")
     _, threads, _ = api_request(

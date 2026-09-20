@@ -81,7 +81,9 @@ the per-repo mutation slot, quarantine records, and post-crash reconciliation.
   `4xx` is a definitive defer, never a retry.
 - **Repair loop** (bounded): red PRs go to `ci-fix` with the PR's remaining
   budget, then return to classification exactly once; a repaired PR may merge
-  in the same sweep only after a fresh helper preflight passes. Involved PRs
+  in the same sweep only after a fresh helper preflight passes. Repairs never
+  change repo settings — if one is needed, the PR goes to needs-human with
+  the exact enable path. Involved PRs
   go to `pr-merge-flow` with a preparation-only instruction (triage and fix,
   do not merge). `--check` / `--no-auto-fix` skip all merges;
   `pause_on_conflict` stops the repo at the first conflict instead of

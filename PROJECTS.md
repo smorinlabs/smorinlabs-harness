@@ -1950,4 +1950,5 @@ neighbor edits).
 - [ ] [P49-T05] PR, merge, main fast-forward, worktree cleanup
 - [x] [P49-T06] Run-1 pilot (15 merged, 2 conflicts deferred) + 3-way stall review (Muse + Codex + local; Gemini blocked on browser auth)
 - [x] [P49-T07] Implement stall fixes per Codex-approved plan (6 required changes): bounded dispatcher, scripts/gh_merge.py, hardened brief, [budgets]
-- [x] [P49-TS02] Behavioral fixture suite 14/14 green (timeout, eligibility, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes
+- [x] [P49-TS02] Behavioral fixture suite 16/16 green (timeout, eligibility incl. review-comment rules, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes
+- [x] [P49-T08] Run-2 pilot on hardened skill (11 merged, 6 deferred with reasons, 0 unknown, 0 hangs) + F6 repair-scope boundary fix

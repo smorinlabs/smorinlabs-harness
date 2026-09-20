@@ -89,5 +89,9 @@ Codex with 6 required changes, all folded in):
   timeout enforcement, eligibility matrix, ambiguous-merge reconcile with no
   duplicate PUT, head-change rejection.
 
-Remaining run-2 gate: one scratch-repo live merge proving REST/`gh`
-equivalence end to end.
+Run-2 gate PASSED 2026-09-20: helper merged scratch PR
+contributors-please-test#16 live in 6.5s (rc=0, verified MERGED), proving
+REST/`gh` equivalence end to end. Along the way the gate caught one real
+over-strict rule (top-level bot COMMENTED reviews blocked merges) — fixed to
+defer only on inline comments, covered by 2 new fixture tests (16/16 green).
+Probe branch and file removed afterwards.

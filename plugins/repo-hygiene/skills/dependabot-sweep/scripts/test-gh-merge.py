@@ -42,6 +42,7 @@ def base_scenario():
         "files": [{"filename": "requirements.txt"}],
         "files_pages": 1,
         "reviews": [],
+        "inline_comments": [],
         "threads_unresolved": 0,
         "check_runs": [{"name": "CI", "status": "completed",
                         "conclusion": "success"}],
@@ -98,6 +99,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send([])
         if path == "/repos/o/r/pulls/1/reviews":
             return self._send(SCENARIO["reviews"])
+        if path == "/repos/o/r/pulls/1/comments":
+            return self._send(SCENARIO["inline_comments"])
         if path == "/repos/o/r/commits/abc123/check-runs":
             return self._send({"check_runs": SCENARIO["check_runs"]})
         if path == "/repos/o/r/commits/abc123/status":
@@ -237,6 +240,23 @@ class HelperTest(unittest.TestCase):
         ]
         code, out, _ = self.run_helper()
         self.assertEqual(code, 0, out)
+
+    def test_toplevel_only_comment_merges(self):
+        SCENARIO["reviews"] = [{"user": {"login": "some-bot"},
+                                "state": "COMMENTED",
+                                "submitted_at": "2026-01-02T00:00:00Z"}]
+        SCENARIO["inline_comments"] = []
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 0, out)
+
+    def test_inline_comments_defer(self):
+        SCENARIO["reviews"] = [{"user": {"login": "rev"},
+                                "state": "COMMENTED",
+                                "submitted_at": "2026-01-02T00:00:00Z"}]
+        SCENARIO["inline_comments"] = [{"id": 1, "body": "look here"}]
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 10, out)
+        self.assertEqual(SCENARIO["put_calls"], 0)
 
     def test_unresolved_threads_defer(self):
         SCENARIO["threads_unresolved"] = 2
