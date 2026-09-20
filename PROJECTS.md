@@ -1976,3 +1976,27 @@ neighbor edits).
 - [x] [P50-T07] Implement stall fixes per Codex-approved plan (6 required changes): bounded dispatcher, scripts/gh_merge.py, hardened brief, [budgets]
 - [x] [P50-TS02] Behavioral fixture suite 16/16 green (timeout, eligibility incl. review-comment rules, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes
 - [x] [P50-T08] Run-2 pilot on hardened skill (11 merged, 6 deferred with reasons, 0 unknown, 0 hangs) + F6 repair-scope boundary fix
+
+## [x] Project P51: Shared skill references resolve under symlink and copy installs
+
+**Goal:** Repair every unresolvable skill reference across the 9 affected
+public plugins so cites hold under symlinked placements, bare per-skill
+copies, and lexical path computation.
+
+**Scope:** 34 skills repaired/verified by pilot + 3 gated agent groups
+(15 repair, 4 repair+handling, 15 verify-only); 16 integrator-owned
+shared-file items; 11 "Resolving shared references" recipe sections;
+destination tests for copied artifacts. Bumps: project-harness 0.2.0,
+factor-harness 0.2.0, use-html-theme 0.12.0 (new recipe procedure →
+minor); fusion-runner 0.3.1, document-merge 0.1.3, repo-hygiene 0.16.1,
+clear-decision-communication 0.3.2, clear-technical-communication 0.2.4,
+muse-github 0.1.1 (fixes → patch).
+
+- [x] Frozen inventory (376 rows + manual seed) and RED fixture proof on the unedited base
+- [x] Pilot (4 skills) + Groups 1–3 (30 skills), each promotion-gated on per-check acceptance
+- [x] Integrator pass: shared-file repairs, judgment-call resolutions, pointer rewrite, bumps, manifests
+- [x] Full fixture green (exit 0 incl. destination tests); `just all` green; all 9 plugins verify on both tools
+
+**Evidence:** promotion joins per group (77 + 162 + 127 + 4 skill checks, zero
+regressions); 34 evidence packs under `/tmp/refcheck-public/packs/` (session
+scratch, not committed).

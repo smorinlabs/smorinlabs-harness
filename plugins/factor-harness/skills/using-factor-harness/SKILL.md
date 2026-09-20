@@ -121,3 +121,16 @@ front:
   toolkit factor-harness hands off to
 - [project-harness](https://github.com/smorinlabs/project-harness)
   — sibling plugin for project lifecycle management
+
+## Resolving shared references
+
+This skill cites shared files relative to the citing file:
+`../_conventions.md`, `../factor-architect/SKILL.md`,
+`../factor-scan/SKILL.md`, `../factor-dedup/SKILL.md`, and
+`../../agents/factor-scanner.md`, `../../agents/factor-comparator.md`,
+`../../agents/factor-researcher.md`. In symlink placements the `../`
+segments resolve via the OS to the install source. When computing
+paths lexically, anchor on the `realpath` of this SKILL.md first.
+In sibling-absent copies (no shared files beside the skill
+directory), fall back to locating the install source that provides
+the factor-harness plugin.

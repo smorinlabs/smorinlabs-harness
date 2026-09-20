@@ -43,7 +43,7 @@ and [GraphQL cursor guide](https://docs.github.com/en/graphql/guides/using-pagin
 Rate-limited? Take the inventory and its ids from REST
 (`…/pulls/{n}/comments?per_page=100` — the field is `id`, not `databaseId`;
 same integer, different name) and get `isResolved` from the thread's own
-rendered state per `references/browser-fallback.md`.
+rendered state per `browser-fallback.md`.
 
 Also gather PR-level review bodies and issue comments via REST
 (`…/pulls/{n}/reviews`, `…/issues/{n}/comments`) — bots sometimes put
@@ -71,7 +71,7 @@ disappearance against a fresh paginated list before treating a thread as gone.
 page `#discussion_r<id>` are the same integer, while the thread node id
 (`PRRT_…`) that `resolveReviewThread` needs exists only in GraphQL. The full
 correlation table, with prefixes and the consequences, is in
-`references/browser-fallback.md`. Never carry an identifier across surfaces
+`browser-fallback.md`. Never carry an identifier across surfaces
 without checking it against that table.
 
 **The ID bridge is mandatory.** A reply is impossible without a real comment
@@ -202,7 +202,7 @@ reserved for claims that are false or contradict a repo convention;
   mandate.
 - Arrival cycle never changes the class — a ship-breaking P1 in cycle 4 is
   still a fix; a style nit in cycle 1 is still a decline. (Trajectory rules:
-  `references/convergence.md`.)
+  `convergence.md`.)
 
 ## Deferral destinations
 
@@ -247,5 +247,5 @@ Confirm `isResolved` in the mutation result before marking the round resolved.
 
 Rate-limited? REST has no substitute, but the browser does — click that
 thread's **Resolve conversation** after anchoring to its own
-`#discussion_r<id>`, per `references/browser-fallback.md`. Never pick a
+`#discussion_r<id>`, per `browser-fallback.md`. Never pick a
 Resolve button out of an enumerated list; identity comes from the anchor.

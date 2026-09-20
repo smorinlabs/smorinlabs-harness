@@ -61,7 +61,7 @@ On invocation, run the **four-step bootstrap** if the per-repo
 config file `.project-harness/project-harness.config.json` does
 not exist OR has `init_done: false`:
 
-1. **PROJECTS.md trunk** — scaffold from `templates/PROJECTS.md`
+1. **PROJECTS.md trunk** — scaffold from `../../templates/PROJECTS.md`
    if missing.
 2. **AGENTS.md / CLAUDE.md mentions** — append a short pointer
    block if either file is missing or doesn't contain
@@ -142,14 +142,14 @@ bundle exists:
 ```
 
 The full initial-state trunk (with status legend, conventions, and
-this pointer block) is at `templates/PROJECTS.md` in the plugin.
+this pointer block) is at `../../templates/PROJECTS.md` in the plugin.
 
 ## What this skill deliberately does not do
 
 - Does not invoke any of the four workflow skills. It teaches; the
   user invokes.
 - Does not encode project conventions (filename rules, glyph rules,
-  TDD bias). Those live in `skills/_conventions.md` and the per-skill
+  TDD bias). Those live in `../_conventions.md` and the per-skill
   SKILL.md files, plus the trunk's own conventions section.
 - Does not run audit checks or capture ideas. If the user is ready
   to do something concrete, point them at the right skill and exit.
@@ -169,13 +169,34 @@ this pointer block) is at `templates/PROJECTS.md` in the plugin.
 
 ## See also
 
-- `_conventions.md` — shared prose conventions for the four workflow
+- `../_conventions.md` — shared prose conventions for the four workflow
   skills.
-- `templates/PROJECTS.md` — initial-state trunk to copy into a fresh
+- `../../templates/PROJECTS.md` — initial-state trunk to copy into a fresh
   repo.
 - `references/bootstrap.md` — full four-step bootstrap procedure,
   config schema, AGENTS.md/CLAUDE.md standard block, planning-system
   branches.
-- `skills/project-audit/references/references-block.md` — format
+- `../project-audit/references/references-block.md` — format
   spec and discovery helper for the per-project `**References**`
   block; pointed at by step 4 of the bootstrap.
+
+## Resolving shared references
+
+Shared citations in this skill are spelled relative to the citing
+file. From this SKILL.md the shared targets are
+`../../templates/PROJECTS.md`, `../_conventions.md`, and
+`../project-audit/references/references-block.md`;
+`references/bootstrap.md` spells the same targets one level deeper
+(e.g. `../../../templates/PROJECTS.md` and
+`../../project-audit/references/references-block.md`).
+
+- In symlink placements (e.g. under `~/.agents/skills/`), `../`
+  traverses through the symlink into the install tree, so the OS
+  resolves these citations with no extra work.
+- When computing a target lexically without filesystem access,
+  anchor on the `realpath` of this SKILL.md first, then apply the
+  relative citation.
+- In bare copies that lack sibling files (only this skill's
+  directory was copied), fall back to locating the install source —
+  the plugin root holding `templates/`, `skills/`, and `hooks/` —
+  and resolve the shared filename there.

@@ -156,7 +156,7 @@ overlooked.
 
 ## The local ledger
 
-`scripts/local_ledger.py` keeps ten successful timings per workflow file/job/step
+`../scripts/local_ledger.py` keeps ten successful timings per workflow file/job/step
 and execution context at `${XDG_CACHE_HOME:-~/.cache}/ci-fix/<owner>--<repo>.json`.
 The context hashes the actual command, test scope and relevant environment.
 `record` and `median` require `--context`; see `targeted-repro.md`, *Timing*.

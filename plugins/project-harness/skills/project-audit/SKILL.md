@@ -253,10 +253,27 @@ See `references/checks.md` for full definitions. IDs:
 - `references/references-block.md` — format spec and discovery
   helper used as the proposed fix for `references-block`
   findings; also invoked by `project-refine` at scope entry.
-- `agents/project-auditor.md` — the read-only subagent prompt
+- `../../agents/project-auditor.md` — the read-only subagent prompt
   this skill dispatches.
-- `_conventions.md` §8 — subagent rules (read-only, inputs inline,
+- `../_conventions.md` §8 — subagent rules (read-only, inputs inline,
   parallelize the read).
 - `project-refine` — when a finding is best fixed by walking the
   user through scope/decompose flow rather than by a one-line
   edit.
+
+## Resolving shared references
+
+Citations in this skill are relative to the citing file. From this
+`SKILL.md`, the shared targets are `../_conventions.md` and
+`../../agents/project-auditor.md`; from `references/`, shared targets
+gain one more level (`../../_conventions.md`,
+`../../project-refine/SKILL.md`), while in-skill siblings stay short
+(`checks.md`, `../SKILL.md`).
+
+When the skill is installed via symlink, the `..` segments resolve
+through the OS to the real plugin tree, so the relative forms above
+just work. When resolving lexically instead, anchor on the `realpath`
+of this `SKILL.md` first, then apply the relative path. If the skill
+was copied without its siblings (no `../_conventions.md` beside it),
+fall back to locating the install source — the plugin tree the copy
+came from — and resolve the shared targets there.

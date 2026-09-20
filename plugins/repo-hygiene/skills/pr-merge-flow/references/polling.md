@@ -37,7 +37,7 @@ budgets — the split below keeps the GraphQL side nearly idle.
 3. Raw REST — `curl -H "Authorization: Bearer $GITHUB_TOKEN"
    https://api.github.com/…` — last resort when gh itself is broken.
 
-GraphQL is reserved for the two thread operations in `references/triage.md`
+GraphQL is reserved for the two thread operations in `triage.md`
 (resolution-state read, resolve mutation) and is never called inside a poll
 loop.
 
@@ -47,7 +47,7 @@ The ladder cannot climb out of an exhausted **GraphQL** budget: all three rungs
 bill the same endpoint. Those two thread operations have no REST equivalent, so
 GraphQL exhaustion stalls the Iron Law itself.
 
-The browser fallback in `references/browser-fallback.md` recovers both by
+The browser fallback in `browser-fallback.md` recovers both by
 driving the GitHub web UI, whose session-authenticated internal endpoints do not
 draw on the token's GraphQL budget. It is an **escape hatch, not a fourth
 rung** — never reached for a call REST can still make, and never used to poll.

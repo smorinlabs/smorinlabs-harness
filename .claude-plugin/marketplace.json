@@ -13,7 +13,7 @@
       "name": "clear-decision-communication",
       "source": "./plugins/clear-decision-communication",
       "description": "Decision requests from an agent to a human during a run. Checks existing authorization, investigates discoverable facts, and requests unavailable human-supplied information without turning it into an approval. Sizes preparation and explanation by seven axes into three tiers, rechecks uncertainty after verification, and keeps material caveats visible beyond the length targets. Uses same-input tables, worked examples, event sequences, and ASCII diagrams with exact verbatim content. Questions and options have stable meanings; revised choices supersede old IDs. Recommendations use option A when supported, with an explicit neutral form otherwise. Silence and skip never grant authority. Adapts a self-contained brief to the available question tool or ordinary text, with independent work continuing while required answers remain pending. Significant decisions retain their rationale and approval scope. Includes behavioral evaluation cases. Never produces HTML artifacts.",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "author": {
         "name": "Steve Morin"
       },
@@ -32,7 +32,7 @@
       "name": "clear-technical-communication",
       "source": "./plugins/clear-technical-communication",
       "description": "Aggressively review, rewrite, and compose technical explanations, comparisons, status, handoffs, and decision requests so readers get the necessary context, explicit relationships, clear status, option effects, recommendations, and exact actions without reconstructing the author's mental model; restores stripped precision by keeping exact names paired with descriptions and frames every embedded code block, diagram, and example",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "author": {
         "name": "Steve Morin"
       },
@@ -70,7 +70,7 @@
       "name": "document-merge",
       "source": "./plugins/document-merge",
       "description": "Merge overlapping markdown docs into consolidated outputs without information loss, with full traceability of every synthesis decision",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "author": {
         "name": "Steve Morin"
       },
@@ -105,7 +105,7 @@
       "name": "factor-harness",
       "source": "./plugins/factor-harness",
       "description": "Architecture-aware review, refactor, and cross-implementation dedup \u2014 surfaces bugs, smells, and precedent gaps, then emits specs for Superpowers to execute.",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "author": {
         "name": "Steve Morin"
       },
@@ -122,7 +122,7 @@
       "name": "fusion-runner",
       "source": "./plugins/fusion-runner",
       "description": "Prepare Windows in VMware Fusion for local standard-account checks or GitHub Actions, then start, inspect, stop, or explicitly reset the working VM.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "author": {
         "name": "Steve Morin"
       },
@@ -157,7 +157,7 @@
       "name": "muse-github",
       "source": "./plugins/muse-github",
       "description": "Install organization-member PR reviews and optional manual fix PRs with the OpenCode GitHub Action and Meta Muse Spark",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Steve Morin"
       },
@@ -175,7 +175,7 @@
       "name": "project-harness",
       "source": "./plugins/project-harness",
       "description": "Lightweight PROJECTS.md project management \u2014 capture, scope, decompose, triage, and drift-audit projects as auto-triggering skills that hand execution off to Superpowers.",
-      "version": "0.1.4",
+      "version": "0.2.0",
       "author": {
         "name": "Steve Morin"
       },
@@ -248,7 +248,7 @@
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
       "description": "Repo & release-readiness checks \u2014 CI fix and audit (measured, targeted, escalating), version drift, README sync, manual test guides, a PR merge flow that resolves every review thread before merging, and a Dependabot sweep that clears open dependency PRs across configured orgs.",
-      "version": "0.16.0",
+      "version": "0.16.1",
       "author": {
         "name": "Steve Morin"
       },
@@ -301,7 +301,7 @@
       "name": "use-html-theme",
       "source": "./plugins/use-html-theme",
       "description": "Themed-HTML toolkit, three pure skills sharing one context-triage preflight. use-html-theme: on any HTML-generation request, offer a catalog of visual themes (Birchline warm-editorial, Technical-minimal docs-site, High-contrast-dark dashboard), apply the chosen theme to all subsequent HTML in the session, and optionally persist it per-project \u2014 natural language and [theme: x] inline-flag control, side-by-side preview on request. html-codesign: interactive 'pick and export' decision pages, opened as a step-through wizard by default (Next/Back, progress dots, Finish-to-review; full-list view one toggle away) \u2014 every question opens with a collapsible context-and-recommendation preamble (free-form rich content on a clarity scaffold) in clear, plain, self-explanatory language (sharpened by clear-technical-communication when installed, an embedded digest otherwise), the reader answers, skips, or raises a question on each section, folds answered sections to dense summary rows for review, then exports the decision as Markdown/JSON (slim by default, full ADR-style by toggle) with stable IDs for diffable iteration. html-explain: read-only explainer pages for settled material \u2014 authoring maps which parts are intrinsically hardest and budgets the page around them, then enriches with diagrams, annotated figures, build-up sequences, and manipulable widgets ONLY where comprehension actually breaks; clarity canon (Mayer, Sweller, Minto, Heath, Tufte, Bertin, Cleveland) carried as advisory aids, with a standalone encoding fallback for surfaces where the bundled dataviz skill does not exist. Both page skills read recent context and ALWAYS confirm before generating \u2014 codesign for unanswered questions, explain for settled work \u2014 and hand off to each other when triage disagrees with the request. Both page skills close delivery the same way: the full absolute path on its own line, then conditional convenience offers \u2014 open it in the browser only when the session can reach one, add it to shelf only when that skill is installed, and where to save it whenever the file sits somewhere temporary or anywhere the agent chose rather than the user, read from context rather than a fixed ranking; copying the path to the clipboard is offered under the same gate as opening it. Portable across Claude Code and Codex.",
-      "version": "0.11.1",
+      "version": "0.12.0",
       "author": {
         "name": "Steve Morin"
       },

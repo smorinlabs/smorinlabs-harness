@@ -23,6 +23,6 @@ to the trunk — followed by canonical labels (`Spec`, `Design`,
 `Plan`, `Depends on`, `Successor of`, `Tracking`, `Discussion`,
 `Prior art`). Bidirectional links mean a tool that lands on
 either file can navigate to the other without prior knowledge of
-the conventions. See
-`skills/project-audit/references/references-block.md` for the
-full format and the discovery helper.
+the conventions. See project-audit's references-block format
+(project-audit skill, project-harness plugin) for the full format
+and the discovery helper.

@@ -244,11 +244,11 @@ appeared since refine entry.
 
 ## See also
 
-- `references/checks.md` — the `references-block` check
+- `checks.md` — the `references-block` check
   definition that verifies this spec.
-- `skills/project-refine/SKILL.md` — sub-modes 1 and 2 invoke
+- `../../project-refine/SKILL.md` — sub-modes 1 and 2 invoke
   this helper.
-- `skills/project-audit/SKILL.md` — the `references-block`
+- `../SKILL.md` — the `references-block`
   finding's proposed fix invokes this helper.
-- `_conventions.md` §6 — one-question-at-a-time convention the
+- `../../_conventions.md` §6 — one-question-at-a-time convention the
   helper follows during prompting.

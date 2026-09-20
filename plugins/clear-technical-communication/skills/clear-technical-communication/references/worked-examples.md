@@ -5,7 +5,7 @@ multidimensional explanation, an under-analyzed owner-decision request, and a
 status report that confuses related artifacts and overstates its evidence.
 
 The rewrites below satisfy the artifact-frame rows in
-`references/common-errors.md`. Where a name cannot be described without
+`common-errors.md`. Where a name cannot be described without
 inventing a fact, the rewrite marks the gap explicitly rather than guessing or
 dropping the name. That is the intended behavior: a name is never removed to
 avoid explaining it.

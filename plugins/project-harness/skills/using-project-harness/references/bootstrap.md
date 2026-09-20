@@ -64,7 +64,7 @@ Skipped when `projects_md_done: true`.
    trunk; nothing to do.)
 3. If no, ask:
    *"No `PROJECTS.md` yet. The plugin ships a starter trunk at
-   `templates/PROJECTS.md`. Copy it to the repo root? [y/n]"*
+   `../../../templates/PROJECTS.md`. Copy it to the repo root? [y/n]"*
 4. On `y`: copy the template to `./PROJECTS.md`, create empty
    `projects/`, `git add` both, commit
    `chore(projects): scaffold PROJECTS.md trunk and projects/ dir`,
@@ -151,7 +151,7 @@ Skipped when `references_block_nudged: true`.
    Tracking → Discussion → Prior art, with `Trunk` mandatory and
    first). The full format and the search
    helper are in
-   `skills/project-audit/references/references-block.md`. Run
+   `../../project-audit/references/references-block.md`. Run
    `project-audit --all --references-block` later to scan
    existing projects."*
 2. Set `references_block_nudged: true`.

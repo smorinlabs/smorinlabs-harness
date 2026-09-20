@@ -377,3 +377,24 @@ offer `html-explain` as the recommended option instead.
 - `use-html-theme` (this plugin) — owns the page's look.
 - `question-walkthrough` (this marketplace) — the synchronous alternative:
   the same open questions worked through one at a time in chat.
+
+## Resolving shared references
+
+This skill's citations are spelled relative to the citing file. From the
+skill root that means the sibling-skill theme overlay
+`../use-html-theme/references/themes/<name>/codesign.md` and the vendored
+_shared copies (`context-triage.md`, `delivery-close.md`, cited from here
+as references/_shared/ paths); one level deeper, from references/, the same
+overlay is `../../use-html-theme/references/themes/<name>/codesign.md` and
+in-skill siblings stay short (`export-formats.md`, `design-notes.md`,
+`id-grammar.md`, `../scripts/validate_spec.py`). The vendored copies are
+generated from the plugin-level references/ sources — read the in-skill
+copy, never reach past the skill directory for the source.
+
+When this skill is installed as a symlink, the OS resolves the `../`
+segments through the link, so relative citations just work. When computing
+a target lexically instead, anchor on the realpath of SKILL.md first and
+resolve the citation from its directory. A bare copy of the skill directory
+has no siblings: `../use-html-theme/...` does not exist there, so fall back
+to locating the install source (the plugin tree the copy came from) and
+resolve the sibling-skill overlay against that.

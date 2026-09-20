@@ -200,7 +200,7 @@ value interpretable.
 | `the file is large` | `the file is 2,900 lines, about 4x the next largest` |
 
 This rule is distinct from the `Unsupported estimate` row in
-`references/common-errors.md`. That row governs where a number came from: its
+`common-errors.md`. That row governs where a number came from: its
 source, calculation, or confidence. This rule governs whether the reader can
 interpret the number once given. A number can have a sound basis and still be
 uninterpretable without a reference scale.

@@ -36,7 +36,7 @@ low-friction that there is no reason not to do it.
 ## What it does
 
 The skill follows the **one-question-at-a-time** convention from
-`_conventions.md` §6 — ask one question, wait for the answer,
+`../_conventions.md` §6 — ask one question, wait for the answer,
 *re-evaluate*, then decide whether the next question is needed.
 Never list multiple questions in a single message.
 
@@ -94,14 +94,14 @@ After the fourth answer, run the **atomic ID reservation**:
    skill mentions this in the commit message indirectly — the
    commit is local-only.
 3. If `PROJECTS.md` doesn't exist (fresh repo), copy
-   `templates/PROJECTS.md` from the plugin to the repo root first,
+   `../../templates/PROJECTS.md` from the plugin to the repo root first,
    then proceed. Mention this to the user in one line.
 4. Compute a kebab-case slug from the title. Use camelCase for the
    *rough* part if the title is awkward in kebab — the trailing
    hyphen is the canonical idea marker, so the camelCase variant is
    cosmetic.
 5. Write `projects/P<NN>-<slug>-.md` (the trailing hyphen is required
-   by the idea convention) using `templates/project-idea.md` from
+   by the idea convention) using `../../templates/project-idea.md` from
    the plugin as the source. The template has:
    - `# P{{N}} — {{title}}` heading
    - `{{description}}` line
@@ -155,7 +155,7 @@ After the fourth answer, run the **atomic ID reservation**:
 |---------|---------|
 | "I should ask about scope while I'm here" | Four-question cap. Stop. Scope is `project-refine`'s job. |
 | "The description is vague, I'll ask for more detail" | Capture first; refine later. The cap is the cap. |
-| "I'll list all four questions in one message to be efficient" | One question per message. Re-evaluate after each answer per `_conventions.md` §6. |
+| "I'll list all four questions in one message to be efficient" | One question per message. Re-evaluate after each answer per `../_conventions.md` §6. |
 | "Q4 is optional, I'll just skip it without asking" | No. Q4 always asks. The optionality is in the user's answer — pressing enter skips it cleanly. Skipping the prompt itself loses the user's chance to capture context. |
 | "I'll add a `### Tests & Tasks` placeholder so it's ready for refine" | No. Idea files contain title + description only. The empty section is itself drift `project-audit` will flag. |
 | "Two ideas at once — let me batch them" | One project per invocation. Atomic commit per project. Run the skill twice. |
@@ -175,10 +175,25 @@ After the fourth answer, run the **atomic ID reservation**:
 
 ## See also
 
-- `_conventions.md` §6 — one-question-at-a-time, iteratively.
+- `../_conventions.md` §6 — one-question-at-a-time, iteratively.
 - `project-refine` — when the user picks `refine now` or asks for
   depth after capture.
 - `project-next` — when the user wants to *find* an existing project
   rather than create a new one.
-- `templates/PROJECTS.md` — used as bootstrap when no `PROJECTS.md`
+- `../../templates/PROJECTS.md` — used as bootstrap when no `PROJECTS.md`
   exists yet.
+
+## Resolving shared references
+
+Citations in this skill are spelled relative to the citing file. From
+this `SKILL.md` (the skill's only file), the shared targets are
+`../_conventions.md`, `../../templates/PROJECTS.md`, and
+`../../templates/project-idea.md`.
+
+When the skill is installed via symlink, the `..` segments resolve
+through the OS to the real plugin tree, so the relative forms above
+just work. When resolving lexically instead, anchor on the `realpath`
+of this `SKILL.md` first, then apply the relative path. If the skill
+was copied without its siblings (no `../_conventions.md` beside it),
+fall back to locating the install source — the plugin tree the copy
+came from — and resolve the shared targets there.

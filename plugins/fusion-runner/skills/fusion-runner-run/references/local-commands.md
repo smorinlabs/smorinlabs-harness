@@ -16,7 +16,7 @@ access change under the owner's authority before attempting local work. Preserve
 existing firewall restrictions and maintenance access. Never promote the account
 or change authentication merely to bypass an access failure.
 
-`scripts/guest_session.py` is the internal macOS native SSH/SFTP transport.
+`../scripts/guest_session.py` is the internal macOS native SSH/SFTP transport.
 It reads only an explicitly supplied owner-only access file. The password goes
 to a hidden SSH terminal prompt, never command arguments or environment variables.
 A temporary mode-0700 directory holds a pinned known-hosts file and connection
@@ -35,7 +35,7 @@ Prepare both accounts before image capture. Normal startup verifies the saved
 access contract, automatic SSH startup and the current address. A validated
 clean reset must provide access immediately without an access-repair step.
 
-`scripts/local_job.ps1` is the internal standard-account executor. Its structured
+`../scripts/local_job.ps1` is the internal standard-account executor. Its structured
 stdin identifies one invocation, expected account/architecture, source snapshot,
 specification and archive hashes. The host transfers fresh copies and verifies
 the executor hash before invocation. The executor verifies source-file hashes,

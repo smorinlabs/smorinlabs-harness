@@ -18,7 +18,7 @@ under Copilot CLI, substitute these equivalents:
 - Copilot CLI auto-discovers skills from installed plugins, so
   `using-project-harness` and the four workflow skills appear
   automatically once the plugin is installed.
-- The SessionStart hook in `hooks/session-start` emits the
+- The SessionStart hook in `../../../hooks/session-start` emits the
   `additionalContext` shape that Copilot CLI v1.0.11+ consumes — no
   Copilot-specific hooks file needed.
 - Subagent-style parallel work (used by `project-refine` and
