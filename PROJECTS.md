@@ -1930,7 +1930,31 @@ and package checks. Development placements resolve to the stable main checkout
 and load the update after that checkout is fast-forwarded. The validation
 record distinguishes instruction edits from repository merge and local activation.
 
-## [~] Project P49: dependabot-sweep skill (repo-hygiene) (v0.16.0)
+---
+
+## [x] Project P49: Muse GitHub setup skill — local authoring
+
+**Goal:** Provide a reusable installer for organization-member Muse PR feedback
+and optional manual fix PRs using the upstream OpenCode Action.
+
+**Scope:** New public `muse-github-setup` skill in `muse-github` 0.1.0. Support
+the optional private `repo-secrets --app muse-ci` interface with a public
+fallback. Use Muse Spark 1.3 Contributor and a distinct repository key named
+`META_MUSE_CI_API_KEY`. Author and validate locally; activation and live paid
+acceptance require a separately selected target and authorization.
+
+- [x] Check global name/trigger space and route the public installer separately from private credential handling
+- [x] Preserve existing instructions and OpenCode configuration; supply automatic-review and manual-new-PR templates
+- [x] Define membership, workflow-writer restrictions, trusted profiles, credential boundaries, immutable review input, and failure behavior
+- [x] Add 24 offline behavior tests, workflow lint, generated manifests, and skill-quality review
+- [x] Exercise credential-free configuration loading in the installed OpenCode version with an inverse project-config control
+- [x] Record exact validation coverage, upstream moving-runtime tradeoff, and unrun live acceptance
+
+**Evidence:** [0.1.0 validation record](docs/validation/muse-github-setup-0.1.0.md).
+The local authoring scope is complete. Publishing, live placement, target
+installation, secret provisioning, and live review/fix validation remain
+separate future work; no such activation is claimed here.
+## [~] Project P50: dependabot-sweep skill (repo-hygiene) (v0.16.0)
 **Goal**: New `dependabot-sweep` skill in `plugins/repo-hygiene/` — clear the
 Dependabot backlog across configured GitHub orgs/repos: TOML scope config
 (`~/.config/dependabot-sweep/config.toml`, GitHub + `gh` assumed), one open-only
@@ -1942,13 +1966,13 @@ fleet collision; single-vs-multi-repo boundary to ci-fix/pr-merge-flow; no
 neighbor edits).
 
 ### Tests & Tasks
-- [x] [P49-T01] Author SKILL.md (6-step workflow, args) + references/config.md + templates/agent-brief.md
-- [x] [P49-T02] plugin.meta.toml 0.15.0 → 0.16.0 (description + keywords); `just gen` + gen-check green
-- [x] [P49-T03] Dev placement both tools (claude-code, then codex); step-5 symlink + ledger verify green
-- [x] [P49-T04] Docs: per-skill page docs/skills/dependabot-sweep.md + README table row (33 → 34 skills)
-- [x] [P49-TS01] skill-quality gate PASS — independent content review (1 blocker + 4 advisories, all fixed and re-verified); docs/conventions green; static verify pass claude-code+codex; --deep pass both tools; Codex headless --check E2E found 6/6 PRs, changed nothing (claude-code E2E blocked by weekly model limit)
-- [ ] [P49-T05] PR, merge, main fast-forward, worktree cleanup
-- [x] [P49-T06] Run-1 pilot (15 merged, 2 conflicts deferred) + 3-way stall review (Muse + Codex + local; Gemini blocked on browser auth)
-- [x] [P49-T07] Implement stall fixes per Codex-approved plan (6 required changes): bounded dispatcher, scripts/gh_merge.py, hardened brief, [budgets]
-- [x] [P49-TS02] Behavioral fixture suite 16/16 green (timeout, eligibility incl. review-comment rules, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes
-- [x] [P49-T08] Run-2 pilot on hardened skill (11 merged, 6 deferred with reasons, 0 unknown, 0 hangs) + F6 repair-scope boundary fix
+- [x] [P50-T01] Author SKILL.md (6-step workflow, args) + references/config.md + templates/agent-brief.md
+- [x] [P50-T02] plugin.meta.toml 0.15.0 → 0.16.0 (description + keywords); `just gen` + gen-check green
+- [x] [P50-T03] Dev placement both tools (claude-code, then codex); step-5 symlink + ledger verify green
+- [x] [P50-T04] Docs: per-skill page docs/skills/dependabot-sweep.md + README table row (33 → 34 skills)
+- [x] [P50-TS01] skill-quality gate PASS — independent content review (1 blocker + 4 advisories, all fixed and re-verified); docs/conventions green; static verify pass claude-code+codex; --deep pass both tools; Codex headless --check E2E found 6/6 PRs, changed nothing (claude-code E2E blocked by weekly model limit)
+- [ ] [P50-T05] PR, merge, main fast-forward, worktree cleanup
+- [x] [P50-T06] Run-1 pilot (15 merged, 2 conflicts deferred) + 3-way stall review (Muse + Codex + local; Gemini blocked on browser auth)
+- [x] [P50-T07] Implement stall fixes per Codex-approved plan (6 required changes): bounded dispatcher, scripts/gh_merge.py, hardened brief, [budgets]
+- [x] [P50-TS02] Behavioral fixture suite 16/16 green (timeout, eligibility incl. review-comment rules, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes
+- [x] [P50-T08] Run-2 pilot on hardened skill (11 merged, 6 deferred with reasons, 0 unknown, 0 hangs) + F6 repair-scope boundary fix
