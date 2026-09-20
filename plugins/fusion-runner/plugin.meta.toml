@@ -1,5 +1,5 @@
 name = "fusion-runner"
-version = "0.3.0"
+version = "0.3.1"
 description = "Prepare Windows in VMware Fusion for local standard-account checks or GitHub Actions, then start, inspect, stop, or explicitly reset the working VM."
 author = "Steve Morin"
 keywords = ["vmware", "fusion", "windows", "macos", "github-actions", "runner", "ci"]

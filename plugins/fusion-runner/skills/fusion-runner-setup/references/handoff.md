@@ -86,7 +86,7 @@ directory, dedicated account name/SID, requested mode, guest receipt path and
 UTC start time. It contains no credential input. Keep it and the eventual guest
 receipt in ignored or user-owned local storage.
 
-`scripts/register_service.ps1` writes a guest receipt before `config.cmd`, then
+`../scripts/register_service.ps1` writes a guest receipt before `config.cmd`, then
 updates it in cleanup even if configuration fails. Its fields include
 `runner_id`, `runner_name`, `service_name`, `service_account`,
 `service_account_sid`, `runner_directory`, `ephemeral`, `labels`,

@@ -161,7 +161,7 @@ The Windows runner installs its service during configuration. The [runner's serv
 
 ### One-job diagnostic registration
 
-Use `scripts/register_service.ps1` for a prepared guest serving an authorized
+Use `../scripts/register_service.ps1` for a prepared guest serving an authorized
 `ci-fix` diagnostic. This helper supports an exact repository on `github.com`.
 Run it in native PowerShell 7.4 or later, in an elevated maintenance session
 using the user's established protected guest connection. Built-in Windows
@@ -269,7 +269,7 @@ For a persistent registration, reboot the guest and verify that the same service
 and runner recover without an interactive Windows login. Record this separately
 from a pre-registration reboot or a one-job execution.
 
-Use `templates/fusion-smoke.yml` for an authorized CI smoke test. Its explicit
+Use `../templates/fusion-smoke.yml` for an authorized CI smoke test. Its explicit
 `pwsh` shell requires PowerShell 7 in the service account's environment. Render
 its target labels from the recorded runner. For an Arm64 persistent runner
 registered with the interactive recipe and default labels, the selector is:
