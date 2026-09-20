@@ -19,6 +19,12 @@ visibility = "all"       # all | public | private; ignored when repos is set
 
 [user."my-login"]
 visibility = "private"
+
+# Execution budgets, enforced by scripts/gh_merge.py (never by prompt text).
+# The orchestrator exports each key as GH_MERGE_<UPPER> before rendering briefs.
+[budgets]
+op_timeout_secs = 30    # per HTTP call inside the helper (connect+transfer)
+pr_budget_secs = 600    # absolute per-PR deadline; retries cannot reset it
 ```
 
 - Each scope table takes either `visibility` or `repos`, not both. `repos`

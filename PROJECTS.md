@@ -1948,3 +1948,6 @@ neighbor edits).
 - [x] [P49-T04] Docs: per-skill page docs/skills/dependabot-sweep.md + README table row (33 → 34 skills)
 - [x] [P49-TS01] skill-quality gate PASS — independent content review (1 blocker + 4 advisories, all fixed and re-verified); docs/conventions green; static verify pass claude-code+codex; --deep pass both tools; Codex headless --check E2E found 6/6 PRs, changed nothing (claude-code E2E blocked by weekly model limit)
 - [ ] [P49-T05] PR, merge, main fast-forward, worktree cleanup
+- [x] [P49-T06] Run-1 pilot (15 merged, 2 conflicts deferred) + 3-way stall review (Muse + Codex + local; Gemini blocked on browser auth)
+- [x] [P49-T07] Implement stall fixes per Codex-approved plan (6 required changes): bounded dispatcher, scripts/gh_merge.py, hardened brief, [budgets]
+- [x] [P49-TS02] Behavioral fixture suite 14/14 green (timeout, eligibility, ambiguous-reconcile, head-change) + helper self-test green in parent and child sandboxes

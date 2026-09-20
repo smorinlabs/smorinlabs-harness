@@ -54,24 +54,62 @@ Group the open PRs by repo. Repos with no PRs get no subagent.
 
 Unless `--check`: report the discovery (N open PRs across M repos, grouped by repo with titles) and confirm via AskUserQuestion — sweep all (Recommended), or check-only instead, with notes to narrow the repo set. One question; notes modify the set.
 
-## 4. Fan out (one subagent per repo-with-PRs)
+## 4. Dispatch (bounded dispatcher, one writer per repo)
 
-One Task subagent per repo from step 2 — never one per PR (same-repo PRs share lockfiles and CI; parallel agents in one repo conflict) and never one per quiet repo. Render each agent's brief from [templates/agent-brief.md](templates/agent-brief.md). Delegation to `ci-fix` / `pr-merge-flow` always happens inside these Task subagents, which load and follow the named skill themselves; the orchestrator never invokes a skill directly. The delegation ladder inside every brief:
+The orchestrator classifies every PR and owns deferral; workers execute merges
+through the helper and never merge any other way. One merge owner per repo:
+the worker running `scripts/gh_merge.py`. The dispatcher owns classification,
+the per-repo mutation slot, quarantine records, and post-crash reconciliation.
 
-1. Trivially mergeable (green, no conflicts) → review the diff, merge.
-2. Red CI → delegate to `ci-fix` for that repo, then merge.
-3. Review findings or involved fixes → delegate to `pr-merge-flow` for that PR.
-4. Merge conflict: `pause_on_conflict` set → report back and wait; otherwise record the conflict and move to the next PR.
+- **Eligible-now** (all true at a pinned head): checks green (check-runs AND
+  commit statuses, required contexts green), dependency-only diff asserted by
+  the classifier, `mergeable=true` + `mergeable_state=clean`, no
+  `CHANGES_REQUESTED` as any reviewer's latest state, zero unresolved review
+  threads, no merge queue requirement.
+- **Deferred** (recorded with reason for a later sweep or a human): pending,
+  red, dirty, nontrivial, queue-required, oversize/unreadable evidence, or
+  anything unknown. Missing evidence always defers — never merges.
+- **Merge path**: `python3 scripts/gh_merge.py <owner> <repo> <pr> merge
+  <progress-log> --assert-trivial`, with `[budgets]` from config exported as
+  `GH_MERGE_*`. Exit `0` merged; `10` deferred (reason logged); `11` unknown
+  (hold the repo slot, reconcile read-only, quarantine across restarts —
+  never auto-retry an uncertain mutation).
+- **Freshness**: volatile checks/reviews refresh inside the helper immediately
+  before each PUT; any head change between preflight and merge aborts the
+  merge. After each merge or repair push, sibling cached evidence is stale.
+  Base movement races are settled server-side: the PUT is SHA-bound and a
+  `4xx` is a definitive defer, never a retry.
+- **Repair loop** (bounded): red PRs go to `ci-fix` with the PR's remaining
+  budget, then return to classification exactly once; a repaired PR may merge
+  in the same sweep only after a fresh helper preflight passes. Involved PRs
+  go to `pr-merge-flow` with a preparation-only instruction (triage and fix,
+  do not merge). `--check` / `--no-auto-fix` skip all merges;
+  `pause_on_conflict` stops the repo at the first conflict instead of
+  recording and continuing.
 
-Agents report back per PR: merged / fixed-then-merged / conflict / needs-human (with reason). No agent touches another repo.
+One Task subagent per repo-with-PRs — never one per PR (same-repo PRs share
+lockfiles and CI) and never one per quiet repo. Render each brief from
+[templates/agent-brief.md](templates/agent-brief.md). No agent touches another
+repo. After a crash or restart, the dispatcher reads the progress log first
+and reconciles every `start` without a matching `result` before any new merge.
 
 ## 5. Trivial direct fixes (narrow fast path, no subagent)
 
-Skip the subagent only when all three hold: the repo is already checked out locally, exactly one Dependabot PR is open in it, and the fix is a mechanical one-file edit (pin bump, generated lockfile refresh). Apply with Edit/Write, commit, push, re-check CI. Anything else fans out per step 4.
+Skip the subagent only when all hold: the repo is already checked out locally,
+exactly one Dependabot PR is open in it, the repo mutation slot is free, and
+the fix is a mechanical one-file edit (pin bump, generated lockfile refresh).
+Apply with Edit/Write, commit, push, then merge only through the step-4 helper
+(a repair push invalidates cached evidence, so the helper re-preflights).
+Anything else dispatches per step 4.
 
 ## 6. Report
 
-Aggregate every agent's results into one report: merged, fixed-then-merged, conflicts (paused or recorded), needs-human with reasons, plus the discovery cost in API calls. Conflicts under `pause_on_conflict` surface as AskUserQuestion follow-ups, one repo at a time.
+Aggregate every agent's results into one report with distinct reasons:
+merged, fixed-then-merged, deferred (pending / failed-checks / conflict /
+queue-required / nontrivial / unreadable-evidence), unknown (quarantined, with
+reconcile status), needs-human with reasons — plus the discovery cost in API
+calls. Conflicts under `pause_on_conflict` surface as AskUserQuestion
+follow-ups, one repo at a time.
 
 ## See also
 
