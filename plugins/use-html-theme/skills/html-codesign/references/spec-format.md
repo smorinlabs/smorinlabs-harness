@@ -1,11 +1,11 @@
 # codesign-spec format (the INPUT document)
 
 The JSON contract behind every codesign page. Written FIRST (before any
-HTML), validated with `scripts/validate_spec.py`, and embedded verbatim in
+HTML), validated with `../scripts/validate_spec.py`, and embedded verbatim in
 the page as `<script id="codesign-spec" type="application/json">`.
 
 This is the **input** side only. What the page emits back is a different
-document — `codesign-answers`, defined in `references/export-formats.md`.
+document — `codesign-answers`, defined in `export-formats.md`.
 Inputs and outputs deliberately do NOT share a schema: the input is the
 question set an agent authors; the output is the decision a person made.
 
@@ -13,7 +13,7 @@ The `sections` core is an ID-stamped superset of the AskUserQuestion tool
 payload — a shape both Claude and Codex natively understand. Keep it that
 way: decision structure goes in `sections`; advisory material goes in the
 sibling `contexts` array, never inside a section. (Lineage and rationale:
-`references/design-notes.md`.)
+`design-notes.md`.)
 
 ## Shape
 
@@ -73,7 +73,7 @@ sibling `contexts` array, never inside a section. (Lineage and rationale:
 | `contexts` | **required — exactly one entry per section.** See below. |
 | `feedback` | optional page-level note; its id is always `note-overall` |
 
-All ids follow `references/id-grammar.md`.
+All ids follow `id-grammar.md`.
 
 ## The contexts layer: envelope in schema, body in the page
 

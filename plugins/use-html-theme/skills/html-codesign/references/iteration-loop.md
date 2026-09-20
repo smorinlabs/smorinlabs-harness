@@ -75,7 +75,7 @@ loop.
 
 ## When an export comes back
 
-Exports are `codesign-answers` documents (references/export-formats.md),
+Exports are `codesign-answers` documents (export-formats.md),
 not input specs. Treat each answer's `selected` entries and `note` text as
 the user's decision record. If they returned MD instead, the ✓ lines and
 note blockquotes carry the same information. Quote IDs back when confirming

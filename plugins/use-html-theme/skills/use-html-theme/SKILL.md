@@ -106,13 +106,35 @@ Before delivering any themed artifact, ask:
 If the request is an interactive pick-and-export decision page (codesign),
 the sibling `html-codesign` skill owns the structure, stable IDs, and
 exports — this skill still supplies the visual theme (its
-`themes/<name>/codesign.md` overlay when present). Don't reimplement
+`references/themes/<name>/codesign.md` overlay when present). Don't reimplement
 toggles or export bars here.
 
 # Previewing the catalog
 
 If the user asks to preview, compare, or "see the options" for the themes
 (e.g. "show me the theme choices", "preview the themes", "what do they look
-like?"), render `assets/preview-template.html` — a single self-contained page
+like?"), render `../../assets/preview-template.html` — a single self-contained page
 showing all three themes side-by-side as sample cards — and share it. This is
 the catalog showcase; it does not change the session theme.
+
+## Resolving shared references
+
+Shared citations in this skill are spelled relative to the citing
+file. From this SKILL.md the shared target is
+`../../assets/preview-template.html` (the plugin-level catalog
+preview under plugins/use-html-theme/assets/); in-skill references/
+citations (activation-flow.md, persistence.md, override-grammar.md,
+and the themes/<name>/ pattern) stay as-is. Cross-skill mentions
+(html-codesign's theming.md, html-explain's scaffold) are
+owner-qualified prose, not file reads.
+
+- In symlink placements (e.g. under `~/.agents/skills/`), `../`
+  traverses through the symlink into the install tree, so the OS
+  resolves these citations with no extra work.
+- When computing a target lexically without filesystem access,
+  anchor on the `realpath` of this SKILL.md first, then apply the
+  relative citation.
+- In bare copies that lack sibling files (only this skill's
+  directory was copied), fall back to locating the install source —
+  the plugin root holding `assets/` and `skills/` — and resolve
+  the shared filename there.

@@ -173,8 +173,8 @@ cannot:
 
 ## 9. Resolve the theme
 
-Follow the same cascade `html-codesign` uses (`references/theming.md` in the
-sibling skill): the use-html-theme session theme if one is active, else its
+Follow the same cascade `html-codesign` uses (`../html-codesign/references/theming.md`
+in the sibling skill): the use-html-theme session theme if one is active, else its
 persistence file (`.claude/use-html-theme.local.md`), else the neutral
 built-in style in the scaffold. Never mix themes. Do NOT force the theme
 picker just for an explainer page.
@@ -335,3 +335,22 @@ ranking. The next moves above lead; these come after them.
 - `references/visual-encoding.md` — encoding rules + the dataviz carve.
 - `references/enrichment-ladder.md` — what to reach for, and what it costs.
 - `assets/explainer-scaffold.html` — the page skeleton to start from.
+
+## Resolving shared references
+
+Citations in this skill are relative to the citing file. From this
+`SKILL.md`, the shared targets live in the sibling skills:
+`../html-codesign/references/theming.md` (the theme cascade step 9
+follows) and `../use-html-theme/references/themes/birchline/explain.md`
+(the Birchline explainer overlay); from `references/`, shared targets
+gain one more level (`../../html-codesign/references/theming.md`),
+while in-skill siblings stay short (`difficulty-map.md`,
+`../SKILL.md`).
+
+When the skill is installed via symlink, the `..` segments resolve
+through the OS to the real plugin tree, so the relative forms above
+just work. When resolving lexically instead, anchor on the `realpath`
+of this `SKILL.md` first, then apply the relative path. If the skill
+was copied without its siblings (no `../html-codesign/` beside it),
+fall back to locating the install source — the plugin tree the copy
+came from — and resolve the shared targets there.
