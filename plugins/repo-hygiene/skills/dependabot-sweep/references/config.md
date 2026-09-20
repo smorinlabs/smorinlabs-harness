@@ -27,8 +27,9 @@ op_timeout_secs = 30    # per HTTP call inside the helper (connect+transfer)
 pr_budget_secs = 600    # absolute per-PR deadline; retries cannot reset it
 ```
 
-- Each scope table takes either `visibility` or `repos`, not both. `repos`
-  holds bare repo names (`"web"`), resolved under that org/user.
+- Each scope table takes `visibility` or `repos`. If both appear, `repos`
+  wins and `visibility` is ignored. `repos` holds bare repo names (`"web"`),
+  resolved under that org/user.
 - Any `[defaults]` key may be repeated inside a scope table to override it
   for that scope only.
 - Unknown hosts or tools: out of scope in v1 — the sweep stops with a plain

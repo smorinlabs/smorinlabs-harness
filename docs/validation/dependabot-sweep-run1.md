@@ -62,8 +62,11 @@ Sweep gate: user confirmed "sweep all 3 repos" live.
   on macOS), retry-once then REST fallback then needs-human.
 - F2: no per-PR progress trail — a wedged child leaves nothing. Fix: append
   one result line per PR to a progress log immediately.
-- F3: pending-checks behavior unspecified (wait? how long? merge?). Fix:
-  bounded wait (30s poll, 10 min cap), merge only on green at bound.
+- F3: pending-checks behavior unspecified (wait? how long? merge?). R1b
+  interim fix: bounded wait (30s poll, 10 min cap), merge only on green at
+  bound. SUPERSEDED by the final contract: pending checks defer immediately
+  (`DefinitiveFailure("checks pending")`), no polling — see "Learnings"
+  below.
 - F4: mergeability assumed, never checked. Fix: REST `mergeable` check
   before merge; null = recheck, don't assume.
 - F5: `UV_CACHE_DIR` needed in sandboxed environments. Fix: brief sets it.

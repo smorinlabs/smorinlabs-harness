@@ -53,6 +53,7 @@ def base_scenario():
         "rulesets": [],
         "rulesets_404": False,
         "put_behavior": "merge",  # merge | hang-then-apply | hang-open
+        "put_status": 200,  # error injection: 429 | 500
         "put_calls": 0,
         "merged": False,
     }
@@ -132,6 +133,9 @@ class Handler(BaseHTTPRequestHandler):
         SCENARIO["put_calls"] += 1
         if body.get("sha") != SCENARIO["pull"]["head"]["sha"]:
             return self._send({"message": "head mismatch"}, status=409)
+        if SCENARIO["put_status"] != 200:
+            return self._send({"message": "injected"},
+                              status=SCENARIO["put_status"])
         behavior = SCENARIO["put_behavior"]
         if behavior == "merge":
             SCENARIO["merged"] = True
@@ -296,6 +300,25 @@ class HelperTest(unittest.TestCase):
         code, out, _ = self.run_helper()
         self.assertEqual(code, 11, out)
         self.assertIn("UNKNOWN", out)
+        self.assertEqual(SCENARIO["put_calls"], 1)
+
+    def test_actions_only_green_merges(self):
+        SCENARIO["combined"] = {"state": "pending", "statuses": []}
+        SCENARIO["protection_404"] = True
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 0, out)
+
+    def test_put_500_reconciles_no_retry(self):
+        SCENARIO["put_status"] = 500
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 11, out)
+        self.assertIn("UNKNOWN", out)
+        self.assertEqual(SCENARIO["put_calls"], 1)
+
+    def test_put_429_defers(self):
+        SCENARIO["put_status"] = 429
+        code, out, _ = self.run_helper()
+        self.assertEqual(code, 10, out)
         self.assertEqual(SCENARIO["put_calls"], 1)
 
     def test_head_change_rejected(self):

@@ -33,6 +33,10 @@ Rules (all mandatory):
    (triage and fix, do not merge), then re-classify exactly once.
 3. Red CI goes to `ci-fix` with the PR's remaining budget, then re-classify
    exactly once. A repaired PR merges only after a fresh helper preflight.
+   Classify first: only genuine CI failures go to `ci-fix` — inspect the
+   producer, context, and target URL. A reviewer-unavailable status (e.g. a
+   bot reporting its own rate limit) is deferred, never repaired, never
+   treated as passing.
 4. Repair scope boundary: never change repo settings (branch protection,
    rulesets, vulnerability alerts, dependency graph, required checks, apps).
    If a repair needs one, report needs-human with the exact enable path.
@@ -40,7 +44,9 @@ Rules (all mandatory):
    helper (`python3 {{HELPER}} {{OWNER}} {{REPO}} N merge {{LOG}}
    --assert-trivial`) and transcribe its single-line verdict. Exit 0 merged;
    10 deferred (record the reason, continue); 11 unknown (stop this repo,
-   hold the mutation slot, report for quarantine — never retry).
+   hold the mutation slot, report for quarantine — never retry). If auto_fix
+   is false, do NOT run the helper: classify each PR (green/red/conflict)
+   and report only.
 6. If pause_on_conflict is true, stop the repo at the first conflict instead
    of recording and continuing.
 

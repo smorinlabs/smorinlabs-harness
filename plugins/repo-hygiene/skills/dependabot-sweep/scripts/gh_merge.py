@@ -35,6 +35,10 @@ TOKEN_ENV = "GH_MERGE_TOKEN"
 class DefinitiveFailure(Exception):
     """The server answered: no merge happened, do not retry."""
 
+    def __init__(self, message, status=None):
+        super().__init__(message)
+        self.status = status
+
 
 class AmbiguousFailure(Exception):
     """Transport failed around the PUT: the merge may or may not have applied."""
@@ -96,7 +100,8 @@ def api_request(method, path, token, body=None, params=None, timeout=None):
         except (OSError, ValueError):
             detail = ""
         raise DefinitiveFailure(
-            f"{method} {path} -> HTTP {exc.code} {detail}") from exc
+            f"{method} {path} -> HTTP {exc.code} {detail}",
+            status=exc.code) from exc
     except (urllib.error.URLError, socket.timeout, TimeoutError,
             ConnectionError, OSError) as exc:
         raise AmbiguousFailure(f"{method} {path} transport failure: {exc}") from exc
@@ -230,10 +235,11 @@ def preflight(owner, repo, pr, token, assert_trivial, deadline, progress_log):
         missing = [c for c in required if c not in green_names]
         if missing:
             raise DefinitiveFailure(f"required checks not green: {missing}")
-    elif pending or combined_state != "success":
-        if not run_list and not (combined or {}).get("statuses", []):
-            pass  # No CI configured at all: nothing required.
-        else:
+    else:
+        statuses = (combined or {}).get("statuses", [])
+        # An empty status list is absence of commit statuses, not pending CI;
+        # Actions reports check-runs only.
+        if pending or (statuses and combined_state != "success"):
             raise DefinitiveFailure("checks pending")
 
     check_deadline(deadline, "preflight/mergeable")
@@ -275,9 +281,15 @@ def preflight(owner, repo, pr, token, assert_trivial, deadline, progress_log):
 
 def merge_put(owner, repo, pr, head_sha, method, token):
     """Returns body dict on success. Definitive vs ambiguous split enforced."""
-    status, body, _ = api_request(
-        "PUT", f"/repos/{owner}/{repo}/pulls/{pr}/merge", token,
-        body={"sha": head_sha, "merge_method": method})
+    try:
+        status, body, _ = api_request(
+            "PUT", f"/repos/{owner}/{repo}/pulls/{pr}/merge", token,
+            body={"sha": head_sha, "merge_method": method})
+    except DefinitiveFailure as exc:
+        # 4xx, including 429, is definitive. 5xx may still have applied.
+        if exc.status is not None and exc.status >= 500:
+            raise AmbiguousFailure(str(exc)) from exc
+        raise
     if status not in (200, 201):
         raise DefinitiveFailure(f"merge PUT -> HTTP {status}")
     if not isinstance(body, dict) or body.get("merged") is not True:

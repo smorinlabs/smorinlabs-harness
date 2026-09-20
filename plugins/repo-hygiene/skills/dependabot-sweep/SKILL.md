@@ -47,12 +47,13 @@ Cost discipline is the point of this skill: discovery costs ~1 API call per org,
 - Explicit repo list (`repos = [...]` or `--repo`): one call per listed repo only —
   `gh pr list --app dependabot -R <owner/name> --json number,title,url`
 - `visibility = "public"|"private"`: run the org search, then join `gh repo list <org> --limit 1000` for visibility and drop the rest. Still a handful of calls for the whole org.
+- Never silently truncate: if any result count hits its `--limit` (search page, per-repo list, repo list), page further or raise the limit; if it still caps out, report discovery as INCOMPLETE with the capped scope instead of claiming a full sweep.
 
 Group the open PRs by repo. Repos with no PRs get no subagent.
 
 ## 3. Gate the sweep
 
-Unless `--check`: report the discovery (N open PRs across M repos, grouped by repo with titles) and confirm via AskUserQuestion — sweep all (Recommended), or check-only instead, with notes to narrow the repo set. One question; notes modify the set.
+Report the discovery (N open PRs across M repos, grouped by repo with titles). Under `--check`, stop here — no dispatch, no merges. Otherwise confirm via AskUserQuestion — sweep all (Recommended), or check-only instead, with notes to narrow the repo set. One question; notes modify the set.
 
 ## 4. Dispatch (bounded dispatcher, one writer per repo)
 
@@ -74,11 +75,11 @@ the per-repo mutation slot, quarantine records, and post-crash reconciliation.
   `GH_MERGE_*`. Exit `0` merged; `10` deferred (reason logged); `11` unknown
   (hold the repo slot, reconcile read-only, quarantine across restarts —
   never auto-retry an uncertain mutation).
-- **Freshness**: volatile checks/reviews refresh inside the helper immediately
-  before each PUT; any head change between preflight and merge aborts the
-  merge. After each merge or repair push, sibling cached evidence is stale.
-  Base movement races are settled server-side: the PUT is SHA-bound and a
-  `4xx` is a definitive defer, never a retry.
+- **Freshness**: the helper runs one preflight per invocation — there is no
+  second evidence read between preflight and PUT. Protection against head
+  movement is the SHA-bound PUT, which GitHub rejects with `409` (a
+  definitive defer). After each merge or repair push, sibling cached evidence
+  is stale. Base movement races settle server-side the same way.
 - **Repair loop** (bounded): red PRs go to `ci-fix` with the PR's remaining
   budget, then return to classification exactly once; a repaired PR may merge
   in the same sweep only after a fresh helper preflight passes. Repairs never

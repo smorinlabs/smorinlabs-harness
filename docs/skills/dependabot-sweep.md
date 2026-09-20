@@ -1,12 +1,13 @@
 # dependabot-sweep
 
 Clears the Dependabot backlog across every configured GitHub org or repo —
-one open-only author search per org finds every open dependency PR (~1 API
-call, not ~1 per repo), then one subagent per repo-with-PRs reviews, fixes,
+one open-only app search per org finds every open dependency PR (~1 API
+call per result page, not ~1 per repo; visibility-filtered scopes add one
+`gh repo list`), then one subagent per repo-with-PRs reviews, fixes,
 and merges each, delegating red CI to `ci-fix` and involved merges to
-`pr-merge-flow`. Scope and behavior come from a TOML config that assumes
-GitHub and `gh` unless told otherwise; auto-fix is the default, with
-report-only and pause-on-conflict escapes.
+`pr-merge-flow`. Scope and behavior come from a TOML config; v1 supports
+GitHub and `gh` only (anything else stops the sweep). Auto-fix is the
+default, with report-only and pause-on-conflict escapes.
 
 **Triggers on:** "update my dependabot PRs", "dependabot sweep", "clear the
 dependabot backlog", "update all the dependency PRs" ·
