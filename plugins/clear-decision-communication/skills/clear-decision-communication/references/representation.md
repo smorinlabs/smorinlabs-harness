@@ -8,7 +8,7 @@ Every form here is text: a downstream tool may render it, this skill never does.
 Forms are adapted from three sources and converted to ASCII: the show-me skill
 (humanlayer/skills, MIT), the clear-technical-communication artifact catalog
 (Steve Morin), and the system-atlas design language (inkboard/system-atlas,
-MIT). Attribution and licenses are in `references/framework.md`.
+MIT). Attribution and licenses are in `framework.md`.
 
 ## Assess the difficulty first
 

@@ -4,7 +4,7 @@ The brief combines a reader-outcome standard with controlled-English
 mechanics. The combination matters: sentence rules cannot repair missing
 context, absent analysis, or an unclear decision. Read this when a reader
 disputes a wording rule, when the pre-send check fails on the four outcomes, or
-when someone asks what the rules in `references/clarity.md` rest on.
+when someone asks what the rules in `clarity.md` rest on.
 
 ## ISO 24495-1:2023 Plain language, Part 1: Governing principles and guidelines
 

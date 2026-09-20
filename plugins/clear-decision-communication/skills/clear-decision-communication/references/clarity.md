@@ -4,7 +4,7 @@ The sentence, term, and error rules applied while drafting (workflow step 5) and
 checked before sending (step 6). Adapted from the clear-technical-communication
 skill (Steve Morin). The four reader gates below are the governing outcomes of
 ISO 24495-1, and the sentence controls are selected ASD-STE100 mechanics;
-`references/standards.md` describes both standards, their official sources, and
+`standards.md` describes both standards, their official sources, and
 their limits. Do not claim formal compliance with either standard.
 
 ## The four reader gates
