@@ -47,7 +47,7 @@ plan) or decompose (the user wants more tasks). The skill says:
 > tasks?"*
 
 with multiple-choice options. One turn; no guessing. This matches
-the one-question-at-a-time convention from `_conventions.md` §6.
+the one-question-at-a-time convention from `../_conventions.md` §6.
 
 For unambiguous cases — `[?]` ⇒ scope, `[ ]` with no tasks ⇒
 decompose, *"refine references on P19"* ⇒ refine-notes — the skill
@@ -79,7 +79,7 @@ edits in place.
 **References-block format check** runs every loop iteration on
 non-`[?]` projects: presence, bullet shape, canonical label
 order, and resolution of filesystem-style references (per
-`skills/project-audit/references/references-block.md`). Cheap;
+`../project-audit/references/references-block.md`). Cheap;
 no filesystem search inside the loop. If the user wants to pull
 in plans, specs, or git-derived candidates that have appeared
 since the project was last refined, they type `refresh
@@ -112,8 +112,8 @@ always answers yes to. If the user does NOT want research and the
 verb was incidental ("I already looked this up"), they can say so
 and the skill cancels — but starting the dispatch is the default.
 
-See `agents/project-researcher.md` for the prompt shape and
-`_conventions.md` §8 for the rules (read-only, inputs inline,
+See `../../agents/project-researcher.md` for the prompt shape and
+`../_conventions.md` §8 for the rules (read-only, inputs inline,
 parallelize the read).
 
 ### Sub-mode 2: scope (idea → ready)
@@ -151,7 +151,7 @@ checklist:
    `<repo>/specs/`, `<repo>/archive/research/`, and
    `<repo>/projects/`, plus recent `git log` output for URLs and
    ticket IDs, then surfaces candidates and prompts. See
-   `skills/project-audit/references/references-block.md` for the
+   `../project-audit/references/references-block.md` for the
    full procedure and format spec. References are gathered first
    because the references contract starts the moment the project
    leaves idea state — scope/tasks come *after* the prior-art
@@ -160,7 +160,7 @@ checklist:
 3. **Open questions** — What's still unresolved?
 
 Use the **one-question-at-a-time** convention from
-`_conventions.md` §6: ask one, wait, *re-evaluate*, then decide
+`../_conventions.md` §6: ask one, wait, *re-evaluate*, then decide
 what to ask next. Multiple-choice when there's a reasonable
 enumeration.
 
@@ -275,7 +275,7 @@ approves the commit message.
 |---------|---------|
 | "Sections look filled, I'll just promote" | No. Iron Law. Ask first. |
 | "User wants tasks but no TS yet, I'll add T01" | No. Default first task is TS01 unless they explicitly opt out. |
-| "I'll list all the refinement questions in one message" | One question per message. Re-evaluate after each answer per `_conventions.md` §6. |
+| "I'll list all the refinement questions in one message" | One question per message. Re-evaluate after each answer per `../_conventions.md` §6. |
 | "User mentioned a new idea mid-refine, I'll capture it inline" | No. Point at `project-add` and stay focused on the project at hand. |
 | "User said 'find', I should ask before dispatching a researcher" | No — dispatch on the trigger verbs (find / look up / research / investigate). The user can cancel if they didn't mean it. Asking first costs a turn most users answer 'yes' to. |
 | "I'll dispatch a researcher because *I* think prior-art lookup would help" | No — the trigger verbs must appear in the user's message. The skill doesn't invent research needs. |
@@ -295,11 +295,11 @@ approves the commit message.
 
 ## See also
 
-- `_conventions.md` §6 — one-question-at-a-time, iteratively.
-- `_conventions.md` §8 — subagent rules.
-- `agents/project-researcher.md` — read-only research subagent
+- `../_conventions.md` §6 — one-question-at-a-time, iteratively.
+- `../_conventions.md` §8 — subagent rules.
+- `../../agents/project-researcher.md` — read-only research subagent
   this skill dispatches in parallel during sub-mode 1.
-- `skills/project-audit/references/references-block.md` —
+- `../project-audit/references/references-block.md` —
   format spec and discovery helper invoked at scope entry
   (sub-mode 2) and re-verified during refine-notes (sub-mode 1).
 - `project-add` — when the user wants to create a new project
@@ -312,3 +312,19 @@ approves the commit message.
   produces enough detail to warrant a full implementation plan.
 - Superpowers (`superpowers:executing-plans`) — when decomposition
   produces tasks ready to execute.
+
+## Resolving shared references
+
+Citations in this skill are relative to the citing file. From this
+`SKILL.md`, the shared targets are `../_conventions.md`,
+`../project-audit/references/references-block.md`, and
+`../../agents/project-researcher.md`. This skill has no `references/`
+subdirectory, so every citation is written from the skill root.
+
+When the skill is installed via symlink, the `..` segments resolve
+through the OS to the real plugin tree, so the relative forms above
+just work. When resolving lexically instead, anchor on the `realpath`
+of this `SKILL.md` first, then apply the relative path. If the skill
+was copied without its siblings (no `../_conventions.md` beside it),
+fall back to locating the install source — the plugin tree the copy
+came from — and resolve the shared targets there.

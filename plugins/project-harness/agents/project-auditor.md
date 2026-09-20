@@ -19,7 +19,7 @@ The parent skill (`project-audit`) provides everything you need
 inline in this prompt:
 
 - `## Check` — the check name and definition, copied verbatim from
-  `skills/project-audit/references/checks.md`.
+  `../skills/project-audit/references/checks.md`.
 - `## Scope` — what subset of projects you are responsible for
   (e.g. "all projects", "P21 only").
 - `## Inputs` — the relevant file contents:

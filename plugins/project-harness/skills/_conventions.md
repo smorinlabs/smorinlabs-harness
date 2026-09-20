@@ -208,8 +208,8 @@ invoke it.
 
 Two skills (`project-refine`, `project-audit`) dispatch subagents:
 
-- `agents/project-researcher.md` — research subagent for scoping.
-- `agents/project-auditor.md` — per-check validation subagent for audit.
+- `../agents/project-researcher.md` — research subagent for scoping.
+- `../agents/project-auditor.md` — per-check validation subagent for audit.
 
 Both follow the shape of `superpowers/agents/code-reviewer.md`. Hard
 rules:
@@ -239,7 +239,7 @@ of `project-refine`). No H4. Matches superpowers cadence.
 | `using-project-harness` | ~80 lines |
 | `project-next` | ~120 lines |
 | `project-add` | ~140 lines |
-| `project-audit` | ~180 lines + `references/checks.md` |
+| `project-audit` | ~180 lines + `project-audit/references/checks.md` |
 | `project-refine` | ~220 lines + `.dot` decision graph |
 
 Going over by 10–20% is fine; doubling the target means the skill is
@@ -315,8 +315,8 @@ keep execution details in the skill body.
 >
 > — `agent-skills/best-practices.md`
 
-Project-harness follows this: `skills/project-audit/references/
-checks.md` is linked from `project-audit/SKILL.md` directly.
+Project-harness follows this: `project-audit/references/checks.md`
+is linked from `project-audit/SKILL.md` directly.
 `_conventions.md` is linked from each SKILL.md directly. No
 nested chains.
 

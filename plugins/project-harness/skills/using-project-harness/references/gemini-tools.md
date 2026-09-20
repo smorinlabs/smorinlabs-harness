@@ -22,7 +22,7 @@ under Gemini CLI, substitute these equivalents:
 - For the four workflow skills (`project-next`, `project-add`,
   `project-refine`, `project-audit`), the user invokes
   `activate_skill` once Gemini surfaces them as available.
-- The SessionStart hook script in `hooks/session-start` falls through
+- The SessionStart hook script in `../../../hooks/session-start` falls through
   to the `additionalContext` (top-level) JSON shape when neither
   `CURSOR_PLUGIN_ROOT` nor `CLAUDE_PLUGIN_ROOT` is set, which matches
   what Gemini-style hosts consume. No Gemini-specific hooks file is
