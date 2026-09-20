@@ -4,7 +4,7 @@
 
 1. Verify the exact repository and scope. Work in an isolated worktree based on
    the current default branch. Read existing configuration before applying the
-   installer. `scripts/install.py WORKTREE --organization OWNER [--with-fixes]`
+   installer. `../scripts/install.py WORKTREE --organization OWNER [--with-fixes]`
    prints the local plan; append `--apply` to write it. `WORKTREE` and `OWNER`
    come from repository discovery. Resolve the script from the installed skill.
 2. Inspect every new or changed file. Run `actionlint` on the rendered workflows.
