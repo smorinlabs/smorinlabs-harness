@@ -1,6 +1,6 @@
 # Windows diagnostic helper interface
 
-`skills/ci-fix/scripts/windows_runner.py` is a Python 3 standard-library helper
+`../skills/ci-fix/scripts/windows_runner.py` is a Python 3 standard-library helper
 for a configured Fusion Windows runner. It schedules diagnostics through GitHub
 on pushed code. Fusion skills retain registration and VM lifecycle ownership.
 

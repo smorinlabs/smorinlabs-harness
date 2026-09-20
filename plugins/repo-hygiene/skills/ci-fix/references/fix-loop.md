@@ -97,7 +97,7 @@ marker nor a separate empty commit is part of this repair strategy.
 
 ## Waiting on CI — the four laws
 
-Every wait in this skill obeys these; `pr-merge-flow/references/polling.md`
+Every wait in this skill obeys these; `../../pr-merge-flow/references/polling.md`
 has the fuller treatment.
 
 1. **Interval floor**: 20–30 seconds between calls to any GitHub endpoint.

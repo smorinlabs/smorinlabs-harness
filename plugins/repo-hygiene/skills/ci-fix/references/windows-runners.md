@@ -11,7 +11,7 @@ user has a suitable Fusion installation. GitHub Actions schedules the diagnostic
 on committed, pushed code; Windows on the Mac executes it. Keep host/Linux
 reproduction and the ordinary required CI run in the repair plan.
 
-`scripts/windows_runner.py` surveys the configured runner, dispatches one
+`../scripts/windows_runner.py` surveys the configured runner, dispatches one
 diagnostic, and verifies its report. The `fusion-runner-setup` and
 `fusion-runner-run` skills own VM preparation, protected guest access,
 registration, and shutdown. This integration has no private-repository or
