@@ -55,49 +55,91 @@ Group the open PRs by repo. Repos with no PRs get no subagent.
 
 Report the discovery (N open PRs across M repos, grouped by repo with titles). Under `--check`, stop here — no dispatch, no merges. Otherwise confirm via AskUserQuestion — sweep all (Recommended), or check-only instead, with notes to narrow the repo set. One question; notes modify the set.
 
-## 4. Dispatch (bounded dispatcher, one writer per repo)
+## 4. Dispatch (bounded dispatcher, one executor per repo)
 
-The orchestrator classifies every PR and owns deferral; workers execute merges
-through the helper and never merge any other way. One merge owner per repo:
-the worker running `scripts/gh_merge.py`. The dispatcher owns classification,
-the per-repo mutation slot, quarantine records, and post-crash reconciliation.
+The coordinator (`scripts/sweep_coordinator.py`) owns inventory, scheduling,
+recovery, and reporting from one durable record store
+(`scripts/sweep_core.py`: append-only JSONL, replayed on restart). It never
+merges. **One executor per repository**: the worker attempt that holds the
+repository's mutation lease. It merges through exactly one transport per
+PR: the SHA-bound helper (`scripts/gh_merge.py`, behavior unchanged) for
+dependency-only PRs, or `pr-merge-flow`'s guarded merge
+(`--match-head-commit`) for involved PRs. Nothing else merges, and the
+dispatcher never issues a second merge. The exact orchestrator commands
+that create a run, schedule, collect, and render land with the live pilot;
+the rules below are what those commands enforce.
 
-- **Eligible-now** (all true at a pinned head): checks green (check-runs AND
-  commit statuses, required contexts green), dependency-only diff asserted by
-  the classifier, `mergeable=true` + `mergeable_state=clean`, no
-  `CHANGES_REQUESTED` as any reviewer's latest state, zero unresolved review
-  threads, no merge queue requirement.
-- **Deferred** (recorded with reason for a later sweep or a human): pending,
-  red, dirty, nontrivial, queue-required, oversize/unreadable evidence, or
-  anything unknown. Missing evidence always defers — never merges.
+- **Tasking**: one Task subagent per repo with schedulable cards, never one
+  per PR (same-repo PRs share lockfiles and CI) and never one per quiet
+  repo. The brief is rendered from
+  [templates/agent-brief.md](templates/agent-brief.md) by
+  `scripts/sweep_protocol.py` from a Tasking record: mode (`inspect` /
+  `automated` / `gated`), permitted repairs, each granted on its own
+  (`branch_update`, `lockfile`, `code_repair`, `major_migration`,
+  `replacement_pr`; repository settings never), owner holds, approvals,
+  fixed or evolving scope with its cutoff, and one absolute
+  `GH_MERGE_DEADLINE_EPOCH` per PR, capped by the run deadline, that
+  successor attempts inherit. `--no-auto-fix` selects `inspect`;
+  `--check` never reaches dispatch (step 3). No agent touches another repo.
+  Each repository has a lock file beside the record store, so a second
+  coordinator session over the same store cannot issue a second writer,
+  and never reconciles away another session's attempt while its heartbeat
+  is fresh.
+- **Five checks** (`scripts/sweep_evaluator.py`) at one pinned head decide
+  every PR. *Is it what we think?* A full refresh (pull, files, reviews,
+  threads, check-runs, check suites, statuses, queue, effective policy)
+  bound to the head, and a classifier receipt bound to that head and file
+  set. *Did no one lose track?* The lease is held and the repo is not
+  quarantined. *Is it green?* The complete effective policy from branch
+  protection plus branch rules (unknown never means none); every required
+  check green from its required producer; no pending, failed, or
+  prerequisite-skipped check; change requests, required approvals, and
+  threads clear; `mergeable_state` clean; not in a merge queue. *Allowed?*
+  Mode, approval, owner hold, dependency-only receipt, budget. *Did it
+  actually merge?* A fresh GET showing `merged` with merge commit and
+  timestamp; queue acceptance and auto-merge arming are pending. Missing
+  or truncated evidence is `K13` and never merges. A reviewer bot's own
+  rate limit is reviewer-unavailable (`K08`), never CI red.
 - **Merge path**: `python3 scripts/gh_merge.py <owner> <repo> <pr> merge
-  <progress-log> --assert-trivial`, with `[budgets]` from config exported as
-  `GH_MERGE_*`. Exit `0` merged; `10` deferred (reason logged); `11` unknown
-  (hold the repo slot, reconcile read-only, quarantine across restarts —
-  never auto-retry an uncertain mutation).
-- **Freshness**: the helper preflights, then re-reads volatile evidence
-  (PR state, head, mergeable, reviews, check-runs) immediately before the
-  PUT — any change, gap, or unreadable state defers. The SHA-bound PUT is
-  the backstop: GitHub rejects a moved head with `409` (a definitive
-  defer). After each merge or repair push, sibling cached evidence is stale.
-- **Repair loop** (bounded): red PRs go to `ci-fix` with the PR's remaining
-  budget, then return to classification exactly once; a repaired PR may merge
-  in the same sweep only after a fresh helper preflight passes. The
-  dispatcher computes one absolute deadline per PR and passes it
-  (`GH_MERGE_DEADLINE_EPOCH`) through repair and helper phases — a fresh
-  helper invocation never restarts the clock. Repairs never
-  change repo settings — if one is needed, the PR goes to needs-human with
-  the exact enable path. Involved PRs
-  go to `pr-merge-flow` with a preparation-only instruction (triage and fix,
-  do not merge). `--check` / `--no-auto-fix` skip all merges;
-  `pause_on_conflict` stops the repo at the first conflict instead of
-  recording and continuing.
-
-One Task subagent per repo-with-PRs — never one per PR (same-repo PRs share
-lockfiles and CI) and never one per quiet repo. Render each brief from
-[templates/agent-brief.md](templates/agent-brief.md). No agent touches another
-repo. After a crash or restart, the dispatcher reads the progress log first
-and reconciles every `start` without a matching `result` before any new merge.
+  <progress-log> --assert-trivial`, with `[budgets]` from config exported
+  as `GH_MERGE_*` per PR. Exit `0`: verify with a fresh GET before recording
+  merged. `10`: hold with the helper's literal reason. `11`: unknown; the
+  repository is quarantined and the coordinator reconciles it read-only
+  before any retry, never auto-retrying an uncertain mutation. The helper
+  re-reads volatile evidence immediately before the PUT, and the SHA-bound
+  PUT rejects a moved head with `409`. A queue-required target never goes
+  through the helper, which refuses it: `pr-merge-flow` enqueues it once,
+  and the card holds as `WAITING` `K10` (pending, never merged) until a
+  fresh observation shows the merge.
+- **Diagnosis before repair** (`scripts/sweep_diagnosis.py`): a red check
+  is attributed only by a matched baseline control, meaning the same
+  workflow, job, matrix, command, toolchain, environment, and inputs run on
+  the base revision. The same failure there is `K05` baseline, and every
+  PR it blocks links one shared incident id (`ISS-…`); base green is `K04`
+  regression; unmatched or missing controls are `K04` with low confidence
+  and name the gap; a green same-head retry is `K17` transient with the
+  mechanism unknown; a runner or network signature is `K06`. Every verdict
+  still holds the PR. Changed files alone never prove a pre-existing
+  failure, and a baseline failure never waives required CI.
+- **Repair loop** (bounded, within the permitted repairs): red PRs go to
+  `ci-fix` with the PR's remaining budget, diagnosed first, then return to
+  the five checks exactly once at the resulting head. Repairs never change
+  repo settings; if one is needed, the PR goes to `NEEDS_OWNER` with the
+  exact enable path. Involved PRs go to `pr-merge-flow` under the same
+  authority. `pause_on_conflict` stops the repo at the first conflict.
+- **Returns and recovery**: workers return one outcome record per assigned
+  PR (`merged` / `ready` / `hold` / `unknown` / `closed`, fields per the
+  brief); the coordinator refuses an incomplete batch before any record
+  changes. After a crash or restart it replays the store, marks dead
+  attempts, reconciles every orphaned or quarantined repository against
+  fresh observation, and only then schedules successor attempts.
+- **Patience** (`scripts/sweep_patience.py`): one absolute deadline bounds
+  each child's whole process tree; at expiry the process group is
+  terminated, then killed. A delegate inherits the earlier deadline, and a
+  retry after the deadline never starts. Observation waits only when the
+  expected CI time fits the window; a longer job is deferred to a named
+  continuation. Holds are re-dispatched only when explicitly woken, and
+  idle cards past their deadline expire to `WAITING` `K14`.
 
 ## 5. Trivial direct fixes (narrow fast path, no subagent)
 
@@ -110,12 +152,21 @@ Anything else dispatches per step 4.
 
 ## 6. Report
 
-Aggregate every agent's results into one report with distinct reasons:
-merged, fixed-then-merged, deferred (pending / failed-checks / conflict /
-queue-required / nontrivial / unreadable-evidence), unknown (quarantined, with
-reconcile status), needs-human with reasons — plus the discovery cost in API
-calls. Conflicts under `pause_on_conflict` surface as AskUserQuestion
-follow-ups, one repo at a time.
+`scripts/sweep_report.py` renders one report from the record store: a
+header with selected and delivered counts (direct plus via replacement),
+unresolved cards first by consequence and owner (each with reason code,
+evidence, next action, owner, and resume trigger), prepared cards, merges
+with commit and timestamp, shared incidents with every PR they block, late
+arrivals, worker reconciliation, and one explicit continuation state. The
+ending is COMPLETE (every selected PR terminal), WITH EXCEPTIONS (every
+PR processed, the rest held with a reason and owner), or INCOMPLETE (a PR
+never processed, or discovery incomplete). A watcher or scheduled
+invocation counts as continuation only with a concrete reference and the
+time it was verified running; otherwise the report says none is
+running. The approval presenter lists every
+`NEEDS_OWNER` card most-consequential-first with a fixed decision block.
+Add the discovery cost in API calls. Conflicts under `pause_on_conflict`
+surface as AskUserQuestion follow-ups, one repo at a time.
 
 ## See also
 
