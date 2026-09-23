@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## v0.29.0 — 2026-09-22
+
+### Fixed
+
+- Shared skill references now resolve under symlinked placements, bare
+  per-skill copies, and lexical path computation across 9 plugins (34 skills):
+  cites are spelled relative to the citing file, 11 skills gain a "Resolving
+  shared references" section, and copied artifacts carry destination tests.
+  Minor: `project-harness` 0.2.0, `factor-harness` 0.2.0, `use-html-theme`
+  0.12.0. Patch: `fusion-runner` 0.3.1, `document-merge` 0.1.3,
+  `repo-hygiene` 0.16.1, `clear-decision-communication` 0.3.2,
+  `clear-technical-communication` 0.2.4, `muse-github` 0.1.1.
+
 ### Changed
 
 - `guided-research` 0.2.0 names a new research index after the repo's own
