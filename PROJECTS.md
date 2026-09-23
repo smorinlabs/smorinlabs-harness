@@ -2004,7 +2004,7 @@ scratch, not committed).
 ## [x] Project P52: guided-research index moves to research/AGENTS.md (guided-research 0.2.0)
 
 **Goal:** Claude Code v2.1.277+ loads a directory's `AGENTS.md` as instructions, as Codex
-does, so the research index is created as `research/AGENTS.md`. Existing trees keep working:
+does, so a new research index is created as `research/AGENTS.md` in repos without a root `CLAUDE.md`. Existing trees keep working:
 the skill reads and updates `research/CLAUDE.md` where it is the only index. Motivated by
 smorin-bootstrap P30, which renamed its `research/CLAUDE.md` to `research/AGENTS.md`.
 
@@ -2013,9 +2013,10 @@ claude.ai-synced copy of the skill, which is already diverged and not editable h
 
 - [x] [P52-T01] Index references in `SKILL.md` (lines 57, 70, 75), `references/artifacts.md:88`,
       and `references/research-tree.md` (tree diagram, regroup note, index section, update rule)
-- [x] [P52-T02] `research-tree.md` gains a **Filename** paragraph: new indexes are `AGENTS.md`;
-      read an older `CLAUDE.md` where it is the only index; `AGENTS.md` wins if both exist; never
-      keep both, because a `CLAUDE.md` makes Claude Code skip that directory's `AGENTS.md`
+- [x] [P52-T02] `research-tree.md` gains a **Filename** rule: a new index follows the repo root —
+      `research/AGENTS.md` when there is no root `CLAUDE.md`/`CLAUDE.local.md`, else `research/CLAUDE.md`,
+      because a `CLAUDE.md` at or above the working directory stops every `AGENTS.md` in the repo from
+      loading under Claude Code's default setting; an existing index keeps its name; never create both
 - [x] [P52-T03] Plugin 0.1.1 → 0.2.0 (behavior change: new trees get a different filename);
       `just gen`; docs page and RELEASE-NOTES updated; description unchanged, so no trigger re-scan
 
@@ -2024,3 +2025,7 @@ claude.ai-synced copy of the skill, which is already diverged and not editable h
       a tree with only `research/CLAUDE.md` got it in `CLAUDE.md` and no `AGENTS.md`
 - [x] [P52-TS02] Session-backed deep load verification on the worktree skill: claude-code pass, codex pass, no findings;
       `just all` 482 passed, 4 skipped; `skill-quality` layers 1–4 green
+- [x] [P52-TS03] Review fix (CodeRabbit on #79): a scratch repo with a root `CLAUDE.md` and `sub/AGENTS.md` loaded only
+      the root file after reading `sub/notes.txt`, confirming the finding. After the rule change, a fresh session
+      setting up a new index created `research/AGENTS.md` under a root `AGENTS.md` and `research/CLAUDE.md` under a
+      root `CLAUDE.md`; `just all` 482 passed, 4 skipped

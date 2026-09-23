@@ -4,7 +4,7 @@ All research lives in a per-project `research/` directory, split by **lifecycle*
 
 ```
 research/
-  AGENTS.md                          # the map — always read first (older trees: CLAUDE.md)
+  AGENTS.md                          # the map — always read first (CLAUDE.md in CLAUDE.md repos)
   CONSTRAINTS.md                     # optional: project constraints + overrides for skill defaults
   reference/                         # DURABLE leaves — the reusable library
     tokio-spawn-blocking-2026-07-05.md
@@ -39,7 +39,12 @@ research/
 
 An index, not prose. It must let an agent answer "does research already exist for this?" in one read.
 
-**Filename.** Create new indexes as `research/AGENTS.md`. Claude Code (v2.1.277 and later) and Codex both load a directory's `AGENTS.md` when they work in it, so the index reaches either agent without being asked for. Trees created before this change use `research/CLAUDE.md`: read and update that file where it is the only index, and never create an `AGENTS.md` beside it. If both files exist, `AGENTS.md` is the index. Renaming an older `CLAUDE.md` with `git mv` is safe but never required — and a leftover `CLAUDE.md` makes Claude Code skip the `AGENTS.md` in that directory, so do not keep both.
+**Filename.** Name the index after the repository's own project instructions, so the agent loads it automatically when it works in `research/`:
+
+- **The repo has no `CLAUDE.md` or `CLAUDE.local.md` at its root or above** (it uses `AGENTS.md`, or nothing): create `research/AGENTS.md`. Claude Code (v2.1.277 and later) and Codex both load it.
+- **The repo has a root `CLAUDE.md` or `CLAUDE.local.md`:** create `research/CLAUDE.md`. Under Claude Code's default setting, a `CLAUDE.md` in the working directory or above stops every `AGENTS.md` in the repo from loading, including `research/AGENTS.md`.
+
+An existing index keeps its name: read and update whichever of the two files exists, and never create the other beside it. If both exist, use the one the rule above picks and tell the user the other is stale. Workflow step 0 reads the index by name either way, so the filename decides only whether the index also loads on its own.
 
 Contents:
 

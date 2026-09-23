@@ -4,9 +4,10 @@
 
 ### Changed
 
-- `guided-research` 0.2.0 names the research index `research/AGENTS.md`, which
-  Claude Code (v2.1.277+) and Codex both load. It still reads and updates an
-  existing `research/CLAUDE.md` in older trees, and never creates both files.
+- `guided-research` 0.2.0 names a new research index after the repo's own
+  instructions file: `research/AGENTS.md` when the repo has no root `CLAUDE.md`
+  (Claude Code v2.1.277+ and Codex both load it), otherwise `research/CLAUDE.md`.
+  An existing index keeps its name, and the skill never creates both files.
 
 ## v0.28.0 — 2026-09-20
 
