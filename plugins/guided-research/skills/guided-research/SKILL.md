@@ -54,7 +54,7 @@ If either fails, the failure names the next narrowing pass. In autonomous mode, 
 
 ## Workflow
 
-0. **Check the tree first.** Before evaluating any trigger, check `research/CLAUDE.md` and `research/reference/` for an existing leaf that answers the question (see "Reuse before research"). A current leaf resolves the request with no new research — this applies even to error-driven triggers, where the fix is often a gotcha already documented in a leaf. Only proceed to trigger evaluation if no current leaf covers the need.
+0. **Check the tree first.** Before evaluating any trigger, check the research index (`research/AGENTS.md` or `research/CLAUDE.md`, named per `references/research-tree.md`) and `research/reference/` for an existing leaf that answers the question (see "Reuse before research"). A current leaf resolves the request with no new research — this applies even to error-driven triggers, where the fix is often a gotcha already documented in a leaf. Only proceed to trigger evaluation if no current leaf covers the need.
 1. **Detect** a trigger; apply the value test (informed by work classification); gate by mode.
 2. **Shape the prompt in a sub-agent** (keep the main context clean). The shaping sub-agent:
    - Runs light web searches to frame the field.
@@ -67,11 +67,11 @@ If either fails, the failure names the next narrowing pass. In autonomous mode, 
 
 ## Reuse before research
 
-Before starting any thread, check `research/CLAUDE.md` and `research/reference/` for an existing leaf that answers the question. A current leaf means no new research. A stale leaf (version mismatch, old date) means refresh it: replace the file in `reference/`, update the filename date, and move the superseded copy to `topics/_archive/`.
+Before starting any thread, check the research index (`research/AGENTS.md` or `research/CLAUDE.md`, named per `references/research-tree.md`) and `research/reference/` for an existing leaf that answers the question. A current leaf means no new research. A stale leaf (version mismatch, old date) means refresh it: replace the file in `reference/`, update the filename date, and move the superseded copy to `topics/_archive/`.
 
 ## Reference files
 
 - `references/templates.md` — the four per-trigger prompt templates and their capture sets. Read when shaping a prompt.
-- `references/research-tree.md` — directory layout, naming, CLAUDE.md index spec, proposal log, archive rules. Read when writing outputs or setting up a new tree.
+- `references/research-tree.md` — directory layout, naming, index spec and filename rule (`AGENTS.md` or `CLAUDE.md`), proposal log, archive rules. Read when writing outputs or setting up a new tree.
 - `references/artifacts.md` — leaf and DECISION.md formats, frontmatter, confidence and conditional-recommendation structure. Read when normalizing results.
 - `references/fallback-research.md` — the self-contained research procedure when `/deep-research` is unavailable. Read only in that case.

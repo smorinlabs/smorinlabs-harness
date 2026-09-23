@@ -8,7 +8,8 @@ applies a value test gated by work classification and by interaction mode
 runs immediately), shapes the research prompt with project constraints in
 a sub-agent, invokes `/deep-research`, and normalizes the output into a
 durable, reusable research tree (`research/reference/`, `DECISION.md`
-files with confidence and ranked runner-ups) so the same question is never
+files with confidence and ranked runner-ups, indexed by `research/AGENTS.md`,
+or `research/CLAUDE.md` in repos whose root uses `CLAUDE.md`) so the same question is never
 re-researched from scratch.
 
 **Triggers on:** making an architectural decision (choosing between
