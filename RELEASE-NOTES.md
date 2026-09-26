@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- `session` 0.12.0: `session-status` draws an ASCII kanban board of what's
+  left when work runs in parallel, five or more items remain, or stated
+  dependencies decide the order. Columns follow the plan's own status words,
+  defaulting to NOW / NEXT / LATER / BLOCKED; parallel work renders as
+  swimlanes, and done work stays one rolled-up line.
+
 ## v0.29.0 — 2026-09-22
 
 ### Fixed
