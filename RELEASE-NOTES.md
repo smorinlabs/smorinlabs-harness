@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.30.0 — 2026-09-26
+
 ### Added
 
 - `session` 0.12.0: `session-status` draws an ASCII kanban board of what's
@@ -9,6 +11,14 @@
   dependencies decide the order. Columns follow the plan's own status words,
   defaulting to NOW / NEXT / LATER / BLOCKED; parallel work renders as
   swimlanes, and done work stays one rolled-up line.
+
+### Changed
+
+- `clear-decision-communication` 0.4.0 gives every decision option one name:
+  options render as bullets led by their stable ID
+  (`- Q1.A (Recommended) <action>.`), replies become `A` or `Q1.A`, and the
+  T1 example is one rendered block with a table mapping each line to the
+  reader question it answers.
 
 ## v0.29.0 — 2026-09-22
 
