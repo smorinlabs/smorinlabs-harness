@@ -2055,3 +2055,32 @@ the same choice. Replies become `A` / `Q1.A`; `Reply with A or B.`
 - [x] [P54-T05] Bump to 0.4.0 (reply grammar change → minor); regenerate manifests
 - [x] [P54-TS01] `just all` green: 482 passed, 4 skipped
 - [x] [P54-TS02] No old-format lines outside historical records (`(option N, Qn.X)`, `; Recommended)`, `Reply with 1`)
+
+## [~] Project P55: session-status draws a dynamic ASCII kanban board (session 0.12.0)
+**Goal/Requirement**: `session-status` shows what's left as an ASCII kanban
+board inside its ledger whenever the shape of the work calls for one — not
+opt-in, not always-on.
+- Include rule: two or more pieces of work moving in parallel, five or more
+  items left in the current focus, stated dependencies that decide the order,
+  or an explicit ask; skip a sequential remainder of four or fewer items, a
+  single item, or a "brief" / "no board" ask.
+- Columns come from the plan's own status words when it tracks three or more
+  informative unfinished states; otherwise `NOW │ NEXT │ LATER │ BLOCKED`.
+  BLOCKED is added whenever a stated dependency exists.
+- Parallel work renders as swimlanes; lanes with nothing in progress collapse
+  to one summary card. Done work is one rolled-up line, never a column.
+- The board replaces the remaining-work zones; plain sentences follow for
+  the NOW and NEXT cards so Law 1 holds.
+
+**Out of Scope**
+- Live probes (git, PR, CI) to decide columns — the skill stays probe-free.
+- Changes to `session-recap` or other session siblings.
+
+### Tests & Tasks
+- [x] [P55-T01] `SKILL.md`: description names the board; new *The board* section (when, columns, layout, placement, drawing rules) with width-checked Medium and swimlane Large mockups (Red Flags table kept at 6 rows per house style)
+- [x] [P55-T02] `docs/skills/session-status.md` + README row + `RELEASE-NOTES.md` Unreleased entry
+- [x] [P55-T03] Bump `session` 0.11.2 → 0.12.0 (trigger change → minor); regenerate manifests
+- [x] [P55-TS01] `just all` green: 482 passed, 4 skipped
+- [x] [P55-TS02] `skill-quality` against the worktree path: content, docs, gen-check, static verify (claude-code + codex) pass
+- [x] [P55-TS04] Deep load verification: Claude Code and Codex each load the skill in a live session and pass, nothing skipped
+- [ ] [P55-TS03] Fenced grid renders aligned in Claude Code and in Codex

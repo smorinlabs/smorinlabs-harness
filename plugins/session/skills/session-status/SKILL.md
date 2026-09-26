@@ -1,7 +1,7 @@
 ---
 name: session-status
 allowed-tools: Read, Glob, Grep
-description: Mid-flight progress map of the active work, covering what it is, what is done, in progress, and left, read from the plan of record and the conversation without running probes. Manual only, fire on /session-status or an explicit "status check" or "how far along are we". Not for returning cold to a session (session-recap).
+description: Mid-flight progress map of the active work, covering what it is, what is done, in progress, and left, read from the plan of record and the conversation without running probes. Adds an ASCII kanban board of what is left when work runs in parallel or much remains. Manual only, fire on /session-status or an explicit "status check", "how far along are we", or "show what's left as a board". Not for returning cold to a session (session-recap).
 ---
 
 # session-status
@@ -20,7 +20,8 @@ level the work's own structure calls for.
   the conversation. This is what keeps it a glance instead of a recap — if
   live state matters, that's `session-recap`'s job.
 - **A glance, not a recap.** No owed-item classification, no proof quotes, no
-  launch prompts, no close-or-continue verdict. One status ledger, then stop.
+  launch prompts, no close-or-continue verdict. One status ledger (with its
+  board, when the board rule includes one), then stop.
 
 ## The two laws
 
@@ -93,7 +94,10 @@ footer. The zones differ by tier:
 
 The mockups below are fenced only so their raw structure is legible — **real
 output is never fenced** (fencing degrades rendering); keep the aligned label
-column and hanging indents as shown.
+column and hanging indents as shown. The one exception is the board's grid
+(see *The board*). The Medium and Large mockups show the zones without a
+board; at their sizes the board rule fires, and *The board* shows the same
+two examples as they actually render.
 
 **Small** — flat list, every task explained:
 
@@ -173,6 +177,154 @@ In Phase 2: 3 projects done · 1 in progress · 2 left — from
 PROJECTS.md G2. Next: finish T04's ledger records — T05 and T06
 repeat the proven move, so T04 is the only real unknown left.
 ```
+
+## The board
+
+An ASCII kanban of what's left, drawn inside the ledger when the shape of the
+work calls for one. It shows how the remaining work sits relative to itself —
+what runs side by side, what waits on what — which a list can only describe.
+The same two laws govern it: cards speak plain language, and done work never
+gets a column.
+
+### When it appears
+
+Decide on every run from the plan and the conversation — never ask. Include
+the board when **any** of these holds:
+
+- two or more pieces of work are moving at once — parallel phases, projects,
+  subagents, or worktrees;
+- five or more items are left in the current focus;
+- the plan states dependencies that decide the order — something waits on
+  something else;
+- the user asks for a board or a kanban.
+
+Leave it out when everything left is one sequential line of four or fewer
+items (the `Left` list is already a glance), when one item is left, or when
+the user asks for a brief status or says "no board". The user's words
+override the rule both ways.
+
+### Which columns
+
+Take the first source that applies:
+
+1. **The plan's own status words** — when the plan tracks three or more
+   not-yet-finished states that say more than started / not started (for
+   example PROJECTS.md projects at `[~]`, `[ ]`, `[?]`, or a plan with
+   review or QA stages). Each such state becomes a column named in capitals
+   (`[~]` → IN PROGRESS, `[ ]` → SCOPED, `[?]` → IDEAS), ordered from
+   closest to done to furthest. Finished and retired states (`[x]`, `[-]`,
+   `[>]`) go to the Done line, never a column.
+2. **Otherwise the default** — `NOW │ NEXT │ LATER │ BLOCKED`:
+   - NOW — in progress, per the plan or the conversation.
+   - NEXT — what starts as soon as a NOW item frees up: the next item in
+     execution order in each lane that has something in NOW.
+   - LATER — not started, not gated, not next.
+   - BLOCKED — waits on an unfinished item that the plan or the
+     conversation names as a gate ("X first, then Y", "can't start until
+     X"). Merely following the item before it in list order is LATER, not
+     BLOCKED. The card names what it waits on.
+3. **BLOCKED is always available.** When the plan's own words have no
+   blocked state but a stated dependency exists, add the column anyway.
+
+At most four columns, so the board fits in 80 characters. Fold any extra
+plan state into its nearest column and tag those cards with their state. Drop
+empty columns, except the one holding current work. Cards inside a column
+follow execution order when the plan implies one.
+
+### Which layout
+
+- **One line of work** — one row of cards under the column headers.
+- **Parallel work** — swimlanes: one horizontal lane per project, phase, or
+  agent that runs alongside the others, labeled with its ID. Law 2 holds
+  inside the board: a lane with work in progress itemizes its cards; a lane
+  with nothing in progress collapses to one summary card with a count
+  (`3 tasks: remove old paths; waits on T06`).
+
+### Where it sits in the ledger
+
+The board replaces the zones that list remaining work, so nothing appears
+twice:
+
+- **Small and Medium** — `The work` stays. The board takes the place of
+  `Done`, `Now`, and `Left`, and a `✅ Done, rolled up:` line sits directly
+  under it. Below that, one plain sentence for each card in the first two
+  columns, under labels that take those columns' names (`Now` and `Next`
+  on the default board) — Law 1's full sentences live here, since cards are
+  too narrow for them.
+- **Large** — `Big picture`, `The work`, `Later phases`, and `Done, rolled
+  up` stay. The board replaces `Left in <current phase>`, drawn as one lane
+  per project of the current phase. Plain sentences follow for the cards in
+  the lane you are in.
+- The header and the counts footer never change.
+
+### Drawing rules
+
+- **Fence the grid** — only the lines from the top border to the bottom
+  border. Column alignment is the board's whole value and unfenced text
+  reflows. Everything around it stays unfenced.
+- Box-drawing borders (`┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ │ ─`), 17 characters inside each
+  column; swimlane labels take a 6-character gutter on the left.
+- **No emoji inside the grid.** They render two characters wide in most
+  terminals and shift every border to their right. Glyphs belong outside it,
+  like the `✅` on the Done line.
+- A card is its ID plus a short plain phrase, at most three lines — a
+  compressed translation, never the task title. More than three cards in one
+  cell: show three, then `+N more`.
+
+**Medium, with the board** — the P21 example from *The ledger*:
+
+```
+📊 Status — P21 · Auth revamp (12 tasks in 3 groups)
+
+The work   Replace login cookies with short-lived tokens that
+           refresh themselves.
+
+┌─ NOW ───────────┬─ NEXT ──────────┬─ LATER ─────────┬─ BLOCKED ───────┐
+│ T08 renew tokens│ T09 accept both │ T10 move users  │ T11 retire old  │
+│     quietly;    │     cookies +   │     onto tokens │     cookie path;│
+│     2-tab race  │     tokens for  │                 │     waits on T12│
+│     still open  │     a while     │ T12 write undo  │                 │
+│                 │                 │     plan first  │                 │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+✅ Done, rolled up: 7 — the token system (T01–T04), and the checks
+   on each request (T05–T07)
+
+Now        🔄 T08 — renewing tokens quietly before they expire. One
+              open edge case: two tabs renewing at the same moment.
+Next       ⬜ T09 — accept BOTH cookies and tokens for a while so
+              nobody gets logged out
+
+7 done · 1 in progress · 4 left — from PROJECTS.md P21.
+Next: T09 — the switchover is untouched and it's the risky one.
+```
+
+**Large, with the board** — the G2 example's `Left in Phase 2` zone, drawn
+as swimlanes (the zones around it are unchanged):
+
+```
+Left in Phase 2 — the board
+
+      ┌─ NOW ───────────┬─ NEXT ──────────┬─ LATER ─────────┬─ BLOCKED ───────┐
+ P07  │ T04 codex copies│ T05 kilo-code + │ T06 prove loads │                 │
+      │     ledger recs │     opencode    │     on 4 tools  │                 │
+      ├─────────────────┼─────────────────┼─────────────────┼─────────────────┤
+ P08  │                 │                 │                 │ 3 tasks: remove │
+      │                 │                 │                 │  old paths;     │
+      │                 │                 │                 │  waits on T06   │
+      ├─────────────────┼─────────────────┼─────────────────┼─────────────────┤
+ P09  │                 │                 │ 2 tasks: drift  │                 │
+      │                 │                 │  alarms; can    │                 │
+      │                 │                 │  start any time │                 │
+      └─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+
+  P07 · moving every skill's install links onto the new ledger
+      🔄 T04 — the codex copies: links are moved, the ledger
+           records still need writing
+      ⬜ T05 — the same move for the kilo-code and opencode copies
+      ⬜ T06 — prove every skill still loads on all four tools
+```
+
+In real output, only the grid lines in these mockups go inside a fence.
 
 ## Red Flags
 
