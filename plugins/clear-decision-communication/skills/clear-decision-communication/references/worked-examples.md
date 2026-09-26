@@ -33,23 +33,13 @@ change. Continuing with step 4.
 
 Situation: PR #142 stops Tab from moving keyboard focus behind the search
 dialog, exactly as planned; checks passed on revision `9c8d7e6`; the
-repository requires a human to approve every merge. This is the same brief as
-the T1 example in `SKILL.md`, where a table maps each line to the reader
-question it answers.
+repository requires a human to approve every merge.
 
 Sizing: every axis low; the gate is the only reason to ask.
 
-```
-Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
-The keyboard-interaction test and all required checks passed on revision 9c8d7e6.
-CONTRIBUTING.md requires a human to approve every merge.
-I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
-
-- Q1.A (Recommended) Merge PR #142. I merge it now, and it ships with the next deploy. Undoing it takes a revert PR and a redeploy. No stored data changes.
-- Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
-
-Reply with A or B.
-```
+The rendered brief is the T1 example in `SKILL.md`, "Rendering by tier",
+together with the table that maps each of its lines to the reader question it
+answers.
 
 ## 3. Scope deviation with a compatibility tradeoff: T2
 

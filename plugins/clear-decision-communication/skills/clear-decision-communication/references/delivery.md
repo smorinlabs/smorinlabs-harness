@@ -7,9 +7,6 @@ workflow steps 7 and 8, after the pre-send check.
 
 The brief in its canonical text form is the message. It works in any chat, in a
 terminal, in a pull request comment, and on tools that have no question dialog.
-Authored prose and diagram syntax use ASCII. Verbatim paths, identifiers,
-input data, quotations, and captured output keep their exact characters,
-including non-ASCII text. Do not produce an HTML artifact or a rendered diagram.
 Where a suitable question tool exists and is permitted, derive its payload from
 the brief; the tool's field layout does not decide which facts the reader needs.
 
@@ -117,6 +114,15 @@ the mapping unclear, ask which question was meant in one line; do not act yet.
 | a reply to a superseded question | stale answer | explain which current question replaced it; execute neither choice from that reply |
 | "I don't get this" | the ask failed | diagnose the missing artifact, project connection, current condition, or commitment first; then terminology and mechanism; rewrite around the gap and reassess whether a decision is still needed |
 | a reply naming an option not offered | revised choice | preserve the user's direction under a new question ID, with its consequence and scope; record it directly if the reply already clearly authorizes that action, otherwise clarify only the missing commitment |
+
+When the reader is confused, first check the concrete artifact, its project
+connection, current condition, and meaning of approval. Then check terminology
+and mechanism. Rewrite around the missing information; add or replace an
+example when it resolves that gap. Reassess whether a decision is still needed.
+If the user replaces a premise shared by the options, retire those options and
+record the new instruction under the ID rules. Proceed within that
+authorization; ask only about an unresolved commitment, never for formal
+confirmation that the explanation is clear.
 
 A reply that overrides a supported recommendation is recorded as `overrode`;
 one that takes it is `followed`. A neutral choice is `no recommendation`.
