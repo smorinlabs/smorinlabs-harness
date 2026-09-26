@@ -2056,7 +2056,35 @@ the same choice. Replies become `A` / `Q1.A`; `Reply with A or B.`
 - [x] [P54-TS01] `just all` green: 482 passed, 4 skipped
 - [x] [P54-TS02] No old-format lines outside historical records (`(option N, Qn.X)`, `; Recommended)`, `Reply with 1`)
 
-## [x] Project P55: Single-source clear-decision-communication (clear-decision-communication 0.5.0)
+## [~] Project P55: session-status draws a dynamic ASCII kanban board (session 0.12.0)
+**Goal/Requirement**: `session-status` shows what's left as an ASCII kanban
+board inside its ledger whenever the shape of the work calls for one — not
+opt-in, not always-on.
+- Include rule: two or more pieces of work moving in parallel, five or more
+  items left in the current focus, stated dependencies that decide the order,
+  or an explicit ask; skip a sequential remainder of four or fewer items, a
+  single item, or a "brief" / "no board" ask.
+- Columns come from the plan's own status words when it tracks three or more
+  informative unfinished states; otherwise `NOW │ NEXT │ LATER │ BLOCKED`.
+  BLOCKED is added whenever a stated dependency exists.
+- Parallel work renders as swimlanes; lanes with nothing in progress collapse
+  to one summary card. Done work is one rolled-up line, never a column.
+- The board replaces the remaining-work zones; plain sentences follow for
+  the NOW and NEXT cards so Law 1 holds.
+
+**Out of Scope**
+- Live probes (git, PR, CI) to decide columns — the skill stays probe-free.
+- Changes to `session-recap` or other session siblings.
+
+### Tests & Tasks
+- [x] [P55-T01] `SKILL.md`: description names the board; new *The board* section (when, columns, layout, placement, drawing rules) with width-checked Medium and swimlane Large mockups (Red Flags table kept at 6 rows per house style)
+- [x] [P55-T02] `docs/skills/session-status.md` + README row + `RELEASE-NOTES.md` Unreleased entry
+- [x] [P55-T03] Bump `session` 0.11.2 → 0.12.0 (trigger change → minor); regenerate manifests
+- [x] [P55-TS01] `just all` green: 482 passed, 4 skipped
+- [x] [P55-TS02] `skill-quality` against the worktree path: content, docs, gen-check, static verify (claude-code + codex) pass
+- [x] [P55-TS04] Deep load verification: Claude Code and Codex each load the skill in a live session and pass, nothing skipped
+- [ ] [P55-TS03] Fenced grid renders aligned in Claude Code and in Codex
+## [x] Project P56: Single-source clear-decision-communication (clear-decision-communication 0.5.0)
 **Goal/Requirement**: Every rule has exactly one home. `SKILL.md` keeps a rule
 inline only when it fires at a fixed workflow step on every run and is compact;
 everything else lives in exactly one reference, and `SKILL.md` gives one
@@ -2082,29 +2110,29 @@ sentence plus the pointer. Behavior must not regress.
 - `evals/run_evals.py`.
 
 ### Tests & Tasks
-- [x] [P55-TS01] Baseline: all 25 evals on Claude against the unchanged skill (`3c3e82c`), graded blind by independent graders from `review.json` expectations
-- [x] [P55-T01] Ownership map: one home per rule D1–D12
-- [x] [P55-T02] Restructure references per the map
-- [x] [P55-T03] Reduce `SKILL.md` to the spine; measure its word count: 6,075 -> 4,332 words; skill plus references ~24,900 -> 19,215
-- [x] [P55-T04] Move the verbatim framework to `docs/superpowers/specs/`; update pointers and the docs page files table
-- [x] [P55-TS02] Duplication re-measured: no rule stated in two places; no mirrored table
-- [x] [P55-TS03] Refactor: same 25 evals, same grader prompt, blind; every baseline pass still passes; any pass->fail investigated as a wording dependency, not re-rolled
-- [x] [P55-TS04] `just all` green
-- [x] [P55-T05] Bump to 0.5.0 (what loads changes); PR with baseline/refactor comparison
+- [x] [P56-TS01] Baseline: all 25 evals on Claude against the unchanged skill (`3c3e82c`), graded blind by independent graders from `review.json` expectations
+- [x] [P56-T01] Ownership map: one home per rule D1–D12
+- [x] [P56-T02] Restructure references per the map
+- [x] [P56-T03] Reduce `SKILL.md` to the spine; measure its word count: 6,075 -> 4,332 words; skill plus references ~24,900 -> 19,215
+- [x] [P56-T04] Move the verbatim framework to `docs/superpowers/specs/`; update pointers and the docs page files table
+- [x] [P56-TS02] Duplication re-measured: no rule stated in two places; no mirrored table
+- [x] [P56-TS03] Refactor: same 25 evals, same grader prompt, blind; every baseline pass still passes; any pass->fail investigated as a wording dependency, not re-rolled
+- [x] [P56-TS04] `just all` green
+- [x] [P56-T05] Bump to 0.5.0 (what loads changes); PR with baseline/refactor comparison
       Result: baseline 23/25, refactor 24/25; 22 identical verdicts; case 5 pass->fail attributed to a
       pre-existing gap (baseline case 11 shows the same slip). Record: `docs/validation/clear-decision-communication-0.5.0.md`.
 
-## [ ] Project P56: Unperformed actions are stated as next steps (clear-decision-communication)
+## [ ] Project P57: Unperformed actions are stated as next steps (clear-decision-communication)
 **Goal/Requirement**: A response never describes an action it has not performed as in progress or done.
-Found by the P55 parity evals: baseline case 11 ("I'm deploying ... to staging now") and refactor case 5
+Found by the P56 parity evals: baseline case 11 ("I'm deploying ... to staging now") and refactor case 5
 ("I'm running it now") both failed on this, and no rule in the skill covers it.
 - Add one rule where delivery and next actions are stated.
 - Add an eval case whose expectations catch a present-tense claim of an unperformed action.
 
 **Out of Scope**
-- Other P55 findings.
+- Other P56 findings.
 
 ### Tests & Tasks
-- [ ] [P56-TS01] New eval case fails on the current skill (red)
-- [ ] [P56-T01] Add the rule
-- [ ] [P56-TS02] New case plus cases 5 and 11 pass on the revised skill, graded blind
+- [ ] [P57-TS01] New eval case fails on the current skill (red)
+- [ ] [P57-T01] Add the rule
+- [ ] [P57-TS02] New case plus cases 5 and 11 pass on the revised skill, graded blind

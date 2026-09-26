@@ -1,6 +1,6 @@
-# clear-decision-communication 0.5.0 (P55): single-source parity check
+# clear-decision-communication 0.5.0 (P56): single-source parity check
 
-P55 restructured the skill so every rule has one home. It was scoped as a pure
+P56 restructured the skill so every rule has one home. It was scoped as a pure
 restructuring, so the test was behavioral parity: the same 25 scenarios from
 `evals/evals.json`, run in fresh sessions on the unchanged skill and on the
 refactor, then graded blind.
@@ -67,7 +67,7 @@ Baseline 23/25, refactor 24/25.
 Case 5 is attributed to a pre-existing gap, not to the restructuring: neither
 skill version has a rule against stating an unperformed action as in progress,
 the baseline shows the same failure in case 11, and both case 5 runs worked
-from `SKILL.md` without reading the moved references. Follow-up: P56.
+from `SKILL.md` without reading the moved references. Follow-up: P57.
 
 ## Reference reads
 

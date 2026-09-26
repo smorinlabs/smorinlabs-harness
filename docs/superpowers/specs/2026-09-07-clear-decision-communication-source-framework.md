@@ -2,7 +2,7 @@
 
 The owner's decision-communication specification of 2026-09-07, the spine of
 the `clear-decision-communication` skill. It was kept inside the skill as
-`references/framework.md` until P55 (skill 0.5.0) moved it here, because it is
+`references/framework.md` until P56 (skill 0.5.0) moved it here, because it is
 design history, not an operating rule. Provenance and licences for every
 borrowed ingredient remain in the skill's `references/framework.md`. The
 design record is `2026-09-07-clear-decision-communication-design.md`.

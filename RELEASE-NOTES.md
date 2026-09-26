@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+- `session` 0.12.0: `session-status` draws an ASCII kanban board of what's
+  left when work runs in parallel, five or more items remain, or stated
+  dependencies decide the order. Columns follow the plan's own status words,
+  defaulting to NOW / NEXT / LATER / BLOCKED; parallel work renders as
+  swimlanes, and done work stays one rolled-up line.
+
+### Changed
+
+- `clear-decision-communication` 0.5.0: every rule has one home. `SKILL.md`
+  is the workflow spine (6,075 -> 4,332 words) and points to the one reference
+  that holds each detail; new `references/evidence.md` holds evidence status,
+  claim support, and measurement reporting. Mirrored tables and the five
+  overlapping pre-send checklists are gone, and the verbatim source framework
+  moved to `docs/superpowers/specs/`. Option lines are ID-first
+  (`- Q1.A (Recommended) ...`, `Reply with A or B.`) since 0.4.0. Blind parity
+  evals: baseline 23/25, refactor 24/25.
+
 ## v0.29.0 — 2026-09-22
 
 ### Fixed
