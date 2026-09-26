@@ -1,7 +1,7 @@
 ---
 name: session-status
 allowed-tools: Read, Glob, Grep
-description: Mid-flight progress map of the active work, covering what it is, what is done, in progress, and left, read from the plan of record and the conversation without running probes. Adds an ASCII kanban board of what is left when work runs in parallel or much remains. Manual only, fire on /session-status or an explicit "status check", "how far along are we", or "show what's left as a board". Not for returning cold to a session (session-recap).
+description: Mid-flight progress map of the active work, covering what it is, what is done, in progress, and left, read from the plan of record and the conversation without running probes. Adds an ASCII kanban board of what is left when work runs in parallel or much remains. Manual only, fire on /session-status or an explicit "status check", "how far along are we", or "show what's left as a board" or "as a kanban". Not for returning cold to a session (session-recap).
 ---
 
 # session-status
@@ -280,10 +280,10 @@ The work   Replace login cookies with short-lived tokens that
            refresh themselves.
 
 ┌─ NOW ───────────┬─ NEXT ──────────┬─ LATER ─────────┬─ BLOCKED ───────┐
-│ T08 renew tokens│ T09 accept both │ T10 move users  │ T11 retire old  │
-│     quietly;    │     cookies +   │     onto tokens │     cookie path;│
-│     2-tab race  │     tokens for  │                 │     waits on T12│
-│     still open  │     a while     │ T12 write undo  │                 │
+│ T08 renew tokens│ T09 run cookies │ T10 move users  │ T11 retire old  │
+│     quietly;    │     and tokens  │     onto tokens │     cookie path;│
+│     2-tab race  │     side by side│                 │     waits on T12│
+│                 │                 │ T12 write undo  │                 │
 │                 │                 │     plan first  │                 │
 └─────────────────┴─────────────────┴─────────────────┴─────────────────┘
 ✅ Done, rolled up: 7 — the token system (T01–T04), and the checks

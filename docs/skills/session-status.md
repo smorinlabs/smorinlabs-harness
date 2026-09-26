@@ -32,7 +32,7 @@ swimlanes; done work is one rolled-up line under the board, never a column.
 
 **Triggers on:** manual invocation only — `/session-status`, "session
 status", "status check", "give me a status", "how far along are we",
-"show what's left as a board", said mid-work about the active task. Never
+"show what's left as a board" or "as a kanban", said mid-work about the active task. Never
 ambiently: "where was I" / "catch me up" / a cold return is
 `session-recap`; "any loose ends?" is `session-loose-ends`; "what should I work on?" is `project-next`.
 **Arguments:** none.
