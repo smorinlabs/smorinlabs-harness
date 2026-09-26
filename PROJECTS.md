@@ -2056,7 +2056,7 @@ the same choice. Replies become `A` / `Q1.A`; `Reply with A or B.`
 - [x] [P54-TS01] `just all` green: 482 passed, 4 skipped
 - [x] [P54-TS02] No old-format lines outside historical records (`(option N, Qn.X)`, `; Recommended)`, `Reply with 1`)
 
-## [~] Project P55: session-status draws a dynamic ASCII kanban board (session 0.12.0)
+## [x] Project P55: session-status draws a dynamic ASCII kanban board (session 0.12.0)
 **Goal/Requirement**: `session-status` shows what's left as an ASCII kanban
 board inside its ledger whenever the shape of the work calls for one — not
 opt-in, not always-on.
@@ -2083,7 +2083,7 @@ opt-in, not always-on.
 - [x] [P55-TS01] `just all` green: 482 passed, 4 skipped
 - [x] [P55-TS02] `skill-quality` against the worktree path: content, docs, gen-check, static verify (claude-code + codex) pass
 - [x] [P55-TS04] Deep load verification: Claude Code and Codex each load the skill in a live session and pass, nothing skipped
-- [ ] [P55-TS03] Fenced grid renders aligned in Claude Code and in Codex
+- [x] [P55-TS03] Fenced grid renders aligned in Claude Code and in Codex: manual check passed 2026-09-26; in Codex a fixture P21 plan drew the board unprompted (NOW T08, NEXT T09, LATER T10/T12, BLOCKED T11 waiting on T12), a 3-item sequential P12 drew none, and "as a kanban" forced one
 ## [x] Project P56: Single-source clear-decision-communication (clear-decision-communication 0.5.0)
 **Goal/Requirement**: Every rule has exactly one home. `SKILL.md` keeps a rule
 inline only when it fires at a fixed workflow step on every run and is compact;
