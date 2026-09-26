@@ -11,22 +11,40 @@ their limits. Do not claim formal compliance with either standard.
 
 A brief passes only when it is all four:
 
-- **Relevant:** it contains what this reader needs to decide and excludes
-  process chatter about drafting, queuing, or agent coordination.
+- **Relevant:** it contains what this reader needs to decide: the decision, the
+  supported recommendation or explicit neutrality, the consequences, the
+  evidence, and the next action. It excludes process chatter about drafting,
+  queuing, or agent coordination.
 - **Findable:** the decision, the recommendation or explicit neutrality, and
-  the requested action are easy to locate. Establish the topic immediately;
-  put the question first only when it is understandable by itself.
+  the requested action are easy to locate, and options carry IDs. Establish the
+  topic immediately; put the question first only when it is understandable by
+  itself; otherwise the minimum orientation precedes it.
 - **Understandable:** terms, references, relationships, and the status of every
-  claim are explicit.
+  claim are explicit. The actual artifact type, exact name, and role are given
+  at first use; the connection to the goal and current condition are clear;
+  claim scope and evidence status survive simplification; every artifact is
+  framed.
 - **Usable:** the reader can reach the decision and the next action from the
-  text alone.
+  text alone. The reply grammar lets the reader answer in a word, add a
+  condition, skip, or ask. They can also state what answering changes now under
+  each option.
+
+Apply these outcomes to the intended reader, their knowledge, and the
+situation in which they will read: an unattended run, some time after the
+work happened, with no memory of the plan in front of them. Do not substitute
+readability scores for reader success.
 
 ## Sentence and terminology controls
 
-- One primary assertion per sentence. Treat about 25 words as a review signal,
-  not a limit; code spans, identifiers, paths, and quoted output count as one
-  word each.
-- Literal verbs and consistent terms. Replace a noun pile with an actor and an
+- One primary assertion per sentence. Treat about 25 words for a descriptive
+  sentence and 20 words for a procedural sentence as a review signal, not a
+  limit; code spans, identifiers, paths, and quoted output count as one word
+  each.
+- One instruction per procedural sentence, except for simultaneous actions.
+  The "On Q1.A I will" line is procedural.
+- Use vertical lists for complex material: options, ladders, and ledgers.
+- Literal verbs and consistent terms: one name per thing for the whole brief.
+  Replace a noun pile with an actor and an
   action: "config walk-up boundary" becomes "choose where the configuration
   search stops".
 - Gloss identifiers where they first appear: `REQ-26 (pre-0.95 fallback
@@ -99,6 +117,12 @@ essential meaning.
   Check whether all options depend on an unapproved implementation assumption.
 - Links and paths let the reader inspect supporting material; the surrounding
   text stays meaningful without opening them.
+- Pair a package manager's exact command with what it installs and how;
+  identify placeholders in a command as placeholders.
+- A research-record ID supplies navigation, not context: name the proposal and
+  what that record establishes.
+- A role must be supported just as a name must; "installs project
+  dependencies" is not a safe substitute for an unknown setup command.
 
 | Before | After |
 |---|---|

@@ -2084,3 +2084,55 @@ opt-in, not always-on.
 - [x] [P55-TS02] `skill-quality` against the worktree path: content, docs, gen-check, static verify (claude-code + codex) pass
 - [x] [P55-TS04] Deep load verification: Claude Code and Codex each load the skill in a live session and pass, nothing skipped
 - [ ] [P55-TS03] Fenced grid renders aligned in Claude Code and in Codex
+## [x] Project P56: Single-source clear-decision-communication (clear-decision-communication 0.5.0)
+**Goal/Requirement**: Every rule has exactly one home. `SKILL.md` keeps a rule
+inline only when it fires at a fixed workflow step on every run and is compact;
+everything else lives in exactly one reference, and `SKILL.md` gives one
+sentence plus the pointer. Behavior must not regress.
+- Remove the mirrored tables (tier table, change-type table) and their
+  "edit both together" notes.
+- One reply table, one silence/skip rule, one batching rule (`delivery.md`); the
+  reply table is the union of the two current tables.
+- One pre-send checklist (`SKILL.md` step 6) with `clarity.md`'s error catalog
+  as its detail; `standards.md` keeps only the standards and their limits.
+- `clarity.md` owns self-contained references; new `references/evidence.md`
+  owns evidence status, claim support, and measurement reporting;
+  `decision-record.md` owns the record threshold.
+- Move the 3,770-word verbatim source framework out of the skill to
+  `docs/superpowers/specs/`; the provenance and licence table stays.
+- Worked example 2 points to the `SKILL.md` T1 example instead of copying it.
+- Move text, do not reword it; where two paraphrases merge, keep the more
+  specific one and list dropped nuance in the PR body.
+
+**Out of Scope**
+- Rewording rules, adding rules, or changing behavior.
+- Historical `docs/validation/*` snapshots and `evals/results/*`.
+- `evals/run_evals.py`.
+
+### Tests & Tasks
+- [x] [P56-TS01] Baseline: all 25 evals on Claude against the unchanged skill (`3c3e82c`), graded blind by independent graders from `review.json` expectations
+- [x] [P56-T01] Ownership map: one home per rule D1–D12
+- [x] [P56-T02] Restructure references per the map
+- [x] [P56-T03] Reduce `SKILL.md` to the spine; measure its word count: 6,075 -> 4,332 words; skill plus references ~24,900 -> 19,215
+- [x] [P56-T04] Move the verbatim framework to `docs/superpowers/specs/`; update pointers and the docs page files table
+- [x] [P56-TS02] Duplication re-measured: no rule stated in two places; no mirrored table
+- [x] [P56-TS03] Refactor: same 25 evals, same grader prompt, blind; every baseline pass still passes; any pass->fail investigated as a wording dependency, not re-rolled
+- [x] [P56-TS04] `just all` green
+- [x] [P56-T05] Bump to 0.5.0 (what loads changes); PR with baseline/refactor comparison
+      Result: baseline 23/25, refactor 24/25; 22 identical verdicts; case 5 pass->fail attributed to a
+      pre-existing gap (baseline case 11 shows the same slip). Record: `docs/validation/clear-decision-communication-0.5.0.md`.
+
+## [ ] Project P57: Unperformed actions are stated as next steps (clear-decision-communication)
+**Goal/Requirement**: A response never describes an action it has not performed as in progress or done.
+Found by the P56 parity evals: baseline case 11 ("I'm deploying ... to staging now") and refactor case 5
+("I'm running it now") both failed on this, and no rule in the skill covers it.
+- Add one rule where delivery and next actions are stated.
+- Add an eval case whose expectations catch a present-tense claim of an unperformed action.
+
+**Out of Scope**
+- Other P56 findings.
+
+### Tests & Tasks
+- [ ] [P57-TS01] New eval case fails on the current skill (red)
+- [ ] [P57-T01] Add the rule
+- [ ] [P57-TS02] New case plus cases 5 and 11 pass on the revised skill, graded blind

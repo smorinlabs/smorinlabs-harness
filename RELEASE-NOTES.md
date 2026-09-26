@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- `clear-decision-communication` 0.5.0: every rule has one home. `SKILL.md`
+  is the workflow spine (6,075 -> 4,346 words) and points to the one reference
+  that holds each detail, with an explicit read instruction at each step; new
+  `references/evidence.md` holds evidence status, claim support, and
+  measurement reporting. Mirrored tables and the five overlapping pre-send
+  checklists are gone, and the verbatim source framework moved to
+  `docs/superpowers/specs/`. Blind parity evals: baseline 23/25, refactor
+  24/25.
+
 ## v0.30.0 — 2026-09-26
 
 ### Added

@@ -126,16 +126,17 @@ session, not presented as current independent verification.
 
 | File | Role |
 |---|---|
-| `SKILL.md` | the gate, preparation and final sizing, representations, the brief template, pre-send check, host-aware delivery, stable IDs, and reply handling |
-| `references/axes-and-tiers.md` | the seven axes verbatim, level tests, the tier rule, stage-of-work guidance |
+| `SKILL.md` | the workflow spine: the gate, the tier table, the change-type table, the six reader questions, the pre-send check, the brief template with its T1 example, and stable IDs; each step points to the one reference that holds its detail |
+| `references/axes-and-tiers.md` | the seven axes, level tests, tier-rule details, stage-of-work guidance |
 | `references/representation.md` | the ASCII forms catalog, F1 to F21, and the diagram rules; F16 to F21 add the span chart, layer stack, containment boxes, decision tree, threshold on a scale, and a general tree |
-| `references/clarity.md` | reader gates, sentence and term controls, the error catalog |
-| `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
-| `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, and reply handling |
+| `references/clarity.md` | the four reader gates, sentence and term controls, names, verbatim zones, self-contained references, the error catalog |
+| `references/standards.md` | what ISO 24495-1 and ASD-STE100 are, their official sources, and the limits of STE for a decision request |
+| `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, the reply table, and confusion recovery |
+| `references/evidence.md` | evidence status labels, tracing claims to their support, and reporting measurements |
 | `references/decision-record.md` | when a record is due and its template |
 | `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent ID-led options; illustrations, not behavioral validation |
 | `references/project-policy-example.md` | an adaptation of the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
-| `references/framework.md` | historical source framework preserved verbatim and provenance |
+| `references/framework.md` | provenance and licences of every borrowed ingredient; the verbatim source framework is in `docs/superpowers/specs/2026-09-07-clear-decision-communication-source-framework.md` |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
 | `evals/run_evals.py` | bounded CLI runner that preserves inputs, source hashes, process evidence, and ungraded review records |
 | `evals/source-review.md` | instructions for the optional, separately executed reviewer experiment; excluded from the ordinary skill snapshot |
