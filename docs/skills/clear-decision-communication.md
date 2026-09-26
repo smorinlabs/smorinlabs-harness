@@ -111,7 +111,7 @@ Preselection and tool completion without an answer do not count as consent.
 > then lists the three options together. A comparison shows the same invalid
 > date corrected today and rejected with the fix. The evidence distinguishes
 > passing regression tests from unknown third-party caller compatibility.
-> The user replies "1, but behind a flag for the API." The agent records the
+> The user replies "A, but behind a flag for the API." The agent records the
 > clearly authorized condition under the next question ID and proceeds without
 > asking for the same permission again.
 
@@ -155,7 +155,7 @@ context, approval stage, confusion, changed implementation requirements, and
 permission-preserving simplification. Measurement cases cover opposing metric
 directions, missing absolute values, and documented workflow usage and author
 restrictions. Three further cases cover a development-tool policy with registry
-evidence, unavailable setup context and roles, and a stale numeric reply. A separate reader receives only the
+evidence, unavailable setup context and roles, and a stale-letter reply. A separate reader receives only the
 generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.

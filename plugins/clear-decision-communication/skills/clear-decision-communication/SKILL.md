@@ -373,7 +373,7 @@ Rendering by tier:
 
   | Line | Reader question it answers |
   |---|---|
-  | `Q1. Merge PR #142, the fix that...` | What am I deciding? |
+  | `Q1. Merge PR #142, the fix that...` | What am I deciding? What changes? (Tab no longer moves focus behind the dialog) |
   | `...checks passed on revision 9c8d7e6` | What supports the recommendation? |
   | `CONTRIBUTING.md requires...` | Why does this need my input? |
   | `I recommend... because...` | What am I deciding? (recommendation and reason) |
