@@ -87,8 +87,8 @@ the output is the brief for that target.
    remaining ones land. Routine confirmations teach the reader to click through,
    and then the one that matters gets clicked through too.
 
-2. **Size: scan the axes, set the tier.** Rate six axes low, elevated, or high
-   with the tests in `references/axes-and-tiers.md`: impact, reversibility,
+2. **Size: scan the axes, set the tier.** Read `references/axes-and-tiers.md`
+   and rate six axes low, elevated, or high with its tests: impact, reversibility,
    departure, uncertainty, tradeoff, domain (those six words are the canonical
    tag names). The highest single axis sets the tier; axes are never summed.
    Only the axes above low expand, each adding exactly the information its row
@@ -124,8 +124,9 @@ the output is the brief for that target.
    and the constraints. Resolve every factual question that authorized
    investigation can answer; execute what you need to execute to get evidence,
    and never mutate beyond what the run already authorized. Run the verification
-   the decision needs and note the revision it ran on. Record each claim's
-   evidence status as `references/evidence.md` defines. Prepare a concrete,
+   the decision needs and note the revision it ran on. Read
+   `references/evidence.md` and record each claim's evidence status as it
+   defines. Prepare a concrete,
    reviewable result: a patch with its checks for an implementation approval,
    concrete alternatives with evidence for a direction. If the user can supply
    an unavailable fact, use step 1's information request. Otherwise, when
@@ -211,8 +212,8 @@ the output is the brief for that target.
    does not support the whole sentence. Remove the unsupported part, narrow it,
    or state the unresolved fact. Mark calculations as derived and retain their
    input values. Check the revised draft for contradictions, then apply every
-   reader check below. Apply `references/evidence.md` to each decision-critical
-   claim. Include relevant sources and limits in the brief without narrating
+   reader check below. Reread `references/evidence.md` and apply it to each
+   decision-critical claim. Include relevant sources and limits in the brief without narrating
    this verification process:
    - The reader can identify the work and state the exact decision and
      commitment without reopening the plan or the conversation.
@@ -258,11 +259,11 @@ the output is the brief for that target.
    decision-critical context inside a dialog's payload. A preselected option,
    elapsed time, or tool completion without an answer is never approval.
 
-8. **After the answer.** Handle the reply with the reply table and confusion
-   recovery in `references/delivery.md`. Match the reply to one open question
+8. **After the answer.** Read `references/delivery.md` and handle the reply
+   with its reply table and confusion recovery. Match the reply to one open question
    and its unchanged options before acting; never execute a reply to a
-   superseded question. Retain a decision record when
-   `references/decision-record.md` says one is due.
+   superseded question. Read `references/decision-record.md` to decide whether
+   a decision record is due, and retain one when it is.
 
 ## The brief: canonical text form
 
