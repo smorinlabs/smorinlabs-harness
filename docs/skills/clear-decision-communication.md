@@ -44,11 +44,12 @@ distinguish quoted percentages from calculated changes. Missing absolute values
 remain explicit gaps.
 
 A recommendation states the action, named asset, and scope before its option
-ID, with the reason beside it. The complete numbered option list follows immediately. Questions
-use IDs such as `Q1`; options retain `Q1.A` and `Q1.B`, with display numbers
-`1` and `2` as local reply aliases. A supported recommendation is A and appears
-first. Neutral questions mark no recommendation. Numeric replies require an
-unambiguous current question; a stale number never selects a replacement option.
+ID, with the reason beside it. The complete option list follows immediately,
+each bullet led by its ID with no separate list number. Questions use IDs such
+as `Q1`; options retain `Q1.A` and `Q1.B`. A supported recommendation is A,
+marked `(Recommended)`, and appears first. Neutral questions mark no
+recommendation. Bare-letter replies require an unambiguous current question; a
+stale letter never selects a replacement option.
 Options keep their meanings under their IDs; revised choices supersede the old
 question, and stale replies authorize no action. Conditions, redirects, skips,
 and requests for explanation have explicit handling. Confusion triggers a
@@ -110,7 +111,7 @@ Preselection and tool completion without an answer do not count as consent.
 > then lists the three options together. A comparison shows the same invalid
 > date corrected today and rejected with the fix. The evidence distinguishes
 > passing regression tests from unknown third-party caller compatibility.
-> The user replies "1, but behind a flag for the API." The agent records the
+> The user replies "A, but behind a flag for the API." The agent records the
 > clearly authorized condition under the next question ID and proceeds without
 > asking for the same permission again.
 
@@ -132,7 +133,7 @@ session, not presented as current independent verification.
 | `references/standards.md` | ISO 24495-1's four reader outcomes and the selected ASD-STE100 mechanics, their sources, limits, and the operational rubric |
 | `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, and reply handling |
 | `references/decision-record.md` | when a record is due and its template |
-| `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent numbered options; illustrations, not behavioral validation |
+| `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent ID-led options; illustrations, not behavioral validation |
 | `references/project-policy-example.md` | an adaptation of the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
 | `references/framework.md` | historical source framework preserved verbatim and provenance |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
@@ -154,7 +155,7 @@ context, approval stage, confusion, changed implementation requirements, and
 permission-preserving simplification. Measurement cases cover opposing metric
 directions, missing absolute values, and documented workflow usage and author
 restrictions. Three further cases cover a development-tool policy with registry
-evidence, unavailable setup context and roles, and a stale numeric reply. A separate reader receives only the
+evidence, unavailable setup context and roles, and a stale-letter reply. A separate reader receives only the
 generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.

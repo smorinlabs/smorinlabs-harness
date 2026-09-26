@@ -23,15 +23,15 @@ The project fixes its repository licence as `MIT OR Apache-2.0`. Its rule says "
 
 **Q4. Should `rs-launch-blueprint` apply its `MIT OR Apache-2.0` licence-compatibility check to standalone development tools such as `cargo-binstall`?**
 
-**I recommend applying the check and keeping the `cargo install` proposal (option 1, Q4.A).** This retains R42's conservative interpretation while setup performance remains unmeasured. The research also identifies `cargo-quickinstall` 0.3.53, another prebuilt-tool installer, as a candidate to investigate if compiling tools proves too slow.
+**I recommend applying the check and keeping the `cargo install` proposal (Q4.A).** This retains R42's conservative interpretation while setup performance remains unmeasured. The research also identifies `cargo-quickinstall` 0.3.53, another prebuilt-tool installer, as a candidate to investigate if compiling tools proves too slow.
 
-1. **Apply the compatibility check to standalone development tools -- Q4.A.** Keep `cargo-binstall` excluded under R42's recorded interpretation and retain the proposed `cargo install` recipe. Future tools in this class must undergo the same check.
-2. **Exempt standalone development tools from this compatibility check -- Q4.B.** Record that exemption and revise R42 to recommend `cargo-binstall`. The exemption would also apply to future tools that run separately and are never linked into the shipped application or library.
-3. **Defer the policy decision -- Q4.C.** Keep the proposed `cargo install` recipe and leave the policy question open.
+- **Q4.A (Recommended) Apply the compatibility check to standalone development tools.** Keep `cargo-binstall` excluded under R42's recorded interpretation and retain the proposed `cargo install` recipe. Future tools in this class must undergo the same check.
+- **Q4.B Exempt standalone development tools from this compatibility check.** Record that exemption and revise R42 to recommend `cargo-binstall`. The exemption would also apply to future tools that run separately and are never linked into the shipped application or library.
+- **Q4.C Defer the policy decision.** Keep the proposed `cargo install` recipe and leave the policy question open.
 
 **Evidence and limits:** R42 records registry checks from 10 September 2026: `cargo-binstall` declares `GPL-3.0-only`; `cargo-quickinstall` declares `MIT OR Apache-2.0`. Those checks establish declared licences. They do not establish installation speed. Setup time and `cargo-quickinstall`'s suitability for the eventual tool list remain unverified.
 
-**Reply with 1, 2 or 3.** Choosing 1 or 2 records the policy and updates the research recommendation accordingly. Choosing 3 leaves the policy unanswered. The template's implementation has not started; these actions update the research records.
+**Reply with A, B, or C.** Choosing A or B records the policy and updates the research recommendation accordingly. Choosing C leaves the policy unanswered. The template's implementation has not started; these actions update the research records.
 ```
 
 Do not copy the facts, policy interpretation, or approval stage into another

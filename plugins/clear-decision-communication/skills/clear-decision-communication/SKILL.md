@@ -185,8 +185,8 @@ the output is the brief for that target.
    the user has not approved. State the recommended action in full before
    attaching its option ID. Give its reason in that sentence or the next.
    Then put the complete option list
-   immediately after the recommendation or neutral statement. Number the
-   displayed options and retain their stable lettered IDs for later reference.
+   immediately after the recommendation or neutral statement. Lead each
+   displayed option with its stable lettered ID; the ID is its only label.
    Each option names the affected asset, scope, consequence, and immediate
    action. Follow with any comparison and evidence needed to judge them, then
    the exact response requested. Mention an alternative before the list only
@@ -323,12 +323,12 @@ quotes the template; send the brief as ordinary message text.
   relevant finding, and what answering changes now.>
 
 Q1. <One full sentence naming the concrete choice and its scope>
-I recommend <action on the named asset and scope>, because <reason> (option 1, Q1.A).
+I recommend <action on the named asset and scope>, because <reason> (Q1.A).
   OR: <Why no option wins under established criteria and which preference settles it>.
 
-1. <Action and outcome> (Q1.A; Recommended). <Effect, conditions, and what I will do now.>
-2. <Action and outcome> (Q1.B). <Effect, conditions, and what I will do now.>
-3. <Action and outcome> (Q1.C). <Effect, conditions, and what I will do now.>
+- Q1.A (Recommended) <Action and outcome>. <Effect, conditions, and what I will do now.>
+- Q1.B <Action and outcome>. <Effect, conditions, and what I will do now.>
+- Q1.C <Action and outcome>. <Effect, conditions, and what I will do now.>
 
 <Only when needed: the comparison or example that exposes the mechanism.>
 Evidence and limits: <Specific source or executed check, what it establishes,
@@ -337,7 +337,7 @@ Evidence and limits: <Specific source or executed check, what it establishes,
 <What would change the recommendation: name the evidence or preference and
   the alternative action it favors. Omit when already clear or neutral.>
 
-Reply with 1, 2, or 3. <Restate any approval boundary needed to interpret the
+Reply with A, B, or C. <Restate any approval boundary needed to interpret the
   options. Describe different next actions separately; defer stays open.>
 Details: <Supporting diff, logs, source, or trace, when useful>.
 ```
@@ -353,14 +353,32 @@ alternative. Say which decision that new evidence would inform.
 Rendering by tier:
 
 - **T1** keeps the question, gate, checked result, supported recommendation or
-  explicit neutrality, and concise options with consequences. For example:
-  `Q1. Merge PR #142, the keyboard-focus fix for the search dialog? The
-  keyboard-interaction test and required checks passed on revision 9c8d7e6.
-  CONTRIBUTING.md, the contribution rules, requires a human merge approval.
-  I recommend merging this tested fix (option 1, Q1.A).` Then
-  `1. Merge PR #142 (Q1.A; Recommended). The fix becomes eligible for the next deploy.`
-  and `2. Hold PR #142 (Q1.B). It stays open for changes.` End with
-  `Reply with 1 or 2.` Do not add sections whose content is already clear.
+  explicit neutrality, and concise options with consequences. Do not add
+  sections whose content is already clear. For example, sent as ordinary text:
+
+  ```
+  Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
+  The keyboard-interaction test and all required checks passed on revision 9c8d7e6.
+  CONTRIBUTING.md requires a human to approve every merge.
+  I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
+
+  - Q1.A (Recommended) Merge PR #142. I merge it now, and it ships with the next deploy. Undoing it takes a revert PR and a redeploy. No stored data changes.
+  - Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
+
+  Reply with A or B.
+  ```
+
+  Those seven lines answer all six reader questions from step 5 by merging
+  fields, not dropping them:
+
+  | Line | Reader question it answers |
+  |---|---|
+  | `Q1. Merge PR #142, the fix that...` | What am I deciding? What changes? (Tab no longer moves focus behind the dialog) |
+  | `...checks passed on revision 9c8d7e6` | What supports the recommendation? |
+  | `CONTRIBUTING.md requires...` | Why does this need my input? |
+  | `I recommend... because...` | What am I deciding? (recommendation and reason) |
+  | Q1.A's `Undoing it takes...` | What am I accepting? |
+  | Q1.B's `I continue with...` | What happens when I choose? |
 - **T2** adds the orientation, material consequences and uncertainty, strongest
   alternative, and conditional comparison that the elevated axes require.
 - **T3** adds the applicable representation, correctness argument, decision
@@ -396,13 +414,14 @@ run, so `Q3` means the same decision in every later message. After a context
 reset, resume from the highest number visible in the conversation or the
 record, and say so. Options are lettered `Q1.A`, `Q1.B`, `Q1.C`. The
 recommended option, when one exists, is first and therefore `A`. A neutral
-question has no recommendation marker. In ordinary text, display a numbered
-list with the stable ID beside each action: `1. <action> (Q1.A)`,
-`2. <action> (Q1.B)`. These list numbers are reply aliases for this displayed
-question, not new decision IDs. A bare number or letter selects an option only
+question has no recommendation marker. In ordinary text, display each option
+as a bullet that leads with its ID: `- Q1.A (Recommended) <action>`,
+`- Q1.B <action>`. The ID is the option's only label; do not add list numbers,
+which would give one choice two names. Bullets keep each option on its own line
+where markdown would merge adjacent lines. A bare letter selects an option only
 when it identifies one live question unambiguously. In a batch or after a
 superseded question, clarify an ambiguous reply with the full current ID.
-Never reinterpret a stale number as permission for a replacement option.
+Never reinterpret a stale letter as permission for a replacement option.
 
 Keep each question's options and approval scope unchanged under its ID. If new
 evidence changes an option's meaning, the recommendation, or the approval scope,
@@ -421,7 +440,7 @@ Replies the ask must accept, in any wording:
 
 | Reply | Meaning | What you do |
 |---|---|---|
-| `1`, `A`, `Q1.A` | pick from the displayed question | match one open question and its unchanged option, then proceed |
+| `A`, `Q1.A` | pick from the displayed question | match one open question and its unchanged option, then proceed |
 | `Q1.B, but <condition>` | pick with a condition | restate the exact conditional action; a changed action or scope gets a new ID, recorded directly when clearly authorized, otherwise clarify only the missing commitment |
 | `Q1: skip` | park it | select no fallback, change no deadline; continue only independent authorized work |
 | `Q1: ask <question>` | need information first | answer and reassess; keep Q1 only if options, recommendation, and scope remain unchanged, otherwise supersede it before re-asking |
