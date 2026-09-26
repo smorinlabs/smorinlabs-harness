@@ -31,22 +31,24 @@ change. Continuing with step 4.
 
 ## 2. Completed, tested change behind a required gate: T1
 
-Situation: PR #142 fixes keyboard focus in the search dialog exactly as
-planned; checks passed on revision `9c8d7e6`; the repository requires a human
-to approve every merge.
+Situation: PR #142 stops Tab from moving keyboard focus behind the search
+dialog, exactly as planned; checks passed on revision `9c8d7e6`; the
+repository requires a human to approve every merge. This is the same brief as
+the T1 example in `SKILL.md`, where a table maps each line to the reader
+question it answers.
 
 Sizing: every axis low; the gate is the only reason to ask.
 
 ```
-Q1. Merge PR #142, the keyboard-focus fix for the search dialog?
-It implements the approved change. The keyboard-interaction test and all
-required checks passed on revision 9c8d7e6. CONTRIBUTING.md, the contribution rules, requires a human merge approval.
-I recommend merging the tested keyboard-focus fix (option 1, Q1.A).
+Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
+The keyboard-interaction test and all required checks passed on revision 9c8d7e6.
+CONTRIBUTING.md requires a human to approve every merge.
+I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
 
-1. Merge PR #142 (Q1.A; Recommended). The fix becomes eligible for the next deploy.
-2. Hold PR #142 (Q1.B). The PR stays open for changes.
+- Q1.A (Recommended) Merge PR #142. I merge it now, and it ships with the next deploy. Undoing it takes a revert PR and a redeploy. No stored data changes.
+- Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
 
-Reply with 1 or 2.
+Reply with A or B.
 ```
 
 ## 3. Scope deviation with a compatibility tradeoff: T2
@@ -67,11 +69,11 @@ changing API upload behavior exceeds the approved CSV-only scope.
 
 Q1. Include the shared date-validation fix in this PR?
 I recommend including the shared date-validation fix for both CSV imports and
-API uploads, so they reject the same invalid dates (option 1, Q1.A).
+API uploads, so they reject the same invalid dates (Q1.A).
 
-1. Include the shared fix (Q1.A; Recommended). both paths reject impossible dates; the PR gains one file
-2. Keep the fix to CSV imports (Q1.B). the API keeps silently correcting; validator logic is duplicated
-3. Include the shared fix behind a flag (Q1.C). default off for the API; no caller change now; a setting to retire later
+- Q1.A (Recommended) Include the shared fix. Both paths reject impossible dates; the PR gains one file
+- Q1.B Keep the fix to CSV imports. The API keeps silently correcting; validator logic is duplicated
+- Q1.C Include the shared fix behind a flag. Default off for the API; no caller change now; a setting to retire later
 
 Why I am asking: the next commit would include the API behavior change.
 Keeping it CSV-only preserves existing external caller behavior.
@@ -99,7 +101,7 @@ Nothing merges.
 
 Details: diff at src/validate/date.ts; test output in ci/run-4412.log.
 
-Reply with 1, 2, or 3.
+Reply with A, B, or C.
 ```
 
 ## 4. Race condition: T3 by domain complexity, no record
@@ -119,10 +121,10 @@ timing, so an event table with identical event order. Record: not due, only
 Q1. Merge commit 6f5e4d3 into the release branch so only the latest search request updates the results?
 I recommend merging the sequence-number check in `src/search/handler.ts`, the
 search response handler, so older responses cannot replace newer results
-(option 1, Q1.A).
+(Q1.A).
 
-1. Merge the sequence-number fix (Q1.A; Recommended). the release branch gains the tested change in src/search/handler.ts
-2. Hold (Q1.B). stale results keep appearing; say what evidence you want first
+- Q1.A (Recommended) Merge the sequence-number fix. The release branch gains the tested change in src/search/handler.ts
+- Q1.B Hold. Stale results keep appearing; say what evidence you want first
 
 Why I am asking: CONTRIBUTING.md requires approval for any user-visible
 behavior change. This one changes what the search box shows when responses
@@ -158,7 +160,7 @@ Deployment remains outside this approval.
 
 Details: diff at src/search/handler.ts; both tests in test/search/order.test.ts.
 
-Reply with 1 or 2.
+Reply with A or B.
 ```
 
 ## 5. Architectural direction during planning: T3 with a record
@@ -181,11 +183,11 @@ separate maintenance-window approval.
 
 Q1. Which direction for report exports: a separate worker process, or streaming inside the web process?
 I recommend moving report exports to a separate worker process so they run
-outside the web request's gateway timeout (option 1, Q1.A).
+outside the web request's gateway timeout (Q1.A).
 
-1. Move exports to a worker process with a jobs queue (Q1.A; Recommended). migration and window required; maximum size unmeasured
-2. Stream exports from the web process (Q1.B). no migration; size cap; two customers affected
-3. Prototype the worker for a day before choosing (Q1.C). delays the decision one day; produces measured evidence
+- Q1.A (Recommended) Move exports to a worker process with a jobs queue. Migration and window required; maximum size unmeasured
+- Q1.B Stream exports from the web process. No migration; size cap; two customers affected
+- Q1.C Prototype the worker for a day before choosing. Delays the decision one day; produces measured evidence
 
 Why I am asking: this selects the next two weeks of work, and once the jobs
 migration ships the direction is expensive to undo. The approved plan assumed
@@ -229,7 +231,7 @@ section in docs/plan.md.
 Record: this decision will be retained as Decision Q1 in docs/adr/ once you
 answer, because it is hard to reverse and the result of a real tradeoff.
 
-Reply with 1, 2, or 3.
+Reply with A, B, or C.
 ```
 
 ## 6. Short change with a major consequence: T3 by impact and reversibility
@@ -248,11 +250,11 @@ hard to reverse and a real tradeoff.
 ```
 Q1. Split log-retention settings to reduce application-log storage cost while preserving the required 90 days of audit logs?
 I recommend splitting the retention setting so application logs are kept for
-30 days and audit logs for the required 90 days (option 1, Q1.A).
+30 days and audit logs for the required 90 days (Q1.A).
 
-1. Split the setting: application logs 30 days, audit logs 90 (Q1.A; Recommended). most of the saving; policy kept; one extra config key
-2. Lower retention for all logs to 30 days (Q1.B). full saving; audit logs breach the written policy; deleted logs are gone
-3. Defer changes pending clarification of the policy (Q1.C). existing retention stays in place
+- Q1.A (Recommended) Split the setting: application logs 30 days, audit logs 90. Most of the saving; policy kept; one extra config key
+- Q1.B Lower retention for all logs to 30 days. Full saving; audit logs breach the written policy; deleted logs are gone
+- Q1.C Defer changes pending clarification of the policy. Existing retention stays in place
 
 Why I am asking: you asked me to cut storage cost. The one-line change in
 config/retention.yaml does that, but the same setting governs audit logs, and
@@ -282,7 +284,7 @@ Record: retained as Decision Q1 in docs/adr/ once you answer.
 Details: the one-line diff in config/retention.yaml; the policy text in
 docs/policies.md; last month's storage invoice in finance/2026-08-storage.pdf.
 
-Reply with 1, 2, or 3.
+Reply with A, B, or C.
 ```
 
 ## 7. Unfamiliar mechanism with low impact: T3 by domain complexity
@@ -301,10 +303,10 @@ I recommend merging the retry-timing change for the nightly cache warmer,
 the job that preloads the internal dashboard's data.
 The delay doubles before successive attempts and gains a random amount,
 subject to a 2-second cap. The randomized delay aims to reduce simultaneous
-requests (option 1, Q1.A).
+requests (Q1.A).
 
-1. Merge the increasing, randomized retry delay (Q1.A; Recommended). This adds up to 3.25 s of scheduled waiting.
-2. Keep a 200 ms delay before each attempt (Q1.B). The incident review's concern stays open.
+- Q1.A (Recommended) Merge the increasing, randomized retry delay. This adds up to 3.25 s of scheduled waiting.
+- Q1.B Keep a 200 ms delay before each attempt. The incident review's concern stays open.
 
 Why I am asking: CONTRIBUTING.md requires approval for any change to retry
 logic since the March incident. This one changes how long the warmer waits
@@ -343,7 +345,7 @@ On Q1.A I will: merge commit 7b6c5d4.
 
 Details: diff at src/cache/warmer.ts; timing test in test/cache/backoff.test.ts.
 
-Reply with 1 or 2.
+Reply with A or B.
 ```
 
 ## 8. Identifiers that must be defined locally: T2
@@ -361,11 +363,11 @@ defined where it is used.
 ```
 Q1. Add a database index on the jobs table's status column, a new migration outside the approved plan, or poll the table without it?
 I recommend adding `jobs_status`, an index on the jobs table's status column,
-to avoid scanning the whole table for the worker health check (option 1, Q1.A).
+to avoid scanning the whole table for the worker health check (Q1.A).
 
-1. Add the status index as a new migration (Q1.A; Recommended). one window; intended to avoid the full scan; latency still to verify
-2. Poll the table on a timer instead of counting on demand (Q1.B). no migration; the health check reports up to 60 s stale
-3. Defer the health check to the third phase (Q1.C). the worker rollout proceeds without it
+- Q1.A (Recommended) Add the status index as a new migration. One window; intended to avoid the full scan; latency still to verify
+- Q1.B Poll the table on a timer instead of counting on demand. No migration; the health check reports up to 60 s stale
+- Q1.C Defer the health check to the third phase. The worker rollout proceeds without it
 
 Why I am asking: the worker health-check endpoint (Task 4 of the second phase,
 which moves report exports into background workers) needs to count jobs by
@@ -389,7 +391,7 @@ Would change my recommendation: no maintenance window available this week.
 On Q1.A I will: write the migration, add it to the plan's second phase as a new
 task, and rerun the health-check test.
 
-Reply with 1, 2, or 3.
+Reply with A, B, or C.
 ```
 
 ## 9. Recover the artifact, then reassess the choice

@@ -2029,3 +2029,29 @@ claude.ai-synced copy of the skill, which is already diverged and not editable h
       the root file after reading `sub/notes.txt`, confirming the finding. After the rule change, a fresh session
       setting up a new index created `research/AGENTS.md` under a root `AGENTS.md` and `research/CLAUDE.md` under a
       root `CLAUDE.md`; `just all` 482 passed, 4 skipped
+
+## [~] Project P54: ID-first decision options and a complete T1 example (clear-decision-communication 0.4.0)
+**Goal/Requirement**: Give every decision option one name. Options render as
+bullets led by their stable ID, `- Q1.A (Recommended) <action>.`, replacing
+`1. <action> (Q1.A; Recommended).`, where the list number was a second name for
+the same choice. Replies become `A` / `Q1.A`; `Reply with A or B.`
+- Replace the T1 example in `SKILL.md`, which was split across backtick spans,
+  with one rendered block plus a table mapping each line to the step 5 reader
+  question it answers.
+- The new example repairs rules the old one broke: each option states the
+  agent's immediate action, reversal effects are visible, the recommendation
+  gives a reason, and the fix names the user-visible bug.
+- Make `references/worked-examples.md` example 2 match the new T1 example.
+
+**Out of Scope**
+- Rewording worked examples beyond the option-line format.
+- Historical eval results under `evals/results/`.
+
+### Tests & Tasks
+- [x] [P54-T01] `SKILL.md`: step 5 rule, template, T1 example and mapping table, IDs section, reply table
+- [x] [P54-T02] `references/worked-examples.md`: 18 option lines, 7 recommendations, 7 reply lines; example 2 synced
+- [x] [P54-T03] `references/delivery.md`, `references/clarity.md`, `references/project-policy-example.md`, `docs/skills/clear-decision-communication.md`
+- [x] [P54-T04] `evals/evals.json`: expectations for evals 23 and 24; eval 25 renamed `superseded-lettered-option-reply` with a stale-letter reply; `evals/README.md` wording
+- [x] [P54-T05] Bump to 0.4.0 (reply grammar change → minor); regenerate manifests
+- [x] [P54-TS01] `just all` green: 482 passed, 4 skipped
+- [x] [P54-TS02] No old-format lines outside historical records (`(option N, Qn.X)`, `; Recommended)`, `Reply with 1`)
