@@ -41,7 +41,7 @@ Global:
 | Long | Type | Default | Notes |
 |---|---|---|---|
 | `--tool` | enum `claude\|codex\|muse\|opencode`, repeatable | all four | restrict to these tools (R3.7) |
-| `--live` | flag | off | only sessions whose `live` is `yes` |
+| `--live` | flag | off | only sessions that may be running: `live` is `yes`, or `unknown` (rendered `live?`) |
 | `--since` | `<n>m\|h\|d\|w` or ISO date | none | only sessions updated at or after this point |
 | `--include-subagents` | flag | off | also list subagent and guardian threads (hidden by default, always counted in the census) |
 

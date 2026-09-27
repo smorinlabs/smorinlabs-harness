@@ -273,6 +273,15 @@ def test_version_goes_to_stdout(home):
     assert r.returncode == 0 and r.stdout.strip()
 
 
+def test_output_flags_work_before_and_after_the_verb(home):
+    # spec: --output/--json are global (PR #86 review, thread 4114456500)
+    for argv in (["--json", "list"], ["list", "--json"], ["-o", "json", "list"], ["list", "-o", "json"]):
+        r = run(home, *argv)
+        assert r.returncode == 0, (argv, r.stderr)
+        assert json.loads(r.stdout)["sessions"] == []
+    assert not run(home, "list").stdout.lstrip().startswith("{")
+
+
 def test_unknown_tool_is_usage_error(home):
     r = run(home, "list", "--tool", "grok")
     assert r.returncode == 2
@@ -577,6 +586,9 @@ def test_opencode_directory_fallback_marks_only_newest_unknown(home, world, proc
     assert got[ids["top"]]["live"] == "unknown"
     assert got[ids["top"]]["resume"] is not None       # unknown never blocks resume
     assert got[ids["archived"]]["live"] == "no"
+    # --live keeps possibly-running sessions (PR #86 review, thread 4114456485)
+    live_ids = set(by_id(inventory(home, "--tool", "opencode", "--live")))
+    assert live_ids == {ids["top"]}
 
 
 # --- text output ----------------------------------------------------------------

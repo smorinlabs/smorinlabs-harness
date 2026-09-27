@@ -468,7 +468,7 @@ def cmd_list(args) -> int:
     for rec in sessions:
         if rec.pop("_hidden", False) and not args.include_subagents:
             continue
-        if args.live and rec["live"] != "yes":
+        if args.live and rec["live"] == "no":   # keep `unknown`: possibly running, rendered live?
             continue
         if args.since and (rec["updated"] or "") < args.since:
             continue
@@ -501,16 +501,23 @@ def build_parser() -> argparse.ArgumentParser:
         prog="session-inventory",
         description="Read-only inventory of Claude Code, Codex, Muse, and OpenCode sessions.")
     parser.add_argument("-V", "--version", action="version", version=f"session-inventory {VERSION}")
+    add_output_flags(parser, default="text")
     sub = parser.add_subparsers(dest="command")
     lst = sub.add_parser("list", help="list sessions, newest activity first")
     lst.add_argument("--tool", action="append", choices=TOOLS, help="restrict to a tool (repeatable)")
-    lst.add_argument("--live", action="store_true", help="only sessions running right now")
+    lst.add_argument("--live", action="store_true",
+                     help="only sessions running right now (live yes, plus unknown = possibly running)")
     lst.add_argument("--since", type=parse_since, help="only sessions active since <n>m|h|d|w or an ISO date")
     lst.add_argument("--include-subagents", action="store_true",
                      help="also list subagent and guardian threads (always counted)")
-    lst.add_argument("-o", "--output", choices=("text", "json"), default="text")
-    lst.add_argument("--json", dest="output", action="store_const", const="json")
+    add_output_flags(lst, default=argparse.SUPPRESS)   # SUPPRESS keeps a root-level choice
     return parser
+
+
+def add_output_flags(parser: argparse.ArgumentParser, default) -> None:
+    """--output/--json are global: accepted before or after the verb."""
+    parser.add_argument("-o", "--output", choices=("text", "json"), default=default)
+    parser.add_argument("--json", dest="output", action="store_const", const="json", default=default)
 
 
 def main(argv: list[str] | None = None) -> int:

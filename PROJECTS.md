@@ -2048,11 +2048,11 @@ otherwise unchanged.
 `archived_sessions/`; resuming, deleting, or writing any session state.
 
 - [x] [P53-T01] Interface spec `docs/session-inventory-cli.md` + conformance note
-- [x] [P53-TS01] Fixture tests for all four stores: names, subagent hiding, stale locks, reused PID, missing workspace, `--tool`, `--live`, `--since`, exit codes, JSON error shape — 36 tests, `tests/test_session_inventory.py` (2026-09-22)
+- [x] [P53-TS01] Fixture tests for all four stores: names, subagent hiding, stale locks, reused PID, missing workspace, `--tool`, `--live`, `--since`, exit codes, JSON error shape — 37 tests, `tests/test_session_inventory.py` (2026-09-22)
 - [x] [P53-T02] `session-inventory` script passes P53-TS01 (2026-09-22)
 - [x] [P53-T03] SKILL.md + format-spec: four tools, element 22 (session name), live cards, `--tool`/`--live`; description rewritten (2026-09-22)
 - [x] [P53-T04] Bump session 0.12.0 → 0.13.0; plugin description, README, docs/skills page; regenerate manifests (2026-09-22)
-- [x] [P53-TS02] `just all` green; live read-only run against this machine's four stores — 516 passed / 4 skipped; live run: claude 152, codex 934 (+1000 hidden), muse 146, opencode 4 (2026-09-22)
+- [x] [P53-TS02] `just all` green; live read-only run against this machine's four stores — 519 passed / 4 skipped; live run: claude 152, codex 934 (+1000 hidden), muse 146, opencode 4 (2026-09-22)
 
 ## [~] Project P54: ID-first decision options and a complete T1 example (clear-decision-communication 0.4.0)
 **Goal/Requirement**: Give every decision option one name. Options render as

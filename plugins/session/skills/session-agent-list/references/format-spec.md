@@ -300,8 +300,9 @@ other and with any view, and the listing header names them as scope
 
 - **`--tool <claude|codex|muse|opencode>`** — repeatable; default all four.
   Also inferred from the query ("my Muse sessions").
-- **`--live`** — only sessions running right now. Also inferred from the
-  query ("what's running", "which sessions are in use").
+- **`--live`** — only sessions running right now, plus `live?` sessions
+  that may be (liveness `unknown`), each marked as such. Also inferred from
+  the query ("what's running", "which sessions are in use").
 
 ## The default listing and the three flag modes
 
