@@ -533,6 +533,44 @@
         "Identifies that the original list was Q8 and has been superseded. Clarifies which current action the user intends before dependent work.",
         "Explains the concrete difference between original worker implementation and current streaming experiment without implying the user already chose the current recommendation."
       ]
+    },
+    {
+      "id": 26,
+      "name": "process-decision-revision-scope-with-held-bundles",
+      "prompt": "Prepare the next owner-facing response from the supplied controller status. The owner did not watch the run and does not remember these identifiers.",
+      "files": [
+        {
+          "path": "inputs/controller-status.md",
+          "content": "# Controller status: logging-library decision D12\n\n## How decisions flow in this project\n- D12 is the decision document that lists the logging libraries implementation work may use.\n- A D12 revision becomes usable downstream only after three steps: the owner accepts it, an automated audit passes, and the controller publishes it.\n- A bundle is a prepared batch of implementation tasks that the runner session R2 executes. Each bundle records the hash of the published D12 revision it relies on.\n- When D12 is republished, a bundle pinned to an older hash needs a re-pin: a mechanical update of the recorded hash plus a check that its assumptions still hold.\n\n## Current state\n- rev4: published 2026-09-02, hash a1b2c3d4. It is the latest published revision.\n- rev5: owner-accepted 2026-09-18, not published. It adds one optional library, `log-rotate`. Its audit failed on a single finding, AF-2.\n- AF-2: the audit's carry-over check counts audit files written during this round as carried over from the previous round, so the check can never pass once a round has written files. It is a defect in the check, not in rev5's content.\n- rev6: the repair sub-session W7 is drafting it now. W7's current brief: rev6 = rev5 content plus the AF-2 check fix, nothing else.\n- Recent audits took 1 to 2 days from submission to result.\n\n## Bundles held by the controller waiting for this answer\n- B3: pinned to rev4's hash; its tasks assume rev4 content.\n- B8: pinned to rev4's hash; its tasks assume rev4 content. B8 also asks for `tracing-appender` to be added to D12's library list. B8's note: \"The controller may fold this into D12's next revision or a later one. Either way, B8's tasks run without it; two tasks would be simpler with it.\"\n- B11: pinned to rev4's hash, but designed against rev5 content, with a recorded trigger to re-verify when D12 is republished.\n\n## Open item\nThe controller must tell W7 what rev6 contains before W7 submits it for audit.\nOption under consideration: rev6 = AF-2 fix only, or rev6 = AF-2 fix plus `tracing-appender`.\nNobody has reviewed whether `tracing-appender` belongs in D12 on its merits.\n"
+        }
+      ],
+      "covered_findings": ["CDC-24", "CDC-25", "CDC-26"],
+      "expectations": [
+        "Before any identifier list or evidence detail, states in plain words that this is a process decision about what the next revision of the logging-library decision contains, and what waits on it (three held bundles and the repair sub-session drafting rev6).",
+        "Explains the lifecycle (accepted, audited, published; bundles pin a published hash) and shows how rev4, rev5, rev6 and bundles B3, B8, B11 relate, using an ASCII timeline, diagram, or table that shows each bundle's pin and what each option does to it.",
+        "Distinguishes the underlying substantive question (whether `tracing-appender` belongs in D12) from the process question, and says that folding it into rev6 would settle that question inside a repair revision without its own review, while the other option leaves it open.",
+        "For the recommended option, states what it costs or gives up (for example: B8's request stays unresolved, a later revision and audit are needed, B3 and B8 owe a re-pin), not only its benefits.",
+        "States the condition under which the runner-up option would be the better choice.",
+        "Explains each identifier by its role in this situation at first use (for example, B8 as the bundle requesting the library), rather than as a bare code or only in a separate glossary line."
+      ]
+    },
+    {
+      "id": 27,
+      "name": "option-tradeoffs-recommended-cost-and-runner-up",
+      "prompt": "Prepare the next owner-facing response from the supplied note.",
+      "files": [
+        {
+          "path": "inputs/dependency-note.md",
+          "content": "# Dependency note: config parser security fix\n\n## Goal\nThe `svc-config` service reads user-supplied YAML configuration with the library `yaml-parse`, currently 2.8.1.\n\n## Finding\n- A published advisory affects `yaml-parse` 2.8.x: crafted anchors can exhaust memory. Fixed in 2.9.4 (backport) and 3.0.0.\n- 3.0.0 changes duplicate-key handling: 2.x silently keeps the last value; 3.0.0 raises an error.\n- The 2.x line reaches end of support on 2027-03-31, per the project's release policy page.\n\n## Checks run on revision 7f1e2a9\n- With 2.9.4: all 412 tests pass.\n- With 3.0.0: 409 pass; 3 fail. All three failures are fixtures containing duplicate keys taken from real customer configurations (support tickets 5521, 5540, 5602).\n- Not verified: how many production customer configurations contain duplicate keys. The config store is not accessible from this session.\n\n## Constraint\nThe team's rule (SECURITY.md): dependency upgrades that change behavior visible to customers need owner approval. The 2.9.4 backport changes no customer-visible behavior in the test suite.\n"
+        }
+      ],
+      "covered_findings": ["CDC-26"],
+      "expectations": [
+        "Recommends an option with its reason and, for that recommended option, states what the owner gives up or still owes (for example: a second migration to 3.x before 2027-03-31, and duplicate keys continuing to be silently accepted), not only its benefits.",
+        "States for each option what it gives, what it costs, and how it is reversed or what it leaves behind.",
+        "Names the runner-up option and the condition under which it would win (for example: the owner wants duplicate keys rejected now, or prefers one migration instead of two).",
+        "Keeps the unverified production duplicate-key count visible as a gap that affects the 3.0.0 option's customer impact."
+      ]
     }
   ]
 }

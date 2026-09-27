@@ -104,8 +104,8 @@ the output is the brief for that target.
    | ID | Tier | Fires when | Prepare | The initial view holds | Length signal |
    |---|---|---|---|---|---|
    | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 80 words |
-   | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | orientation when needed, question, full recommendation or neutrality, complete option list, relevant evidence or comparison, and exact reply | about 250 words |
-   | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
+   | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | grounding L1 and L2 when needed, question, full recommendation or neutrality, complete option list with each option's gain and cost, the runner-up condition, relevant evidence or comparison, and exact reply | about 250 words, excluding grounding and diagrams |
+   | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, grounding L1 to L3, the representation the change type requires, and a details pointer when supporting material exists | about 500 words, excluding grounding and diagrams |
 
    The length signals are review targets, not caps. Past them, re-run the
    removal test, shorten repeated explanation, and move supporting detail
@@ -149,7 +149,7 @@ the output is the brief for that target.
    table often suffices; use a small relationship diagram when several
    connections matter. Then use the change-type table for the behavior the
    reader must judge. Forms live in `references/representation.md`, numbered
-   F1 to F21 so a form can be named by ID.
+   F1 to F22 so a form can be named by ID.
 
    | Type of change | Show |
    |---|---|
@@ -158,6 +158,7 @@ the output is the brief for that target.
    | Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode (F2), a whole block (F7), or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
    | Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
    | Architectural, such as moving responsibilities | a small ASCII system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
+   | Process, sequencing, or dependency across work items, such as which revision carries a change or which work waits on which | a process view (F22): each item's current state, what it depends on or pins, and the path each option takes; required at T2 and above when three or more items or states interact |
 
    Read `references/representation.md` before drawing: every artifact follows
    its diagram rules, including the frame (a lead-in, the artifact exact and
@@ -165,9 +166,24 @@ the output is the brief for that target.
    outcome-cell checks.
 
 5. **Draft the brief.** Establish the decision topic immediately. Put the
-   question first when it is understandable by itself. Otherwise precede it
-   with the minimum connection from the user's goal to the affected component,
-   the relevant discovery, and the remaining choice. State the current
+   question first only when a reader who never watched the run understands it
+   by itself. Otherwise ground it first, from high to low:
+
+   | Layer | Holds | Tier |
+   |---|---|---|
+   | L1 Situation | in plain words and without IDs: the system or document involved, the goal it serves, what happened, and the kind of decision this is | T1 as one clause when needed; T2 and T3 always |
+   | L2 Mechanics | the moving parts, their current state, and how they depend on each other; a diagram from step 4 when three or more interact | T2 when an axis needs it; T3 always |
+   | L3 Evidence | the source passages, checks, and file references behind the claims | in the evidence section at every tier |
+
+   L1 states the decision layer. A substantive decision chooses what is
+   right: a behavior, a design, a policy. A process decision chooses how the
+   work proceeds: which revision or batch carries a change, what order work
+   runs in, what waits on what. A process decision names the substantive
+   question underneath it, says it is not being decided here or where it will
+   be decided, and says when an option would settle it anyway. Adding a change
+   to a repair revision, for example, approves that change without its own
+   review. Explain each identifier by its role in this situation at first use;
+   a glossary line of bare definitions is not grounding. State the current
    condition and immediate commitment before the options. Name each command,
    tool, library, document, or concept exactly and define its role at first use.
    Show a relevant command or source statement when it makes the choice concrete.
@@ -180,7 +196,10 @@ the output is the brief for that target.
    immediately after the recommendation or neutral statement. Lead each
    displayed option with its stable lettered ID; the ID is its only label.
    Each option names the affected asset, scope, consequence, and immediate
-   action. Follow with any comparison and evidence needed to judge them, then
+   action. At T2 and above, each option also states what choosing it gives up
+   or costs, including for the recommended option, and how it is reversed or
+   what it leaves open. After the list, state when the runner-up, the strongest
+   alternative, would be the better choice. Follow with any comparison and evidence needed to judge them, then
    the exact response requested. Mention an alternative before the list only
    by its action and meaning, never by an unexplained ID.
 
@@ -196,12 +215,13 @@ the output is the brief for that target.
 
    | Question | What the reader must be able to state afterwards |
    |---|---|
+   | What kind of decision is this? | whether it is substantive or process; for process, the substantive question underneath it and whether any option settles it |
    | What am I deciding? | the exact choice, the supported recommendation or neutrality, the main justification |
    | Why does this need my input? | the original goal, the discovery, the judgment or authorization needed |
    | What changes? | current or agreed behavior against proposed behavior, including any deviation |
-   | What am I accepting? | benefit, main downside, who and what is affected, how reversal actually works |
+   | What am I accepting? | benefit, main downside of the recommended option, who and what is affected, how reversal actually works |
    | What supports the recommendation? | verified evidence, material uncertainty, assumptions, what would change the recommendation |
-   | What happens when I choose? | the strongest alternative, the consequence of declining or deferring, the exact action approval authorizes |
+   | What happens when I choose? | the strongest alternative and the condition under which it wins, the consequence of declining or deferring, the exact action approval authorizes |
 
 6. **Check the completed draft against its sources.** Before the reader checks
    below, make a separate verification pass over the recommendation, comparison,
@@ -236,7 +256,9 @@ the output is the brief for that target.
      permissions or safeguards for one component do not stand for another's.
      Check claims in options, table readings, and records against their sources
      too; an accurate evidence paragraph cannot repair a stronger claim elsewhere.
-   - Remove each sentence in turn: if the decision is no harder, cut it. The
+   - Remove each sentence in turn: if the decision is no harder for a reader
+     who never watched the run, cut it. Judge as that reader, not as the
+     writer who already holds the context. The
      length target prompts review, never removal of material information.
      Artifact readings, option consequences, and evidence labels are concise
      enough to expose their meaning without hiding a condition or limitation.
@@ -268,21 +290,29 @@ the output is the brief for that target.
 ## The brief: canonical text form
 
 The topic is immediately identifiable. The question comes first when it is
-self-contained; otherwise a short orientation precedes it. Use this order,
+self-contained; otherwise the grounding layers from step 5 precede it. Use this order,
 combining fields when a short question needs no separate sections. The fence
 quotes the template; send the brief as ordinary message text.
 
 ```
-<When needed: goal, exact artifact and role, current or proposed behavior,
-  relevant finding, and what answering changes now.>
+<L1 Situation, when needed: in plain words, the system or document, the goal
+  it serves, what happened, what waits on the answer, and the decision layer.
+  For a process decision: the substantive question underneath it, and
+  whether any option settles it.>
+<L2 Mechanics, when needed: the moving parts and their current state, as a
+  framed diagram when three or more interact, with each option's path.>
 
 Q1. <One full sentence naming the concrete choice and its scope>
 I recommend <action on the named asset and scope>, because <reason> (Q1.A).
   OR: <Why no option wins under established criteria and which preference settles it>.
 
 - Q1.A (Recommended) <Action and outcome>. <Effect, conditions, and what I will do now.>
+  <T2+: You give up or owe: <cost>. Reversal or what stays open: <effect>.>
 - Q1.B <Action and outcome>. <Effect, conditions, and what I will do now.>
+  <T2+: You give up or owe: <cost>. Reversal or what stays open: <effect>.>
 - Q1.C <Action and outcome>. <Effect, conditions, and what I will do now.>
+
+<T2+ with a recommendation: Q1.B would be better if <condition>.>
 
 <Only when needed: the comparison or example that exposes the mechanism.>
 Evidence and limits: <Specific source or executed check, what it establishes,
@@ -299,9 +329,9 @@ Details: <Supporting diff, logs, source, or trace, when useful>.
 Use only the options that exist. Choose one recommendation form, never both.
 For neutrality, omit every recommended marker and do not invent a runner-up
 condition. A supported recommendation
-reveals its objective. Name the strongest alternative and the condition under
-which it wins when that distinction matters; explain it in its option or after
-the list rather than making the reader look forward to an undefined option.
+reveals its objective. At T2 and above, name the strongest alternative and the
+condition under which it wins, after the list, so the reader never looks forward
+to an undefined option. At T1, include it only when that distinction matters.
 A missing measurement can justify investigation without selecting an untested
 alternative. Say which decision that new evidence would inform.
 
@@ -352,7 +382,8 @@ do. In an attended session omit the line and wait on dependent work.
 
 Read the closest example in `references/worked-examples.md`: routine work,
 merge, scope deviation, race, architecture, retention policy, retry algorithm,
-identifier definitions, or clarification after a replaced premise. For a
+identifier definitions, clarification after a replaced premise, or a process
+decision about what a batch or revision carries. For a
 policy question about a named developer tool and a research proposal, read
 `references/project-policy-example.md`. Examples illustrate the form; obtain
 the current question's facts from its own sources.
@@ -398,8 +429,12 @@ wording.
 | "I will assume yes and keep going" | Silence grants no authority. A stated fallback can pause, defer, or perform already-authorized work; skip selects none of it. |
 | "Tests pass, so the decision is safe" | Passing tests reduce uncertainty. They do not reduce impact, recovery cost, or the need to understand the mechanism. |
 | "More context is safer" | Depth is set by the highest axis and spent only on that axis. Unrelated background hides the decision. |
+| "The reader has the context I have" | They were not watching. Ground high to low: the situation in plain words, then the moving parts, then the evidence. A missing layer hides the decision as surely as unrelated background. |
+| "A glossary line defines the IDs" | Definitions do not describe the situation. Explain each identifier by its role here, and say what process the decision belongs to. |
+| "It is only a process question" | Say so, name the substantive question underneath, and say whether any option settles it without its own review. |
+| "The recommendation's benefits make the case" | State what the recommended option gives up and when the runner-up wins. A choice shown only by its benefits is a sales pitch. |
 | "The host's name tells me which dialog to call" | Inspect the tools actually exposed and their restrictions. Put necessary context in the payload; use a separate delivering turn only when that surface needs it. |
-| "A diagram would look thorough" | Show only what changes the answer, in the smallest ASCII form, framed. Decoration is noise. |
+| "A diagram would look thorough" | Show only what changes the answer, in the smallest ASCII form, framed. Decoration is noise. When three or more items, states, or dependencies interact, prose is the defect. |
 | "The label is short, the trade-off is in my head" | Every option stands alone with its consequence, in case the brief is the part that never rendered. |
 
 ## Behavioral evaluation

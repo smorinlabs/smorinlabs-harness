@@ -17,7 +17,7 @@ even when everything else is routine.
 | Uncertainty | What is established by relevant evidence and what is inferred, assumed, untested, or inaccessible. | Verification, evidence limits, important assumptions, missing information, and what would change the recommendation. |
 | Tradeoff complexity | Credible alternatives, competing priorities, dependencies between choices, and consequences for future decisions. | A focused comparison, the criterion driving the recommendation, and the strongest alternative. |
 | Domain complexity | How much behavior, state, interaction, or specialized mechanism the reader must understand to evaluate the change. | A worked example, before-and-after comparison, event sequence, state representation, or small system diagram. |
-| Context gap | What the reader would otherwise have to remember or retrieve to understand the message. | Descriptive names, local definitions, relevant project context, and a minimal explanation of unfamiliar components or relationships. |
+| Context gap | What the reader would otherwise have to remember or retrieve to understand the message. | The situation in plain words, the process the decision belongs to, each identifier's role in this situation rather than a bare definition, and the relationships among the components involved. |
 
 Preserve these distinctions:
 
@@ -89,6 +89,7 @@ one.
 | Implementation or scope adjustment | the approved baseline, the new finding, the proposed change, and its consequences | the exact judgment or authorization still needed |
 | Review of completed work | what the prepared change does, how it matches the agreement, the relevant verification, material exceptions, and the specific revision under review | approval of the completed work, or merge of a particular revision |
 | Rollout or deployment | the target environment, the expected effects, the readiness evidence, and the recovery options | the exact rollout or deployment action, to a named environment |
+| Orchestration or sequencing | the process and its lifecycle, each work item's current state and dependencies, what waits on the answer, and the substantive question underneath the process choice | which version, batch, or order carries a change; whether any option settles the substantive question without its own review |
 
 State the relevant current condition and immediate commitment before presenting
 options: selects an approach, authorizes a prototype or experiment, expands
