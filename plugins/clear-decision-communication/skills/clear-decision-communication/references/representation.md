@@ -23,6 +23,7 @@ understanding. A precise trace of internals cannot identify an unnamed feature.
 | What requirement has changed before behavior is implemented? | stated old rule and revised requirement; keep implementation and test status separate |
 | What changes for the same event? | same-input or same-event comparison |
 | Why does the order matter? | event sequence or timing chart |
+| Which process is this, and what waits on what? | process view (F22): the lifecycle, each item's state and pin, each option's path |
 
 Keep a workflow file distinct from its jobs, invoked actions or scripts,
 settings, and credentials. Include the exact artifact names the reader must
@@ -97,6 +98,7 @@ Do not complete a table by changing its inputs or supplying missing facts.
 | Branching conditions in evaluation order | F19 Decision tree |
 | One measured value against its limit | F20 Threshold on a scale |
 | Any hierarchy that is not files: a design space, a plan, ownership, configuration | F21 Tree |
+| Versions, work items, and what each depends on or waits for, under each option | F22 Process view |
 
 ## Rules every diagram follows
 
@@ -457,6 +459,35 @@ Phase 2: exports to background workers
 |-- Task 4: health check endpoint    blocked on the jobs_status index (Q1)
 `-- Task 5: retire the sync path     not started
 ```
+
+### F22 Process view
+
+For a process decision: which version, batch, or run carries a change, and
+which work waits on which. Three parts, top to bottom. First, the lifecycle
+as one line, with the step that downstream work depends on marked. Second,
+the items in their actual order, each with its current state, and arrows
+from the dependent work to the version it pins. Third, one line per option
+showing its path and what happens to the dependent work. Each item keeps its
+real identifier followed by its role in words. The reading names the one
+fact that differs between the options.
+
+```
+Style-guide lifecycle:  accepted --> checked --> PUBLISHED  (services pin a published version)
+
+v7  PUBLISHED                        <-- [S1] billing API  pins v7, built on v7
+ |                                   <-- [S2] search API   pins v7, asks for a new pagination rule
+ v
+v8  accepted, check FAILED           the checker's own rule is broken, not v8's content
+ |
+ v
+v9  being drafted now.  WHAT GOES IN?   <== Q1
+     Q1.A  v8 + checker fix              -> S1, S2 continue; both re-pin once v9 publishes
+     Q1.B  v8 + checker fix + S2's rule  -> S1, S2 wait for v9; the pagination rule is
+                                            approved inside a repair version
+```
+
+Reading: both options carry v8's accepted content. Only the pagination rule
+differs, and Q1.B would settle that substantive question without its own review.
 
 ## Placement
 

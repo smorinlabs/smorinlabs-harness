@@ -128,13 +128,13 @@ session, not presented as current independent verification.
 |---|---|
 | `SKILL.md` | the workflow spine: the gate, the tier table, the change-type table, the six reader questions, the pre-send check, the brief template with its T1 example, and stable IDs; each step points to the one reference that holds its detail |
 | `references/axes-and-tiers.md` | the seven axes, level tests, tier-rule details, stage-of-work guidance |
-| `references/representation.md` | the ASCII forms catalog, F1 to F21, and the diagram rules; F16 to F21 add the span chart, layer stack, containment boxes, decision tree, threshold on a scale, and a general tree |
+| `references/representation.md` | the ASCII forms catalog, F1 to F22, and the diagram rules; F16 to F22 add the span chart, layer stack, containment boxes, decision tree, threshold on a scale, a general tree, and a process view |
 | `references/clarity.md` | the four reader gates, sentence and term controls, names, verbatim zones, self-contained references, the error catalog |
 | `references/standards.md` | what ISO 24495-1 and ASD-STE100 are, their official sources, and the limits of STE for a decision request |
 | `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, the reply table, and confusion recovery |
 | `references/evidence.md` | evidence status labels, tracing claims to their support, and reporting measurements |
 | `references/decision-record.md` | when a record is due and its template |
-| `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent ID-led options; illustrations, not behavioral validation |
+| `references/worked-examples.md` | ten fictional situations across the tiers, including a process decision, with full recommendations and adjacent ID-led options; illustrations, not behavioral validation |
 | `references/project-policy-example.md` | an adaptation of the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
 | `references/framework.md` | provenance and licences of every borrowed ingredient; the verbatim source framework is in `docs/superpowers/specs/2026-09-07-clear-decision-communication-source-framework.md` |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
@@ -151,12 +151,12 @@ Runs that invoke a CLI also retain its output and version. Process completion
 is not a behavioral pass: a reviewer
 must judge the actual response against the expectations, including positive
 and negative controls for approval, silence, skip, and superseded replies.
-The twenty-five scenarios include artifact identification, recovery of project
+The twenty-seven scenarios include artifact identification, recovery of project
 context, approval stage, confusion, changed implementation requirements, and
 permission-preserving simplification. Measurement cases cover opposing metric
 directions, missing absolute values, and documented workflow usage and author
 restrictions. Three further cases cover a development-tool policy with registry
-evidence, unavailable setup context and roles, and a stale-letter reply. A separate reader receives only the
+evidence, unavailable setup context and roles, and a stale-letter reply. Cases 26 and 27 cover a process decision about what a revision carries while work is held, and option trade-offs for the recommended option and the runner-up. A separate reader receives only the
 generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.

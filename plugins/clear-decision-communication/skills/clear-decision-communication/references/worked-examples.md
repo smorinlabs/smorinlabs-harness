@@ -1,6 +1,6 @@
 # Worked examples
 
-Nine fictional situations rendered through the workflow, one per shape the
+Ten fictional situations rendered through the workflow, one per shape the
 skill must handle. Every fact, revision, test result, and repository detail
 below is invented for illustration and is not a claim about any real project.
 Read the one closest to the situation at hand before drafting; the shape is the
@@ -10,7 +10,7 @@ The outer code fences in this file quote each rendered message; the message
 itself is sent as ordinary text with pipe tables. Alignment-dependent diagrams
 retain their own inner fences. Behavioral edge cases and grading expectations
 live separately in `../evals/evals.json`; examples alone are not validation.
-The historical tool-policy rewrite in `project-policy-example.md` is a tenth
+The historical tool-policy rewrite in `project-policy-example.md` is an eleventh
 example with its source status stated separately.
 
 ## 1. Routine authorized work: the gate says no ask
@@ -483,3 +483,87 @@ plan. It does not authorize implementing, installing, or activating the workflow
 files." The requirements for the future workflows stay the same, but the
 immediate action is editing the planning documents. A decision record cannot
 grant broader authority than the reply that created it.
+
+## 10. Process decision: what a batch carries, with held work: T2
+
+Situation: a schema program ships database changes in numbered migration
+batches. A batch becomes usable once it is accepted, passes the migration
+linter, and is applied to staging. Batch M4 (accepted) failed the linter on
+one finding, L-9: the linter flags any batch that renames a column it also
+indexes, even when the rename is guarded, so the defect is in the linter rule.
+A repair session is preparing M5 as M4 plus the linter fix. Three service
+deploys, for orders, invoices, and refunds, are held until the controller says
+what M5 contains, because each deploy targets a specific applied batch. The
+refunds team asks to add a column drop (`refunds.legacy_ref`) to M5 and says
+it can wait. Nobody has reviewed that drop.
+
+Sizing: departure elevated (adding the drop changes M5 beyond its repair
+scope); tradeoff elevated (held deploys against settling the drop now);
+reversibility elevated for Q1.B, because the dropped column returns only from
+a backup restore. It is also a process decision
+with three dependent items, so a process view (F22) carries L2. The
+substantive question, whether to drop `refunds.legacy_ref`, is named and kept
+separate.
+
+````
+We are deciding what the next schema batch contains. This is a process
+decision; three service deploys wait on it.
+
+The schema program ships database changes in numbered batches. A batch is
+usable only after it is accepted, passes the migration linter, and is applied
+to staging. Batch M4 failed the linter, but the defect is in a linter rule,
+not in M4's changes. A repair session is preparing the next batch, M5, now.
+
+```
+Batch lifecycle:  accepted --> linted --> APPLIED to staging  (deploys target an applied batch)
+
+M3  APPLIED                          <-- orders deploy    targets M3
+ |                                   <-- invoices deploy  targets M3
+ |                                   <-- refunds deploy   targets M3, asks to drop refunds.legacy_ref
+ v
+M4  accepted, linter FAILED (L-9: a linter rule defect, not M4's content)
+ v
+M5  being prepared now.  WHAT GOES IN?   <== Q1
+     Q1.A  M4 + linter fix               -> deploys proceed on M3; each retargets M5 after it applies
+     Q1.B  M4 + linter fix + column drop -> all three deploys wait for M5
+```
+
+Reading: both options carry M4's accepted changes. Only the column drop
+differs.
+
+What this does not decide: whether `refunds.legacy_ref` should be dropped.
+Q1.A leaves that open for a later batch. Q1.B would approve the drop inside a
+repair batch, without its own review, and a dropped column cannot be restored
+from the schema alone.
+
+Q1. Should M5 contain only M4 plus the linter fix, or also the refunds column drop?
+I recommend keeping M5 to M4 plus the linter fix, because that releases the
+three held deploys now and leaves the unreviewed drop for its own review (Q1.A).
+
+- Q1.A (Recommended) M5 = M4 + linter fix. I tell the repair session to keep
+  its current scope; the three deploys proceed on M3.
+  You give up or owe: settling the drop now. It needs a later batch and
+  another lint and staging cycle, and each deploy retargets M5 after it applies.
+  Reversal or what stays open: the drop stays an open request.
+- Q1.B M5 = M4 + linter fix + drop `refunds.legacy_ref`. I re-brief the
+  repair session mid-run and keep all three deploys held until M5 applies.
+  You give up or owe: three held deploys for one more lint and staging cycle,
+  and approval of the drop without its own review.
+  Reversal or what stays open: the dropped column's data is lost unless
+  restored from backup.
+
+Q1.B would be better if the drop is already agreed on its merits and the
+refunds team needs it in this cycle.
+
+Evidence and limits: the linter report for M4 names L-9 only (lint log,
+run 212). The refunds team's request says the drop can wait. Not verified:
+how long the next lint and staging cycle takes.
+
+Reply with A or B. A leaves the drop's merits open; B approves the drop.
+````
+
+The brief opens with the kind of decision before any identifier, draws the
+three deploys and their targets instead of listing them, names the
+substantive question it is not deciding, and gives the recommended option its
+cost. The runner-up line tells the reader what fact would flip the choice.
+

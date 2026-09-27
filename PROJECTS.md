@@ -2231,3 +2231,43 @@ $ just all
 - Gated preparation 2026-09-27: PR 40, Tach 0.35.0 to 0.35.1, only `uv.lock`; worker observation and classification returned NEEDS_OWNER K16, collection completed and released the repository lease. Accurate check counts are 22 successful and 8 skipped. The preparation run ended with exceptions and no continuation; execution then required specific PR approval and a new linked run with fresh deadlines. At that preparation checkpoint, no pilot merge or release had occurred.
 - Read-only dry run 2026-09-22 (Q6.A): `python3 scripts/sweep_cli.py pr observe 'smorinlabs/gmail2pdf#40' -o json` read every section (pull, files, reviews, threads, check-runs, check-suites, statuses, queue, protection 404, branch rules with one org ruleset detail); the only changed file was `uv.lock`, so `pr evaluate ... --dependency-only --classifier "claude session c-f7, dry run" --mode inspect` returned READY (30 checks green, 8 legitimately skipped, 0 unresolved threads, `mergeable_state` clean, merge path none) and the same observation without the attestation returned BLOCKED K09. No store, no lease, no mutation; roughly ten REST calls plus one GraphQL call
 - Render `sweep_report.render_report` on a fixture with one replacement merge and one late arrival: header shows selected and delivered counts separately, unresolved cards come first, the replacement merge line reads `delivers [PR-0xx]`, one continuation line closes the report
+
+## [~] Project P59: Layered grounding, decision layer, process diagrams, and option trade-offs (clear-decision-communication 0.5.0 → 0.6.0)
+**Goal/Requirement**: A decision brief lets a reader who never watched the run
+understand the situation, the kind of decision, and what each option costs.
+Found in a Muse session (HR-B Q1, 2026-09-27): a process question about what
+R69 revision r11 should contain opened with a glossary of IDs. It never said
+"we are deciding X as part of process Y", drew no picture of the revision and
+pack dependencies, did not say that one option silently settled a substantive
+question, and gave the recommended option no cost and the runner-up no
+condition under which it wins.
+- Grounding ladder: L1 situation in plain words, L2 moving parts and state
+  (diagram when three or more relationships interact), L3 evidence; depth by tier.
+- Decision layer: state whether the question is substantive or process; a
+  process question names the underlying substantive question and whether any
+  option settles it.
+- Routing row for versions, dependencies, and ordering across work items; a
+  diagram is required at T2+ when three or more items interact.
+- Identifiers are explained by their role in the situation, not only defined.
+- Every option at T2+ states what it gives, what it gives up, and how to reverse
+  it; a runner-up line states when the strongest alternative wins.
+- The removal test is judged as a cold reader.
+
+**Out of Scope**
+- P57 (unperformed actions as next steps).
+- Restructuring the template, IDs, or reply grammar.
+- `evals/run_evals.py`.
+
+### Tests & Tasks
+- [x] [P59-TS01] Add eval cases 26 (process decision) and 27 (option trade-offs); run on the unchanged skill; expect failures (red)
+      Result (Claude, self-graded): case 26 failed (no diagram, no decision layer, invented a review step in option B); case 27 passed all 4 on the unchanged skill, so it does not discriminate.
+- [x] [P59-T01] `SKILL.md`: grounding ladder, decision layer, routing row, option trade-off slots, runner-up line, red flags
+- [x] [P59-T02] `references/axes-and-tiers.md`: orchestration stage row; context-gap expansion explains roles
+- [x] [P59-T03] `references/clarity.md`: cold-reader removal test; glossary-instead-of-grounding error
+- [x] [P59-T04] `references/representation.md`: process-dependency form guidance
+- [x] [P59-T05] `references/worked-examples.md`: example 10, a process decision with a timeline
+- [x] [P59-TS02] Cases 26 and 27 pass on the revised skill; cases 2 and 8 still pass (T1 brevity and T2 regression checks)
+      Result (Claude, self-graded): 26 pass 6/6, 27 pass 4/4, 2 pass, 8 pass (neutral, no invented runner-up). Briefs run long: 960 and 823 words. Blind grading not yet done.
+- [x] [P59-TS03] `just all` green
+- [x] [P59-T06] Bump to 0.6.0; update README/docs counts; regenerate manifests
+- [ ] [P59-T07] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
