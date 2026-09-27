@@ -28,12 +28,12 @@ from sweep_core import (
 def discovery(org, repo, number, title="bump x"):
     return {"org": org, "repo": repo, "number": number,
             "url": f"https://example.test/{org}/{repo}/pull/{number}",
-            "title": title, "owner": org, "head_sha": f"head{number}",
+            "title": title, "owner": org, "head_sha": f"{number:040x}",
             "base_ref": "main"}
 
 
 def make_store(tmp_path, discoveries, run_id="RUN-TEST-01", **options):
-    store = Store(str(tmp_path / "run.jsonl"))
+    store = Store(str(tmp_path / "run.jsonl"), session="slice1-coordinator")
     coord.create_run(store, run_id, mode="automated",
                      authorization="test-authorization",
                      discoveries=discoveries, **options)
@@ -332,15 +332,18 @@ def test_store_replay_roundtrip(tmp_path):
 # --- Slice 1 review repairs (Q4.A, 2026-09-22). Core layer. ---
 
 def test_store_replay_recovers_id_counters_without_ids_record(tmp_path):
-    """P4: a crash between card writes and record_ids() must not make the
-    resumed run reissue an existing id."""
+    """P4: legacy logs lacking an ids event still cannot reuse seen ids."""
     import json
     path = tmp_path / "run.jsonl"
     store = make_store(tmp_path, [discovery("acme", "r", 1),
                                   discovery("acme", "r", 2)])
     coord.schedule(store, model="sol")
-    kept = [line for line in path.read_text().splitlines()
-            if json.loads(line)["kind"] != "ids"]
+    events = []
+    for line in path.read_text().splitlines():
+        record = json.loads(line)
+        events.extend(record["records"] if record["kind"] == "transaction"
+                      else [record])
+    kept = [json.dumps(event) for event in events if event["kind"] != "ids"]
     path.write_text("\n".join(kept) + "\n")
     replayed = Store.load(str(path))
     assert replayed.ids.next("PR") == "PR-003"
@@ -404,6 +407,7 @@ def test_register_replacement_closes_ready_original(tmp_path):
     taskings = coord.schedule(store)
     coord.apply_outcome(store, taskings[0]["attempt_id"], [
         {"card_id": "PR-001", "outcome": "ready", "reason_line": "green",
+         "head_sha": "a" * 40,
          "evidence": [{"id": "EV-001"}]}])
     replacement = coord.register_replacement(
         store, "PR-001", discovery("acme", "r", 2, title="redo"))
@@ -572,6 +576,7 @@ def test_report_lists_ready_cards_under_prepared(tmp_path):
     tasking = coord.schedule(store)[0]
     coord.apply_outcome(store, tasking["attempt_id"], [
         {"card_id": "PR-001", "outcome": "ready", "reason_line": "green",
+         "head_sha": "a" * 40,
          "evidence": [{"id": "EV-001"}]}])
     text = report.render_report(store)
     assert "open 1;" in text

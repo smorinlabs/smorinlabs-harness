@@ -32,8 +32,39 @@ exit semantics remain intact.
 Independent CLI probes covered original failure inputs, mixed org/user scopes,
 separate-process replay, later config changes, mode and conflict flags, legacy
 flat stores, missing repository entries, human reports, and reviewer contexts.
-Claude and Codex native loading passed. Native loading checks availability, not
+Claude 2.1.283 and Codex 0.145.0 native loading passed, including a refresh
+after the review corrections. Native loading checks availability, not
 behavior; the tests and live proof below supply behavioral evidence.
+
+## Implementation PR review
+
+[PR 87](https://github.com/smorinlabs/smorinlabs-harness/pull/87) identified
+additional recovery and permission defects after the pilot checkpoint.
+Regression tests reproduced each finding before correction.
+
+| Defect | Verified correction |
+| --- | --- |
+| Creation could publish an empty selected scope before its cards | Scope, cards, saved authority, and deadline commit in one transaction |
+| A crash after claiming a repository left an unrecoverable lock | Only protocol-marked claims without a matching committed lease can be recovered under the store lock |
+| Stale coordinators could collect old results or reuse IDs | Decisions refresh inside serialized transactions; collection requires current holder, session, and attempt generation |
+| A torn final append prevented replay | Preceding transactions replay with a warning; a locked writer preserves and removes the uncommitted tail; malformed committed records fail |
+| Heartbeat silence allowed takeover while delegates might still mutate | Foreign attempts remain protected until their worker and delegates are explicitly confirmed stopped |
+| An unattributed commit status could satisfy a producer-specific required check | A matching check-run producer is required |
+| Delegation could lose an earlier helper deadline | Both inherited deadline variables and the offered deadline are capped to their minimum |
+| Evaluated heads were lost and replacement approvals were hidden | READY and identity-verified hold outcomes transfer their head; stale approvals are revoked; both approval formats include linked replacements |
+
+Independent composition review then found and reproduced five additional
+edge cases: worker briefs ignored explicit approval-head records; unnamed
+sessions could reclaim each other; successive partial result batches lost
+remaining-work history; a standalone incident link persisted only one
+direction; and a same-store write from another thread could join a transaction
+that later rolled back. Focused regressions cover those boundaries alongside
+the original GitHub findings.
+
+Crash tests terminate actual child processes before commit and during a write.
+Separate processes test lock contention and ID allocation from stale snapshots.
+These tests establish process-crash recovery on the local macOS host; they are
+not a claim of Windows runtime or storage power-loss testing.
 
 ## Live pilot: Gmail2PDF PR 40
 
@@ -49,6 +80,11 @@ behavior; the tests and live proof below supply behavioral evidence.
 | Merge | [f30d0e720bb8f5c783fe355693e3fa55e466ed7b](https://github.com/smorinlabs/gmail2pdf/commit/f30d0e720bb8f5c783fe355693e3fa55e466ed7b), observed merged at 2026-09-27T07:32:42Z |
 | Durable completion | Reloaded store: selected 1, merged 1, delivered 1, unknown 0; both attempts complete; lease released; no continuation |
 
+The pilot ran before the PR 87 recovery corrections. Its unchanged completed
+journal was replayed with the revised implementation and retained the same
+merge, attempt, lease, and accounting results. No second live merge was used
+to validate those corrections.
+
 The preparation run returned the approval hold and was finished when its
 original deadlines expired during safety work. After approval, a new execution
 run explicitly linked to that preparation. Its first worker attempt returned
@@ -62,12 +98,12 @@ Nine integration suites retained queued suite records but contained no check
 runs. Separate complete suite/check-run reads found no actual pending job.
 Those records were disclosed and were not counted as successful checks.
 
-Final release validation after integrating current main and generating the
-0.31.0 marketplace metadata:
+Final release validation after integrating current main, the PR 87 review
+corrections, and the 0.31.0 marketplace metadata:
 
 ```text
 just all
-736 passed, 4 skipped in 80.79 seconds
+835 passed, 4 skipped in 81.62 seconds
 ```
 
 This includes the generation drift check and all discovered tests. The

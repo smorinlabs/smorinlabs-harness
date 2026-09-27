@@ -9,12 +9,19 @@ crashed run can rebuild exact state by replay.
 
 from __future__ import annotations
 
+import copy
+import errno
+import hashlib
 import json
 import os
+import threading
 import time
 import uuid
+import warnings
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+from functools import wraps
 
 
 class State(str, Enum):
@@ -333,17 +340,18 @@ class Issue:
 
 
 class RepoLocks:
-    """Cross-session repository locks: one file per repository, created
-    with O_EXCL so two coordinator sessions over one store can never both
-    issue a writer. The in-memory LeaseTable records what this session
-    believes; the lock file decides who actually holds the repository.
-    Each Store instance writes its own token beside the holder, so two
-    sessions that compute the same attempt id from stale counters still
-    cannot both claim."""
+    """Exclusive repository claims, published as complete lock-file payloads.
 
-    def __init__(self, directory: str) -> None:
+    Store transactions serialize durable lease decisions and id allocation.
+    Claims made under that protocol can be recovered only when locked replay
+    proves no matching held or quarantined lease exists. Legacy claims stay
+    protected, and each Store keeps its own token to identify its claims.
+    """
+
+    def __init__(self, directory: str, store=None) -> None:
         self.directory = directory
         self.token = uuid.uuid4().hex[:12]
+        self.store = store
 
     def _path(self, repo_id: str) -> str:
         return os.path.join(self.directory,
@@ -351,13 +359,29 @@ class RepoLocks:
 
     def claim(self, repo_id: str, holder: str) -> bool:
         os.makedirs(self.directory, exist_ok=True)
+        text = f"{self.token} {holder}"
+        if self.store is not None and self.store._owns_transaction():
+            text = json.dumps({"protocol": "store-transaction-v1",
+                               "store": os.path.realpath(self.store.path),
+                               "repo_id": repo_id, "token": self.token,
+                               "holder": holder}, sort_keys=True)
+        # The exclusive hard link publishes a complete payload. A crash
+        # while writing the temporary file cannot leave a half-marked claim.
+        temporary = os.path.join(self.directory, f".claim-{uuid.uuid4().hex}")
         try:
-            fd = os.open(self._path(repo_id),
-                         os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
-            return self._read(repo_id) == f"{self.token} {holder}"
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(f"{self.token} {holder}")
+            with open(temporary, "x", encoding="utf-8") as handle:
+                handle.write(text)
+                handle.flush()
+                os.fsync(handle.fileno())
+            try:
+                os.link(temporary, self._path(repo_id))
+            except FileExistsError:
+                return self._read(repo_id) == text
+        finally:
+            try:
+                os.unlink(temporary)
+            except FileNotFoundError:
+                pass
         return True
 
     def _read(self, repo_id: str) -> str:
@@ -368,7 +392,46 @@ class RepoLocks:
             return ""
 
     def holder(self, repo_id: str) -> str:
-        return self._read(repo_id).partition(" ")[2]
+        text = self._read(repo_id)
+        if text.startswith("{"):
+            try:
+                return json.loads(text).get("holder", "")
+            except (ValueError, AttributeError):
+                return ""
+        return text.partition(" ")[2]
+
+    def recover_orphans(self) -> None:
+        """Recover only claims made by the serialized journal protocol.
+
+        The caller holds the store lock and has replayed durable leases.
+        No live claim+commit critical section can coexist with that lock.
+        Legacy and unrecognized files stay locked; age proves nothing.
+        """
+        if self.store is None or not self.store._owns_transaction():
+            raise StoreError("orphan recovery requires a store transaction")
+        if not os.path.isdir(self.directory):
+            return
+        for entry in os.scandir(self.directory):
+            if not entry.name.endswith(".lock") or not entry.is_file():
+                continue
+            try:
+                with open(entry.path, encoding="utf-8") as handle:
+                    record = json.load(handle)
+            except (ValueError, UnicodeError, FileNotFoundError):
+                continue
+            if not isinstance(record, dict) or \
+                    record.get("protocol") != "store-transaction-v1" or \
+                    record.get("store") != os.path.realpath(self.store.path):
+                continue
+            repo_id, holder = record.get("repo_id"), record.get("holder")
+            if not isinstance(repo_id, str) or not isinstance(holder, str) \
+                    or not holder or self._path(repo_id) != entry.path:
+                continue
+            lease = self.store.leases.leases.get(repo_id)
+            if lease is not None and lease.holder == holder and \
+                    lease.state in ("held", "quarantined"):
+                continue
+            os.unlink(entry.path)
 
     def release(self, repo_id: str, holder: str) -> None:
         """Remove the lock only when `holder` owns it; tolerant of a
@@ -465,9 +528,86 @@ class IdAssigner:
                                     int(number))
 
 
+@contextmanager
+def _journal_lock(path: str, timeout: float):
+    """A bounded kernel lock, released even when the owning process dies."""
+    if not path:
+        yield
+        return
+    with open(os.path.realpath(path) + ".write.lock", "a+b") as handle:
+        if os.name == "nt":
+            import msvcrt
+
+            if handle.seek(0, os.SEEK_END) == 0:
+                handle.write(b"\0")
+                handle.flush()
+
+            def acquire():
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+
+            def release():
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            def acquire():
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+            def release():
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                acquire()
+                break
+            except OSError as exc:
+                if exc.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                    raise
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise StoreError(f"timed out waiting for store lock: {path}") from exc
+                time.sleep(min(0.05, remaining))
+        try:
+            yield
+        finally:
+            release()
+
+
+def transactional(function):
+    """Run a Store-first coordinator operation under one durable transaction."""
+    @wraps(function)
+    def wrapped(store, *args, **kwargs):
+        with store.transaction():
+            return function(store, *args, **kwargs)
+    return wrapped
+
+
+def _serialized_write(function):
+    """Lock before model mutation, including standalone writes from threads."""
+    @wraps(function)
+    def wrapped(store, *args, **kwargs):
+        if not store._mutex.acquire(timeout=5.0):
+            raise StoreError(f"timed out waiting for store lock: {store.path}")
+        try:
+            return function(store, *args, **kwargs)
+        finally:
+            store._mutex.release()
+    return wrapped
+
+
+_ANY_REVISION = object()
+
+
 class Store:
-    """Append-only JSONL record store. Every mutation appends one line;
-    load() replays the file to rebuild exact state."""
+    """Append-only JSONL with serialized, atomic multi-record transactions.
+
+    `transaction()` refreshes under a kernel lock before decisions or id
+    allocation. One complete JSONL transaction publishes every buffered
+    event; a torn final append publishes none. Legacy events still replay.
+    Standalone writes reject stale snapshots instead of losing newer state.
+    """
 
     def __init__(self, path: str = "", session: str = "") -> None:
         self.path = path
@@ -478,65 +618,252 @@ class Store:
         self.issues: dict[str, Issue] = {}
         self.leases = LeaseTable()
         self.ids = IdAssigner()
-        self.locks = RepoLocks(path + ".locks") if path else None
+        self.locks = RepoLocks(path + ".locks", self) if path else None
+        self._mutex = threading.RLock()
+        self._transaction_depth = 0
+        self._transaction_owner: int | None = None
+        self._transaction_failed = False
+        self._records: list = []
+        self._revision: str | None = None
+        self._tail_offset: int | None = None
+        self._tail = b""
+        self._needs_newline = False
+        self.recovery_warnings: list = []
 
-    def _append(self, kind: str, payload: dict) -> None:
+    @staticmethod
+    def _update_object(existing, incoming):
+        if incoming is None:
+            return None
+        if existing is None:
+            return copy.deepcopy(incoming)
+        existing.__dict__.clear()
+        existing.__dict__.update(copy.deepcopy(incoming.__dict__))
+        return existing
+
+    def _adopt(self, other: "Store") -> None:
+        """Refresh values in place without replacing live locks or card handles."""
+        self.header = self._update_object(self.header, other.header)
+        for current, incoming in ((self.cards, other.cards),
+                                  (self.diary, other.diary),
+                                  (self.issues, other.issues),
+                                  (self.leases.leases, other.leases.leases)):
+            for key in set(current) - set(incoming):
+                del current[key]
+            for key, value in incoming.items():
+                current[key] = self._update_object(current.get(key), value)
+        self.ids.counters.clear()
+        self.ids.counters.update(other.ids.counters)
+        for name in ("_revision", "_tail_offset", "_tail", "_needs_newline",
+                     "recovery_warnings"):
+            setattr(self, name, copy.deepcopy(getattr(other, name)))
+
+    def _current(self) -> "Store":
+        if self.path and os.path.exists(self.path):
+            return self.load(self.path, session=self.session)
+        current = Store(self.path, session=self.session)
         if not self.path:
-            return
-        line = json.dumps({"ts": utc_now(), "kind": kind, **payload})
-        with open(self.path, "a", encoding="utf-8") as handle:
-            handle.write(line + "\n")
+            current._adopt(self)
+        return current
 
+    def _owns_transaction(self) -> bool:
+        return bool(self._transaction_depth and
+                    self._transaction_owner == threading.get_ident())
+
+    @contextmanager
+    def transaction(self, timeout: float = 5.0, *, _expected_revision=_ANY_REVISION):
+        """Refresh, mutate, and commit under a bounded store-wide lock.
+
+        Nested calls share the outer batch. Any nested exception aborts that
+        batch, even when caught by its caller. Exceptions restore persisted
+        state in place. New journals stay absent until the first commit.
+        """
+        if timeout < 0:
+            raise ValueError("store lock timeout must be non-negative")
+        deadline = time.monotonic() + timeout
+        if not self._mutex.acquire(timeout=timeout):
+            raise StoreError(f"timed out waiting for store lock: {self.path}")
+        try:
+            if self._owns_transaction():
+                self._transaction_depth += 1
+                try:
+                    yield self
+                except BaseException:
+                    self._transaction_failed = True
+                    raise
+                finally:
+                    self._transaction_depth -= 1
+                return
+            with _journal_lock(self.path, max(0.0, deadline - time.monotonic())):
+                baseline = self._current()
+                self._adopt(baseline)
+                if _expected_revision is not _ANY_REVISION and \
+                        _expected_revision != self._revision:
+                    raise StoreError("stale store snapshot; reload and apply the "
+                                     "change inside Store.transaction()")
+                self._transaction_depth = 1
+                self._transaction_owner = threading.get_ident()
+                self._transaction_failed = False
+                self._records = []
+                try:
+                    if self._tail_offset is not None:
+                        self._quarantine_tail()
+                    if self.locks is not None:
+                        self.locks.recover_orphans()
+                    yield self
+                    if self._transaction_failed:
+                        raise StoreError("store transaction aborted by a nested failure")
+                    self._commit_records()
+                except BaseException:
+                    self._adopt(self._current() if self.path else baseline)
+                    if self.locks is not None:
+                        self.locks.recover_orphans()
+                    raise
+                finally:
+                    self._records = []
+                    self._transaction_depth = 0
+                    self._transaction_owner = None
+                    self._transaction_failed = False
+        finally:
+            self._mutex.release()
+
+    def _quarantine_tail(self) -> None:
+        quarantine = f"{self.path}.torn-{uuid.uuid4().hex}.jsonl"
+        with open(quarantine, "xb") as handle:
+            handle.write(self._tail)
+            handle.flush()
+            os.fsync(handle.fileno())
+        with open(self.path, "r+b") as handle:
+            handle.truncate(self._tail_offset)
+            handle.flush()
+            os.fsync(handle.fileno())
+            handle.seek(0)
+            self._revision = hashlib.sha256(handle.read()).hexdigest()
+        self.recovery_warnings.append(f"trailing bytes preserved in {quarantine}")
+        self._tail_offset, self._tail = None, b""
+        self._needs_newline = False
+
+    def _commit_records(self) -> None:
+        if not self.path or not self._records:
+            return
+        record = {"ts": utc_now(), "kind": "transaction", "version": 1,
+                  "records": self._records}
+        data = (("\n" if self._needs_newline else "") +
+                json.dumps(record) + "\n").encode("utf-8")
+        descriptor = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        try:
+            remaining = memoryview(data)
+            while remaining:
+                written = os.write(descriptor, remaining)
+                if written <= 0:
+                    raise OSError("store append made no progress")
+                remaining = remaining[written:]
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        with open(self.path, "rb") as handle:
+            self._revision = hashlib.sha256(handle.read()).hexdigest()
+        self._needs_newline = False
+
+    @_serialized_write
+    def _append(self, kind: str, payload: dict) -> None:
+        record = {"ts": utc_now(), "kind": kind, **payload}
+        if self._owns_transaction():
+            self._records.append(copy.deepcopy(record))
+            return
+        if self.path:
+            # Callers may already have changed a model object. Preserve that
+            # intent as an event, but refuse it if another snapshot committed.
+            with self.transaction(_expected_revision=self._revision):
+                self._replay_record(record)
+                self._records.append(copy.deepcopy(record))
+
+    @_serialized_write
     def set_header(self, header: RunHeader) -> None:
         self.header = header
         self._append("run_header", header.to_dict())
 
+    @_serialized_write
     def upsert_card(self, card: Card) -> None:
         self.cards[card.id] = card
         self._append("card", card.to_dict())
 
+    @_serialized_write
     def record_attempt(self, attempt: Attempt) -> None:
         self.diary[attempt.id] = attempt
         self._append("attempt", attempt.to_dict())
 
+    @_serialized_write
     def record_lease(self, lease: Lease) -> None:
         self.leases.leases[lease.repo_id] = lease
         self._append("lease", lease.to_dict())
 
+    @_serialized_write
     def record_issue(self, issue: Issue) -> None:
         self.issues[issue.id] = issue
         self._append("issue", issue.to_dict())
 
+    @_serialized_write
     def record_ids(self) -> None:
         self._append("ids", {"counters": dict(self.ids.counters)})
 
     @classmethod
     def load(cls, path: str, session: str = "") -> "Store":
         store = cls(path, session=session)
-        with open(path, encoding="utf-8") as handle:
-            for line in handle:
-                line = line.strip()
-                if not line:
-                    continue
+        with open(path, "rb") as handle:
+            raw = handle.read()
+        store._revision = hashlib.sha256(raw).hexdigest()
+        store._needs_newline = bool(raw and not raw.endswith(b"\n"))
+        offset = 0
+        for number, line in enumerate(raw.splitlines(keepends=True), 1):
+            if not line.strip():
+                offset += len(line)
+                continue
+            try:
                 record = json.loads(line)
-                kind = record.pop("kind", "")
-                record.pop("ts", None)
-                if kind == "run_header":
-                    store.header = RunHeader.from_dict(record)
-                elif kind == "card":
-                    card = Card.from_dict(record)
-                    store.cards[card.id] = card
-                elif kind == "attempt":
-                    attempt = Attempt.from_dict(record)
-                    store.diary[attempt.id] = attempt
-                elif kind == "lease":
-                    lease = Lease.from_dict(record)
-                    store.leases.leases[lease.repo_id] = lease
-                elif kind == "issue":
-                    issue = Issue.from_dict(record)
-                    store.issues[issue.id] = issue
-                elif kind == "ids":
-                    store.ids = IdAssigner(record.get("counters", {}))
+            except (ValueError, UnicodeError) as exc:
+                if not line.endswith(b"\n") and offset + len(line) == len(raw):
+                    store._tail_offset, store._tail = offset, line
+                    message = (f"incomplete trailing record in {path} at byte {offset}; "
+                               "preceding records recovered; next write quarantines the tail")
+                    store.recovery_warnings.append(message)
+                    warnings.warn(message, RuntimeWarning, stacklevel=2)
+                    break
+                raise StoreError(f"invalid store record {number} in {path}: {exc}") from exc
+            try:
+                if isinstance(record, dict) and record.get("kind") == "transaction":
+                    if record.get("version") != 1 or not isinstance(record.get("records"), list):
+                        raise ValueError("invalid transaction envelope")
+                    for event in record["records"]:
+                        store._replay_record(event)
+                else:
+                    store._replay_record(record)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise StoreError(f"invalid store record {number} in {path}: {exc}") from exc
+            offset += len(line)
         for identifier in (*store.cards, *store.diary, *store.issues):
             store.ids.observe(identifier)
         return store
+
+    def _replay_record(self, record: dict) -> None:
+        if not isinstance(record, dict):
+            raise ValueError("event must be an object")
+        kind = record.get("kind")
+        if kind == "run_header":
+            self.header = self._update_object(self.header, RunHeader.from_dict(record))
+        elif kind in ("card", "attempt", "issue", "lease"):
+            model, mapping, identifier = {
+                "card": (Card, self.cards, "id"),
+                "attempt": (Attempt, self.diary, "id"),
+                "issue": (Issue, self.issues, "id"),
+                "lease": (Lease, self.leases.leases, "repo_id"),
+            }[kind]
+            value = model.from_dict(record)
+            key = getattr(value, identifier)
+            mapping[key] = self._update_object(mapping.get(key), value)
+            if kind != "lease":
+                self.ids.observe(key)
+        elif kind == "ids":
+            for prefix, value in record.get("counters", {}).items():
+                self.ids.counters[prefix] = max(self.ids.counters.get(prefix, 0), value)
+        else:
+            raise ValueError(f"unknown event kind {kind!r}")

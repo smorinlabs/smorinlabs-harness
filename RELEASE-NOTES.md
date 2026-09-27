@@ -40,6 +40,13 @@
 - Successful-check counts exclude skipped jobs.
 - Delivery reports distinguish merged PRs from dependency updates delivered
   through merged replacement PRs.
+- Store transactions preserve complete scope across crashes, serialize ID
+  allocation, and reject returns from superseded workers. Recovery of another
+  session's attempt requires explicit confirmation that its writers stopped.
+- Required checks with a specified producer cannot fall back to unattributed
+  commit statuses. Delegates preserve the earliest inherited deadline.
+- Approval lists include linked replacements. Evaluated heads are saved, and
+  approvals for a different head are revoked before another worker is issued.
 
 ## v0.30.0 — 2026-09-26
 

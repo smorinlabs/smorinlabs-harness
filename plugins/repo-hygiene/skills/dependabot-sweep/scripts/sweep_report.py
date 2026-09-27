@@ -225,15 +225,19 @@ def render_report(store: Store, continuation: str | None = None) -> str:
     return "\n".join(lines) + "\n"
 
 
+def approval_cards(store: Store) -> list:
+    """Selected and linked replacement approvals, most consequential first."""
+    assert store.header is not None, "create_run first"
+    return sorted((c for c in _visible(store) if c.state == State.NEEDS_OWNER),
+                  key=lambda c: (SEVERITY_RANK.get(c.severity, 99), c.id))
+
+
 def render_approval(store: Store) -> str:
     """Render the approval set: every NEEDS_OWNER card, most
     consequential first, each with the fixed 7-part decision block."""
-    assert store.header is not None, "create_run first"
-    needy = [store.cards[i] for i in store.header.scope_ids
-             if store.cards[i].state == State.NEEDS_OWNER]
+    needy = approval_cards(store)
     if not needy:
         return "No approvals needed.\n"
-    needy.sort(key=lambda c: (SEVERITY_RANK.get(c.severity, 99), c.id))
     lines = [f"APPROVAL NEEDED -- {len(needy)} PRs. "
              f"Start with #1: {needy[0].reason_line}",
              "Reply APPROVE <n|ALL> or DECLINE <n> <reason>.",
@@ -241,6 +245,7 @@ def render_approval(store: Store) -> str:
     for pos, card in enumerate(needy, start=1):
         tag = "MOST URGENT -- " if pos == 1 else ""
         lines.append(f"#{pos} {tag}{card.human_id} [{card.id}]")
+        lines.append(f"   Head: {card.head_sha or 'not yet verified'}")
         decision = card.decision or {}
         lines.append(f"   Why you: {decision.get('why', card.reason_line)}")
         lines.append(f"   Approve -> "

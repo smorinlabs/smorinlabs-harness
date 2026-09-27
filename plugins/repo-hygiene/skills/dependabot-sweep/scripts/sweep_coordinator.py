@@ -11,7 +11,7 @@ mappings), so every path below is testable without the network.
 
 from __future__ import annotations
 
-import calendar
+import re
 import sys
 import os
 import time
@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sweep_core import (  # noqa: E402
     Card, Issue, K_REASONS, RunHeader, SEVERITIES, State, Store, StoreError,
-    TERMINAL, TRANSITIONS, utc_now,
+    TERMINAL, TRANSITIONS, transactional, utc_now,
 )
 
 HOLD_STATES = frozenset({State.WAITING, State.BLOCKED, State.NEEDS_OWNER})
@@ -29,6 +29,7 @@ OUTCOME_TARGETS = {"merged": State.MERGED, "ready": State.READY,
                    "unknown": State.UNKNOWN, "closed": State.CLOSED}
 
 
+@transactional
 def create_run(store: Store, run_id: str, mode: str, authorization: str,
                discoveries: list, scope_fixed: bool = True,
                exclusions: list | None = None,
@@ -38,12 +39,13 @@ def create_run(store: Store, run_id: str, mode: str, authorization: str,
     Card ids are assigned in discovery order and never renumbered.
     `cutoff` records the discovery instant a fixed scope was taken at.
     """
+    if store.header is not None:
+        raise StoreError(f"run {store.header.run_id!r} already exists")
     header = RunHeader(run_id=run_id, mode=mode,
                        scope_fixed=scope_fixed, cutoff=cutoff,
                        authorization=authorization,
                        exclusions=list(exclusions or []),
                        started_at=utc_now())
-    store.set_header(header)
     for discovery in discoveries:
         card_id = store.ids.next("PR")
         card = Card(
@@ -75,26 +77,18 @@ def _decide(seen: dict) -> str:
     return "ambiguous"
 
 
-def _epoch_of(stamp: str) -> float:
-    try:
-        return float(calendar.timegm(time.strptime(stamp,
-                                                   "%Y-%m-%dT%H:%M:%SZ")))
-    except (TypeError, ValueError):
-        return 0.0
+def _protected(store: Store, attempt, confirmed_stopped: set) -> bool:
+    """A foreign or unknown owner stays protected until its stop is verified.
 
-
-def _protected(store: Store, attempt, now: float | None,
-               stale_after_secs: float | None) -> bool:
-    """A live attempt of another coordinator session is never reconciled
-    away while its heartbeat is fresh: this session cannot know it died.
-    Without a staleness bound, another session's attempt is always kept."""
-    if attempt is None or not attempt.session \
-            or attempt.session == store.session:
-        return False
-    if stale_after_secs is None:
+    A heartbeat's age cannot establish that a worker has stopped mutating.
+    Missing session ids cannot establish same-session ownership.
+    """
+    if attempt is None:
         return True
-    moment = time.time() if now is None else now
-    return moment - _epoch_of(attempt.last_progress_at) <= stale_after_secs
+    if attempt.id in confirmed_stopped:
+        return False
+    return not (attempt.session and store.session
+                and attempt.session == store.session)
 
 
 def _unlock(store: Store, repo_id: str, holder: str) -> None:
@@ -102,9 +96,11 @@ def _unlock(store: Store, repo_id: str, holder: str) -> None:
         store.locks.release(repo_id, holder)
 
 
+@transactional
 def reconcile(store: Store, observed: dict, live_attempts: set,
               now: float | None = None,
-              stale_after_secs: float | None = None) -> dict:
+              stale_after_secs: float | None = None,
+              confirmed_stopped=()) -> dict:
     """Restart/crash reconciliation. Runs before any new mutation.
 
     `observed` maps card id -> {"merged": bool|None, "commit": str,
@@ -115,21 +111,34 @@ def reconcile(store: Store, observed: dict, live_attempts: set,
     each UNKNOWN card needs a decisive observation, and the quarantine
     lifts only when none remains. A recorded hold is truth: an unmerged
     observation confirms it, only UNKNOWN cards are restored, and only
-    NEW cards are rescheduled. Attempts another session issued are left
-    alone until their heartbeat is older than `stale_after_secs`.
+    NEW cards are rescheduled. Same-session recovery requires matching,
+    nonempty session ids. Other attempts, including quarantined attempts,
+    stay protected unless their ids are supplied in `confirmed_stopped`
+    after their processes are verified stopped. Age and `stale_after_secs`
+    never establish that fact; the timing parameters are retained for
+    compatibility with older callers.
     """
+    confirmed_stopped = set(confirmed_stopped)
+    conflict = confirmed_stopped & set(live_attempts)
+    if conflict:
+        raise StoreError(f"attempts cannot be live and confirmed stopped: "
+                         f"{', '.join(sorted(conflict))}")
+    unknown = confirmed_stopped - set(store.diary)
+    if unknown:
+        raise StoreError(f"unknown confirmed-stopped attempts: "
+                         f"{', '.join(sorted(unknown))}")
     summary = {"crashed": [], "merged": [], "rescheduled": [],
                "retained": [], "quarantined": [], "resolved": []}
     crashed = []
     for attempt in store.diary.values():
         if not attempt.result and attempt.id not in live_attempts \
-                and not _protected(store, attempt, now, stale_after_secs):
+                and not _protected(store, attempt, confirmed_stopped):
             attempt.result = "crashed"
             crashed.append(attempt)
     for lease in list(store.leases.leases.values()):
         if lease.state != "held" or lease.holder in live_attempts \
-                or _protected(store, store.diary.get(lease.holder), now,
-                              stale_after_secs):
+                or _protected(store, store.diary.get(lease.holder),
+                              confirmed_stopped):
             continue
         quarantined_here = False
         for card_id in lease.pr_ids:
@@ -168,6 +177,9 @@ def reconcile(store: Store, observed: dict, live_attempts: set,
             _unlock(store, lease.repo_id, holder)
     for lease in list(store.leases.leases.values()):
         if lease.state != "quarantined":
+            continue
+        if lease.holder in live_attempts or (lease.holder and _protected(
+                store, store.diary.get(lease.holder), confirmed_stopped)):
             continue
         unknown = sorted((c for c in store.cards.values()
                           if c.repo_id == lease.repo_id
@@ -208,6 +220,7 @@ def reconcile(store: Store, observed: dict, live_attempts: set,
 SCHEDULABLE = frozenset({State.NEW, State.READY})
 
 
+@transactional
 def schedule(store: Store, model: str = "", pr_budget_secs: float | None = None,
              now: float | None = None, wake=()) -> list:
     """Issue one tasking per free repo that holds schedulable cards: NEW,
@@ -312,19 +325,21 @@ def _new_attempt(attempt_id: str, card_ids: list, model: str):
     from sweep_core import Attempt
     return Attempt(id=attempt_id, assigned=list(card_ids), model=model,
                    started_at=utc_now(), last_progress_at=utc_now(),
-                   phase="assigned")
+                   phase="assigned", outstanding=list(card_ids))
 
 
+@transactional
 def apply_outcome(store: Store, attempt_id: str, results: list) -> dict:
     """Collect one worker's outcome records.
 
     Each result resolves one assigned card: merged (requires commit sha
-    and timestamp), ready (requires reason and evidence; prepared but
-    unmerged), hold (requires target state, known reason code, known
+    and timestamp), ready (requires evaluated head, reason, and evidence;
+    prepared but unmerged), hold (requires target state, known reason code, known
     severity, reason, action, owner), unknown (requires an operation
     note; quarantines the repo), or closed (requires a reason). The whole
     batch is validated before any card changes: one bad record refuses
-    the batch and leaves cards, attempt, and lease untouched.
+    the batch and leaves cards, attempt, and lease untouched. Each card
+    returns once per attempt; batches cumulatively resolve outstanding cards.
     """
     attempt = store.diary.get(attempt_id)
     if attempt is None:
@@ -332,16 +347,35 @@ def apply_outcome(store: Store, attempt_id: str, results: list) -> dict:
     if attempt.result:
         raise StoreError(f"attempt {attempt_id} already "
                          f"{attempt.result}")
+    if attempt.session != store.session:
+        raise StoreError(f"attempt {attempt_id} belongs to coordinator "
+                         f"session {attempt.session!r}, not {store.session!r}")
+    # Legacy attempts started with an empty outstanding list. A completed
+    # return is rejected above, so an active empty list means no results yet.
+    outstanding = list(attempt.outstanding or attempt.assigned)
+    for card_id in attempt.assigned:
+        card = store.cards[card_id]
+        lease = store.leases.get(card.repo_id)
+        if lease.state not in ("held", "quarantined") \
+                or lease.holder != attempt_id or card_id not in lease.pr_ids:
+            raise StoreError(f"{card_id}: current repository lease does not "
+                             f"belong to {attempt_id}")
+        if not card.attempts or card.attempts[-1] != attempt_id:
+            raise StoreError(f"{card_id}: {attempt_id} is not the current "
+                             f"attempt generation")
     seen: set = set()
     for result in results:
         card_id = result.get("card_id", "")
         if card_id not in attempt.assigned:
             raise StoreError(f"{attempt_id} was not assigned {card_id!r}")
+        if card_id not in outstanding:
+            raise StoreError(f"{card_id}: already returned by {attempt_id}")
         if card_id in seen:
             raise StoreError(f"{card_id}: resolved twice in one batch")
         seen.add(card_id)
         card = store.cards[card_id]
-        if store.leases.get(card.repo_id).state == "quarantined" \
+        lease = store.leases.get(card.repo_id)
+        if lease.state == "quarantined" \
                 and result.get("outcome") in ("merged", "ready"):
             raise StoreError(f"{card_id}: repository {card.repo_id} is "
                              f"quarantined; reconcile before claiming "
@@ -354,8 +388,10 @@ def apply_outcome(store: Store, attempt_id: str, results: list) -> dict:
         if outcome == "merged":
             _apply_merged(card, result)
         elif outcome == "ready":
+            _apply_evaluated_head(store, card, result)
             _apply_ready(card, result)
         elif outcome == "hold":
+            _apply_evaluated_head(store, card, result)
             _apply_hold(card, result)
             if result.get("incident"):
                 link_incident(store, card, result)
@@ -368,7 +404,7 @@ def apply_outcome(store: Store, attempt_id: str, results: list) -> dict:
         applied.append(card.id)
     attempt.last_progress_at = utc_now()
     attempt.phase = "returned"
-    pending = [c for c in attempt.assigned if c not in applied]
+    pending = [c for c in outstanding if c not in applied]
     attempt.outstanding = pending
     if not pending:
         attempt.result = "completed"
@@ -381,6 +417,12 @@ def _validate_result(card: Card, result: dict) -> None:
     """Refuse an outcome record before anything mutates. Every rule the
     appliers rely on lives here, including worker transition legality."""
     outcome = result.get("outcome")
+    if outcome == "ready" or (outcome == "hold" and "head_sha" in result):
+        head = result.get("head_sha")
+        if not isinstance(head, str) \
+                or not re.fullmatch(r"[0-9a-fA-F]{40}", head):
+            raise StoreError(f"{card.id}: {outcome} requires head_sha as a "
+                             f"full 40-hex commit SHA")
     if outcome == "closed" and card.state == State.CLOSED:
         # The coordinator already recorded the supersession; the worker's
         # own closed record is accepted when it agrees.
@@ -439,8 +481,8 @@ def _validate_result(card: Card, result: dict) -> None:
     if severity not in SEVERITIES:
         raise StoreError(f"{card.id}: unknown severity {severity!r}; "
                          f"expected one of {', '.join(SEVERITIES)}")
-    if outcome == "hold" and target == card.state:
-        return  # a re-evaluated hold refreshes its reason in place
+    if outcome in ("hold", "ready") and target == card.state:
+        return  # fresh evaluations update their existing state in place
     if target not in TRANSITIONS[card.state]:
         raise StoreError(f"{card.id}: {card.state.value} -> {target.value} "
                          f"is not a worker transition")
@@ -453,13 +495,49 @@ def _apply_merged(card: Card, result: dict) -> None:
     card.transition_to(State.MERGED)
 
 
+def _apply_evaluated_head(store: Store, card: Card, result: dict) -> None:
+    """Store an identity-verified head and retain only approval bound to it.
+
+    READY always supplies a head. HOLD supplies one only after the
+    evaluator's identity check passed; unreadable observations omit it.
+    An explicit matching approval remains valid even if discovery was stale.
+    Legacy approval ids are bound to the card's previously stored head.
+    """
+    if "head_sha" not in result:
+        return
+    head = result["head_sha"].lower()
+    authority = store.header.authority if store.header else {}
+    records = authority.get("approval_records", {})
+    if card.id in records:
+        record = records[card.id]
+        approved_head = (record.get("head_sha", "")
+                         if isinstance(record, dict) else "")
+    else:
+        approved_head = card.head_sha
+    approved = authority.get("approved", [])
+    if not isinstance(approved_head, str) or approved_head.lower() != head:
+        changed = False
+        if card.id in approved:
+            authority["approved"] = [i for i in approved if i != card.id]
+            changed = True
+        if card.id in records:
+            del records[card.id]
+            changed = True
+        if changed:
+            store.set_header(store.header)
+    card.head_sha = head
+
+
 def _apply_ready(card: Card, result: dict) -> None:
     """A worker evaluated the card and found it mergeable but did not
     merge (e.g. gated preparation)."""
     card.reason_line = result["reason_line"]
     card.evidence = result["evidence"]
     card.severity = "none"
-    card.transition_to(State.READY)
+    if card.state == State.READY:
+        card.updated_at = utc_now()
+    else:
+        card.transition_to(State.READY)
 
 
 def _apply_hold(card: Card, result: dict) -> None:
@@ -517,6 +595,7 @@ def _settle_leases(store: Store, attempt) -> None:
             _unlock(store, repo_id, attempt.id)
 
 
+@transactional
 def verify_merges(store: Store, observed: dict) -> list:
     """Cross-check MERGED claims against fresh observation.
 
@@ -541,6 +620,7 @@ def verify_merges(store: Store, observed: dict) -> list:
     return demoted
 
 
+@transactional
 def register_replacement(store: Store, old_id: str, fields: dict) -> Card:
     """Link a replacement PR to the original it supersedes.
 
@@ -572,6 +652,7 @@ def register_replacement(store: Store, old_id: str, fields: dict) -> Card:
     return new
 
 
+@transactional
 def register_arrival(store: Store, fields: dict) -> Card:
     """Record a PR discovered after the run started.
 
@@ -623,10 +704,12 @@ def describe_subset(store: Store, ids: list) -> list:
     return [store.cards[i] for i in store.header.query_subset(ids)]
 
 
+@transactional
 def link_incident(store: Store, card: Card, result: dict) -> Issue:
     """Link a card to the shared incident its diagnosis named. One issue
     per (repository, incident key): every PR a base-branch failure blocks
     carries the same ISS id, and the incident is repaired once."""
+    card = store.cards[card.id]
     key = result["incident"]["key"]
     issue = next((i for i in store.issues.values()
                   if i.key == key and i.repo_id == card.repo_id), None)
@@ -644,9 +727,11 @@ def link_incident(store: Store, card: Card, result: dict) -> Issue:
     store.record_issue(issue)
     if issue.id not in card.issue_ids:
         card.issue_ids.append(issue.id)
+    store.upsert_card(card)
     return issue
 
 
+@transactional
 def start_run_clock(store: Store, run_budget_secs: float,
                     now: float | None = None) -> float:
     """Set the whole-run deadline once. A second call is refused: a
@@ -661,6 +746,7 @@ def start_run_clock(store: Store, run_budget_secs: float,
     return store.header.deadline_epoch
 
 
+@transactional
 def expire(store: Store, now: float | None = None) -> list:
     """Move idle dispatchable cards (NEW, READY) whose deadline passed to
     WAITING K14, so `schedule` never hands dead work to a worker. A card
@@ -705,6 +791,7 @@ def run_ending(store: Store, discovery_complete: bool | None = None) -> str:
 CONTINUATION_KINDS = ("watcher", "scheduled", "none")
 
 
+@transactional
 def finish_run(store: Store, continuation: dict,
                discovery_complete: bool = True) -> str:
     """Record the stop reason and the one explicit continuation state."""

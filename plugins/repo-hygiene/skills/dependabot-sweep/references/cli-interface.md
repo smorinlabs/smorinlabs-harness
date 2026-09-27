@@ -49,7 +49,7 @@ Domain verbs are justified in the conformance note (R2.1).
 | `--debug` | | maximum diagnostics |
 | `--config PATH` | | config file; replaces discovery (R5.2) |
 | `--store PATH` | | the run's JSONL record store; env `DEPENDABOT_SWEEP_STORE` |
-| `--session ID` | | this coordinator session's id; env `DEPENDABOT_SWEEP_SESSION` |
+| `--session ID` | | this coordinator session's stable id; env `DEPENDABOT_SWEEP_SESSION`; recovery without a known matching id requires `--stopped` |
 | `--output FORMAT` | `-o` | `table` (default, human) or `json` (machine); accepted before or after the command (R4.5) |
 | `--json` | | identical to `-o json` (R4.2) |
 
@@ -71,6 +71,7 @@ the command line (R5.5).
 | | `--authorization TEXT` | string | `dependabot-sweep run create` | the user's authorizing words or record id |
 | `run reconcile` | `--file PATH` | path or `-`, required | | `{card id: {"merged": bool\|null, "commit", "at"}}` |
 | | `--live ATTEMPT` | repeatable | none | attempt ids known to still run |
+| | `--stopped ATTEMPT` | repeatable | none | worker and all delegates verified stopped with mutation handles released; required to reclaim another session's attempt |
 | `run finish` | `--continuation KIND` | `none` \| `watcher` \| `scheduled`, required | | the one explicit continuation |
 | | `--ref REF` | string | | watcher or invocation reference (required unless `none`) |
 | | `--verified-at ISO8601` | string | | when the continuation was verified running (required unless `none`) |
@@ -149,8 +150,21 @@ effective repository modes, including mixed-mode runs.
 
 ## Safety
 
-No command is destructive: the store is append-only and `pr observe` only
-reads GitHub. Merges are performed by the worker's transport
+Commands never mutate GitHub; `pr observe` only reads it. Store mutations
+are serialized and append one complete transaction at a time. Replay also
+accepts legacy single-record lines. A torn final append is reported; before
+the next write, its bytes are preserved separately and the uncommitted tail
+is removed under the store lock. Malformed committed history fails closed.
+Run creation commits its scope, authority, and deadline together.
+
+Reconciliation never infers that another session's worker has stopped from
+heartbeat age. Missing session identities are treated as unknown, even when
+both are empty. `--stopped ATTEMPT` asserts verified termination of the worker
+and every delegate and release of their mutation handles. It cannot overlap
+`--live` or name an unknown attempt. Fresh GitHub evidence is still required
+before a successor may mutate the repository.
+
+Merges are performed by the worker's transport
 (`sweep_merge.py` around the unchanged `gh_merge.py`, or pr-merge-flow),
 never by this CLI, so `--dry-run`,
 `--force`, `--yes`, and `--no-input` do not apply (§8 N/A). The CLI never

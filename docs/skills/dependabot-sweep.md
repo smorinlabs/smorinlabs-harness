@@ -40,9 +40,14 @@ location) as well.
 ## Durable runs and approval
 
 Each sweep stores its selected PRs, worker attempts, repository leases, and
-outcomes in an append-only JSONL file. Restart reconciliation checks unfinished
-attempts before another worker receives the repository. An uncertain merge
-quarantines the repository until read-only evidence resolves it.
+outcomes in a JSONL transaction journal. Concurrent coordinator processes
+serialize changes, and replay restores complete transactions. A torn final
+append is preserved before recovery repairs the uncommitted tail. Restart
+reconciliation checks unfinished attempts before another worker receives the
+repository. Reclaiming another session's attempt requires verified termination
+of its worker and delegates, supplied through `run reconcile --stopped ATTEMPT`.
+Heartbeat silence alone cannot release it. An uncertain merge quarantines the
+repository until read-only evidence resolves it.
 
 The configured mode controls authority:
 
@@ -55,7 +60,8 @@ The configured mode controls authority:
 Repair permissions are separate grants. Repository settings are never a worker
 repair. Approval never waives CI or review requirements, and a changed head
 requires new classification and gated approval. A technical failure discovered
-while approval is pending becomes a recorded hold.
+while approval is pending becomes a recorded hold. Approval lists include
+linked replacement PRs and identify the full head being approved.
 
 Organization and user configuration overrides are resolved per repository at
 run creation and saved with the run. Later config edits cannot change that

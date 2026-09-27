@@ -59,7 +59,7 @@ Report the discovery (N open PRs across M repos, grouped by repo with titles). U
 
 The coordinator (`scripts/sweep_coordinator.py`) owns inventory, scheduling,
 recovery, and reporting from one durable record store
-(`scripts/sweep_core.py`: append-only JSONL, replayed on restart). It never
+(`scripts/sweep_core.py`: a JSONL transaction journal, replayed on restart). It never
 merges. **One executor per repository**: the worker attempt that holds the
 repository's mutation lease. It merges through exactly one transport per
 PR: `scripts/sweep_merge.py`, which binds the unchanged SHA-bound helper
@@ -79,7 +79,10 @@ below are what those commands enforce.
   `brief view <attempt>` renders that worker's brief; hand it to a Task
   subagent; `attempt collect <attempt> --file <outcomes.jsonl>` applies
   the returned outcome records; on any restart, `run reconcile --file
-  <observed.json> --live <attempt>...` runs before `attempt create`;
+  <observed.json> --live <attempt>...` runs before `attempt create`.
+  To reclaim an attempt owned by another session, verify that its worker
+  and all delegates have stopped and released mutation handles, then pass
+  `--stopped <attempt>`. Silence or an expired deadline is not that evidence;
   `run describe` and `approval list` render the report and the approval
   set; `run finish --continuation ...` records the stop reason. Every
   command takes `--store <run.jsonl>` and `-o json`. `pr observe` and
@@ -98,9 +101,13 @@ below are what those commands enforce.
   successor attempts inherit. `--no-auto-fix` selects `inspect`;
   `--check` never reaches dispatch (step 3). No agent touches another repo.
   Each repository has a lock file beside the record store, so a second
-  coordinator session over the same store cannot issue a second writer,
-  and never reconciles away another session's attempt while its heartbeat
-  is fresh.
+  coordinator session over the same store cannot issue a second writer.
+  Store transactions serialize scheduling, ID allocation, and collection
+  across coordinator processes. Collection checks the current lease holder,
+  attempt generation, and owning session. Reconciliation preserves another
+  session's held or quarantined attempt until explicitly confirmed stopped,
+  regardless of heartbeat age. Missing session identities remain protected
+  too; use a stable `--session` value across commands for the same coordinator.
 - **Five checks** (`scripts/sweep_evaluator.py`) at one pinned head decide
   every PR. *Is it what we think?* A full refresh (pull, files, reviews,
   threads, check-runs, check suites, statuses, queue, effective policy)
@@ -158,9 +165,15 @@ below are what those commands enforce.
 - **Returns and recovery**: workers return one outcome record per assigned
   PR (`merged` / `ready` / `hold` / `unknown` / `closed`, fields per the
   brief); the coordinator refuses an incomplete batch before any record
-  changes. After a crash or restart it replays the store, marks dead
-  attempts, reconciles every orphaned or quarantined repository against
-  fresh observation, and only then schedules successor attempts.
+  changes. Evaluated READY records carry the full head; a changed head
+  revokes any approval that does not match it. After a crash or restart,
+  replay restores only committed transactions. A torn final append is
+  reported and preserved separately before a locked writer repairs the
+  journal tail; corruption inside committed history fails closed. Recovery
+  can release a protocol-marked repository claim that never reached a
+  committed lease, but never steals an unknown lock by age. After confirmed
+  worker termination, reconcile unfinished and quarantined attempts against
+  fresh observation before scheduling a successor.
 - **Patience** (`scripts/sweep_patience.py`): one absolute deadline bounds
   each child's whole process tree; at expiry the process group is
   terminated, then killed. A delegate inherits the earlier deadline, and a
@@ -191,8 +204,9 @@ PR processed, the rest held with a reason and owner), or INCOMPLETE (a PR
 never processed, or discovery incomplete). A watcher or scheduled
 invocation counts as continuation only with a concrete reference and the
 time it was verified running; otherwise the report says none is
-running. The approval presenter lists every
-`NEEDS_OWNER` card most-consequential-first with a fixed decision block.
+running. The approval presenter lists selected `NEEDS_OWNER` cards and their
+linked replacements most-consequential-first with a fixed decision block,
+including the head to approve. Unselected late arrivals remain separate.
 Add the discovery cost in API calls. Conflicts under `pause_on_conflict`
 surface as AskUserQuestion follow-ups, one repo at a time.
 

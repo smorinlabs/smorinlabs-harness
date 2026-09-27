@@ -577,10 +577,10 @@ from sweep_core import StoreError  # noqa: E402
 
 
 def two_card_run(tmp_path, run_id="RUN-T06"):
-    store = Store(str(tmp_path / "run.jsonl"))
+    store = Store(str(tmp_path / "run.jsonl"), session="slice2-coordinator")
     coord.create_run(store, run_id, "automated", "auth", [
         {"org": "acme", "repo": "r", "number": n, "title": f"bump {n}",
-         "url": "u", "owner": "acme", "head_sha": f"h{n}"} for n in (1, 2)])
+         "url": "u", "owner": "acme", "head_sha": f"{n:040x}"} for n in (1, 2)])
     return store
 
 
@@ -596,7 +596,7 @@ def test_t06_lost_response_restart_retains_hold_then_reconciles(tmp_path):
         {"card_id": "PR-001", "outcome": "unknown",
          "op_note": "merge PUT accepted by transport; response lost"}])
     # Restart: only the JSONL survives.
-    store = Store.load(str(tmp_path / "run.jsonl"))
+    store = Store.load(str(tmp_path / "run.jsonl"), session="slice2-coordinator")
     assert store.leases.get("acme/r").state == "quarantined"
     assert coord.schedule(store) == []  # the hold survives the restart
     try:
@@ -677,6 +677,7 @@ def test_ready_cards_are_rescheduled_for_merge(tmp_path):
     attempt = coord.schedule(store)[0]["attempt_id"]
     coord.apply_outcome(store, attempt, [
         {"card_id": "PR-001", "outcome": "ready", "reason_line": "inspect",
+         "head_sha": "a" * 40,
          "evidence": [{"id": "EV-1"}]},
         {"card_id": "PR-002", "outcome": "merged", "commit_sha": "d" * 40,
          "merged_at": "2026-09-22T00:21:00Z"}])

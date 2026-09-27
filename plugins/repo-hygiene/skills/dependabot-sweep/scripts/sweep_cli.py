@@ -196,6 +196,10 @@ def build_parser() -> Parser:
                         '"at"}}; - reads stdin')
     p.add_argument("--live", action="append", default=[], metavar="ATTEMPT",
                    help="attempt id known to still run (repeatable)")
+    p.add_argument("--stopped", action="append", default=[], metavar="ATTEMPT",
+                   help="attempt whose worker and delegates are verified "
+                        "stopped and have released mutation handles "
+                        "(repeatable; required to reclaim another session)")
     p = verb(run_verbs, "finish",
              "Record the stop reason and the one explicit continuation.",
              f"  {TOOL} --store run.jsonl run finish --continuation none\n"
@@ -464,15 +468,16 @@ def cmd_run_create(args, ctx: Context) -> None:
     authority = run_config.to_authority(
         HELPER_PATH, repositories=[f"{d['org']}/{d['repo']}" for d in discoveries])
     store = Store(ctx.store_path, session=ctx.session)
-    header = coord.create_run(
-        store, args.run_id, mode=run_config.mode,
-        authorization=args.authorization or f"{TOOL} run create",
-        discoveries=discoveries, scope_fixed=not args.evolving,
-        cutoff=args.cutoff or utc_now())
-    header.authority = authority
-    store.set_header(header)
-    if run_config.run_budget_secs:
-        coord.start_run_clock(store, run_config.run_budget_secs)
+    with store.transaction():
+        header = coord.create_run(
+            store, args.run_id, mode=run_config.mode,
+            authorization=args.authorization or f"{TOOL} run create",
+            discoveries=discoveries, scope_fixed=not args.evolving,
+            cutoff=args.cutoff or utc_now())
+        header.authority = authority
+        store.set_header(header)
+        if run_config.run_budget_secs:
+            coord.start_run_clock(store, run_config.run_budget_secs)
     label = report.authority_label(header)
     ctx.note(f"created {args.run_id}: {len(discoveries)} card(s), "
              f"{label}, config "
@@ -521,7 +526,8 @@ def cmd_run_reconcile(args, ctx: Context) -> None:
                        "invalid_input")
     stale = _authority(store).get("stale_after_secs")
     summary = coord.reconcile(store, observed, set(args.live),
-                              stale_after_secs=stale)
+                              stale_after_secs=stale,
+                              confirmed_stopped=set(args.stopped))
     ctx.emit(summary, "\n".join(f"{key}: {', '.join(value) or 'none'}"
                                 for key, value in summary.items()))
 
@@ -644,6 +650,13 @@ def _ok(section: dict) -> bool:
         "truncated")
 
 
+def _approved_for_head(authority: dict, card, head_sha: str) -> bool:
+    """Explicit receipts bind approval to their head; legacy IDs bind to the card."""
+    if card.id not in authority.get("approved", []) or not head_sha:
+        return False
+    return proto.approval_head(authority, card.id, card.head_sha) == head_sha.lower()
+
+
 def cmd_pr_evaluate(args, ctx: Context) -> None:
     store = _store_or_none(ctx)
     owner, repo, number, card = _resolve_target(ctx, args.target, store)
@@ -663,7 +676,8 @@ def cmd_pr_evaluate(args, ctx: Context) -> None:
         auth = ev.Authority(mode=authority["mode"],
                             repairs=frozenset(authority["repairs"]),
                             owner_hold=card.id in authority.get("holds", []),
-                            approved=card.id in authority.get("approved", []),
+                            approved=_approved_for_head(
+                                authority, card, observation.head_sha),
                             deadline_epoch=card.deadline_epoch or None)
         lease = store.leases.get(card.repo_id)
         tracking = ev.Tracking(
@@ -708,8 +722,7 @@ def cmd_pr_evaluate(args, ctx: Context) -> None:
 
 def cmd_approval_list(args, ctx: Context) -> None:
     store = ctx.store()
-    needy = [store.cards[i].to_dict() for i in store.header.scope_ids
-             if store.cards[i].state == State.NEEDS_OWNER]
+    needy = [card.to_dict() for card in report.approval_cards(store)]
     ctx.emit(needy, report.render_approval(store))
 
 

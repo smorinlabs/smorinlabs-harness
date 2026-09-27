@@ -94,10 +94,14 @@ else. The coordinator refuses a batch with a missing field, so fill every
 field from evidence:
 
 - `{"card_id": "PR-001", "outcome": "merged", "commit_sha": "<40 hex>", "merged_at": "<ISO 8601>"}`
-- `{"card_id": "PR-001", "outcome": "ready", "reason_line": "...", "evidence": [{"id": "EV-...", "what": "...", "establishes": "..."}]}`
+- `{"card_id": "PR-001", "outcome": "ready", "head_sha": "<40 hex>", "reason_line": "...", "evidence": [{"id": "EV-...", "what": "...", "establishes": "..."}]}`
 - `{"card_id": "PR-001", "outcome": "hold", "state": "WAITING|BLOCKED|NEEDS_OWNER", "reason_code": "K01..K17", "reason_line": "...", "severity": "critical|high|medium|low|advisory|unknown", "confidence": "...", "evidence": [...], "action": "...", "action_owner": "...", "resume_trigger": "...", "decision": {"why", "approve_effect", "decline_effect", "recommendation"}}`
 - `{"card_id": "PR-001", "outcome": "unknown", "op_note": "<the uncertain operation>"}`
 - `{"card_id": "PR-001", "outcome": "closed", "reason": "...", "replaced_by": "<card id or empty>"}`
 
 A PR you could not reach still gets a record: hold `K12` with what stopped
-you. `decision` is required only for `NEEDS_OWNER`.
+you. `decision` is required only for `NEEDS_OWNER`. READY always includes the
+full evaluated `head_sha`. Include that field on a hold only when the identity
+check passed; omit it when observation or classification could not establish
+the head. Collection saves the evaluated head and revokes approvals for other
+heads. The next attempt then receives that head in its assigned card.

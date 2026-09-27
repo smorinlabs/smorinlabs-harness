@@ -350,6 +350,7 @@ class Evaluation:
             return {"card_id": card_id, **self.resolved}
         if self.state == State.READY:
             return {"card_id": card_id, "outcome": "ready",
+                    "head_sha": self.head_sha,
                     "reason_line": self.reason_line,
                     "evidence": list(self.evidence)}
         record = {"card_id": card_id, "outcome": "hold",
@@ -360,6 +361,9 @@ class Evaluation:
                   "evidence": list(self.evidence), "action": self.action,
                   "action_owner": self.action_owner,
                   "resume_trigger": self.resume_trigger}
+        if any(check.name == "identity" and check.passed is True
+               for check in self.checks):
+            record["head_sha"] = self.head_sha
         if self.state == State.NEEDS_OWNER:
             record["decision"] = dict(self.decision)
         return record
@@ -615,6 +619,12 @@ def _green(obs: Observation, reviewer_contexts: set,
     for req in policy.required_checks:
         run = latest.get(req.context)
         status = statuses.get(req.context)
+        if req.producer_id is not None and (
+                run is None
+                or (run.get("app") or {}).get("id") != req.producer_id):
+            raise _Hold(State.WAITING, "K01",
+                        f"required check {req.context} has no run from the "
+                        f"required producer (app {req.producer_id})")
         if run is None and status is not None and status.get("state") == "success":
             continue
         if run is None:
@@ -623,11 +633,6 @@ def _green(obs: Observation, reviewer_contexts: set,
                             f"required check {req.context} has no run on "
                             f"this head yet")
             continue  # pending status, reported below
-        if req.producer_id is not None \
-                and (run.get("app") or {}).get("id") != req.producer_id:
-            raise _Hold(State.WAITING, "K01",
-                        f"required check {req.context} has no run from the "
-                        f"required producer (app {req.producer_id})")
     if red:
         raise _Hold(State.BLOCKED, "K04",
                     f"applicable check failed on head {head[:12]}: "

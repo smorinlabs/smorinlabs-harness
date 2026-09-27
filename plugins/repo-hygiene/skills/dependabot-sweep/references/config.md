@@ -36,9 +36,9 @@ pr_budget_secs = 600    # per-PR deadline span; one absolute epoch per PR
 # run_budget_secs = 0           # whole-run deadline; 0 = unbounded
 # observation_window_secs = 600 # longest wait one observation may promise
 # poll_floor_secs = 20          # minimum seconds between polls; never lowered
-# stale_after_secs = 600        # another session's attempt is reconciled only
-#                               # past this much heartbeat silence (default =
-#                               # pr_budget_secs)
+# stale_after_secs = 600        # retained for configuration compatibility;
+#                               # heartbeat silence never authorizes takeover
+#                               # of another session's attempt
 ```
 
 - Each scope table takes `visibility` or `repos`. If both appear, `repos`
@@ -59,6 +59,10 @@ pr_budget_secs = 600    # per-PR deadline span; one absolute epoch per PR
   refuses authority instead of falling back to broader defaults.
 - Unknown hosts or tools: out of scope in v1 — the sweep stops with a plain
   message rather than guessing.
+- Recovery of another session's attempt requires explicit confirmation that
+  the worker and all delegates have stopped and released mutation handles.
+  Use `run reconcile --stopped ATTEMPT` only after that verification; neither
+  `stale_after_secs` nor a passed deadline supplies it.
 
 ## Precedence
 

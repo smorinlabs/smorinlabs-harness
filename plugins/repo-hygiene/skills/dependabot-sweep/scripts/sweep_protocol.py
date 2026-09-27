@@ -49,6 +49,23 @@ DEFAULT_TEMPLATE = (Path(__file__).resolve().parent.parent / "templates"
 PLACEHOLDER = re.compile(r"\{\{[A-Z_]+\}\}")
 
 
+def _full_head(value) -> str:
+    return value.lower() if isinstance(value, str) and re.fullmatch(
+        r"[0-9a-fA-F]{40}", value) else ""
+
+
+def approval_head(authority: dict, card_id: str, legacy_head: str) -> str:
+    """The head an approval binds to, without granting approval by itself."""
+    records = authority.get("approval_records", {})
+    if not isinstance(records, dict):
+        return ""
+    if card_id in records:
+        record = records[card_id]
+        return _full_head(record.get("head_sha") if isinstance(record, dict)
+                          else None)
+    return _full_head(legacy_head)
+
+
 @dataclass
 class Tasking:
     """One worker attempt's exact authority over one repository."""
@@ -72,6 +89,16 @@ class Tasking:
     cutoff: str = ""
     run_deadline_epoch: float = 0.0
     reviewer_contexts: list = field(default_factory=list)
+    approval_heads: dict | None = None
+
+    def __post_init__(self) -> None:
+        # Old serialized taskings carried only IDs. Bind those once to
+        # their existing valid heads; later card edits cannot widen approval.
+        if self.approval_heads is None:
+            self.approval_heads = {
+                card["id"]: _full_head(card.get("head_sha"))
+                for card in self.cards if card["id"] in self.approved
+                and _full_head(card.get("head_sha"))}
 
     @classmethod
     def from_store(cls, store: Store, record: dict, mode: str, repairs,
@@ -113,11 +140,20 @@ class Tasking:
                           "reason_code": card.reason_code,
                           "deadline_epoch": card.deadline_epoch})
         header = store.header
+        authority = header.authority if header else {}
+        approved_heads = {}
+        if mode == "gated":
+            for card in cards:
+                if card["id"] not in approved:
+                    continue
+                head = approval_head(authority, card["id"], card["head_sha"])
+                if head and head == _full_head(card["head_sha"]):
+                    approved_heads[card["id"]] = head
         return cls(
             attempt_id=record["attempt_id"], repo_id=record["repo_id"],
             card_ids=card_ids, cards=cards, mode=mode,
             merge_allowed=mode != "inspect",
-            approved=list(approved) if mode == "gated" else [],
+            approved=list(approved_heads), approval_heads=approved_heads,
             holds=list(holds),
             repairs=[] if mode == "inspect" else sorted(set(repairs or ())),
             deadlines={c["id"]: c["deadline_epoch"] for c in cards},
@@ -221,6 +257,13 @@ def executor_for(merge_path: str) -> str:
     return EXECUTORS[merge_path]
 
 
+def _approved_card_head(tasking: Tasking, card: dict) -> bool:
+    head = _full_head(card.get("head_sha"))
+    return (card["id"] in tasking.approved and bool(head)
+            and isinstance(tasking.approval_heads, dict)
+            and _full_head(tasking.approval_heads.get(card["id"])) == head)
+
+
 def authorize(tasking: Tasking, action: str, card_id: str,
               now: float) -> tuple:
     """May this attempt take `action` on this card now?
@@ -249,8 +292,8 @@ def authorize(tasking: Tasking, action: str, card_id: str,
         if card.get("state") == "WAITING" and card.get("reason_code") == "K10":
             return False, ("already in the merge queue; queue acceptance is "
                            "pending, observe only")
-        if tasking.mode == "gated" and card_id not in tasking.approved:
-            return False, "K16 gated mode: not approved"
+        if tasking.mode == "gated" and not _approved_card_head(tasking, card):
+            return False, "K16 gated mode: not approved for the assigned head"
         return True, f"{tasking.mode} merge"
     if action not in tasking.repairs:
         return False, f"repair {action} not permitted"
@@ -263,6 +306,9 @@ def helper_command(tasking: Tasking, card_id: str) -> tuple:
     run's absolute deadlines. Never substitute a freshly fetched head or
     recompute a deadline here. The wrapper refuses an absent/invalid head."""
     card = tasking.card(card_id)
+    if tasking.mode == "gated" and not _approved_card_head(tasking, card):
+        raise ValueError(f"{card_id}: gated merge is not approved for the "
+                         "assigned head")
     argv = ["python3", str(MERGE_WRAPPER), "--expected-head",
             card.get("head_sha") or "", "--helper-path", tasking.helper_path,
             "--", card["org"], card["repo"],

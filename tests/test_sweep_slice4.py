@@ -873,6 +873,11 @@ def test_cli_reconcile_from_file(tmp_path, capsys):
     assert code == 0 and json.loads(out)["crashed"] == []
     code, out, err = run(common + ["run", "reconcile", "--file", str(observed),
                                    "-o", "json"], capsys)
+    assert code == 0 and json.loads(out)["crashed"] == []
+    # Anonymous ownership cannot prove this is the original coordinator.
+    # After verifying the worker stopped, explicitly permit reconciliation.
+    code, out, err = run(common + ["run", "reconcile", "--file", str(observed),
+                                   "--stopped", "AGT-001.1", "-o", "json"], capsys)
     assert code == 0, err
     summary = json.loads(out)
     assert summary["crashed"] == ["AGT-001.1"] and summary["merged"] == ["PR-001"]

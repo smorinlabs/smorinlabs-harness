@@ -47,8 +47,9 @@ def _epoch(value: float) -> str:
 def delegate_env(env: dict, deadline_epoch: float) -> dict:
     """Environment for a delegated child: the earlier of the inherited and
     the offered deadline, exported under both names. Never later."""
-    inherited = float((env or {}).get(DEADLINE_ENV) or 0)
-    deadline = effective_deadline(inherited, deadline_epoch)
+    inherited = [float((env or {}).get(name) or 0)
+                 for name in (DEADLINE_ENV, HELPER_DEADLINE_ENV)]
+    deadline = effective_deadline(*inherited, deadline_epoch)
     out = dict(env or {})
     if deadline:
         out[DEADLINE_ENV] = out[HELPER_DEADLINE_ENV] = _epoch(deadline)

@@ -35,11 +35,11 @@ POSIX_ONLY = pytest.mark.skipif(os.name == "nt",
 def discovery(org, repo, number, title="bump x"):
     return {"org": org, "repo": repo, "number": number,
             "url": f"https://example.test/{org}/{repo}/pull/{number}",
-            "title": title, "owner": org, "head_sha": f"head{number}",
+            "title": title, "owner": org, "head_sha": f"{number:040x}",
             "base_ref": "main"}
 
 
-def make_store(tmp_path, discoveries, run_id="RUN-S3-01", session="",
+def make_store(tmp_path, discoveries, run_id="RUN-S3-01", session="slice3-coordinator",
                **options):
     store = Store(str(tmp_path / "run.jsonl"), session=session)
     coord.create_run(store, run_id, mode="automated",
@@ -609,6 +609,7 @@ def test_t11_expire_moves_dead_work_to_budget_exhausted(tmp_path):
              for t in coord.schedule(store, pr_budget_secs=60, now=1000.0)}
     coord.apply_outcome(store, tasks["acme/one"]["attempt_id"], [
         {"card_id": "PR-001", "outcome": "ready", "reason_line": "prepared",
+         "head_sha": "a" * 40,
          "evidence": [{"id": "EV-1"}]}])
     assert coord.expire(store, now=1061.0) == ["PR-001"]
     # PR-002's worker still holds the lease and its own deadline; only
@@ -643,11 +644,17 @@ def test_t08_foreign_live_attempt_is_not_reconciled_away(tmp_path):
                               now=time.time(), stale_after_secs=600)
     assert summary["crashed"] == []
     assert store_b.leases.get("acme/one").holder == task["attempt_id"]
-    # Once A's heartbeat is stale, B may take over through reconcile.
+    # Silence never proves that A or its delegated writer has stopped.
     later = time.time() + 601
     summary = coord.reconcile(store_b, observed={
         "PR-001": {"merged": False}}, live_attempts=set(), now=later,
         stale_after_secs=600)
+    assert summary["crashed"] == []
+    assert coord.schedule(store_b, now=later) == []
+    # B can recover only after explicitly verifying all of A's writers stopped.
+    summary = coord.reconcile(store_b, observed={
+        "PR-001": {"merged": False}}, live_attempts=set(), now=later,
+        confirmed_stopped={task["attempt_id"]})
     assert summary["crashed"] == [task["attempt_id"]]
     (successor,) = coord.schedule(store_b, now=later)
     assert successor["attempt_id"] == "AGT-001.2"
