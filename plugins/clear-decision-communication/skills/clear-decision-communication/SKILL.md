@@ -87,8 +87,8 @@ the output is the brief for that target.
    remaining ones land. Routine confirmations teach the reader to click through,
    and then the one that matters gets clicked through too.
 
-2. **Size: scan the axes, set the tier.** Rate six axes low, elevated, or high
-   with the tests in `references/axes-and-tiers.md`: impact, reversibility,
+2. **Size: scan the axes, set the tier.** Read `references/axes-and-tiers.md`
+   and rate six axes low, elevated, or high with its tests: impact, reversibility,
    departure, uncertainty, tradeoff, domain (those six words are the canonical
    tag names). The highest single axis sets the tier; axes are never summed.
    Only the axes above low expand, each adding exactly the information its row
@@ -109,8 +109,10 @@ the output is the brief for that target.
 
    The length signals are review targets, not caps. Past them, re-run the
    removal test, shorten repeated explanation, and move supporting detail
-   behind Details. Keep every material consequence, uncertainty, definition,
-   and approval boundary in the initial view, even when it exceeds the target.
+   behind Details. Do not compress away a material condition to meet a
+   sentence or clause count. Keep every material consequence, uncertainty,
+   definition, and approval boundary in the initial view, even when it exceeds
+   the target.
    Use sizing internally. Omit tier tags and drafting or batching logistics
    from ordinary requests. Explain the actual consequence that needs attention,
    such as repository write access. If the reader asks to inspect sizing, show
@@ -122,7 +124,9 @@ the output is the brief for that target.
    and the constraints. Resolve every factual question that authorized
    investigation can answer; execute what you need to execute to get evidence,
    and never mutate beyond what the run already authorized. Run the verification
-   the decision needs and note the revision it ran on. Prepare a concrete,
+   the decision needs and note the revision it ran on. Read
+   `references/evidence.md` and record each claim's evidence status as it
+   defines. Prepare a concrete,
    reviewable result: a patch with its checks for an implementation approval,
    concrete alternatives with evidence for a direction. If the user can supply
    an unavailable fact, use step 1's information request. Otherwise, when
@@ -144,10 +148,8 @@ the output is the brief for that target.
    missing, show that relationship before its internals. A sentence or artifact
    table often suffices; use a small relationship diagram when several
    connections matter. Then use the change-type table for the behavior the
-   reader must judge. Forms use ASCII syntax, preserving verbatim content,
-   and live in
-   `references/representation.md`, numbered F1 to F21 so a form can be named by
-   ID.
+   reader must judge. Forms live in `references/representation.md`, numbered
+   F1 to F21 so a form can be named by ID.
 
    | Type of change | Show |
    |---|---|
@@ -157,20 +159,10 @@ the output is the brief for that target.
    | Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
    | Architectural, such as moving responsibilities | a small ASCII system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
 
-   Keep inputs and event order identical across comparisons. Choose the smallest
-   example that exposes the actual difficulty, and include ordinary behavior plus
-   the distinguishing boundary case only when both matter. Every artifact carries
-   a frame: a lead-in that says what question it answers, the artifact exact and
-   unedited, and a reading that says what to take from it. Skip any artifact that
-   adds nothing to a clear sentence. Say whether an example is illustrative or
-   reproduced from a real run, and whether verification was performed or is
-   proposed.
-   Before filling an outcome cell, check that its source establishes the same
-   actor, trigger, and condition values as that row. Keep independent inputs
-   independent: a missing credential does not establish a setting's value.
-   Label an unsupported outcome unknown. When the evidence defines only design
-   rules, compare the stated rules instead of constructing a runtime trace.
-   Do not complete a table by changing its inputs or supplying missing facts.
+   Read `references/representation.md` before drawing: every artifact follows
+   its diagram rules, including the frame (a lead-in, the artifact exact and
+   unedited, and a reading), identical inputs across comparisons, and the
+   outcome-cell checks.
 
 5. **Draft the brief.** Establish the decision topic immediately. Put the
    question first when it is understandable by itself. Otherwise precede it
@@ -185,8 +177,8 @@ the output is the brief for that target.
    the user has not approved. State the recommended action in full before
    attaching its option ID. Give its reason in that sentence or the next.
    Then put the complete option list
-   immediately after the recommendation or neutral statement. Number the
-   displayed options and retain their stable lettered IDs for later reference.
+   immediately after the recommendation or neutral statement. Lead each
+   displayed option with its stable lettered ID; the ID is its only label.
    Each option names the affected asset, scope, consequence, and immediate
    action. Follow with any comparison and evidence needed to judge them, then
    the exact response requested. Mention an alternative before the list only
@@ -198,11 +190,9 @@ the output is the brief for that target.
    and drafting narration. Omit extra tracking IDs, parameter names, and audit
    findings unless they change the choice or support a material claim.
    A T1 can satisfy several fields in one sentence.
-   `references/clarity.md` holds the sentence, term, and error
-   rules applied while drafting, and `references/standards.md` holds the two
-   standards behind them: ISO 24495-1's four reader outcomes, relevant,
-   findable, understandable, usable, judged on the brief as a whole, and
-   selected ASD-STE100 mechanics for its sentences and terms.
+   Read `references/clarity.md` while drafting: it holds the four reader gates,
+   the sentence and term controls, the naming and self-contained-reference
+   rules, and the error catalog.
 
    | Question | What the reader must be able to state afterwards |
    |---|---|
@@ -222,8 +212,9 @@ the output is the brief for that target.
    does not support the whole sentence. Remove the unsupported part, narrow it,
    or state the unresolved fact. Mark calculations as derived and retain their
    input values. Check the revised draft for contradictions, then apply every
-   reader check below. Include relevant sources and limits in the brief without
-   narrating this verification process:
+   reader check below. Reread `references/evidence.md` and apply it to each
+   decision-critical claim. Include relevant sources and limits in the brief without narrating
+   this verification process:
    - The reader can identify the work and state the exact decision and
      commitment without reopening the plan or the conversation.
      The artifact type and exact name, its connection to the goal, current
@@ -258,58 +249,21 @@ the output is the brief for that target.
      explicit for every option, including hold and defer. Read the closing
      action separately for each choice: deferring a policy leaves it open;
      a shared closing sentence must not imply that every answer approves work.
-   - The brief passes the four ISO 24495-1 outcomes: relevant, findable,
-     understandable, usable.
-   - Authored prose and diagram syntax use ASCII; verbatim content is exact,
-     including non-ASCII characters. There is no HTML artifact or rendered diagram.
+     The reader knows how to reply.
+   - The brief passes the four reader gates in `references/clarity.md` and
+     applies its error catalog.
 
 7. **Deliver.** Plain text is canonical; a dialog rendering derives from it.
-   Read `references/delivery.md` for tool adaptation and reply handling.
-   - Inspect the available question tool, its schema, and host restrictions.
-     Put all decision-critical context inside the question payload when using
-     a dialog; do not rely on accompanying prose being visible. Use the
-     two-turn delivery rule only on surfaces known to lose that prose when
-     necessary context cannot fit in the dialog. Plain text is the fallback
-     when no suitable tool is available or permitted.
-   - An asynchronous question does not stop independent authorized work.
-     Dependent work waits for an actual answer. A preselected option, elapsed
-     time, and tool completion without an answer are never approval.
-   - The ordinary-text brief has no surrounding code fence. Tables use pipes;
-     code and pseudocode use fences. Fence diagrams when alignment requires it.
-   - Each option names its outcome and consequence. A recommendation is marked
-     only when supported. At most three independent T1 or T2 questions share
-     one message, further limited by the host; T3 goes alone. Coupled questions
-     state their dependency and are asked in order. If a reply already answers
-     the question, do not raise a second dialog.
+   Read `references/delivery.md` before delivering: it holds tool adaptation,
+   the two-turn rule, batching, and the silence default. Put all
+   decision-critical context inside a dialog's payload. A preselected option,
+   elapsed time, or tool completion without an answer is never approval.
 
-8. **After the answer.**
-   - Match the reply to one open question and its unchanged options before
-     acting. Never execute a reply to a superseded question. Restate a valid
-     decision with its ID, option, and date.
-   - A condition ("A, but behind a flag") is restated with the chosen action.
-     If it changes the action or approval scope, record the clearly authorized
-     revised decision under a new ID with the old question as history; do not
-     ask for the same permission again. Clarify only an unresolved commitment.
-     An ask-back is answered, then reassessed before re-asking. A redirect
-     ("check X first") is done first,
-     then the question is reassessed. If the finding changes the options,
-     recommendation, or approval scope, issue a new question ID and mark the
-     old one superseded. A skip parks the question without selecting its
-     fallback or advancing its deadline; continue only independent authorized work.
-   - When the reader is confused, first check the concrete artifact, its
-     project connection, current condition, and meaning of approval. Then check
-     terminology and mechanism. Rewrite around the missing information; add
-     or replace an example when it resolves that gap. Reassess whether a
-     decision is still needed. If the user replaces a premise shared by the
-     options, retire those options and record the new instruction under the
-     ID rules. Proceed within that authorization; ask only about an unresolved
-     commitment, never for formal confirmation that the explanation is clear.
-   - Retain a decision record when at least two of these hold: hard to reverse,
-     surprising without its context, the result of a real tradeoff. The
-     template and where it lives are in `references/decision-record.md`.
-   - Check persistent text for claims the answer made stale. Retain rejected
-     alternatives as history in the decision record. When several questions
-     are live, keep one tally line: open, decided, skipped, redirected, superseded.
+8. **After the answer.** Read `references/delivery.md` and handle the reply
+   with its reply table and confusion recovery. Match the reply to one open question
+   and its unchanged options before acting; never execute a reply to a
+   superseded question. Read `references/decision-record.md` to decide whether
+   a decision record is due, and retain one when it is.
 
 ## The brief: canonical text form
 
@@ -323,12 +277,12 @@ quotes the template; send the brief as ordinary message text.
   relevant finding, and what answering changes now.>
 
 Q1. <One full sentence naming the concrete choice and its scope>
-I recommend <action on the named asset and scope>, because <reason> (option 1, Q1.A).
+I recommend <action on the named asset and scope>, because <reason> (Q1.A).
   OR: <Why no option wins under established criteria and which preference settles it>.
 
-1. <Action and outcome> (Q1.A; Recommended). <Effect, conditions, and what I will do now.>
-2. <Action and outcome> (Q1.B). <Effect, conditions, and what I will do now.>
-3. <Action and outcome> (Q1.C). <Effect, conditions, and what I will do now.>
+- Q1.A (Recommended) <Action and outcome>. <Effect, conditions, and what I will do now.>
+- Q1.B <Action and outcome>. <Effect, conditions, and what I will do now.>
+- Q1.C <Action and outcome>. <Effect, conditions, and what I will do now.>
 
 <Only when needed: the comparison or example that exposes the mechanism.>
 Evidence and limits: <Specific source or executed check, what it establishes,
@@ -337,13 +291,14 @@ Evidence and limits: <Specific source or executed check, what it establishes,
 <What would change the recommendation: name the evidence or preference and
   the alternative action it favors. Omit when already clear or neutral.>
 
-Reply with 1, 2, or 3. <Restate any approval boundary needed to interpret the
+Reply with A, B, or C. <Restate any approval boundary needed to interpret the
   options. Describe different next actions separately; defer stays open.>
 Details: <Supporting diff, logs, source, or trace, when useful>.
 ```
 
 Use only the options that exist. Choose one recommendation form, never both.
-For neutrality, omit every recommended marker. A supported recommendation
+For neutrality, omit every recommended marker and do not invent a runner-up
+condition. A supported recommendation
 reveals its objective. Name the strongest alternative and the condition under
 which it wins when that distinction matters; explain it in its option or after
 the list rather than making the reader look forward to an undefined option.
@@ -353,14 +308,32 @@ alternative. Say which decision that new evidence would inform.
 Rendering by tier:
 
 - **T1** keeps the question, gate, checked result, supported recommendation or
-  explicit neutrality, and concise options with consequences. For example:
-  `Q1. Merge PR #142, the keyboard-focus fix for the search dialog? The
-  keyboard-interaction test and required checks passed on revision 9c8d7e6.
-  CONTRIBUTING.md, the contribution rules, requires a human merge approval.
-  I recommend merging this tested fix (option 1, Q1.A).` Then
-  `1. Merge PR #142 (Q1.A; Recommended). The fix becomes eligible for the next deploy.`
-  and `2. Hold PR #142 (Q1.B). It stays open for changes.` End with
-  `Reply with 1 or 2.` Do not add sections whose content is already clear.
+  explicit neutrality, and concise options with consequences. Do not add
+  sections whose content is already clear. For example, sent as ordinary text:
+
+  ```
+  Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
+  The keyboard-interaction test and all required checks passed on revision 9c8d7e6.
+  CONTRIBUTING.md requires a human to approve every merge.
+  I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
+
+  - Q1.A (Recommended) Merge PR #142. I merge it now, and it ships with the next deploy. Undoing it takes a revert PR and a redeploy. No stored data changes.
+  - Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
+
+  Reply with A or B.
+  ```
+
+  Those seven lines answer all six reader questions from step 5 by merging
+  fields, not dropping them:
+
+  | Line | Reader question it answers |
+  |---|---|
+  | `Q1. Merge PR #142, the fix that...` | What am I deciding? What changes? (Tab no longer moves focus behind the dialog) |
+  | `...checks passed on revision 9c8d7e6` | What supports the recommendation? |
+  | `CONTRIBUTING.md requires...` | Why does this need my input? |
+  | `I recommend... because...` | What am I deciding? (recommendation and reason) |
+  | Q1.A's `Undoing it takes...` | What am I accepting? |
+  | Q1.B's `I continue with...` | What happens when I choose? |
 - **T2** adds the orientation, material consequences and uncertainty, strongest
   alternative, and conditional comparison that the elevated axes require.
 - **T3** adds the applicable representation, correctness argument, decision
@@ -373,14 +346,9 @@ merge, and activation. A significant decision's record location can accompany
 that action; record a deferral as deferred, not decided. Sizing appears only
 when requested. Omit optional fields rather than narrating why they are absent.
 
-An `If I hear nothing by <when>` line appears only when the run cannot wait:
-the human requested unattended work or a scheduled step would be missed. Name
-the deadline and prior authority for any fallback action. The fallback may only
-pause, defer, or do work authorized before the ask. Choose the most reversible
-eligible option; never expand scope, merge, or deploy under this fallback.
-Stating it grants no authority. Skip parks the question without
-selecting its fallback or advancing its deadline. In an attended session omit
-the line and wait on dependent work.
+Add an `If I hear nothing by <when>` line only when the run cannot wait;
+`references/delivery.md` defines when it is allowed and what the fallback may
+do. In an attended session omit the line and wait on dependent work.
 
 Read the closest example in `references/worked-examples.md`: routine work,
 merge, scope deviation, race, architecture, retention policy, retry algorithm,
@@ -396,13 +364,14 @@ run, so `Q3` means the same decision in every later message. After a context
 reset, resume from the highest number visible in the conversation or the
 record, and say so. Options are lettered `Q1.A`, `Q1.B`, `Q1.C`. The
 recommended option, when one exists, is first and therefore `A`. A neutral
-question has no recommendation marker. In ordinary text, display a numbered
-list with the stable ID beside each action: `1. <action> (Q1.A)`,
-`2. <action> (Q1.B)`. These list numbers are reply aliases for this displayed
-question, not new decision IDs. A bare number or letter selects an option only
+question has no recommendation marker. In ordinary text, display each option
+as a bullet that leads with its ID: `- Q1.A (Recommended) <action>`,
+`- Q1.B <action>`. The ID is the option's only label; do not add list numbers,
+which would give one choice two names. Bullets keep each option on its own line
+where markdown would merge adjacent lines. A bare letter selects an option only
 when it identifies one live question unambiguously. In a batch or after a
 superseded question, clarify an ambiguous reply with the full current ID.
-Never reinterpret a stale number as permission for a replacement option.
+Never reinterpret a stale letter as permission for a replacement option.
 
 Keep each question's options and approval scope unchanged under its ID. If new
 evidence changes an option's meaning, the recommendation, or the approval scope,
@@ -417,111 +386,8 @@ record that decision under its new ID with the prior question as history.
 An answered question keeps its ID as its decision-record key. States are open,
 decided with its option, skipped, redirected, and superseded with its successor.
 
-Replies the ask must accept, in any wording:
-
-| Reply | Meaning | What you do |
-|---|---|---|
-| `1`, `A`, `Q1.A` | pick from the displayed question | match one open question and its unchanged option, then proceed |
-| `Q1.B, but <condition>` | pick with a condition | restate the exact conditional action; a changed action or scope gets a new ID, recorded directly when clearly authorized, otherwise clarify only the missing commitment |
-| `Q1: skip` | park it | select no fallback, change no deadline; continue only independent authorized work |
-| `Q1: ask <question>` | need information first | answer and reassess; keep Q1 only if options, recommendation, and scope remain unchanged, otherwise supersede it before re-asking |
-| `Q1: do <X> first` | redirect | do authorized X, then reassess; supersede Q1 if its options, recommendation, or scope changed |
-| a reply to a superseded question | stale answer | execute no choice; point to the current question and clarify the intended answer |
-| a reply naming an option not offered | revised choice | use a new question ID; record directly if already clearly authorized, otherwise clarify the missing commitment |
-| "I don't get this" | the ask failed | diagnose missing artifact, project connection, state, commitment, terminology, or mechanism; rewrite and reassess the decision |
-
-## Confidence is inspectable
-
-Make each claim's evidence status clear in words, never as a fabricated
-confidence number. Use a source attribution or concise label when needed;
-do not prefix every sentence or populate empty evidence categories.
-**Verified** means observed directly or established by an executed
-test or analysis, with the revision or environment it ran on. A document's
-report remains attributed to that document unless independently checked.
-**Inferred** means derived from those results, including estimates with their basis;
-**Assumed**, or a preference driving the recommendation; **Not verified**, an
-unknown or a check still outstanding. A generic "tests pass" never implies
-coverage that was not run; name the targeted checks and say what full
-validation would add. Tests can establish that an implementation is correct
-while whether the behavior is desirable remains the human's call. For timing
-and concurrency, give the interaction argument as an inference beside the test.
-Material uncertainty stays in the initial view; supporting detail such as diffs,
-logs, and traces goes behind the details pointer, and only one level of detail
-exists below the initial view.
-
-Simplification preserves the subject, scope, conditions, and status of each
-decision-critical claim. Agreed behavior is a requirement, not a validated
-implementation. Where components differ, identify each one's permissions,
-safeguards, and unknowns. A workflow's declared permissions do not establish
-the effective permissions of a separately obtained credential.
-
-Before sending, trace each decision-critical claim back to its support. A label
-such as "Verified" does not make a stronger statement follow from its source:
-
-- A documented trigger and an exercised trigger are different evidence. Retain
-  the tested actor, event, and conditions; label broader predictions as inferences.
-- Registry metadata can establish a declared licence or version. It does not
-  establish a tool's mechanism, installation speed, suitability, or legal
-  compatibility. Cite support specific to each claim and preserve unverified
-  limits. A project ruling establishes the check's scope or the project's
-  acceptance decision; it does not establish a general legal conclusion.
-- Comparative words are claims too. Do not call an alternative "faster" when
-  its speed has not been measured. Describe the known mechanism, or label the
-  expected improvement as an inference with its basis. An uncertainty label
-  later in the brief does not repair an unqualified comparison in the opening.
-- A policy that requires a check does not predetermine every candidate's result.
-  An exemption from that check does not approve every tool or waive other
-  requirements. Distinguish the named tool's recorded disposition from the
-  rule for future tools. A compatible alternative can change implementation
-  without changing policy; untested alternatives remain candidates to investigate.
-- An overall comparison does not establish a win on each metric. Keep aggregate
-  conclusions aggregate unless separate measurements are supplied.
-- An omitted check or UI behavior is unknown, not absent. "Not selected",
-  "not tested", and "test status not recorded" describe different gaps; carry
-  each finding's actual status into summaries and decision records.
-- A request interval is not a maximum data age. An age estimate also needs
-  assumptions about response time, source freshness, and failures. Remaining
-  effects after reversal do not establish a need for manual cleanup.
-
-Derive approval gates from the user's instructions and identified policy, not
-from an imagined later stage. If exact patch bytes or other evidence are
-unavailable, state the gap and the intended action. Omit unsupported additions;
-never fill a template field with invented evidence, effects, or constraints.
-
-## Self-contained references
-
-Every statement is understandable from its own wording and the visible text
-around it. Use a meaningful description first and attach the identifier for
-navigation: "the database migration that stores queued jobs (Task 1)", never
-"Task 1". Define task numbers, phases, option letters, and unfamiliar component
-names on first use in each message. Reuse shorthand only while its definition is
-still visible. Give every bullet and table row enough words to stand alone. Use
-the reader's own names for things and attach the technical name in code font:
-"the confirm card (`ApprovalGate`)". On first mention, give the actual artifact
-type, exact name or identifier, and a short role description. Distinguish a
-workflow file, a job inside it, an invoked action or script, a setting, and a
-credential. A familiar label such as "lane" does not identify which one is
-meant. Use a concise reference such as "the review workflow" afterward only
-while unambiguous. Preserve established terms and real identifiers exactly,
-including names that contain metaphor words. Mark proposed names as proposed;
-if no name exists yet, say so instead of inventing an existing artifact.
-Define established domain terms at first use too. For example, pair a package
-manager's exact command with what it installs and how; identify placeholders
-in a command as placeholders. A research-record ID supplies navigation, not
-context: name the proposal and what that record establishes. A role must be
-supported just as a name must; "installs project dependencies" is not a safe
-substitute for an unknown setup command.
-Never edit text the reader must type, match, or search. For each reported
-measurement, identify the exact asset measured and its role, the metric,
-statistic or denominator, unit, source, and relevant revision/date and conditions.
-For a comparison, identify both baseline and candidate. When reporting a
-percentage improvement, include the percentage, both absolute values, and the
-absolute difference when the sources supply them or support their calculation.
-Say whether the percentage is quoted from the source or calculated from supplied
-values. Preserve the direction of change; distinguish relative percent change
-from percentage-point change. If a baseline or absolute value is missing, state
-the gap instead of inventing it or presenting the percentage as independently
-checked. Preserve exact quotations and point to the supporting source.
+`references/delivery.md` holds the table of replies the ask must accept, in any
+wording.
 
 ## Red Flags
 

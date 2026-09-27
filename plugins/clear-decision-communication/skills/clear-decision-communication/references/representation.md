@@ -47,15 +47,8 @@ explains the relationship.
 
 ## Change type to form
 
-This table mirrors the one in SKILL.md step 4; edit both together.
-
-| Type of change | Show |
-|---|---|
-| Mechanical, such as a rename | one descriptive sentence naming the change and its purpose |
-| Conditional behavior, such as a validation rule | the same input with the previous and the proposed outcome (F1); if only design rules are known, compare those rules and leave runtime outcomes unknown |
-| Algorithm, such as ranking, scheduling, or retries | a worked example as pseudocode (F2), a whole block (F7), or a table of its steps, plus the boundary case and the rule the algorithm must preserve |
-| Timing or state interaction, such as a race | an ordered sequence with the same event order under current and proposed behavior (F9 or F10), or a span chart (F16) when overlap in time is the fact |
-| Architectural, such as moving responsibilities | a small system diagram with coded nodes (F8, F17, or F18), the baseline first and the change as a delta, one representative operation through it, and the tradeoffs |
+The change-type table in `SKILL.md` step 4 picks the form for the behavior the
+reader must judge; the relationship table below names every form.
 
 For a non-obvious change, the prose around the artifact covers, in order:
 
@@ -73,6 +66,13 @@ ordinary behavior and the distinguishing boundary case only when both matter.
 Keep inputs and event order identical across every comparison. Say whether the
 example is illustrative or reproduced from a real run, and whether verification
 was performed or is proposed.
+
+Before filling an outcome cell, check that its source establishes the same
+actor, trigger, and condition values as that row. Keep independent inputs
+independent: a missing credential does not establish a setting's value.
+Label an unsupported outcome unknown. When the evidence defines only design
+rules, compare the stated rules instead of constructing a runtime trace.
+Do not complete a table by changing its inputs or supplying missing facts.
 
 ## Relationship to form
 

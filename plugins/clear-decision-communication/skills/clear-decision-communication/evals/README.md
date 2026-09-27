@@ -222,7 +222,7 @@ does not by itself establish incorrect skill behavior.
 
 Cases 23-25 test the concrete-language correction: a development-tool policy
 using different names from the worked example, an unavailable setup proposal,
-and a numeric reply to a superseded list. Check roles as well as names; an
+and a stale-letter reply to a superseded list. Check roles as well as names; an
 invented description can fail even when no exact identifier is fabricated.
 For policy cases, distinguish a class's review requirement from one tool's
 result and keep deferred policy open. Compare every evidence claim with the

@@ -2001,6 +2001,142 @@ muse-github 0.1.1 (fixes → patch).
 regressions); 34 evidence packs under `/tmp/refcheck-public/packs/` (session
 scratch, not committed).
 
+## [x] Project P52: guided-research index moves to research/AGENTS.md (guided-research 0.2.0)
+
+**Goal:** Claude Code v2.1.277+ loads a directory's `AGENTS.md` as instructions, as Codex
+does, so a new research index is created as `research/AGENTS.md` in repos without a root `CLAUDE.md`. Existing trees keep working:
+the skill reads and updates `research/CLAUDE.md` where it is the only index. Motivated by
+smorin-bootstrap P30, which renamed its `research/CLAUDE.md` to `research/AGENTS.md`.
+
+**Out of Scope:** renaming `research/CLAUDE.md` in other repos (this repo included); the
+claude.ai-synced copy of the skill, which is already diverged and not editable here.
+
+- [x] [P52-T01] Index references in `SKILL.md` (lines 57, 70, 75), `references/artifacts.md:88`,
+      and `references/research-tree.md` (tree diagram, regroup note, index section, update rule)
+- [x] [P52-T02] `research-tree.md` gains a **Filename** rule: a new index follows the repo root —
+      `research/AGENTS.md` when there is no root `CLAUDE.md`/`CLAUDE.local.md`, else `research/CLAUDE.md`,
+      because a `CLAUDE.md` at or above the working directory stops every `AGENTS.md` in the repo from
+      loading under Claude Code's default setting; an existing index keeps its name; never create both
+- [x] [P52-T03] Plugin 0.1.1 → 0.2.0 (behavior change: new trees get a different filename);
+      `just gen`; docs page and RELEASE-NOTES updated; description unchanged, so no trigger re-scan
+
+- [x] [P52-TS01] Live headless E2E (fresh `claude -p`, told to follow the worktree skill, recording a declined
+      proposal): a tree with only `research/AGENTS.md` got the Proposal-log entry in `AGENTS.md` and no `CLAUDE.md`;
+      a tree with only `research/CLAUDE.md` got it in `CLAUDE.md` and no `AGENTS.md`
+- [x] [P52-TS02] Session-backed deep load verification on the worktree skill: claude-code pass, codex pass, no findings;
+      `just all` 482 passed, 4 skipped; `skill-quality` layers 1–4 green
+- [x] [P52-TS03] Review fix (CodeRabbit on #79): a scratch repo with a root `CLAUDE.md` and `sub/AGENTS.md` loaded only
+      the root file after reading `sub/notes.txt`, confirming the finding. After the rule change, a fresh session
+      setting up a new index created `research/AGENTS.md` under a root `AGENTS.md` and `research/CLAUDE.md` under a
+      root `CLAUDE.md`; `just all` 482 passed, 4 skipped
+
+## [~] Project P54: ID-first decision options and a complete T1 example (clear-decision-communication 0.4.0)
+**Goal/Requirement**: Give every decision option one name. Options render as
+bullets led by their stable ID, `- Q1.A (Recommended) <action>.`, replacing
+`1. <action> (Q1.A; Recommended).`, where the list number was a second name for
+the same choice. Replies become `A` / `Q1.A`; `Reply with A or B.`
+- Replace the T1 example in `SKILL.md`, which was split across backtick spans,
+  with one rendered block plus a table mapping each line to the step 5 reader
+  question it answers.
+- The new example repairs rules the old one broke: each option states the
+  agent's immediate action, reversal effects are visible, the recommendation
+  gives a reason, and the fix names the user-visible bug.
+- Make `references/worked-examples.md` example 2 match the new T1 example.
+
+**Out of Scope**
+- Rewording worked examples beyond the option-line format.
+- Historical eval results under `evals/results/`.
+
+### Tests & Tasks
+- [x] [P54-T01] `SKILL.md`: step 5 rule, template, T1 example and mapping table, IDs section, reply table
+- [x] [P54-T02] `references/worked-examples.md`: 18 option lines, 7 recommendations, 7 reply lines; example 2 synced
+- [x] [P54-T03] `references/delivery.md`, `references/clarity.md`, `references/project-policy-example.md`, `docs/skills/clear-decision-communication.md`
+- [x] [P54-T04] `evals/evals.json`: expectations for evals 23 and 24; eval 25 renamed `superseded-lettered-option-reply` with a stale-letter reply; `evals/README.md` wording
+- [x] [P54-T05] Bump to 0.4.0 (reply grammar change → minor); regenerate manifests
+- [x] [P54-TS01] `just all` green: 482 passed, 4 skipped
+- [x] [P54-TS02] No old-format lines outside historical records (`(option N, Qn.X)`, `; Recommended)`, `Reply with 1`)
+
+## [x] Project P55: session-status draws a dynamic ASCII kanban board (session 0.12.0)
+**Goal/Requirement**: `session-status` shows what's left as an ASCII kanban
+board inside its ledger whenever the shape of the work calls for one — not
+opt-in, not always-on.
+- Include rule: two or more pieces of work moving in parallel, five or more
+  items left in the current focus, stated dependencies that decide the order,
+  or an explicit ask; skip a sequential remainder of four or fewer items, a
+  single item, or a "brief" / "no board" ask.
+- Columns come from the plan's own status words when it tracks three or more
+  informative unfinished states; otherwise `NOW │ NEXT │ LATER │ BLOCKED`.
+  BLOCKED is added whenever a stated dependency exists.
+- Parallel work renders as swimlanes; lanes with nothing in progress collapse
+  to one summary card. Done work is one rolled-up line, never a column.
+- The board replaces the remaining-work zones; plain sentences follow for
+  the NOW and NEXT cards so Law 1 holds.
+
+**Out of Scope**
+- Live probes (git, PR, CI) to decide columns — the skill stays probe-free.
+- Changes to `session-recap` or other session siblings.
+
+### Tests & Tasks
+- [x] [P55-T01] `SKILL.md`: description names the board; new *The board* section (when, columns, layout, placement, drawing rules) with width-checked Medium and swimlane Large mockups (Red Flags table kept at 6 rows per house style)
+- [x] [P55-T02] `docs/skills/session-status.md` + README row + `RELEASE-NOTES.md` Unreleased entry
+- [x] [P55-T03] Bump `session` 0.11.2 → 0.12.0 (trigger change → minor); regenerate manifests
+- [x] [P55-TS01] `just all` green: 482 passed, 4 skipped
+- [x] [P55-TS02] `skill-quality` against the worktree path: content, docs, gen-check, static verify (claude-code + codex) pass
+- [x] [P55-TS04] Deep load verification: Claude Code and Codex each load the skill in a live session and pass, nothing skipped
+- [x] [P55-TS03] Fenced grid renders aligned in Claude Code and in Codex: manual check passed 2026-09-26; in Codex a fixture P21 plan drew the board unprompted (NOW T08, NEXT T09, LATER T10/T12, BLOCKED T11 waiting on T12), a 3-item sequential P12 drew none, and "as a kanban" forced one
+## [x] Project P56: Single-source clear-decision-communication (clear-decision-communication 0.5.0)
+**Goal/Requirement**: Every rule has exactly one home. `SKILL.md` keeps a rule
+inline only when it fires at a fixed workflow step on every run and is compact;
+everything else lives in exactly one reference, and `SKILL.md` gives one
+sentence plus the pointer. Behavior must not regress.
+- Remove the mirrored tables (tier table, change-type table) and their
+  "edit both together" notes.
+- One reply table, one silence/skip rule, one batching rule (`delivery.md`); the
+  reply table is the union of the two current tables.
+- One pre-send checklist (`SKILL.md` step 6) with `clarity.md`'s error catalog
+  as its detail; `standards.md` keeps only the standards and their limits.
+- `clarity.md` owns self-contained references; new `references/evidence.md`
+  owns evidence status, claim support, and measurement reporting;
+  `decision-record.md` owns the record threshold.
+- Move the 3,770-word verbatim source framework out of the skill to
+  `docs/superpowers/specs/`; the provenance and licence table stays.
+- Worked example 2 points to the `SKILL.md` T1 example instead of copying it.
+- Move text, do not reword it; where two paraphrases merge, keep the more
+  specific one and list dropped nuance in the PR body.
+
+**Out of Scope**
+- Rewording rules, adding rules, or changing behavior.
+- Historical `docs/validation/*` snapshots and `evals/results/*`.
+- `evals/run_evals.py`.
+
+### Tests & Tasks
+- [x] [P56-TS01] Baseline: all 25 evals on Claude against the unchanged skill (`3c3e82c`), graded blind by independent graders from `review.json` expectations
+- [x] [P56-T01] Ownership map: one home per rule D1–D12
+- [x] [P56-T02] Restructure references per the map
+- [x] [P56-T03] Reduce `SKILL.md` to the spine; measure its word count: 6,075 -> 4,332 words; skill plus references ~24,900 -> 19,215
+- [x] [P56-T04] Move the verbatim framework to `docs/superpowers/specs/`; update pointers and the docs page files table
+- [x] [P56-TS02] Duplication re-measured: no rule stated in two places; no mirrored table
+- [x] [P56-TS03] Refactor: same 25 evals, same grader prompt, blind; every baseline pass still passes; any pass->fail investigated as a wording dependency, not re-rolled
+- [x] [P56-TS04] `just all` green
+- [x] [P56-T05] Bump to 0.5.0 (what loads changes); PR with baseline/refactor comparison
+      Result: baseline 23/25, refactor 24/25; 22 identical verdicts; case 5 pass->fail attributed to a
+      pre-existing gap (baseline case 11 shows the same slip). Record: `docs/validation/clear-decision-communication-0.5.0.md`.
+
+## [ ] Project P57: Unperformed actions are stated as next steps (clear-decision-communication)
+**Goal/Requirement**: A response never describes an action it has not performed as in progress or done.
+Found by the P56 parity evals: baseline case 11 ("I'm deploying ... to staging now") and refactor case 5
+("I'm running it now") both failed on this, and no rule in the skill covers it.
+- Add one rule where delivery and next actions are stated.
+- Add an eval case whose expectations catch a present-tense claim of an unperformed action.
+
+**Out of Scope**
+- Other P56 findings.
+
+### Tests & Tasks
+- [ ] [P57-TS01] New eval case fails on the current skill (red)
+- [ ] [P57-T01] Add the rule
+- [ ] [P57-TS02] New case plus cases 5 and 11 pass on the revised skill, graded blind
+
 ## [~] Project P58: dependabot-sweep durable core — S1–S6 in four slices (repo-hygiene 0.16.1 → 0.17.0)
 **Historical ID**: P52 in Claude session `76b20680-b740-4ff9-8f48-1d9db6474b2a`; renumbered to P58 on 2026-09-26 because main assigned P52 to the guided-research index change.
 
@@ -2038,9 +2174,9 @@ S4 authority, S5 patience, S6 proof.
 - [x] [P58-TS02] T05 stale readiness invalidation, T06 lost-response restart across JSONL replay, T07 reviewer outage (required vs optional) and legitimate vs prerequisite skip, T12 evidence cannot pass by omission — `tests/test_sweep_slice2.py`, 53 tests green (2026-09-22)
 - [x] [P58-T06] Slice 3 (2026-09-22): S3 `scripts/sweep_diagnosis.py` (matched baseline/candidate controls over workflow/job/matrix/command/toolchain/environment/inputs; K05 baseline with one shared `ISS` incident per repo, K04 regression or inconclusive naming the gap, K17 same-head transient, K06 environment table; every verdict holds); S4 authority in `scripts/sweep_protocol.py` (closed repair vocabulary, `authorize`, `resolve_mode`, `executor_for`, scope and run deadline in every Tasking and brief); S5 `scripts/sweep_patience.py` (process-group `run_bounded`, `delegate_env`, `plan_observation`, verified `continuation`); coordinator `wake`, same-state re-hold, run clock, `expire`, `run_ending`/`finish_run`, repo lock files and session-aware reconcile; missing K03/K05/K06/K15 evaluator defaults
 - [x] [P58-TS03] T04 baseline vs regression, T08 one writer per repo and queue state, T09 mode/stop semantics, T11 total bounds across the process tree — `tests/test_sweep_slice3.py`, 38 tests green (2026-09-22)
-- [~] [P58-TS04] Slice 4: config precedence and validation, observation fetch against a mock GitHub (section isolation, truncation, GraphQL errors, deadline), CLI contract (help/version/usage/exit codes/error schema/lifecycle), read-only dry run on one real PR — `tests/test_sweep_slice4.py`, 36 tests green (2026-09-22); live pilot pending
+- [~] [P58-TS04] Slice 4: config precedence and validation, observation fetch against a mock GitHub (section isolation, truncation, GraphQL errors, deadline), CLI contract (help/version/usage/exit codes/error schema/lifecycle), read-only dry run on one real PR — `tests/test_sweep_slice4.py`, 54 tests green (2026-09-27); live merge pilot pending
 - [~] [P58-T07] Slice 4. Non-mutating half done 2026-09-22 (Q6.A): `scripts/sweep_config.py` (precedence flags > env > config > defaults, closed repair vocabulary, budgets incl. `run_budget_secs`/`observation_window_secs`/`poll_floor_secs`/`stale_after_secs`, per-scope overrides, authority dict), `scripts/sweep_observe.py` (one full observation over the helper's bounded HTTP: pull, files, reviews, GraphQL threads+queue, check-runs, check-suites, statuses, protection, branch rules, per-ruleset detail; per-section failure isolation; JSON round trip), `scripts/sweep_cli.py` (noun-verb per CLI Design Standard v1.4.14, minimal tier: run/attempt/brief/card/pr/approval; `references/cli-interface.md`, `references/cli-conformance.md`), `RunHeader.authority` persisted by `run create`, config keys documented, SKILL.md run wiring. Remaining: the named gated pilot "Pilot for Gmail to PDF" on `smorinlabs/gmail2pdf`, starting with PR 40, with rollback; then repo-hygiene 0.17.0 release. User authorized the pilot preparation and post-clean-pilot delivery on 2026-09-26; each pilot merge still requires approval of that specific PR
-- [~] Regression Test Status — initial 2026-09-26 safety changes passed `just all` (657 tests, 4 platform skips) and 24 standalone helper tests. Final integration checks include the additional pilot review corrections below.
+- [x] Regression Test Status — final integration with current main passed `just all` on 2026-09-27: 699 tests passed, 4 platform skips, generation current. The 24 standalone helper tests also passed; `gh_merge.py` remains unchanged.
 
 **Slice 3 assumptions (agent, 2026-09-22)**: worker claims stay on the strict table, so a woken WAITING card whose checks turn green returns `ready` and merges on its next dispatch (observed merges still close any card through reconcile/verify); repository lock files live at `<store>.locks/` whenever the store has a path; another session's attempt is reconciled only past `stale_after_secs` of heartbeat (`last_progress_at`, refreshed at schedule and return), so Slice 4 must choose that bound at least the per-PR budget; `run_budget_secs`, the observation window, and `stale_after_secs` are call arguments until Slice 4 adds config keys; `expire` touches only idle NEW/READY cards; the environment-signature table has four patterns (disk, DNS, runner lost, network reset); the repair named `lockfile` (Slice 2 fixture) is canonical. The historical helper mapping for `merge queue required` was corrected before the pilot on 2026-09-26: it now records `BLOCKED K12` with an explicit helper/evaluator disagreement or wrong-executor reason, requiring fresh policy re-evaluation. Only observed queue state uses `K10`.
 
@@ -2053,17 +2189,17 @@ S4 authority, S5 patience, S6 proof.
 **Slice 2 assumptions (agent, 2026-09-22)**: undiagnosed red maps to K04 with confidence low until Slice 3's diagnosis stage (one tested table, `REASON_DEFAULTS`); reviewer identity = configured `reviewer_contexts` plus a rate-limit/quota description pattern on commit statuses; a later COMMENTED review does not withdraw an approval (only DISMISSED or CHANGES_REQUESTED do); `--check`/`--no-auto-fix` select mode `inspect`; orchestrator run wiring (commands to create/schedule/collect/render) is Slice 4 pilot work.
 
 ### Deliverable
-Initial pre-pilot focused result, before the additional pilot review corrections:
+Final integrated verification, 2026-09-27, including `tests/test_sweep_merge.py`:
 ```bash
-$ uv run pytest tests/test_sweep_slice1.py tests/test_sweep_slice2.py tests/test_sweep_slice3.py tests/test_sweep_slice4.py -q
-175 passed
+$ just all
+699 passed, 4 skipped in 60.54s
 ```
-Final integration also includes `tests/test_sweep_merge.py`; its receipt is pending.
 
 ### Automated Verification
 - `just all` green (gen-check + full pytest)
 - `uv run python plugins/repo-hygiene/skills/dependabot-sweep/scripts/test-gh-merge.py` reports 24 OK (helper untouched by Slice 1)
 
 ### Manual Verification
+- Gated preparation 2026-09-27: PR 40, Tach 0.35.0 to 0.35.1, only `uv.lock`; worker observation and classification returned NEEDS_OWNER K16, collection completed and released the repository lease. Accurate check counts are 22 successful and 8 skipped. The preparation run ended with exceptions and no continuation; execution requires specific PR approval and a new linked run with fresh deadlines. No pilot merge or release has occurred.
 - Read-only dry run 2026-09-22 (Q6.A): `python3 scripts/sweep_cli.py pr observe 'smorinlabs/gmail2pdf#40' -o json` read every section (pull, files, reviews, threads, check-runs, check-suites, statuses, queue, protection 404, branch rules with one org ruleset detail); the only changed file was `uv.lock`, so `pr evaluate ... --dependency-only --classifier "claude session c-f7, dry run" --mode inspect` returned READY (30 checks green, 8 legitimately skipped, 0 unresolved threads, `mergeable_state` clean, merge path none) and the same observation without the attestation returned BLOCKED K09. No store, no lease, no mutation; roughly ten REST calls plus one GraphQL call
 - Render `sweep_report.render_report` on a fixture with one replacement merge and one late arrival: header shows selected and delivered counts separately, unresolved cards come first, the replacement merge line reads `delivers [PR-0xx]`, one continuation line closes the report

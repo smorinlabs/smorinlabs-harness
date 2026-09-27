@@ -1,7 +1,7 @@
 # Axes and tiers
 
 How much preparation and explanation a decision request needs. Read this when
-sizing an ask (workflow step 2) or when a reader disputes the sizing tag.
+sizing an ask (workflow step 2) or when a reader disputes the sizing.
 
 ## The seven axes
 
@@ -54,53 +54,28 @@ rules apply at every tier and the axis never sets the tier by itself.
 
 ## The tier rule
 
-- The highest single axis sets the tier: all six rated axes low is T1, any
-  elevated is T2, any high is T3. Axes are never summed.
-- Tag names are the six words impact, reversibility, departure, uncertainty,
-  tradeoff, domain, and nothing else.
-- Two floors override the size of the change: a timing, ordering, or state
-  interaction is always high on domain; deleting data that cannot be recovered
-  is always high on reversibility.
-- Only the elevated or high axes expand. Each adds exactly the information in
-  its "additional information" column above, and nothing else.
+`SKILL.md` step 2 holds the tier table and the rule: the highest single axis
+sets the tier, only elevated or high axes expand, and two floors override the
+size of the change. The details:
+
+- Each expanding axis adds exactly the information in its "additional
+  information" column above, and nothing else.
 - Initial sizing is provisional. Preparation that reveals a higher issue
   raises the tier; completed verification can lower uncertainty and therefore
   the final tier if it resolved the only elevated or high issue.
-- Passing tests alone does not lower impact, reversibility, departure,
-  tradeoff, or domain complexity. Keep a timing fix high on domain even after
-  its tests pass. Size the delivered brief from the issues that remain.
+- Keep a timing fix high on domain even after its tests pass. Size the
+  delivered brief from the issues that remain.
 - Prepare what the decision needs. A routine change needs no prototype merely
   because its initial checks had not run; a remaining T3 domain issue still
   needs its correctness argument.
-- Representation is not set by the tier. A low-impact race condition still gets
-  its ordered sequence because its change type requires one.
-- A decision record is not set by the tier. It is retained when at least two of
-  these hold: hard to reverse, surprising without its context, the result of a
-  real tradeoff.
-- Keep sizing internal in ordinary requests. Omit tier tags and drafting or
-  batching logistics; describe the relevant consequences in the reader's terms.
-  When the reader asks to inspect sizing, give the tier and only the axes that
+- A low-impact race condition still gets its ordered sequence because its
+  change type requires one.
+- When the reader asks to inspect sizing, give the tier and only the axes that
   set it, for example `[T2: departure]`. An axis that is merely elevated inside
   a T3 is explained in the section it expands. When the reader disputes sizing,
   acknowledge the correction and honor their level as a standing preference
   on the same subject. Do not repeat that sizing explanation in later asks
   unless requested.
-
-This table mirrors the one in SKILL.md step 2; edit both together.
-
-| ID | Tier | Prepare | The initial view holds | Length signal |
-|---|---|---|---|---|
-| T1 | Confirm | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 80 words |
-| T2 | Compact brief | facts resolved, verification run, the strongest alternative prepared | orientation when needed, question, full recommendation or neutrality, complete option list, relevant evidence or comparison, and exact reply | about 250 words |
-| T3 | Full brief | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, the representation the change type requires, and a details pointer when supporting material exists | about 500 words |
-
-The word counts are review targets, never caps. Past them, remove repetition,
-shorten artifact readings and option consequences, and move supporting detail
-behind Details. Do not compress away a material condition to meet a sentence
-or clause count. Keep every material consequence, uncertainty, definition,
-and approval boundary in the initial view even when it exceeds the target.
-Neutral questions explain the unresolved preference without inventing a
-recommendation or runner-up condition.
 
 ## Stage of work: what kind of explanation
 

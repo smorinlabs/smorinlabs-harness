@@ -85,4 +85,4 @@ questions months later.
 - `.prompt.md` — the exact final prompt handed to `/deep-research`. Nothing else in the file; a clean provenance record readable in isolation when diagnosing a bad run.
 - `.framing.md` — the shaping sub-agent's light-search findings and the constraint set it selected. Kept separate so a bad *prompt* and a bad *framing* can be diagnosed independently — they are different failure modes.
 
-Write ordering: `.framing.md` → `.prompt.md` → run → output `.md` → leaf promotion → `DECISION.md` → update `research/CLAUDE.md`. Each file persists the moment it's produced, so a crash anywhere leaves everything up to that point on disk.
+Write ordering: `.framing.md` → `.prompt.md` → run → output `.md` → leaf promotion → `DECISION.md` → update the research index (`research/AGENTS.md` or `research/CLAUDE.md`, named per `research-tree.md`). Each file persists the moment it's produced, so a crash anywhere leaves everything up to that point on disk.

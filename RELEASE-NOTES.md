@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### Changed
+
+- `clear-decision-communication` 0.5.0: every rule has one home. `SKILL.md`
+  is the workflow spine (6,075 -> 4,346 words) and points to the one reference
+  that holds each detail, with an explicit read instruction at each step; new
+  `references/evidence.md` holds evidence status, claim support, and
+  measurement reporting. Mirrored tables and the five overlapping pre-send
+  checklists are gone, and the verbatim source framework moved to
+  `docs/superpowers/specs/`. Blind parity evals: baseline 23/25, refactor
+  24/25.
+
+## v0.30.0 — 2026-09-26
+
+### Added
+
+- `session` 0.12.0: `session-status` draws an ASCII kanban board of what's
+  left when work runs in parallel, five or more items remain, or stated
+  dependencies decide the order. Columns follow the plan's own status words,
+  defaulting to NOW / NEXT / LATER / BLOCKED; parallel work renders as
+  swimlanes, and done work stays one rolled-up line.
+
+### Changed
+
+- `clear-decision-communication` 0.4.0 gives every decision option one name:
+  options render as bullets led by their stable ID
+  (`- Q1.A (Recommended) <action>.`), replies become `A` or `Q1.A`, and the
+  T1 example is one rendered block with a table mapping each line to the
+  reader question it answers.
+
+## v0.29.0 — 2026-09-22
+
+### Fixed
+
+- Shared skill references now resolve under symlinked placements, bare
+  per-skill copies, and lexical path computation across 9 plugins (34 skills):
+  cites are spelled relative to the citing file, 11 skills gain a "Resolving
+  shared references" section, and copied artifacts carry destination tests.
+  Minor: `project-harness` 0.2.0, `factor-harness` 0.2.0, `use-html-theme`
+  0.12.0. Patch: `fusion-runner` 0.3.1, `document-merge` 0.1.3,
+  `repo-hygiene` 0.16.1, `clear-decision-communication` 0.3.2,
+  `clear-technical-communication` 0.2.4, `muse-github` 0.1.1.
+
+### Changed
+
+- `guided-research` 0.2.0 names a new research index after the repo's own
+  instructions file: `research/AGENTS.md` when the repo has no root `CLAUDE.md`
+  (Claude Code v2.1.277+ and Codex both load it), otherwise `research/CLAUDE.md`.
+  An existing index keeps its name, and the skill never creates both files.
+
 ## v0.28.0 — 2026-09-20
 
 ### Added

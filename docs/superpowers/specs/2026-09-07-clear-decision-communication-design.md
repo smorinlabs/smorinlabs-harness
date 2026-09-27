@@ -8,8 +8,9 @@ The research and decisions behind the `clear-decision-communication` skill
 (PROJECTS P43). Part 1 is the inventory of every installed communication prompt
 and the first candidate list. Part 2 is the per-candidate research with the
 arguments for and against and the recommendations the owner accepted. The
-source framework itself is reproduced verbatim inside the skill at
-`plugins/clear-decision-communication/skills/clear-decision-communication/references/framework.md`.
+source framework itself is reproduced verbatim at
+`docs/superpowers/specs/2026-09-07-clear-decision-communication-source-framework.md`
+(inside the skill at `references/framework.md` until P56 moved it out).
 
 Decisions taken during the session, in order: scope is decision asks only, no
 report branch; three tiers with the highest single axis setting the tier;

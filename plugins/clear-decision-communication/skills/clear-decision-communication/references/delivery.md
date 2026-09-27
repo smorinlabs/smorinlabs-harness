@@ -7,9 +7,6 @@ workflow steps 7 and 8, after the pre-send check.
 
 The brief in its canonical text form is the message. It works in any chat, in a
 terminal, in a pull request comment, and on tools that have no question dialog.
-Authored prose and diagram syntax use ASCII. Verbatim paths, identifiers,
-input data, quotations, and captured output keep their exact characters,
-including non-ASCII text. Do not produce an HTML artifact or a rendered diagram.
 Where a suitable question tool exists and is permitted, derive its payload from
 the brief; the tool's field layout does not decide which facts the reader needs.
 
@@ -102,15 +99,14 @@ continue only independent work already authorized.
 ## Replies
 
 Accept the reply in any wording and match it to one open question with unchanged
-options. A displayed list number or bare letter is sufficient only when it
-unambiguously identifies one live choice. Numbers alias the stable lettered IDs
-in that question's current list. A number from a superseded list never selects
-a replacement option. When a batch, a quoted old brief, or multiple open questions makes
+options. A bare letter is sufficient only when it unambiguously identifies
+one live choice. A letter from a superseded list never selects a replacement
+option, even when the current list reuses that letter. When a batch, a quoted old brief, or multiple open questions makes
 the mapping unclear, ask which question was meant in one line; do not act yet.
 
 | Reply | Meaning | Handling |
 |---|---|---|
-| `1`, `A`, `Q1.A`, "go with your recommendation" | pick | validate the displayed live question and unchanged option, restate `Q1: decided A, <date>`, then proceed; the recommendation phrase is not a choice on a neutral question |
+| `A`, `Q1.A`, "go with your recommendation" | pick | validate the displayed live question and unchanged option, restate `Q1: decided A, <date>`, then proceed; the recommendation phrase is not a choice on a neutral question |
 | `Q1.B, but <condition>` | pick with a condition | restate the conditional action; when action or approval scope changes, record the clearly authorized revised decision under a new ID with Q1 as history, without asking again; clarify only an unresolved commitment |
 | `Q1: skip`, "not now" | park | mark skipped without selecting its fallback or advancing its deadline; continue only independent authorized work |
 | `Q1: ask <question>` | information needed first | answer with facts and reassess; keep the ID only if options, recommendation, and scope are unchanged, otherwise supersede it before asking for the revised choice |
@@ -118,6 +114,15 @@ the mapping unclear, ask which question was meant in one line; do not act yet.
 | a reply to a superseded question | stale answer | explain which current question replaced it; execute neither choice from that reply |
 | "I don't get this" | the ask failed | diagnose the missing artifact, project connection, current condition, or commitment first; then terminology and mechanism; rewrite around the gap and reassess whether a decision is still needed |
 | a reply naming an option not offered | revised choice | preserve the user's direction under a new question ID, with its consequence and scope; record it directly if the reply already clearly authorizes that action, otherwise clarify only the missing commitment |
+
+When the reader is confused, first check the concrete artifact, its project
+connection, current condition, and meaning of approval. Then check terminology
+and mechanism. Rewrite around the missing information; add or replace an
+example when it resolves that gap. Reassess whether a decision is still needed.
+If the user replaces a premise shared by the options, retire those options and
+record the new instruction under the ID rules. Proceed within that
+authorization; ask only about an unresolved commitment, never for formal
+confirmation that the explanation is clear.
 
 A reply that overrides a supported recommendation is recorded as `overrode`;
 one that takes it is `followed`. A neutral choice is `no recommendation`.
@@ -130,8 +135,8 @@ history. A banner over a stale claim about the current plan is not a fix.
 
 ## Plain-text form on tools without a dialog
 
-Send the canonical text form. Number the questions and use a numbered option
-list with each stable lettered ID beside its action. Mark the recommendation
-only when supported. For one displayed question, a reply instruction can say
-`Reply with 1 or 2, add a condition, or say skip.` For a batch, use the actual
+Send the canonical text form. Number the questions and show the options as a
+bulleted list, each bullet led by its stable lettered ID and no list number.
+Mark the recommendation only when supported. For one displayed question, a
+reply instruction can say `Reply with A or B, add a condition, or say skip.` For a batch, use the actual
 full IDs. Wait on dependent work and interpret the reply with the table above.

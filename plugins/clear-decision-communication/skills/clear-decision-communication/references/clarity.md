@@ -11,22 +11,40 @@ their limits. Do not claim formal compliance with either standard.
 
 A brief passes only when it is all four:
 
-- **Relevant:** it contains what this reader needs to decide and excludes
-  process chatter about drafting, queuing, or agent coordination.
+- **Relevant:** it contains what this reader needs to decide: the decision, the
+  supported recommendation or explicit neutrality, the consequences, the
+  evidence, and the next action. It excludes process chatter about drafting,
+  queuing, or agent coordination.
 - **Findable:** the decision, the recommendation or explicit neutrality, and
-  the requested action are easy to locate. Establish the topic immediately;
-  put the question first only when it is understandable by itself.
+  the requested action are easy to locate, and options carry IDs. Establish the
+  topic immediately; put the question first only when it is understandable by
+  itself; otherwise the minimum orientation precedes it.
 - **Understandable:** terms, references, relationships, and the status of every
-  claim are explicit.
+  claim are explicit. The actual artifact type, exact name, and role are given
+  at first use; the connection to the goal and current condition are clear;
+  claim scope and evidence status survive simplification; every artifact is
+  framed.
 - **Usable:** the reader can reach the decision and the next action from the
-  text alone.
+  text alone. The reply grammar lets the reader answer in a word, add a
+  condition, skip, or ask. They can also state what answering changes now under
+  each option.
+
+Apply these outcomes to the intended reader, their knowledge, and the
+situation in which they will read: an unattended run, some time after the
+work happened, with no memory of the plan in front of them. Do not substitute
+readability scores for reader success.
 
 ## Sentence and terminology controls
 
-- One primary assertion per sentence. Treat about 25 words as a review signal,
-  not a limit; code spans, identifiers, paths, and quoted output count as one
-  word each.
-- Literal verbs and consistent terms. Replace a noun pile with an actor and an
+- One primary assertion per sentence. Treat about 25 words for a descriptive
+  sentence and 20 words for a procedural sentence as a review signal, not a
+  limit; code spans, identifiers, paths, and quoted output count as one word
+  each.
+- One instruction per procedural sentence, except for simultaneous actions.
+  The "On Q1.A I will" line is procedural.
+- Use vertical lists for complex material: options, ladders, and ledgers.
+- Literal verbs and consistent terms: one name per thing for the whole brief.
+  Replace a noun pile with an actor and an
   action: "config walk-up boundary" becomes "choose where the configuration
   search stops".
 - Gloss identifiers where they first appear: `REQ-26 (pre-0.95 fallback
@@ -99,6 +117,12 @@ essential meaning.
   Check whether all options depend on an unapproved implementation assumption.
 - Links and paths let the reader inspect supporting material; the surrounding
   text stays meaningful without opening them.
+- Pair a package manager's exact command with what it installs and how;
+  identify placeholders in a command as placeholders.
+- A research-record ID supplies navigation, not context: name the proposal and
+  what that record establishes.
+- A role must be supported just as a name must; "installs project
+  dependencies" is not a safe substitute for an unknown setup command.
 
 | Before | After |
 |---|---|
@@ -130,7 +154,7 @@ fixing vocabulary or sentence length alone is not enough.
 | Undefined exclusion | A combination is called invalid or unreachable without a rule. | State the criterion and the evidence. | `These cells are N/A.` becomes `N/A only when <exclusion rule> applies.` |
 | Missing reader action | The reader cannot tell whether this is information, a proposal, or an approval request. | End with one explicit action, or state that none is required. | `Expected volume: 120.` becomes `Action: approve the limit, or set another.` |
 | No option consequences | Choices are named without effects. | State what changes under each option and why it matters. | `Keep or remove?` becomes `Keep: restore reachability and test it. Remove: update the requirement and delete unreachable code.` |
-| No recommendation or owner dumping | Unresolved questions are transferred to the reader without a position. | Resolve discoverable facts, recommend a named action, escalate only policy or preference. | `Only you can answer these.` becomes `I recommend keeping the proposed source installer while applying the compatibility check (option 1, Q4.A).` |
+| No recommendation or owner dumping | Unresolved questions are transferred to the reader without a position. | Resolve discoverable facts, recommend a named action, escalate only policy or preference. | `Only you can answer these.` becomes `I recommend keeping the proposed source installer while applying the compatibility check (Q4.A).` |
 | Possible false choice | Options omit a feasible alternative or share an unapproved design assumption. | Distinguish requirements from proposed mechanisms; revise obsolete options after new direction. | Enable-switch choices are retired when the user requires credential-based activation. |
 | Process chatter | Drafting, queuing, or coordination talk that does not help the reader act. | Remove it unless it changes ownership, timing, or the response. | `I will queue these with anything Codex adds.` is omitted. |
 | Inconsistent question form | Parallel decisions use different structures. | Give every decision the same fields and one explicit question. | A heading plus complaint becomes `Q2. What source should generate the name?` |
@@ -142,7 +166,7 @@ fixing vocabulary or sentence length alone is not enough.
 | Unframed artifact | A block, table, or diagram appears with no lead-in and no reading. | Add the question it answers above and the takeaway below. | A bare config block gains both. |
 | Bare number | A quantity has no unit, or no reference point. | Give the unit and a comparison. | `200ms` becomes `200 ms, about 3x the p50`. |
 | Scope lost in simplification | A summary changes the subject or removes a material condition or uncertainty. | Preserve the affected component, credential, or environment and its evidence status. | A workflow's declared permissions do not settle an exchanged token's effective permissions. |
-| Forward reference instead of a recommendation | The recommendation or alternative is only an ID whose meaning appears later. | State the action, asset, and scope before its ID; put the options together immediately afterward. | `Q4.A; Q4.B wins if setup is slow` becomes `Apply the compatibility check to standalone development tools (option 1, Q4.A).` |
+| Forward reference instead of a recommendation | The recommendation or alternative is only an ID whose meaning appears later. | State the action, asset, and scope before its ID; put the options together immediately afterward. | `Q4.A; Q4.B wins if setup is slow` becomes `Apply the compatibility check to standalone development tools (Q4.A).` |
 | Evidence supports a different claim | A source verifies one fact but the sentence also asserts a mechanism, performance, or suitability. | Attribute the exact supported fact and separate what needs another source or test. | A registry's declared licence does not establish installation speed. |
 | Policy and candidate result conflated | A requirement to review a class becomes a ban on that class, or an exemption becomes automatic approval. | Name the check, the named candidate's disposition, and the future scope separately. | Applying a compatibility check does not mean every tool in the class fails it. |
 | Closing action contradicts an option | A shared conclusion says every choice settles policy or starts implementation. | Check the closing against each option; preserve the effect of hold and defer. | Choosing defer keeps the policy question open and the proposal unchanged. |
