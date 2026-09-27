@@ -311,8 +311,9 @@ I recommend <action on the named asset and scope>, because <reason> (Q1.A).
 - Q1.B <Action and outcome>. <Effect, conditions, and what I will do now.>
   <T2+: You give up or owe: <cost>. Reversal or what stays open: <effect>.>
 - Q1.C <Action and outcome>. <Effect, conditions, and what I will do now.>
+  <T2+: You give up or owe: <cost>. Reversal or what stays open: <effect>.>
 
-<T2+ with a recommendation: Q1.B would be better if <condition>.>
+<T2+ with a recommendation: <runner-up option ID> would be better if <condition>.>
 
 <Only when needed: the comparison or example that exposes the mechanism.>
 Evidence and limits: <Specific source or executed check, what it establishes,

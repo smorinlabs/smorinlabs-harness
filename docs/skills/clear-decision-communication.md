@@ -134,7 +134,7 @@ session, not presented as current independent verification.
 | `references/delivery.md` | tool adaptation, conditional two-turn delivery, batching, authorized fallbacks, the reply table, and confusion recovery |
 | `references/evidence.md` | evidence status labels, tracing claims to their support, and reporting measurements |
 | `references/decision-record.md` | when a record is due and its template |
-| `references/worked-examples.md` | nine fictional situations across the tiers, with full recommendations and adjacent ID-led options; illustrations, not behavioral validation |
+| `references/worked-examples.md` | ten fictional situations across the tiers, including a process decision, with full recommendations and adjacent ID-led options; illustrations, not behavioral validation |
 | `references/project-policy-example.md` | an adaptation of the owner-preferred historical rewrite, with exact tool names, scoped evidence, and distinct effects for each choice |
 | `references/framework.md` | provenance and licences of every borrowed ingredient; the verbatim source framework is in `docs/superpowers/specs/2026-09-07-clear-decision-communication-source-framework.md` |
 | `evals/evals.json` | realistic behavioral scenarios with grading expectations kept out of the scenario prompt |
