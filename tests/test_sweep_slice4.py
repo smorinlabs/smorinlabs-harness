@@ -178,6 +178,39 @@ def test_per_scope_overrides(tmp_path):
     assert run.scope_for("me").repos == ["dotfiles"]
 
 
+@pytest.mark.parametrize("kind", ["org", "user"])
+def test_discovered_scope_selection_keeps_configured_authority(tmp_path, kind):
+    text = (f'[{kind}."acme"]\nauto_fix = false\nrepairs = []\n'
+            'pause_on_conflict = true\nreviewer_contexts = ["review-bot"]\n')
+    run = load(tmp_path, text, flags={"org": ["acme"]})
+    scope = run.scope_for("acme")
+    assert scope.mode == "inspect"
+    assert scope.repairs == []
+    assert scope.pause_on_conflict is True
+    assert scope.reviewer_contexts == ["review-bot"]
+
+
+@pytest.mark.parametrize("flags,mode,pause", [
+    ({"no_auto_fix": True}, "inspect", False),
+    ({"check": True}, "inspect", False),
+    ({"mode": "gated"}, "gated", False),
+    ({"mode": "inspect"}, "inspect", False),
+    ({"pause_on_conflict": True}, "automated", True),
+    ({"no_auto_fix": True, "mode": "automated"}, "inspect", False),
+])
+def test_explicit_flags_override_scope_mode_and_pause(tmp_path, flags, mode, pause):
+    run = load(tmp_path, '[org."acme"]\nauto_fix = true\nmode = "automated"\n'
+                         'pause_on_conflict = false\n', flags=flags)
+    scope = run.scope_for("acme")
+    assert (scope.mode, scope.pause_on_conflict) == (mode, pause)
+
+
+def test_mode_flag_does_not_override_disabled_auto_fix(tmp_path):
+    run = load(tmp_path, '[org."acme"]\nauto_fix = false\n',
+               flags={"mode": "automated"})
+    assert run.scope_for("acme").mode == "inspect"
+
+
 def test_authority_dict_is_complete_and_json_safe(tmp_path):
     run = load(tmp_path, '[defaults]\nreviewer_contexts = ["coderabbitai"]\n'
                          '[org."acme"]\n')
@@ -604,6 +637,190 @@ def test_cli_run_lifecycle(tmp_path, capsys):
     view = json.loads(out)
     assert view["stop_reason"] == "completed_with_exceptions"
     assert view["counts"]["merged"] == 1 and view["authority"]["mode"] == "automated"
+
+
+def test_cli_scoped_inspect_authority_survives_replay_brief_and_evaluation(
+        github, tmp_path, capsys):
+    make_green(github)
+    github["combined"] = {
+        "state": "failure", "total_count": 1, "sha": HEAD, "statuses": [{
+            "context": "scope-reviewer", "state": "failure",
+            "description": "Review rate limited",
+            "creator": {"login": "custom-integration"}}]}
+    observation_path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())),
+                              "observation.json")
+    config_path = config_file(
+        tmp_path, '[org."o"]\nauto_fix = false\nrepairs = []\n'
+        'pause_on_conflict = true\nreviewer_contexts = ["scope-reviewer"]\n')
+    store_path = str(tmp_path / "run.jsonl")
+    common = ["--store", store_path, "--config", config_path]
+    items = [{"org": "o", "repo": "r", "number": 7, "head_sha": HEAD}]
+    code, out, err = run(common + ["run", "create", "--run-id", "R", "--file",
+                                   discoveries_file(tmp_path, items), "--json"],
+                         capsys)
+    assert code == 0, err
+    stored = Store.load(store_path).header.authority
+    assert stored["repositories"]["o/r"] == {
+        "mode": "inspect", "repairs": [], "pause_on_conflict": True,
+        "reviewer_contexts": ["scope-reviewer"]}
+    code, out, err = run(common + ["run", "view"], capsys)
+    assert code == 0 and "o/r: mode inspect" in out, err
+
+    # Later invocations must use the persisted restriction, not a widened file.
+    Path(config_path).write_text('[org."o"]\nauto_fix = true\n'
+                                'mode = "automated"\n', encoding="utf-8")
+    code, out, err = run(common + ["attempt", "create", "--json"], capsys)
+    assert code == 0, err
+    attempt = json.loads(out)[0]["attempt_id"]
+    code, out, err = run(common + ["brief", "view", attempt, "--json"], capsys)
+    assert code == 0, err
+    brief = json.loads(out)
+    assert (brief["mode"], brief["repairs"], brief["merge_allowed"]) == (
+        "inspect", [], False)
+    assert brief["pause_on_conflict"] is True
+    assert brief["reviewer_contexts"] == ["scope-reviewer"]
+    code, out, err = run(common + ["brief", "view", attempt], capsys)
+    assert code == 0 and "scope-reviewer" in out, err
+    code, out, err = run(common + ["pr", "evaluate", "PR-001", "--file",
+                                   observation_path, "--dependency-only",
+                                   "--attempt", attempt, "--json"], capsys)
+    assert code == 0, err
+    result = json.loads(out)["evaluation"]
+    assert (result["state"], result["merge_path"]) == ("READY", "none")
+    assert any("scope-reviewer" in note for note in result["notes"])
+
+
+def test_cli_mixed_scope_grants_and_global_approvals_stay_distinct(
+        github, tmp_path, capsys):
+    make_green(github)
+    observation_path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())),
+                              "observation.json")
+    config_path = config_file(
+        tmp_path, '[defaults]\nmode = "automated"\n'
+        '[org."o"]\nmode = "inspect"\nrepairs = []\n'
+        '[user."developer"]\nmode = "gated"\nrepairs = ["lockfile"]\n'
+        'pause_on_conflict = true\nreviewer_contexts = ["user-reviewer"]\n')
+    store_path = str(tmp_path / "run.jsonl")
+    common = ["--store", store_path, "--config", config_path]
+    items = [{"org": owner, "repo": "r", "number": 7, "head_sha": HEAD}
+             for owner in ("o", "developer")]
+    code, out, err = run(common + ["run", "create", "--run-id", "R", "--file",
+                                   discoveries_file(tmp_path, items)], capsys)
+    assert code == 0, err
+    persisted = Store.load(store_path)
+    assert persisted.header.authority["repositories"] == {
+        "o/r": {"mode": "inspect", "repairs": [], "pause_on_conflict": False,
+                "reviewer_contexts": []},
+        "developer/r": {"mode": "gated", "repairs": ["lockfile"],
+                        "pause_on_conflict": True,
+                        "reviewer_contexts": ["user-reviewer"]}}
+    assert "mixed authority" in out
+    code, out, err = run(common + ["run", "view"], capsys)
+    assert code == 0 and "mixed authority" in out, err
+    assert "o/r: mode inspect" in out and "developer/r: mode gated" in out
+    code, out, err = run(common + ["attempt", "create", "--json"], capsys)
+    assert code == 0, err
+    tasks = {task["repo_id"]: task for task in json.loads(out)}
+    for repo_id, mode, repairs in (("o/r", "inspect", []),
+                                    ("developer/r", "gated", ["lockfile"])):
+        code, out, err = run(common + ["brief", "view", tasks[repo_id]["attempt_id"],
+                                       "--json"], capsys)
+        assert code == 0, err
+        brief = json.loads(out)
+        assert (brief["mode"], brief["repairs"]) == (mode, repairs)
+
+    evaluate = common + ["pr", "evaluate", "PR-002", "--file", observation_path,
+                         "--dependency-only", "--attempt",
+                         tasks["developer/r"]["attempt_id"], "--json"]
+    code, out, err = run(evaluate, capsys)
+    assert code == 0, err
+    assert json.loads(out)["outcome"]["state"] == "NEEDS_OWNER"
+    persisted = Store.load(store_path)
+    persisted.header.authority["approved"] = ["PR-002"]
+    persisted.set_header(persisted.header)
+    code, out, err = run(evaluate, capsys)
+    assert code == 0, err
+    assert json.loads(out)["evaluation"]["merge_path"] == "put"
+    code, out, err = run(common + ["brief", "view",
+                                   tasks["developer/r"]["attempt_id"], "--json"],
+                         capsys)
+    assert code == 0 and json.loads(out)["approved"] == ["PR-002"], err
+
+
+@pytest.mark.parametrize("flags,settings,expected_mode,expected_pause", [
+    (["--no-auto-fix", "--mode", "automated"], 'auto_fix = true\n', "inspect", False),
+    (["--mode", "gated"], 'mode = "automated"\n', "gated", False),
+    (["--pause-on-conflict"], 'mode = "inspect"\n', "inspect", True),
+    (["--mode", "automated"], 'auto_fix = false\n', "inspect", False),
+])
+def test_cli_creation_flags_resolve_each_repository(
+        tmp_path, capsys, flags, settings, expected_mode, expected_pause):
+    config_path = config_file(tmp_path, '[org."acme"]\n' + settings +
+                              'pause_on_conflict = false\nrepairs = ["lockfile"]\n')
+    store_path = str(tmp_path / "run.jsonl")
+    common = ["--store", store_path, "--config", config_path]
+    code, out, err = run(common + ["run", "create", "--run-id", "R", "--file",
+                                   discoveries_file(tmp_path), "--json"] + flags,
+                         capsys)
+    assert code == 0, err
+    repo = Store.load(store_path).header.authority["repositories"]["acme/r"]
+    assert (repo["mode"], repo["pause_on_conflict"]) == (
+        expected_mode, expected_pause)
+    assert repo["repairs"] == ([] if expected_mode == "inspect" else ["lockfile"])
+
+
+def test_cli_explicit_discovery_overrides_repo_list_but_preserves_authority(
+        tmp_path, capsys):
+    store_path = str(tmp_path / "run.jsonl")
+    config_path = config_file(tmp_path, '[org."acme"]\nrepos = ["allowed"]\n'
+                              'auto_fix = false\nrepairs = []\n')
+    code, out, err = run(["--store", store_path, "--config", config_path,
+                          "run", "create", "--run-id", "R", "--file",
+                          discoveries_file(tmp_path), "--json"], capsys)
+    assert code == 0, err
+    stored = Store.load(store_path)
+    assert stored.cards["PR-001"].repo_id == "acme/r"
+    assert stored.header.authority["repositories"]["acme/r"] == {
+        "mode": "inspect", "repairs": [], "pause_on_conflict": False,
+        "reviewer_contexts": []}
+
+
+@pytest.mark.parametrize("legacy", [False, True], ids=["missing-entry", "legacy-flat"])
+def test_cli_repository_authority_requires_entry_except_for_legacy_store(
+        github, tmp_path, capsys, legacy):
+    make_green(github)
+    observation_path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())),
+                              "observation.json")
+    store_path = str(tmp_path / "run.jsonl")
+    common = ["--store", store_path, "--config", config_file(tmp_path)]
+    items = [{"org": "acme", "repo": "r", "number": 7, "head_sha": HEAD}]
+    code, out, err = run(common + ["run", "create", "--run-id", "R", "--file",
+                                   discoveries_file(tmp_path, items)], capsys)
+    assert code == 0, err
+    code, out, err = run(common + ["attempt", "create", "--json"], capsys)
+    assert code == 0, err
+    attempt = json.loads(out)[0]["attempt_id"]
+    persisted = Store.load(store_path)
+    if legacy:
+        persisted.header.authority.pop("repositories", None)
+        persisted.header.authority.update(mode="inspect", repairs=[])
+    else:
+        persisted.header.authority["repositories"] = {}
+    persisted.set_header(persisted.header)
+    for args in (["brief", "view", attempt],
+                  ["pr", "evaluate", "PR-001", "--file", observation_path,
+                   "--dependency-only", "--attempt", attempt]):
+        code, out, err = run(common + args + ["--json"], capsys)
+        if legacy:
+            assert code == 0, err
+            payload = json.loads(out)
+            if args[0] == "brief":
+                assert payload["mode"] == "inspect" and payload["repairs"] == []
+            else:
+                assert payload["evaluation"]["merge_path"] == "none"
+        else:
+            assert code != 0 and out == ""
+            assert "acme/r" in json.loads(err)["error"]["message"]
 
 
 def test_cli_discoveries_accept_gh_search_shape(tmp_path, capsys):

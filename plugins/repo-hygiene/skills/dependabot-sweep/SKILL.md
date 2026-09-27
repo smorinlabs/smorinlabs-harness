@@ -62,8 +62,9 @@ recovery, and reporting from one durable record store
 (`scripts/sweep_core.py`: append-only JSONL, replayed on restart). It never
 merges. **One executor per repository**: the worker attempt that holds the
 repository's mutation lease. It merges through exactly one transport per
-PR: the SHA-bound helper (`scripts/gh_merge.py`, behavior unchanged) for
-dependency-only PRs, or `pr-merge-flow`'s guarded merge
+PR: `scripts/sweep_merge.py`, which binds the unchanged SHA-bound helper
+(`scripts/gh_merge.py`) to the classified and approved head, for
+dependency-only PRs; or `pr-merge-flow`'s guarded merge
 (`--match-head-commit`) for involved PRs. Nothing else merges, and the
 dispatcher never issues a second merge. The orchestrator commands are
 `python3 scripts/sweep_cli.py` (interface in
@@ -72,7 +73,8 @@ below are what those commands enforce.
 
 - **Run wiring**: `run create --run-id <id> --file <discoveries>` (the
   `gh search` JSON from step 2 is accepted as is) stores the header, the
-  authority resolved from config, and one card per PR; `attempt create`
+  effective authority resolved per repository from config, and one card per PR;
+  later briefs and evaluations use that saved authority. `attempt create`
   expires dead work and issues one tasking per free repository;
   `brief view <attempt>` renders that worker's brief; hand it to a Task
   subagent; `attempt collect <attempt> --file <outcomes.jsonl>` applies
@@ -114,12 +116,22 @@ below are what those commands enforce.
   timestamp; queue acceptance and auto-merge arming are pending. Missing
   or truncated evidence is `K13` and never merges. A reviewer bot's own
   rate limit is reviewer-unavailable (`K08`), never CI red.
-- **Merge path**: `python3 scripts/gh_merge.py <owner> <repo> <pr> merge
-  <progress-log> --assert-trivial`, with `[budgets]` from config exported
-  as `GH_MERGE_*` per PR. Exit `0`: verify with a fresh GET before recording
-  merged. `10`: hold with the helper's literal reason. `11`: unknown; the
-  repository is quarantined and the coordinator reconciles it read-only
-  before any retry, never auto-retrying an uncertain mutation. The helper
+- **Merge path**: use `sweep_protocol.helper_command` or the exact command
+  in the rendered worker brief. It invokes
+  `python3 scripts/sweep_merge.py --expected-head <head> --helper-path scripts/gh_merge.py -- <owner> <repo> <pr> merge <progress-log> --assert-trivial`,
+  with `[budgets]` from config exported as `GH_MERGE_*` per PR. The head
+  must match the classifier receipt and, in gated mode, the approved head.
+  Missing or invalid heads fail closed. A different head observed during
+  helper preflight defers before any merge; classify the new diff and
+  obtain a new gated approval instead of adopting it automatically.
+  Exit `0`: verify with a fresh GET before recording
+  merged. `10`: hold with the helper's literal reason. A
+  `merge queue required` refusal is `BLOCKED` `K12`: the helper and
+  evaluator disagree or the worker chose the wrong executor. Refresh
+  policy and re-evaluate before choosing an executor; the refusal is never
+  queue acceptance. `11`: unknown; the repository is quarantined and the
+  coordinator reconciles it read-only before any retry, never auto-retrying
+  an uncertain mutation. The helper
   re-reads volatile evidence immediately before the PUT, and the SHA-bound
   PUT rejects a moved head with `409`. A queue-required target never goes
   through the helper, which refuses it: `pr-merge-flow` enqueues it once,
@@ -132,9 +144,11 @@ below are what those commands enforce.
   PR it blocks links one shared incident id (`ISS-…`); base green is `K04`
   regression; unmatched or missing controls are `K04` with low confidence
   and name the gap; a green same-head retry is `K17` transient with the
-  mechanism unknown; a runner or network signature is `K06`. Every verdict
-  still holds the PR. Changed files alone never prove a pre-existing
-  failure, and a baseline failure never waives required CI.
+  mechanism unknown; a runner or network signature is `K06` only when no
+  matched baseline exists. Matched control evidence takes precedence over
+  those signatures. Every verdict still holds the PR. Changed files alone
+  never prove a pre-existing failure, and a baseline failure never waives
+  required CI.
 - **Repair loop** (bounded, within the permitted repairs): red PRs go to
   `ci-fix` with the PR's remaining budget, diagnosed first, then return to
   the five checks exactly once at the resulting head. Repairs never change

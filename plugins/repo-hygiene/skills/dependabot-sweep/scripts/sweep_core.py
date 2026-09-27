@@ -47,8 +47,10 @@ TRANSITIONS: dict[State, frozenset] = {
         {State.READY, State.NEEDS_OWNER, State.WAITING, State.CLOSED,
          State.UNKNOWN}
     ),
+    # A fresh evaluation after an owner decision can find a technical hold;
+    # approval alone never permits a worker to skip READY and claim MERGED.
     State.NEEDS_OWNER: frozenset(
-        {State.READY, State.CLOSED, State.UNKNOWN}),
+        {State.READY, State.WAITING, State.BLOCKED, State.CLOSED, State.UNKNOWN}),
     # UNKNOWN exits only through observed reality: Card.restore_prior()
     # returns a proved-unmerged card to its recorded prior_state (NEW when
     # it was never evaluated) and Card.observe_merged() confirms a merge.

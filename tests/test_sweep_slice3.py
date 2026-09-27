@@ -26,6 +26,7 @@ import sweep_patience as patience  # noqa: E402
 import sweep_protocol as proto  # noqa: E402
 import sweep_report as report  # noqa: E402
 from sweep_core import K_REASONS, State, Store, StoreError  # noqa: E402
+import test_sweep_slice2 as evaluator_cases  # noqa: E402
 
 POSIX_ONLY = pytest.mark.skipif(os.name == "nt",
                                 reason="process groups are POSIX-only")
@@ -161,13 +162,46 @@ def test_t04_same_head_green_retry_is_transient_mechanism_unknown():
     assert result.state == State.WAITING  # re-evaluate; never READY
 
 
-def test_t04_environment_signature_is_environment_failure():
+@pytest.mark.parametrize("signature", [
+    "OSError: [Errno 28] No space left on device",
+    "fatal: Could not resolve host: example.test",
+    "The runner has received a shutdown signal",
+    "Connection reset by peer",
+])
+@pytest.mark.parametrize("baseline_conclusion,baseline_signature,code,confidence", [
+    ("success", "", "K04", "high"),
+    ("failure", None, "K05", "high"),
+    ("failure", "AssertionError: other", "K04", "low"),
+], ids=["base-passes", "same-failure", "different-failure"])
+def test_t04_matched_baseline_takes_precedence_over_environment_signature(
+        signature, baseline_conclusion, baseline_signature, code, confidence):
+    result = diag.diagnose(
+        candidate=control("head1", signature=signature),
+        baseline=control("base1", "base", conclusion=baseline_conclusion,
+                         signature=(signature if baseline_signature is None
+                                    else baseline_signature)))
+    assert (result.reason_code, result.confidence) == (code, confidence)
+    assert result.state == State.BLOCKED
+    assert [item["id"] for item in result.evidence] == [
+        "EV-diag-candidate", "EV-diag-baseline"]
+    assert bool(result.incident) is (code == "K05")
+    if confidence == "low":
+        assert "different signatures" in result.reason_line
+
+
+@pytest.mark.parametrize("baseline", [
+    None,
+    control("head1", "base"),
+    control("base1", "head"),
+    control("base1", "base", toolchain="python 3.13.0"),
+], ids=["missing", "same-revision", "wrong-ref", "unmatched-conditions"])
+def test_t04_environment_signature_without_matched_baseline_is_environment_failure(
+        baseline):
     result = diag.diagnose(
         candidate=control("head1", signature="OSError: [Errno 28] No space "
                                              "left on device"),
-        baseline=control("base1", "base", conclusion="success",
-                         signature=""))
-    assert result.reason_code == "K06"
+        baseline=baseline)
+    assert (result.reason_code, result.confidence) == ("K06", "medium")
     assert result.state == State.BLOCKED
 
 
@@ -257,6 +291,103 @@ def test_t09_mode_matrix_exact_authority(tmp_path):
         assert allowed is update, (mode, repairs, holds, why)
         for read_only in ("observe", "diagnose"):
             assert proto.authorize(tasking, read_only, "PR-001", now=0)[0]
+
+
+def evaluate_scheduled_card(store, task, observation=None):
+    """Evaluate fresh evidence with the persisted approval and actual lease."""
+    card = store.cards["PR-001"]
+    authority = store.header.authority
+    lease = store.leases.get(card.repo_id)
+    return evaluator_cases.evaluate(
+        obs=observation,
+        auth=ev.Authority(
+            mode=authority["mode"],
+            approved=card.id in authority.get("approved", []),
+            deadline_epoch=card.deadline_epoch or None),
+        track=ev.Tracking(
+            lease_held=(lease.state == "held" and
+                        lease.holder == task["attempt_id"]),
+            repo_quarantined=lease.state == "quarantined"))
+
+
+@pytest.fixture
+def approved_owner_hold(tmp_path):
+    found = discovery("acme", "one", 1)
+    found["head_sha"] = evaluator_cases.HEAD
+    store = Store(str(tmp_path / "run.jsonl"))
+    coord.create_run(store, "RUN-OWNER-01", mode="gated",
+                     authorization="test-authorization", discoveries=[found])
+    store.header.authority = {"mode": "gated", "approved": []}
+    store.set_header(store.header)
+    (first,) = coord.schedule(store, now=evaluator_cases.NOW,
+                              pr_budget_secs=600)
+    owner_hold = evaluate_scheduled_card(store, first)
+    assert (owner_hold.state, owner_hold.reason_code) == (State.NEEDS_OWNER, "K16")
+    coord.apply_outcome(store, first["attempt_id"],
+                        [owner_hold.to_outcome("PR-001")])
+    store = Store.load(store.path)
+    assert store.cards["PR-001"].state == State.NEEDS_OWNER
+    assert store.leases.get("acme/one").state == "released"
+
+    store.header.authority["approved"] = ["PR-001"]
+    store.set_header(store.header)
+    store = Store.load(store.path)
+    assert store.header.authority["approved"] == ["PR-001"]
+    (woken,) = coord.schedule(store, wake=["PR-001"], now=evaluator_cases.NOW + 1)
+    assert store.cards["PR-001"].state == State.NEEDS_OWNER
+    assert store.leases.get("acme/one").state == "held"
+    return store, woken
+
+
+@pytest.mark.parametrize("conclusion,status,state,code", [
+    ("failure", "completed", State.BLOCKED, "K04"),
+    (None, "in_progress", State.WAITING, "K01"),
+], ids=["fresh-ci-failure", "fresh-ci-pending"])
+def test_t09_approved_owner_hold_collects_fresh_technical_hold(
+        approved_owner_hold, conclusion, status, state, code):
+    store, woken = approved_owner_hold
+    observation = evaluator_cases.observe(
+        check_runs=evaluator_cases.section(evaluator_cases.check_runs(
+            evaluator_cases.run("ci/test", conclusion=conclusion, status=status))))
+    result = evaluate_scheduled_card(store, woken, observation)
+    assert (result.state, result.reason_code) == (state, code)
+
+    collected = coord.apply_outcome(store, woken["attempt_id"],
+                                    [result.to_outcome("PR-001")])
+    assert collected["pending"] == []
+    reloaded = Store.load(store.path)
+    card = reloaded.cards["PR-001"]
+    assert (card.state, card.reason_code) == (state, code)
+    assert card.evidence == result.evidence
+    assert reloaded.diary[woken["attempt_id"]].result == "completed"
+    assert reloaded.leases.get("acme/one").state == "released"
+
+    # Once CI is green, the same approved card can be evaluated and prepared.
+    # Scheduling again also proves collection released the repository lock.
+    (again,) = coord.schedule(reloaded, wake=["PR-001"],
+                              now=evaluator_cases.NOW + 2)
+    ready = evaluate_scheduled_card(reloaded, again)
+    assert ready.state == State.READY
+    coord.apply_outcome(reloaded, again["attempt_id"],
+                        [ready.to_outcome("PR-001")])
+    final = Store.load(store.path)
+    assert final.cards["PR-001"].state == State.READY
+    assert final.leases.get("acme/one").state == "released"
+
+
+def test_t09_approved_owner_hold_cannot_be_collected_as_directly_merged(
+        approved_owner_hold):
+    store, woken = approved_owner_hold
+    before = Path(store.path).read_bytes()
+    with pytest.raises(StoreError, match="NEEDS_OWNER -> MERGED"):
+        coord.apply_outcome(store, woken["attempt_id"], [{
+            "card_id": "PR-001", "outcome": "merged", "commit_sha": "c" * 40,
+            "merged_at": "2026-09-22T12:00:00Z"}])
+    assert Path(store.path).read_bytes() == before
+    reloaded = Store.load(store.path)
+    assert reloaded.cards["PR-001"].state == State.NEEDS_OWNER
+    assert reloaded.diary[woken["attempt_id"]].result == ""
+    assert reloaded.leases.get("acme/one").state == "held"
 
 
 def test_t09_budget_exhaustion_stops_mutation_not_observation(tmp_path):
@@ -544,7 +675,7 @@ def test_t08_superseded_attempt_cannot_write(tmp_path):
 
 
 def test_t08_queue_required_target_uses_the_enqueue_executor():
-    assert proto.executor_for("put") == "gh_merge.py"
+    assert proto.executor_for("put") == "sweep_merge.py"
     assert proto.executor_for("queue") == "pr-merge-flow enqueue"
     with pytest.raises(ValueError):
         proto.executor_for("none")

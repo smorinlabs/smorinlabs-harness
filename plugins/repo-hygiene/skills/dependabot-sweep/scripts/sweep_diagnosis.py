@@ -27,8 +27,8 @@ from sweep_core import State  # noqa: E402
 MATCH_FIELDS = ("workflow", "job", "matrix", "command", "toolchain",
                 "environment", "inputs")
 PASSED = frozenset({"success", "neutral"})
-# Failure signatures that name the runner or network, not the code under
-# test. A small explicit table: anything else is attributed by controls.
+# Runner or network failure signatures used only without a matched baseline.
+# These heuristics never override evidence from a matched control.
 ENVIRONMENT_SIGNATURES = (
     (re.compile(r"No space left on device|ENOSPC", re.I), "disk full"),
     (re.compile(r"Could not resolve host|Temporary failure in name "
@@ -119,10 +119,11 @@ def diagnose(candidate: Control, baseline: Control | None = None,
 
     K17 transient: a same-head retry under matched conditions passed; the
         mechanism stays unknown and the PR re-evaluates (WAITING).
-    K06 environment: the failure signature names the runner or network.
     K05 baseline: a matched base-revision run fails with the same
         signature. One shared incident per (base revision, job, signature).
     K04 regression, high confidence: a matched base-revision run passed.
+    K06 environment: without a matched baseline, the failure signature
+        names the runner or network.
     K04 inconclusive, low confidence: no baseline, a baseline on the same
         revision, unmatched conditions, or a different failure signature.
     """
@@ -144,16 +145,8 @@ def diagnose(candidate: Control, baseline: Control | None = None,
             "low", "medium", "sweeper", "re-evaluate",
             "Re-evaluate at this head; a green retry is evidence of "
             "transience, not a waiver.", evidence)
-    environment = _environment(candidate.signature)
-    if environment:
-        return Diagnosis(
-            State.BLOCKED, "K06",
-            f"{candidate.job} failed on {environment}: "
-            f"{candidate.signature}",
-            "medium", "medium", "ci-fix", "environment restored",
-            "Restore the CI environment, then re-run at the same head; "
-            "never weaken the check.", evidence)
     mismatched: list = []
+    matched_baseline = False
     if baseline is None:
         gap = "no baseline control was run"
     elif baseline.ref_kind != "base" or baseline.revision == candidate.revision:
@@ -161,6 +154,7 @@ def diagnose(candidate: Control, baseline: Control | None = None,
     else:
         evidence.append(_evidence(baseline, "baseline"))
         mismatched = mismatches(baseline, candidate)
+        matched_baseline = not mismatched
         if mismatched:
             gap = (f"baseline conditions differ on "
                    f"{', '.join(mismatched)}")
@@ -192,6 +186,16 @@ def diagnose(candidate: Control, baseline: Control | None = None,
                           f"{baseline.signature}"})
         else:
             gap = "base and head fail with different signatures"
+    if not matched_baseline:
+        environment = _environment(candidate.signature)
+        if environment:
+            return Diagnosis(
+                State.BLOCKED, "K06",
+                f"{candidate.job} failed on {environment}: "
+                f"{candidate.signature}",
+                "medium", "medium", "ci-fix", "environment restored",
+                "Restore the CI environment, then re-run at the same head; "
+                "never weaken the check.", evidence, mismatched)
     return Diagnosis(
         State.BLOCKED, "K04",
         f"{candidate.job} failed on head {candidate.revision[:12]}; "

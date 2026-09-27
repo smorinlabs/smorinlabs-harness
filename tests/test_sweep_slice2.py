@@ -453,6 +453,16 @@ def test_legitimate_skip_vs_failed_prerequisite_skip():
     assert "prerequisite" in result.reason_line
 
 
+def test_green_evidence_counts_legitimate_skips_separately():
+    checks = check_runs(run("ci/test"),
+                        run("deploy", conclusion="skipped", run_id=2))
+    result = evaluate(observe(check_runs=section(checks)))
+    assert result.state == State.READY
+    green = next(e for e in result.evidence if e["id"].startswith("EV-green-"))
+    assert green["establishes"].split(";", 1)[0] == (
+        "1 check(s) green, 1 legitimately skipped")
+
+
 # --- Mergeability and queue (negative control) ---
 
 def test_mergeability_states_map_distinctly():
@@ -783,6 +793,7 @@ def test_tasking_mode_semantics(tmp_path):
 
 def test_brief_renders_from_template_without_placeholders(tmp_path):
     store, record = tasked_store(tmp_path)
+    store.cards["PR-001"].head_sha = HEAD
     tasking = proto.Tasking.from_store(
         store, record, mode="gated", repairs={"branch_update"},
         op_timeout_secs=30, progress_log="/tmp/sweep.log",
@@ -799,16 +810,23 @@ def test_brief_renders_from_template_without_placeholders(tmp_path):
     assert "transport" in brief.lower()
     assert "outcome record" in brief.lower()
     assert "never" in brief and "gh pr merge" in brief
+    assert str(SCRIPTS / "sweep_merge.py") in brief
+    assert f"head {HEAD}" in brief
+    assert "--expected-head <approved-head> --helper-path /opt/h/gh_merge.py" in brief
+    assert "Never substitute a newly fetched head" in brief
 
 
 def test_helper_command_binds_card_deadline_and_timeout(tmp_path):
     store, record = tasked_store(tmp_path)
+    store.cards["PR-002"].head_sha = HEAD
     tasking = proto.Tasking.from_store(
         store, record, mode="automated", repairs=set(), op_timeout_secs=45,
         progress_log="/tmp/sweep.log", helper_path="/opt/h/gh_merge.py")
     argv, env = proto.helper_command(tasking, "PR-002")
-    assert argv == ["python3", "/opt/h/gh_merge.py", "acme", "r", "2",
-                    "merge", "/tmp/sweep.log", "--assert-trivial"]
+    assert argv == ["python3", str(SCRIPTS / "sweep_merge.py"),
+                    "--expected-head", HEAD, "--helper-path", "/opt/h/gh_merge.py",
+                    "--", "acme", "r", "2", "merge", "/tmp/sweep.log",
+                    "--assert-trivial"]
     assert env == {"GH_MERGE_OP_TIMEOUT": "45",
                    "GH_MERGE_DEADLINE_EPOCH": "1600", "GH_PROMPT_DISABLED": "1"}
 
@@ -828,7 +846,6 @@ def test_helper_deferred_reasons_map_to_codes():
         "DEFERRED: failing checks: ['lint']": ("K04", "BLOCKED"),
         "DEFERRED: not mergeable: state=dirty": ("K02", "BLOCKED"),
         "DEFERRED: not mergeable: state=blocked": ("K09", "BLOCKED"),
-        "DEFERRED: merge queue required: unsupported path": ("K10", "WAITING"),
         "DEFERRED: change requests outstanding: ['a']": ("K07", "BLOCKED"),
         "DEFERRED: unresolved review threads": ("K07", "BLOCKED"),
         "DEFERRED: inline review comments need human reading": ("K07", "BLOCKED"),
@@ -849,6 +866,85 @@ def test_helper_deferred_reasons_map_to_codes():
         assert (step["reason_code"], step["state"]) == (code, state), line
         reason = step["reason_line"].removeprefix("helper deferred: ")
         assert line.endswith(reason) and reason, line
+
+
+def test_helper_queue_refusal_records_wrong_executor_disagreement():
+    refusal = "merge queue required: unsupported path"
+    assert f'DefinitiveFailure("{refusal}")' in HELPER_SRC
+    ready = evaluate()
+    assert ready.state == State.READY and ready.merge_path == "put"
+
+    step = proto.helper_outcome(10, f"DEFERRED: {refusal}\n")
+    assert step["next"] == "hold"
+    assert (step["reason_code"], step["state"]) == ("K12", "BLOCKED")
+    assert step["reason_line"].startswith(f"helper deferred: {refusal}")
+    assert "helper/evaluator disagreement" in step["reason_line"]
+    assert "wrong executor" in step["reason_line"]
+    assert "fresh policy re-evaluation" in step["reason_line"]
+    assert "merge_path" not in step  # the refusal cannot choose a new executor
+
+
+def test_wrapper_changed_approved_head_holds_for_fresh_classification():
+    step = proto.helper_outcome(
+        10, "DEFERRED: head changed since classification or approval")
+    assert (step["next"], step["reason_code"], step["state"]) == (
+        "hold", "K13", "WAITING")
+
+
+def test_helper_queue_refusal_replays_and_requires_fresh_executor_choice(tmp_path):
+    store = Store(str(tmp_path / "run.jsonl"))
+    coord.create_run(store, "RUN-REFUSAL", "automated", "auth", [
+        {"org": "acme", "repo": "r", "number": 1, "title": "bump requests",
+         "url": "u", "owner": "acme", "head_sha": HEAD}])
+    ready = evaluate()
+    first = coord.schedule(store, pr_budget_secs=600, now=NOW)[0]
+    coord.apply_outcome(store, first["attempt_id"], [
+        ready.to_outcome("PR-001")])
+
+    merge_attempt = coord.schedule(store, now=NOW)[0]
+    refusal = "DEFERRED: merge queue required: unsupported path"
+    step = proto.helper_outcome(10, refusal)
+    coord.apply_outcome(store, merge_attempt["attempt_id"], [{
+        "card_id": "PR-001", "outcome": step["next"],
+        "state": step["state"], "reason_code": step["reason_code"],
+        "reason_line": step["reason_line"], "severity": "medium",
+        "confidence": "high", "evidence": ready.evidence + [{
+            "id": "EV-HELPER", "what": refusal,
+            "establishes": "helper refused before submitting a merge"}],
+        "action": "Refresh policy and re-evaluate before choosing an executor.",
+        "action_owner": "sweeper", "resume_trigger": "fresh policy observation",
+    }])
+
+    store = Store.load(store.path)
+    card = store.cards["PR-001"]
+    assert (card.state, card.reason_code) == (State.BLOCKED, "K12")
+    assert "helper/evaluator disagreement" in card.reason_line
+    assert coord.schedule(store, now=NOW + 1) == []
+    woken = coord.schedule(store, wake=[card.id], now=NOW + 1)[0]
+    tasking = proto.Tasking.from_store(
+        store, woken, mode="automated", repairs=set(), op_timeout_secs=30,
+        progress_log="l", helper_path="h")
+    assert proto.authorize(tasking, "observe", card.id, now=NOW + 1)[0]
+    # Authority and readiness are separate. A refusal cannot fabricate the
+    # duplicate-enqueue prohibition reserved for an observed queued PR.
+    for action in ("merge", "enqueue"):
+        allowed, why = proto.authorize(tasking, action, card.id, now=NOW + 1)
+        assert allowed, why
+        assert "already in the merge queue" not in why
+
+    policy = clean_policy(branch_rules=section(
+        [rule("merge_queue", 9, merge_method="MERGE")]),
+        rulesets={9: section(ruleset(9))})
+    refreshed = evaluate(observe(policy=policy))
+    assert refreshed.state == State.READY and refreshed.merge_path == "queue"
+    assert proto.executor_for(refreshed.merge_path) == "pr-merge-flow enqueue"
+    coord.apply_outcome(store, woken["attempt_id"], [
+        refreshed.to_outcome(card.id)])
+    enqueue_attempt = coord.schedule(store, now=NOW + 2)[0]
+    tasking = proto.Tasking.from_store(
+        store, enqueue_attempt, mode="automated", repairs=set(),
+        op_timeout_secs=30, progress_log="l", helper_path="h")
+    assert proto.authorize(tasking, "enqueue", card.id, now=NOW + 2)[0]
 
 
 def test_helper_closed_pr_and_unknown_and_refusal():

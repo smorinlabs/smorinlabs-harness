@@ -36,3 +36,43 @@ location) as well.
 > and confirms the sweep, then fans out one subagent per repo-with-PRs —
 > green PRs merged, red CI delegated to `ci-fix`, involved PRs to
 > `pr-merge-flow` — and aggregates one report.
+
+## Durable runs and approval
+
+Each sweep stores its selected PRs, worker attempts, repository leases, and
+outcomes in an append-only JSONL file. Restart reconciliation checks unfinished
+attempts before another worker receives the repository. An uncertain merge
+quarantines the repository until read-only evidence resolves it.
+
+The configured mode controls authority:
+
+| Mode | Behavior |
+|---|---|
+| `inspect` | Observe and diagnose; do not repair or merge. `--no-auto-fix` selects this mode. |
+| `automated` | Perform granted repairs and merge only after all readiness checks pass. |
+| `gated` | Complete preparation, then request approval for each PR before merging. |
+
+Repair permissions are separate grants. Repository settings are never a worker
+repair. Approval never waives CI or review requirements, and a changed head
+requires new classification and gated approval. A technical failure discovered
+while approval is pending becomes a recorded hold.
+
+Organization and user configuration overrides are resolved per repository at
+run creation and saved with the run. Later config edits cannot change that
+authority. The report shows each repository's effective mode and repair grants.
+
+The internal orchestrator, `python3 scripts/sweep_cli.py`, creates runs, renders
+worker briefs, collects outcomes, and reports the remaining work. Its
+`pr observe` and `pr evaluate` commands also support a read-only dry run.
+The orchestrator does not merge. The designated worker uses `sweep_merge.py`
+to bind the existing merge helper to the classified and approved head, or the
+guarded PR-flow route for an involved change. Merge completion requires a fresh
+GitHub observation with a merge commit and timestamp.
+
+Commands are relative to the installed skill directory. See the
+[CLI interface](../../plugins/repo-hygiene/skills/dependabot-sweep/references/cli-interface.md)
+and [configuration schema](../../plugins/repo-hygiene/skills/dependabot-sweep/references/config.md).
+
+The final report accounts for every selected PR, reports skipped checks
+separately from successful checks, and names the owner and resume condition for
+each hold. It states whether a verified continuation is running.

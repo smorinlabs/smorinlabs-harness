@@ -44,8 +44,19 @@ pr_budget_secs = 600    # per-PR deadline span; one absolute epoch per PR
 - Each scope table takes `visibility` or `repos`. If both appear, `repos`
   wins and `visibility` is ignored. `repos` holds bare repo names (`"web"`),
   resolved under that org/user.
-- Any `[defaults]` key may be repeated inside a scope table to override it
+- The behavior keys `auto_fix`, `pause_on_conflict`, `mode`, `repairs`, and
+  `reviewer_contexts` may be repeated inside a scope table to override them
   for that scope only.
+- Explicit scope flags and the selected discovery inventory passed to
+  `run create --file` can override the configured repository selection.
+  Matching owner behavior restrictions still apply to those repositories.
+- Run creation resolves mode, repair permissions, pause-on-conflict, and
+  reviewer contexts for each selected repository and stores them under
+  `authority.repositories`. Later briefs and evaluations use this saved
+  authority, so editing the config file does not change a running sweep.
+  The flat authority fields remain the global defaults and retain legacy
+  store compatibility; a newer store with a missing repository entry
+  refuses authority instead of falling back to broader defaults.
 - Unknown hosts or tools: out of scope in v1 — the sweep stops with a plain
   message rather than guessing.
 

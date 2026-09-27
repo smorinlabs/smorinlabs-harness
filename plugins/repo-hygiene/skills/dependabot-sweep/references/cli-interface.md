@@ -3,7 +3,7 @@
 The orchestrator CLI the sweep skill runs: `python3 scripts/sweep_cli.py`.
 Pinned to the CLI Design Standard **v1.4.14** (`cli-design-standard.md`,
 2026-06-28). Tier **minimal** (an internal skill helper, not an installed
-binary). Profile **noun-verb** (R1.1): twelve commands across six nouns,
+binary). Profile **noun-verb** (R1.1): thirteen commands across six nouns,
 above the Appendix A verb-first bound. Conformance record:
 [cli-conformance.md](cli-conformance.md).
 
@@ -140,11 +140,19 @@ the machine format and stays stable within a repo-hygiene major version:
 `{header, cards, attempts, issues, report}`. Fields are added, never
 renamed or removed, within a major (R7.2).
 
+New run headers include `authority.repositories`, keyed by `owner/repo`,
+with each repository's resolved mode, repairs, pause-on-conflict, and
+reviewer contexts. Flat authority fields describe the global defaults.
+Worker briefs and PR evaluations select the repository entry; only legacy
+stores without this map use flat authority. Human reports show the
+effective repository modes, including mixed-mode runs.
+
 ## Safety
 
 No command is destructive: the store is append-only and `pr observe` only
 reads GitHub. Merges are performed by the worker's transport
-(`gh_merge.py` or pr-merge-flow), never by this CLI, so `--dry-run`,
+(`sweep_merge.py` around the unchanged `gh_merge.py`, or pr-merge-flow),
+never by this CLI, so `--dry-run`,
 `--force`, `--yes`, and `--no-input` do not apply (§8 N/A). The CLI never
 prompts.
 

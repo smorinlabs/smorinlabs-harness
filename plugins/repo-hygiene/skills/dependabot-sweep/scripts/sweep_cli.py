@@ -169,11 +169,13 @@ def build_parser() -> Parser:
                    help="discoveries as JSON (coordinator shape or gh search "
                         "--json output); - reads stdin")
     p.add_argument("--mode", choices=tuple(proto.MODES),
-                   help="override the configured mode")
+                   help="override configured modes; auto_fix=false or "
+                        "--no-auto-fix still forces inspect")
     p.add_argument("--no-auto-fix", action="store_true",
                    help="triage only: inspect mode, no repair, no merge")
     p.add_argument("--pause-on-conflict", action="store_true", default=None,
-                   help="stop a repository at its first conflict")
+                   help="override configured pause settings: stop a "
+                        "repository at its first conflict")
     p.add_argument("--evolving", action="store_true",
                    help="evolving backlog: later arrivals join the scope")
     p.add_argument("--cutoff", metavar="ISO8601",
@@ -385,12 +387,13 @@ def normalize_discoveries(items) -> list:
     return out
 
 
-def _authority(store: Store) -> dict:
+def _authority(store: Store, repo_id: str | None = None) -> dict:
     authority = dict((store.header.authority if store.header else {}) or {})
     if not authority:
         raise CliError("run header has no authority; recreate the run with "
                        "`run create`", "precondition_failed", EXIT_CONFLICT)
-    return authority
+    return (cfg.authority_for_repo(authority, repo_id)
+            if repo_id is not None else authority)
 
 
 def _card(store: Store, card_id: str):
@@ -458,23 +461,26 @@ def cmd_run_create(args, ctx: Context) -> None:
              "pause_on_conflict": args.pause_on_conflict,
              "org": sorted({d["org"] for d in discoveries})}
     run_config = cfg.load_config(ctx.config_path, flags, dict(os.environ))
+    authority = run_config.to_authority(
+        HELPER_PATH, repositories=[f"{d['org']}/{d['repo']}" for d in discoveries])
     store = Store(ctx.store_path, session=ctx.session)
     header = coord.create_run(
         store, args.run_id, mode=run_config.mode,
         authorization=args.authorization or f"{TOOL} run create",
         discoveries=discoveries, scope_fixed=not args.evolving,
         cutoff=args.cutoff or utc_now())
-    header.authority = run_config.to_authority(HELPER_PATH)
+    header.authority = authority
     store.set_header(header)
     if run_config.run_budget_secs:
         coord.start_run_clock(store, run_config.run_budget_secs)
-    ctx.note(f"created {args.run_id}: {len(discoveries)} card(s), mode "
-             f"{run_config.mode}, config "
+    label = report.authority_label(header)
+    ctx.note(f"created {args.run_id}: {len(discoveries)} card(s), "
+             f"{label}, config "
              f"{run_config.config_path or 'built-in defaults'}")
-    ctx.emit(header.to_dict(),
-             f"{header.run_id} {header.mode}: {len(header.scope_ids)} "
-             f"selected card(s); repairs {', '.join(header.authority['repairs']) or 'none'}; "
-             f"store {ctx.store_path}")
+    lines = [f"{header.run_id} {label}: {len(header.scope_ids)} "
+             f"selected card(s); store {ctx.store_path}"]
+    lines.extend(report.repository_authority_lines(header))
+    ctx.emit(header.to_dict(), "\n".join(lines))
 
 
 def cmd_run_view(args, ctx: Context) -> None:
@@ -482,14 +488,18 @@ def cmd_run_view(args, ctx: Context) -> None:
     header = store.header.to_dict()
     header["counts"] = _counts(store)
     header["attempts"] = len(store.diary)
-    lines = [f"{store.header.run_id} {store.header.mode} "
+    lines = [f"{store.header.run_id} {report.authority_label(store.header)} "
              f"stop_reason={store.header.stop_reason or 'running'}",
              f"selected {header['counts']['selected']}; "
              f"merged {header['counts']['merged']}; "
              f"delivered {header['counts']['delivered']['total']}; "
-             f"attempts {header['attempts']}",
-             f"authority: mode {store.header.authority.get('mode', '?')}, "
-             f"repairs {', '.join(store.header.authority.get('repairs', [])) or 'none'}"]
+             f"attempts {header['attempts']}"]
+    if "repositories" in store.header.authority:
+        lines.extend(report.repository_authority_lines(store.header))
+    else:
+        lines.append(
+            f"authority: mode {store.header.authority.get('mode', '?')}, "
+            f"repairs {', '.join(store.header.authority.get('repairs', [])) or 'none'}")
     ctx.emit(header, "\n".join(lines))
 
 
@@ -557,9 +567,9 @@ def _tasking(store: Store, ctx: Context, attempt_id: str,
     if attempt is None:
         raise CliError(f"attempt {attempt_id!r} not found", "not_found",
                        EXIT_NOT_FOUND)
-    authority = _authority(store)
     card_ids = list(attempt.assigned)
     repo_id = store.cards[card_ids[0]].repo_id if card_ids else ""
+    authority = _authority(store, repo_id)
     record = {"attempt_id": attempt_id, "repo_id": repo_id,
               "card_ids": card_ids}
     return proto.Tasking.from_store(
@@ -569,7 +579,8 @@ def _tasking(store: Store, ctx: Context, attempt_id: str,
         helper_path=authority.get("helper_path") or HELPER_PATH,
         approved=[i for i in authority.get("approved", []) if i in card_ids],
         holds=[i for i in authority.get("holds", []) if i in card_ids],
-        pause_on_conflict=authority.get("pause_on_conflict", False))
+        pause_on_conflict=authority.get("pause_on_conflict", False),
+        reviewer_contexts=authority.get("reviewer_contexts", []))
 
 
 def cmd_brief_view(args, ctx: Context) -> None:
@@ -648,7 +659,7 @@ def cmd_pr_evaluate(args, ctx: Context) -> None:
         classifier=args.classifier, at=utc_now())
     notes = []
     if store is not None and card is not None:
-        authority = _authority(store)
+        authority = _authority(store, card.repo_id)
         auth = ev.Authority(mode=authority["mode"],
                             repairs=frozenset(authority["repairs"]),
                             owner_hold=card.id in authority.get("holds", []),

@@ -42,6 +42,8 @@ BUDGET_KEYS = ("op_timeout_secs", "pr_budget_secs", "run_budget_secs",
                "stale_after_secs")
 SCOPE_KEYS = ("visibility", "repos") + DEFAULTS_KEYS[2:]
 TOP_LEVEL_KEYS = ("defaults", "budgets", "org", "user")
+REPOSITORY_AUTHORITY_KEYS = ("mode", "repairs", "pause_on_conflict",
+                             "reviewer_contexts")
 
 BUILTIN = {
     "host": "github", "tool": "gh", "auto_fix": True,
@@ -106,32 +108,43 @@ class RunConfig:
     config_path: str = ""
     origin: dict = field(default_factory=dict)
     _flags: dict = field(default_factory=dict, repr=False)
+    _mode_config: str | None = field(default=None, repr=False)
 
     def scope_for(self, login: str) -> ScopeConfig:
-        scope = next((s for s in self.scopes if s.login == login), None)
+        scope = next((s for s in self.scopes
+                      if s.login.casefold() == login.casefold()), None)
         if scope is None:
             raise ConfigError(f"scope {login!r} is not configured", "not_found")
         over = scope.overrides
         auto_fix = self.auto_fix if "auto_fix" not in over else bool(over["auto_fix"])
-        mode_cfg = over.get("mode", self.mode if self.origin.get("mode") != "default" else BUILTIN["mode"])
+        if self._flags.get("no_auto_fix"):
+            auto_fix = False
+        mode_cfg = over.get("mode", self._mode_config or self.mode)
         if "mode" in over:
             _check_mode(over["mode"], f'[{scope.kind}."{login}"]')
         mode = _resolve(auto_fix, self._flags, mode_cfg)
         repairs = (_check_repairs(over["repairs"], f'[{scope.kind}."{login}"]')
                    if "repairs" in over else list(self.repairs))
+        pause = bool(over.get("pause_on_conflict", self.pause_on_conflict))
+        if self._flags.get("pause_on_conflict") is not None:
+            pause = bool(self._flags["pause_on_conflict"])
         return ScopeConfig(
             login=login, mode=mode, auto_fix=auto_fix,
-            pause_on_conflict=bool(over.get("pause_on_conflict",
-                                            self.pause_on_conflict)),
-            repairs=repairs,
+            pause_on_conflict=pause,
+            repairs=[] if mode == "inspect" else repairs,
             reviewer_contexts=list(over.get("reviewer_contexts",
                                             self.reviewer_contexts)),
             visibility=scope.visibility, repos=list(scope.repos))
 
-    def to_authority(self, helper_path: str = "") -> dict:
-        """The run-level authority `run create` stores on the header and
-        every later command reads back, so no invocation re-derives it."""
-        return {
+    def to_authority(self, helper_path: str = "",
+                     repositories: list | None = None) -> dict:
+        """Freeze defaults and effective repository grants on the run header.
+
+        The flat fields remain compatible with old stores. New runs pass
+        every discovered repository; later commands select its frozen entry.
+        Approval and hold lists remain global so owner decisions can append.
+        """
+        authority = {
             "mode": self.mode, "repairs": list(self.repairs),
             "approved": [], "holds": [],
             "reviewer_contexts": list(self.reviewer_contexts),
@@ -144,6 +157,34 @@ class RunConfig:
             "stale_after_secs": self.stale_after_secs,
             "helper_path": helper_path,
         }
+        if repositories is not None:
+            authority["repositories"] = {}
+            for repo_id in sorted(set(repositories)):
+                login = repo_id.partition("/")[0]
+                scope = self.scope_for(login)
+                authority["repositories"][repo_id] = {
+                    key: getattr(scope, key) for key in REPOSITORY_AUTHORITY_KEYS}
+        return authority
+
+
+def authority_for_repo(authority: dict, repo_id: str) -> dict:
+    """Resolve persisted repository grants; flat fallback is legacy-only.
+
+    A new-format store with a missing or incomplete entry cannot inherit
+    broader defaults. Global approvals, holds, and budgets are retained.
+    """
+    resolved = dict(authority)
+    if "repositories" not in authority:
+        return resolved
+    repositories = authority["repositories"]
+    entry = repositories.get(repo_id) if isinstance(repositories, dict) else None
+    if not isinstance(entry, dict) or any(
+            key not in entry for key in REPOSITORY_AUTHORITY_KEYS):
+        raise ConfigError(f"repository {repo_id!r} has no complete stored "
+                          "authority; recreate the run with `run create`",
+                          "precondition_failed")
+    resolved.update({key: entry[key] for key in REPOSITORY_AUTHORITY_KEYS})
+    return resolved
 
 
 def default_config_path(env: dict) -> str:
@@ -190,8 +231,10 @@ def _check_int(value, key: str, minimum: int, where: str = "[budgets]") -> int:
 
 
 def _resolve(auto_fix: bool, flags: dict, mode_cfg: str) -> str:
-    """One mapping only: flags and config feed `resolve_mode`."""
-    return resolve_mode(auto_fix=auto_fix and mode_cfg != "inspect",
+    """Mode flags override configured modes; disabled auto-fix stays inspect."""
+    mode_cfg = flags.get("mode") or mode_cfg
+    return resolve_mode(auto_fix=auto_fix and not flags.get("no_auto_fix")
+                        and mode_cfg != "inspect",
                         check=bool(flags.get("check")),
                         gated=(mode_cfg == "gated"))
 
@@ -321,11 +364,24 @@ def load_config(path: str | None, flags: dict | None,
     else:
         stale, origin["stale_after_secs"] = pr_budget, "default"
 
+    configured_scopes = _scopes_from_config(data)
     scopes = _scopes_from_flags(flags)
     if scopes:
         origin["scopes"] = "flag"
+        # Discovery selects owners; it does not grant permission to discard
+        # their configured behavior, including owners configured as user scopes.
+        for scope in scopes:
+            configured = next((s for s in configured_scopes
+                               if s.login.casefold() == scope.login.casefold()),
+                              None)
+            if configured is not None:
+                scope.overrides = dict(configured.overrides)
+                scope.visibility = configured.visibility
+                if scope.kind != "repo":
+                    scope.kind = configured.kind
+                    scope.repos = list(configured.repos)
     else:
-        scopes = _scopes_from_config(data)
+        scopes = configured_scopes
         origin["scopes"] = "config"
     if not scopes:
         raise ConfigError("no scope: pass --org or --repo, or configure an "
@@ -339,4 +395,4 @@ def load_config(path: str | None, flags: dict | None,
         pr_budget_secs=pr_budget, run_budget_secs=run_budget,
         observation_window_secs=window, poll_floor_secs=poll_floor,
         stale_after_secs=stale, scopes=scopes, config_path=config_path,
-        origin=origin, _flags=flags)
+        origin=origin, _flags=flags, _mode_config=mode_cfg)

@@ -5,8 +5,8 @@ A Tasking record carries exactly what one worker attempt may do to one
 repository: assigned cards, mode, repairs, approvals, holds, and one
 absolute deadline per PR. `render_brief` fills templates/agent-brief.md
 from it and refuses to leave a placeholder. `helper_command` binds the
-merge helper to a card's deadline. `helper_outcome` maps a helper exit to
-the worker's next step using the helper's own literal reason strings, and
+merge wrapper to a card's approved head and deadline. `helper_outcome`
+maps a helper exit to the worker's next step using literal reason strings, and
 never fabricates a merged record: exit 0 means "verify", not "merged".
 
 Stdlib only. The helper (gh_merge.py) is unchanged: it is transport.
@@ -42,7 +42,8 @@ READ_ONLY_ACTIONS = frozenset({"observe", "diagnose"})
 MERGE_ACTIONS = frozenset({"merge", "enqueue"})
 # The one executor per merge path. The helper refuses queue-required
 # targets, so a queue merge is always pr-merge-flow's enqueue.
-EXECUTORS = {"put": "gh_merge.py", "queue": "pr-merge-flow enqueue"}
+EXECUTORS = {"put": "sweep_merge.py", "queue": "pr-merge-flow enqueue"}
+MERGE_WRAPPER = Path(__file__).resolve().with_name("sweep_merge.py")
 DEFAULT_TEMPLATE = (Path(__file__).resolve().parent.parent / "templates"
                     / "agent-brief.md")
 PLACEHOLDER = re.compile(r"\{\{[A-Z_]+\}\}")
@@ -70,11 +71,13 @@ class Tasking:
     scope_fixed: bool = True
     cutoff: str = ""
     run_deadline_epoch: float = 0.0
+    reviewer_contexts: list = field(default_factory=list)
 
     @classmethod
     def from_store(cls, store: Store, record: dict, mode: str, repairs,
                    op_timeout_secs: int, progress_log: str, helper_path: str,
-                   approved=(), holds=(), pause_on_conflict: bool = False
+                   approved=(), holds=(), pause_on_conflict: bool = False,
+                   reviewer_contexts=()
                    ) -> "Tasking":
         """Build from a `schedule()` tasking record plus the run's authority.
 
@@ -124,7 +127,8 @@ class Tasking:
             lease_holder=record["attempt_id"],
             scope_fixed=header.scope_fixed if header else True,
             cutoff=header.cutoff if header else "",
-            run_deadline_epoch=header.deadline_epoch if header else 0.0)
+            run_deadline_epoch=header.deadline_epoch if header else 0.0,
+            reviewer_contexts=list(reviewer_contexts))
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -160,7 +164,7 @@ def render_brief(tasking: Tasking, template_path=None) -> str:
         deadline = card.get("deadline_epoch") or 0
         pr_lines.append(
             f"- {card['human_id']} [{card['id']}] head "
-            f"{(card.get('head_sha') or '?')[:12]} · "
+            f"{card.get('head_sha') or '?'} · "
             f"GH_MERGE_DEADLINE_EPOCH={_epoch(deadline) if deadline else 'unset'}")
     values = {
         "ATTEMPT_ID": tasking.attempt_id, "OWNER": owner, "REPO": repo,
@@ -171,11 +175,13 @@ def render_brief(tasking: Tasking, template_path=None) -> str:
                      else "not applicable"),
         "HOLDS": _listing(tasking.holds),
         "REPAIRS": _listing(tasking.repairs),
+        "REVIEWER_CONTEXTS": _listing(tasking.reviewer_contexts),
         "PAUSE_ON_CONFLICT": "true" if tasking.pause_on_conflict else "false",
         "SCOPE": _scope_line(tasking),
         "RUN_DEADLINE": (_epoch(tasking.run_deadline_epoch)
                          if tasking.run_deadline_epoch else "unset"),
         "OP_TIMEOUT": str(tasking.op_timeout_secs),
+        "MERGE_WRAPPER": str(MERGE_WRAPPER),
         "HELPER": tasking.helper_path, "LOG": tasking.progress_log,
     }
     text = template
@@ -252,11 +258,14 @@ def authorize(tasking: Tasking, action: str, card_id: str,
 
 
 def helper_command(tasking: Tasking, card_id: str) -> tuple:
-    """argv and environment for one helper invocation, bound to the
-    earlier of the card's and the run's absolute deadlines. Never
-    recompute a deadline here."""
+    """argv and environment for one wrapper invocation, bound to the
+    card's approved/classified head and the earlier of the card's and
+    run's absolute deadlines. Never substitute a freshly fetched head or
+    recompute a deadline here. The wrapper refuses an absent/invalid head."""
     card = tasking.card(card_id)
-    argv = ["python3", tasking.helper_path, card["org"], card["repo"],
+    argv = ["python3", str(MERGE_WRAPPER), "--expected-head",
+            card.get("head_sha") or "", "--helper-path", tasking.helper_path,
+            "--", card["org"], card["repo"],
             str(card["number"]), "merge", tasking.progress_log,
             "--assert-trivial"]
     env = {"GH_MERGE_OP_TIMEOUT": str(tasking.op_timeout_secs),
@@ -279,7 +288,7 @@ HELPER_REASONS = (
     ("failing checks", "K04", "BLOCKED"),
     ("no longer mergeable", "K13", "WAITING"),
     ("not mergeable: state=", "K09", "BLOCKED"),
-    ("merge queue required", "K10", "WAITING"),
+    ("merge queue required", "K12", "BLOCKED"),
     ("change requests outstanding", "K07", "BLOCKED"),
     ("unresolved review threads", "K07", "BLOCKED"),
     ("inline review comments need human reading", "K07", "BLOCKED"),
@@ -319,7 +328,8 @@ def helper_outcome(exit_code: int, stdout: str) -> dict:
           fresh evidence (check 5). Never a merged record from exit 0 alone.
     10 -> {"next": "hold", ...} with the helper's literal reason mapped to
           a code and hold state, or {"next": "verify"} when the PR left the
-          open state.
+          open state. A queue-required refusal is a wrong-executor or
+          evaluator disagreement (K12), never queue acceptance (K10).
     11 -> {"next": "unknown", "op_note": ...}: quarantine, never retry.
     12 or anything else -> hold K12 (worker/configuration failure).
     """
@@ -346,8 +356,14 @@ def helper_outcome(exit_code: int, stdout: str) -> dict:
             if literal == "not mergeable: state=":
                 value = reason.split("state=", 1)[1].strip()
                 code, state = MERGEABLE_STATE_REASONS.get(value, (code, state))
+            reason_line = f"helper deferred: {reason}"
+            if literal == "merge queue required":
+                reason_line += (
+                    "; helper/evaluator disagreement or wrong executor; "
+                    "fresh policy re-evaluation required before choosing "
+                    "a merge executor")
             return {"next": "hold", "reason_code": code, "state": state,
-                    "reason_line": f"helper deferred: {reason}"}
+                    "reason_line": reason_line}
         return {"next": "hold", "reason_code": "K13", "state": "BLOCKED",
                 "reason_line": f"helper deferred: {reason}"}
     return {"next": "hold", "reason_code": "K12", "state": "BLOCKED",

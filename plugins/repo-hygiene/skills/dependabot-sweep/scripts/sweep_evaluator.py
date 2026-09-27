@@ -680,7 +680,7 @@ def _green(obs: Observation, reviewer_contexts: set,
                     f"mergeable_state {ms!r} is not clean")
     _ev(result.evidence, "green",
         f"check-runs, statuses, reviews, threads at {obs.observed_at}",
-        f"{len(latest)} check(s) green"
+        f"{len(latest) - len(skipped_ok)} check(s) green"
         f"{', ' + str(len(skipped_ok)) + ' legitimately skipped' if skipped_ok else ''}"
         f"; {approvals} approval(s); 0 unresolved threads; "
         f"mergeable_state clean; policy sources {policy.sources or ['none']}",

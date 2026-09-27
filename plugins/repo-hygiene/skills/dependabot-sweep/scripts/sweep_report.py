@@ -19,6 +19,23 @@ from sweep_core import (  # noqa: E402
 )
 
 
+def authority_label(header) -> str:
+    """The effective modes, rather than a misleading global default."""
+    repositories = header.authority.get("repositories", {})
+    modes = {policy.get("mode", "unknown") for policy in repositories.values()}
+    return next(iter(modes)) if len(modes) == 1 else (
+        "mixed authority" if modes else header.mode)
+
+
+def repository_authority_lines(header) -> list:
+    return [
+        f"{repo}: mode {policy.get('mode', 'unknown')}; "
+        f"repairs {', '.join(policy.get('repairs', [])) or 'none'}"
+        for repo, policy in sorted(
+            header.authority.get("repositories", {}).items())
+    ]
+
+
 def _counts(store: Store) -> dict:
     assert store.header is not None, "create_run first"
     counts = {"selected": len(store.header.scope_ids), "merged": 0,
@@ -130,7 +147,7 @@ def render_report(store: Store, continuation: str | None = None) -> str:
                   + counts["blocked"] + counts["needs_owner"])
     ending = ENDINGS[run_ending(store)]
     lines = [
-        f"{header.run_id} {header.mode} pass ended {ending}. "
+        f"{header.run_id} {authority_label(header)} pass ended {ending}. "
         f"Selected {counts['selected']}; merged {counts['merged']}; "
         f"open {open_total}; unknown {counts['unknown']}; "
         f"unprocessed {counts['new']}. "
@@ -138,6 +155,9 @@ def render_report(store: Store, continuation: str | None = None) -> str:
         f"via replacement {delivered['via_replacement']}).",
         "",
     ]
+    authority_lines = repository_authority_lines(header)
+    if authority_lines:
+        lines += ["REPOSITORY AUTHORITY", *authority_lines, ""]
     unresolved = _unresolved(store)
     if unresolved:
         lines.append("UNRESOLVED (by consequence, then owner)")
