@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public cross-platform (Claude Code + Codex) plugin marketplace for smorinlabs",
-    "version": "0.30.0"
+    "version": "0.31.0"
   },
   "plugins": [
     {
@@ -248,7 +248,7 @@
       "name": "repo-hygiene",
       "source": "./plugins/repo-hygiene",
       "description": "Repo & release-readiness checks \u2014 CI fix and audit (measured, targeted, escalating), version drift, README sync, manual test guides, a PR merge flow that resolves every review thread before merging, and a Dependabot sweep that clears open dependency PRs across configured orgs.",
-      "version": "0.16.1",
+      "version": "0.17.0",
       "author": {
         "name": "Steve Morin"
       },

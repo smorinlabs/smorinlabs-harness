@@ -20,26 +20,64 @@ visibility = "all"       # all | public | private; ignored when repos is set
 [user."my-login"]
 visibility = "private"
 
-# Execution budgets, enforced by scripts/gh_merge.py (never by prompt text).
-# The orchestrator exports op_timeout_secs as GH_MERGE_OP_TIMEOUT, and
-# computes GH_MERGE_DEADLINE_EPOCH = now + pr_budget_secs once per PR.
+# Authority (Slice 4). Defaults reproduce the historical behavior.
+# mode = "automated"       # inspect | automated | gated; auto_fix = false means inspect
+# repairs = ["branch_update", "lockfile", "code_repair", "major_migration", "replacement_pr"]
+#                          # each repair is granted on its own; repo_settings is never one
+# reviewer_contexts = []   # status contexts of reviewer bots (their outage is never CI red)
+
+# Execution budgets, enforced by scripts/gh_merge.py and the coordinator
+# (never by prompt text). The orchestrator exports op_timeout_secs as
+# GH_MERGE_OP_TIMEOUT and sets GH_MERGE_DEADLINE_EPOCH once per PR when it is
+# first scheduled; successor attempts inherit it.
 [budgets]
 op_timeout_secs = 30    # per HTTP call inside the helper (connect+transfer)
 pr_budget_secs = 600    # per-PR deadline span; one absolute epoch per PR
+# run_budget_secs = 0           # whole-run deadline; 0 = unbounded
+# observation_window_secs = 600 # longest wait one observation may promise
+# poll_floor_secs = 20          # minimum seconds between polls; never lowered
+# stale_after_secs = 600        # retained for configuration compatibility;
+#                               # heartbeat silence never authorizes takeover
+#                               # of another session's attempt
 ```
 
 - Each scope table takes `visibility` or `repos`. If both appear, `repos`
   wins and `visibility` is ignored. `repos` holds bare repo names (`"web"`),
   resolved under that org/user.
-- Any `[defaults]` key may be repeated inside a scope table to override it
+- The behavior keys `auto_fix`, `pause_on_conflict`, `mode`, `repairs`, and
+  `reviewer_contexts` may be repeated inside a scope table to override them
   for that scope only.
+- Explicit scope flags and the selected discovery inventory passed to
+  `run create --file` can override the configured repository selection.
+  Matching owner behavior restrictions still apply to those repositories.
+- Run creation resolves mode, repair permissions, pause-on-conflict, and
+  reviewer contexts for each selected repository and stores them under
+  `authority.repositories`. Later briefs and evaluations use this saved
+  authority, so editing the config file does not change a running sweep.
+  The flat authority fields remain the global defaults and retain legacy
+  store compatibility; a newer store with a missing repository entry
+  refuses authority instead of falling back to broader defaults.
 - Unknown hosts or tools: out of scope in v1 — the sweep stops with a plain
   message rather than guessing.
+- Recovery of another session's attempt requires explicit confirmation that
+  the worker and all delegates have stopped and released mutation handles.
+  Use `run reconcile --stopped ATTEMPT` only after that verification; neither
+  `stale_after_secs` nor a passed deadline supplies it.
 
 ## Precedence
 
-Invocation flags (`--no-auto-fix`, `--pause-on-conflict`, `--org`, `--repo`,
-`--config`) beat the config file; the config file beats built-in defaults.
+Highest first: invocation flags (`--no-auto-fix`, `--pause-on-conflict`,
+`--mode`, `--org`, `--repo`, `--config`); environment variables
+(`DEPENDABOT_SWEEP_CONFIG` names the config file, `DEPENDABOT_SWEEP_STORE`
+the run store, `DEPENDABOT_SWEEP_SESSION` the session id,
+`DEPENDABOT_SWEEP_OUTPUT` the output format); the config file; built-in
+defaults. `--config` (or the env variable) names the sole config file and
+replaces discovery of `$XDG_CONFIG_HOME/dependabot-sweep/config.toml`. A
+missing discovered file is fine when `--org`/`--repo` supply the scope; a
+missing explicit file is an error. `--no-auto-fix` and `--check` always
+resolve to `inspect`, whatever `mode` says. `poll_floor_secs` below 20 is
+raised to 20. The loader is `scripts/sweep_config.py`; the orchestrator
+CLI that consumes it is documented in [cli-interface.md](cli-interface.md).
 
 ## Examples
 
