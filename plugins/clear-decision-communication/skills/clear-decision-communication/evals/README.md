@@ -139,7 +139,7 @@ draft and dependent responses do not yet exist. Pipeline status is `prepared`.
 ## Context and clarification cases
 
 Cases 1 through 13 retain the existing authorization, evidence, delivery, and
-question-ID controls. Cases 14 through 22 add the following coverage. The
+question-ID controls. Cases 14 through 22, 26, and 27 add the following coverage. The
 `CDC-*` identifiers name review findings; they are grader metadata and are not
 part of the project conversations.
 
@@ -161,7 +161,7 @@ Run the new cases together in fresh sessions:
 
 ```sh
 uv run --no-project plugins/clear-decision-communication/skills/clear-decision-communication/evals/run_evals.py \
-  --tool both --cases 14 15 16 17 18 19 20 21 22 --output /tmp/cdc-context-live --run
+  --tool both --cases 14 15 16 17 18 19 20 21 22 26 27 --output /tmp/cdc-context-live --run
 ```
 
 The input artifacts are fictional project files, conversation excerpts, and
