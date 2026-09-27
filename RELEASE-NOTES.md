@@ -1,9 +1,14 @@
 # Release Notes
 
-## Unreleased
+## v0.31.0 — 2026-09-27
 
 ### Added
 
+- `repo-hygiene` 0.17.0 adds a durable Dependabot sweep core and CLI with
+  saved run state, repository worker leases, bounded dispatch, and crash recovery.
+- Worker briefs and evaluations share saved per-repository permissions.
+- The `sweep_merge.py` merge wrapper refuses a PR whose latest commit differs
+  from the classified and approved commit.
 - `session` 0.13.0: `session-agent-list` now covers Muse and OpenCode beside
   Claude Code and Codex, through a new bundled read-only `session-inventory`
   CLI (stdlib Python, CLI Design Standard minimal tier; 37 fixture tests).
@@ -23,6 +28,18 @@
   checklists are gone, and the verbatim source framework moved to
   `docs/superpowers/specs/`. Blind parity evals: baseline 23/25, refactor
   24/25.
+
+### Fixed
+
+- Matched baseline controls take precedence over runner and network failure
+  signatures when diagnosing failed checks.
+- Merge-queue policy refusals require fresh policy evaluation instead of
+  being recorded as accepted queue entries.
+- Failed or pending CI discovered after owner approval can be collected as
+  technical holds, releasing the repository lease for later work.
+- Successful-check counts exclude skipped jobs.
+- Delivery reports distinguish merged PRs from dependency updates delivered
+  through merged replacement PRs.
 
 ## v0.30.0 — 2026-09-26
 
