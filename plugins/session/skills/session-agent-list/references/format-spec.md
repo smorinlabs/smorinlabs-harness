@@ -1,4 +1,8 @@
-# session-agent-list — output format spec (v7, converged 2026-08-08)
+# session-agent-list — output format spec (v8, 2026-09-22; v7 converged 2026-08-08)
+
+v8 is additive over v7: four tools (Claude Code, Codex, Muse, OpenCode),
+element 22 (session name), the `live` marker for sessions running right now,
+and the `--tool` / `--live` filters. Every v7 rule below still binds.
 
 This file is the single source of truth for the listing format. It is the
 converged result of a seven-iteration design session; the "do not regress"
@@ -13,8 +17,9 @@ All paths, session IDs, PR numbers, and worktrees in the examples below are
 The reader is finding a session (or sessions) in order to **access its data or
 respawn it**. The format answers these questions, in priority order:
 
-1. **Orientation** — How long ago? Claude Code or Codex? Spawned from another
-   session (fork/child)? Started from a handoff?
+1. **Orientation** — How long ago? Which tool (Claude Code, Codex, Muse,
+   OpenCode)? Running right now? Spawned from another session (fork/child)?
+   Started from a handoff?
 2. **Triage by end state** — Open mid-work (the resume candidate), handed off
    (follow the doc, don't resume), or closed (leave it alone / clean up)?
 3. **Action** — copy-paste commands to resume it or read its transcript.
@@ -25,31 +30,41 @@ Guiding principle: *the card doesn't just describe state, it changes which
 actions it hands you* — a cleanly-closed session offers only its transcript,
 never a resume command.
 
-## The 21 elements
+## The 22 elements
 
 | # | Element | Example | Definition |
 |---|---------|---------|------------|
 | 1 | Ephemeral ID | `[1]` | Ordinal assigned at first listing, **stable within a conversation**: once a session is [3] it stays [3] across re-filters; new sessions keep counting up; filtered-out sessions leave gaps. "Open [3]" is always safe. Not stored beyond the conversation. Prominent in every format. |
 | 2 | Session title | Fix skill symlink placements | Generated human-readable summary of what the session is about. |
-| 3 | Literal session ID | `claude:37185d34` / `codex:rollout-2026-08-08T16-18` | The real identifier the tool knows the session by, prefixed with the tool. |
-| 4 | Tool | Claude Code · Codex | Which agent CLI owns the session. |
+| 3 | Literal session ID | `claude:37185d34` / `codex:rollout-2026-08-08T16-18` / `muse:01a0ca24` / `opencode:ses_2e70924c` | The real identifier the tool knows the session by, prefixed with the tool. |
+| 4 | Tool | Claude Code · Codex · Muse · OpenCode | Which agent CLI owns the session. |
 | 5 | Relative time | 1h ago | Human-first "how long ago", keyed to **last activity**; always shown before the literals. |
 | 6 | Time span | started 15:21 → last active 16:12, Fri Aug 8, 2026 (51m) | **Both** start and end (or "last active" if still open) plus duration. Sessions can be very long-running; a single timestamp is not enough. Multi-day form: `started Tue Jun 3 → last active Fri Aug 8 (66 days)`. |
-| 7 | Spawn directory | `~/c` | Where the session was *launched*. First-class and separate from repos/worktrees — for Claude Code it is part of the resume address (session files are keyed by cwd). |
+| 7 | Spawn directory | `~/c` | Where the session was *launched*. First-class and separate from repos/worktrees — for Claude Code, Muse, and OpenCode it is part of the resume address (resume is directory-scoped). |
 | 8 | Repos | `acme-api`, `acme-web` | Repo(s) the session worked on — **plural is the norm**; may differ from spawn dir. `—` if none. |
 | 9 | Worktrees | ⑂ `~/c/…-placements` @ `fix/placements` | Worktree path(s) + branch(es) — **may be multiple**; one table row per repo/worktree pairing. Worktrees behave like working directories. |
 | 10 | Subgroup | MO5 group, sessions [1]–[3] | Related sessions clustered under a shared milestone/topic header. Renders as the container, not on the card. |
 | 11 | Lineage | ↳ fork of [1] "Fix skill symlink placements" | Fork/child of another session (shared transcript). Rendered as a labeled `lineage:` line using **title + ephemeral ID**, never the ID alone. |
 | 12 | Work item (triple form) | HP02-33 (placement audit — the task verifying skill symlinks resolve for both Claude and Codex) | Never a bare ID. See ID-hygiene convention below. |
 | 13 | Milestone / org context | MO5 (harness consolidation — the milestone folding all skills into one marketplace repo) | Same triple-form rule; defined once per group header, then referenced by plain name. |
-| 14 | Resume command | `cd ~/c && claude --resume <uuid>` | Copy-pasteable respawn, tool-appropriate, in a highlighted bash block. Includes the `cd` (Claude Code resume is cwd-sensitive). |
-| 15 | Session file path | `~/.claude/projects/-Users-alex-c/<uuid>.jsonl` | Path to the raw transcript, tool-appropriate layout, command-styled. Rendered as the **bare path** (no `less` prefix). |
+| 14 | Resume command | `cd ~/c && claude --resume <uuid>` | Copy-pasteable respawn, tool-appropriate, in a highlighted bash block. Includes the `cd` (Claude Code, Muse, and OpenCode resume are directory-scoped). Always by UUID. **Never rendered for a running session** — resuming it puts two writers on one transcript. |
+| 15 | Session file path | `~/.claude/projects/-Users-alex-c/<uuid>.jsonl` | Path to the raw transcript, tool-appropriate layout, command-styled. Rendered as the **bare path** (no `less` prefix). OpenCode keeps no per-session file: render `opencode export <id>` in this slot instead. |
 | 16 | Lately (bullets) | three bullets, most recent first | The last three things going on — hours horizon. |
 | 17 | TLDR | one/two sentences | What the session is, in one breath — session horizon. Explicitly titled `TLDR:`. |
 | 18 | The longer arc | 2–3 sentences | Months-scale narrative: where this thread of work came from. |
 | 19 | End status | ● / ⇥ / ✔ / ◒ | One of four closure states; on its own line under the title. See taxonomy. |
 | 20 | End-state detail | "merged PR #87, removed worktree…" | The closing section: receipts for closed sessions; for open sessions, `left off:` + progress live in the header block instead. |
 | 21 | Handoff origin | ⇤ from `claude:9a01c4e2` on `mbp-m1` · doc `<path>` | Inbound provenance: source session, source machine if different, handoff doc path. |
+| 22 | Session name | `copper-umbra` | The readable name the **tool itself** recorded — Muse canonical name, Codex thread name, Claude Code `/rename` title, OpenCode slug. Rendered on the identity line after the literal ID; omitted when the tool recorded none — never invented, and never the generated title (#2). Supplements the UUID, never replaces it. When the tool resumes by name (Muse, Codex), the commands block adds a by-name resume line. |
+
+**Live marker.** A session running right now carries the word **`live`**
+(not a glyph — the glyph budget is unchanged) on its identity line and on
+compact line 1, with the evidence: `live · pid 23981` plus `tmux <pane>` when
+known, or `live (app-server) · pid 9576` when a Codex thread is loaded in an
+app-server host (IDE, desktop app, companion plugin) rather than a terminal.
+Liveness is orthogonal to end state: a live session is still `●`, `⇥`, `✔`,
+or `◒`. A liveness verdict of `unknown` renders as `live?` with its basis;
+it never renders as running.
 
 Non-worktree / no-history sessions collapse #16–18 to a single TLDR (gist).
 The format decides by *whether there's a story*, not by card position.
@@ -143,7 +158,8 @@ what eyes navigate by, plain is what the mind reads.*
   never share a texture: heading → labeled lines → prose → table → code → prose)
 
 **Listing header:** `FOUND <n> SESSIONS · ● 1 open · ⇥ 1 handed off · ✔ 2
-clean · ◒ 1 loose ends` — end-state census up front. A filtered listing
+clean · ◒ 1 loose ends · live 3` — end-state census up front; the `live`
+count appears only when nonzero. A filtered listing
 names its scope in the census line — `FOUND 3 SESSIONS (query: flox pr) ·
 …` — so a narrowed set is never mistaken for the whole machine. These
 header rules apply to every listing view (default and all flag modes).
@@ -151,7 +167,8 @@ header rules apply to every listing view (default and all flag modes).
 **Coverage footer (optional, one line, any listing view).** When candidates
 were dropped by the filter or a source went unverified, one plain line at
 the listing's end says what was dropped and how to widen — silent
-truncation reads as full coverage.
+truncation reads as full coverage. Hidden subagent and guardian threads
+(Codex, OpenCode) are reported here as a count, never silently dropped.
 
 ## Band anatomy — final card ordering (v7)
 
@@ -171,15 +188,20 @@ truncation reads as full coverage.
 6. **Placement table** — 3 columns `Spawned in | Repo | Worktree`, one row per
    repo/worktree pairing, spawn cell filled on first row only. Multi-repo and
    multi-worktree are first-class.
-7. **Identity line** — `**Tool** · \`tool:id\` · 1h ago — started 15:21 →
-   last active 16:12, Fri Aug 8, 2026 (51m)`. Both endpoints always; for
+7. **Identity line** — `**Tool** · \`tool:id\` · <name> · live · pid <n> ·
+   1h ago — started 15:21 → last active 16:12, Fri Aug 8, 2026 (51m)`; the
+   name (#22) and live marker appear only when present. Both endpoints always; for
    long-running sessions the span is the signal (`started Tue Jun 3 → last
    active Fri Aug 8 (66 days)`).
 8. **Commands** — one bash block; **blank line between the two entries**;
    resume command first (with `cd`), then the **bare session-file path** (no
    `less`), each with a trailing `# comment`. Commands vary by end state
    (closed sessions get transcript only; handed-off sessions lead with the
-   handoff doc and annotate resume as "usually wrong").
+   handoff doc and annotate resume as "usually wrong"). A **live** session
+   gets no resume line: its first entry is a comment naming where it runs —
+   `# running now — pid 23981 · tmux main:@1.%1; switch to it, don't resume`
+   — then the transcript path. When the tool resumes by name, a by-name line
+   follows the UUID line: `cd ~/c && muse resume copper-umbra   # resume by name`.
 9. **`Lately:`** — three bullets, most recent first.
 10. **`The longer arc:`** — months-scale narrative.
 11. **`End state:`** — closes the card (chronological: history → how it ended).
@@ -264,7 +286,22 @@ scoping task off the docs-renderer project, removed scratch files. Fully
 capped." Codex cards use `codex resume <uuid>` and the resolved
 `$CODEX_HOME/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl` path —
 `~/.codex/sessions/…` by default; always render the resolved path, never the
-variable.)*
+variable. Muse cards use `cd <workspace> && muse resume <uuid>` and the
+`~/.local/share/muse/sessions/YYYY/MM/DD/<uuid>/session.jsonl` path; a Muse
+session with no recorded workspace gets no resume line — say so on the card.
+OpenCode cards use `cd <dir> && opencode --session <id>` and
+`opencode export <id>` in the transcript slot.)*
+
+## Filters
+
+Filters narrow the set; they never change the card. They combine with each
+other and with any view, and the listing header names them as scope
+(`FOUND 3 SESSIONS (tool: muse · live) · …`).
+
+- **`--tool <claude|codex|muse|opencode>`** — repeatable; default all four.
+  Also inferred from the query ("my Muse sessions").
+- **`--live`** — only sessions running right now. Also inferred from the
+  query ("what's running", "which sessions are in use").
 
 ## The default listing and the three flag modes
 
@@ -284,6 +321,9 @@ invent fields.
    Status is a first-class column. Drill-down ("show me [1]") returns the
    full card. Long-running sessions show a span instead of a bare time-ago
    (`Jun 3 → Aug 8`).
+
+   A live session adds `· live` to line 1 and replaces the line-3 resume
+   command with `# running now — pid <n>`.
 
    ```text
    [1] Fix skill symlink placements   claude · 1h ago  · ● open ~90% · ⇤ from mbp-m1
@@ -352,11 +392,13 @@ These were explicit user corrections during the design session:
   where? → which exactly? → how do I get back in? → what happened?" in scan
   order. (Data-type grouping was explicitly rejected: it optimizes the writer.)
 - **Spawn dir is first-class** because Claude Code keys session files and
-  resume behavior by cwd; Codex keys by date. The `cd` in the resume command
+  resume behavior by cwd, and Muse and OpenCode resume within a directory;
+  Codex keys by date. The `cd` in the resume command
   and the session-file path move together.
 - **Deliberate redundancy:** the UUID appears in identity line, resume command,
   and file path — each serves a different hand (talk / run / grep). Don't
-  dedupe.
+  dedupe. The session name (#22) is a fourth handle for talking, not a
+  substitute: resume commands stay on the UUID.
 - **Location echo (`at:`) repeats the table** on purpose: the echo is the
   *resolved* answer ("where do my hands go"), the table is the *decomposed*
   facts. E.g. "no worktree of its own (reads [1]'s)" fits no table cell.
