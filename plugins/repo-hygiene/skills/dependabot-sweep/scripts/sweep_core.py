@@ -262,6 +262,11 @@ class RunHeader:
     # Who continues after this pass: {"kind": watcher|scheduled|none,
     # "ref": ..., "verified_at": ...}. Empty means none.
     continuation: dict = field(default_factory=dict)
+    # The run's resolved authority (mode, repairs, approvals, holds,
+    # budgets, reviewer contexts, helper path), written once by `run
+    # create` so every later command reads the same values instead of
+    # re-deriving them from flags.
+    authority: dict = field(default_factory=dict)
 
     def query_subset(self, ids: list) -> tuple:
         """Resolve a follow-up question about a subset of cards.

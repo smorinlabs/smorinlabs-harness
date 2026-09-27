@@ -65,9 +65,23 @@ repository's mutation lease. It merges through exactly one transport per
 PR: the SHA-bound helper (`scripts/gh_merge.py`, behavior unchanged) for
 dependency-only PRs, or `pr-merge-flow`'s guarded merge
 (`--match-head-commit`) for involved PRs. Nothing else merges, and the
-dispatcher never issues a second merge. The exact orchestrator commands
-that create a run, schedule, collect, and render land with the live pilot;
-the rules below are what those commands enforce.
+dispatcher never issues a second merge. The orchestrator commands are
+`python3 scripts/sweep_cli.py` (interface in
+[references/cli-interface.md](references/cli-interface.md)); the rules
+below are what those commands enforce.
+
+- **Run wiring**: `run create --run-id <id> --file <discoveries>` (the
+  `gh search` JSON from step 2 is accepted as is) stores the header, the
+  authority resolved from config, and one card per PR; `attempt create`
+  expires dead work and issues one tasking per free repository;
+  `brief view <attempt>` renders that worker's brief; hand it to a Task
+  subagent; `attempt collect <attempt> --file <outcomes.jsonl>` applies
+  the returned outcome records; on any restart, `run reconcile --file
+  <observed.json> --live <attempt>...` runs before `attempt create`;
+  `run describe` and `approval list` render the report and the approval
+  set; `run finish --continuation ...` records the stop reason. Every
+  command takes `--store <run.jsonl>` and `-o json`. `pr observe` and
+  `pr evaluate` inspect one PR read-only, for diagnosis or a dry run.
 
 - **Tasking**: one Task subagent per repo with schedulable cards, never one
   per PR (same-repo PRs share lockfiles and CI) and never one per quiet
