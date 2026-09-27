@@ -356,13 +356,17 @@ def opencode_directory_liveness(sessions_in_dir: list[dict], pid: int) -> dict[s
     without naming its session (`opencode` started bare, or with --continue).
 
     sessions_in_dir: this directory's top-level sessions, newest `updated` first.
-    Returns {session_id: (live, basis)} for any session whose verdict you set;
+    Returns {session_id: (live, basis)} for any session whose verdict is set;
     sessions left out keep live="no".
 
-    TODO(Steve): choose the policy. The process proves *some* session in this
-    directory may be running, not which one.
+    Policy (owner decision, PR #86): only the newest session is `unknown`. The
+    process proves some session here may be running, not which one, so nothing
+    is claimed as running and older sessions keep their resume command.
     """
-    return {s["id"]: ("unknown", f"opencode pid {pid} running in this directory") for s in sessions_in_dir}
+    if not sessions_in_dir:
+        return {}
+    newest = sessions_in_dir[0]
+    return {newest["id"]: ("unknown", f"opencode pid {pid} running in this directory; newest session assumed")}
 
 
 def scan_opencode(procs: dict[int, list[str]]) -> tuple[list[dict], dict, int]:

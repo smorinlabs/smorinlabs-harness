@@ -42,4 +42,4 @@ other session skills ship no CLI.
 | Date | Standard version | Mode | Result |
 |---|---|---|---|
 | 2026-09-22 | 1.4.14 | plan | Interface spec seeded (`docs/session-inventory-cli.md`); no code yet |
-| 2026-09-22 | 1.4.14 | review | Implemented; 35 fixture tests cover R4.1 help/version, R6.1 exits 0/1/2, R7.1 split, R7.8 error object. Live run fixed two real-data gaps (Codex string `subagent` source; Muse versioned `muse-bin-*` binary) |
+| 2026-09-22 | 1.4.14 | review | Implemented; 36 fixture tests cover R4.1 help/version, R6.1 exits 0/1/2, R7.1 split, R7.8 error object. Live run fixed two real-data gaps (Codex string `subagent` source; Muse versioned `muse-bin-*` binary) |

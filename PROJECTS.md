@@ -2030,7 +2030,7 @@ claude.ai-synced copy of the skill, which is already diverged and not editable h
       setting up a new index created `research/AGENTS.md` under a root `AGENTS.md` and `research/CLAUDE.md` under a
       root `CLAUDE.md`; `just all` 482 passed, 4 skipped
 
-## [~] Project P53: session-agent-list covers Muse and OpenCode, with names, live and tool filters (session 0.12.0 → 0.13.0)
+## [x] Project P53: session-agent-list covers Muse and OpenCode, with names, live and tool filters (session 0.12.0 → 0.13.0)
 
 **Goal:** `session-agent-list` lists sessions from all four agent tools on this
 machine — Claude Code, Codex, Muse, and OpenCode — from one read-only
@@ -2048,7 +2048,7 @@ otherwise unchanged.
 `archived_sessions/`; resuming, deleting, or writing any session state.
 
 - [x] [P53-T01] Interface spec `docs/session-inventory-cli.md` + conformance note
-- [x] [P53-TS01] Fixture tests for all four stores: names, subagent hiding, stale locks, reused PID, missing workspace, `--tool`, `--live`, `--since`, exit codes, JSON error shape — 35 tests, `tests/test_session_inventory.py` (2026-09-22)
+- [x] [P53-TS01] Fixture tests for all four stores: names, subagent hiding, stale locks, reused PID, missing workspace, `--tool`, `--live`, `--since`, exit codes, JSON error shape — 36 tests, `tests/test_session_inventory.py` (2026-09-22)
 - [x] [P53-T02] `session-inventory` script passes P53-TS01 (2026-09-22)
 - [x] [P53-T03] SKILL.md + format-spec: four tools, element 22 (session name), live cards, `--tool`/`--live`; description rewritten (2026-09-22)
 - [x] [P53-T04] Bump session 0.12.0 → 0.13.0; plugin description, README, docs/skills page; regenerate manifests (2026-09-22)

@@ -557,8 +557,26 @@ def test_opencode_process_in_directory_surfaces_a_signal(home, world, procs, tmp
     db.commit()
     db.close()
     procs([str(fake_tool(home / "bin", "opencode"))], cwd=workdir)
-    s = by_id(inventory(home, "--tool", "opencode"))[ids["top"]]
+    got = by_id(inventory(home, "--tool", "opencode"))
+    s = got[ids["top"]]
     assert s["live"] != "no" and "opencode pid" in s["live_basis"]
+
+
+def test_opencode_directory_fallback_marks_only_newest_unknown(home, world, procs, tmp_path):
+    # owner decision (PR #86): without --session, only the newest top-level
+    # session in the process's directory is `unknown`; older ones stay `no`
+    ids = world["opencode"]
+    workdir = tmp_path / "delta"
+    workdir.mkdir()
+    db = sqlite3.connect(home / ".local/share/opencode/opencode.db")
+    db.execute("UPDATE session SET directory = ?", (str(workdir.resolve()),))
+    db.commit()
+    db.close()
+    procs([str(fake_tool(home / "bin", "opencode"))], cwd=workdir)
+    got = by_id(inventory(home, "--tool", "opencode"))
+    assert got[ids["top"]]["live"] == "unknown"
+    assert got[ids["top"]]["resume"] is not None       # unknown never blocks resume
+    assert got[ids["archived"]]["live"] == "no"
 
 
 # --- text output ----------------------------------------------------------------

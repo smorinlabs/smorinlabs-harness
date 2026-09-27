@@ -6,7 +6,7 @@
 
 - `session` 0.13.0: `session-agent-list` now covers Muse and OpenCode beside
   Claude Code and Codex, through a new bundled read-only `session-inventory`
-  CLI (stdlib Python, CLI Design Standard minimal tier; 35 fixture tests).
+  CLI (stdlib Python, CLI Design Standard minimal tier; 36 fixture tests).
   Cards show each tool's own session name next to the UUID (format spec
   element 22), mark sessions running right now as `live` — with no resume
   command, since resuming would put two writers on one transcript — and the
