@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- `session` 0.13.0: `session-agent-list` now covers Muse and OpenCode beside
+  Claude Code and Codex, through a new bundled read-only `session-inventory`
+  CLI (stdlib Python, CLI Design Standard minimal tier; 37 fixture tests).
+  Cards show each tool's own session name next to the UUID (format spec
+  element 22), mark sessions running right now as `live` — with no resume
+  command, since resuming would put two writers on one transcript — and the
+  listing filters with `--tool` and `--live`. Codex and OpenCode subagent
+  and guardian threads are hidden and counted.
+
 ### Changed
 
 - `clear-decision-communication` 0.5.0: every rule has one home. `SKILL.md`
