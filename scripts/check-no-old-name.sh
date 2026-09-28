@@ -15,5 +15,5 @@ case "$status" in
 esac
 # Over-match guard: fleet-concept names must survive the sweep.
 for keep in 'harness-kit' 'skill-harness-release' 'factor-harness'; do
-  git grep -qE "$keep" || { echo "::error::'$keep' vanished — the sweep over-matched"; exit 1; }
+  git grep -qE "$keep" -- . ':!scripts/check-no-old-name.sh' || { echo "::error::'$keep' vanished — the sweep over-matched"; exit 1; }
 done
