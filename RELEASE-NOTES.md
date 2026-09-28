@@ -24,6 +24,11 @@
   links to it were updated.
 - CI now fails if either old repository name appears in a live file
   (`scripts/check-no-old-name.sh`); dated history keeps the old names.
+- `repo-hygiene` 0.17.0 -> 0.18.0: `dependabot-sweep` saves one complete
+  report and repeats it inline, with a recommendation for every remaining
+  item; records follow-ups durably; separates technical blockers, execution
+  stops, and owner holds; ties dependency receipts to the evaluated PR; and
+  bounds admission by worker capacity, batch size, and deadlines (#94).
 
 ## v0.31.1 — 2026-09-28
 
