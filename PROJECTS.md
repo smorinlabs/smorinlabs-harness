@@ -2308,8 +2308,8 @@ code, or architecture. PR #89 made the rule firm only for process decisions, and
 **Goal/Requirement**: A simple, verified ask (T1) reads in about 100 words (target raised from 80 by owner decision Q6.A, 2026-09-28, to match the skill's own example). Case 29 measured
 173 words on 0.7.0 and 141 on 0.6.0 for a verified merge, because the brief restated the
 handoff in a context paragraph and repeated facts inside the options.
-- T1 rendering names its five parts, forbids a handoff-restating paragraph, caps options at
-  two sentences, and sets a review signal at about 120 words.
+- T1 rendering names its five parts, forbids a handoff-restating paragraph, gives options the
+  example's short-clause shape, and sets a review signal at about 120 words that names what to cut.
 
 **Out of Scope**
 - T2 and T3 length; grounding layers.

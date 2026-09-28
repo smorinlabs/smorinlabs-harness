@@ -372,8 +372,9 @@ Rendering by tier:
   the example below; do not repeat facts the question line already states. The
   reply line is "Reply with A or B." Add one sentence for an approval
   boundary only when the handoff or a policy establishes that boundary;
-  otherwise omit it. Past about 120 words, rerun the removal test before sending. For
-  example, sent as ordinary text:
+  otherwise omit it. Past about 120 words, cut repeated facts and any claim
+  the handoff does not support, then rerun the removal test before sending.
+  For example, sent as ordinary text:
 
   ```
   Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
@@ -382,7 +383,7 @@ Rendering by tier:
   I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
 
   - Q1.A (Recommended) Merge PR #142. I merge it as soon as you reply. Undoing it takes a revert PR. No stored data changes.
-  - Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
+  - Q1.B Hold PR #142. It stays open and unmerged, and you can approve the merge later. I continue with the other planned work.
 
   Reply with A or B.
   ```
