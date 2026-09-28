@@ -571,6 +571,41 @@
         "Names the runner-up option and the condition under which it would win (for example: the owner wants duplicate keys rejected now, or prefers one migration instead of two).",
         "Keeps the unverified production duplicate-key count visible as a gap that affects the 3.0.0 option's customer impact."
       ]
+    },
+    {
+      "id": 28,
+      "name": "architecture-decision-visual-before-question",
+      "prompt": "Prepare the next owner-facing response from the supplied design note. The owner has not read it.",
+      "files": [
+        {
+          "path": "inputs/design-note.md",
+          "content": "# Design note: where request quotas are enforced\n\n## Current system\n- `[G] edge-gateway` receives every public request and forwards it to one of two services.\n- `[O] orders-svc` and `[R] reports-svc` handle requests. Each service already reads a customer's plan from `[P] plan-store`.\n- Today `[G]` enforces the per-customer quota: 100 requests per minute, counted in `[G]`'s own memory.\n- `[G]` runs as 3 replicas. Each replica counts separately, so a customer spread across replicas can reach up to 300 requests per minute (observed in load test LT-14 on 2026-09-20: 287 accepted in one minute).\n\n## Problem\nEnterprise customers need a higher quota than 100. `[G]` cannot read `[P]`, so it cannot know a customer's plan.\n\n## Candidate designs\n- Option 1: move quota enforcement into `[O]` and `[R]`. Each service reads the plan from `[P]` and counts in a shared Redis instance `[C] quota-cache` (already deployed for sessions). `[G]` stops counting.\n- Option 2: keep enforcement in `[G]`, give `[G]` read access to `[P]`, and move `[G]`'s counters into `[C]`.\n\n## Evidence\n- Prototype of option 1 on branch `quota-in-svc` (revision 4c2e91b): unit tests pass; LT-14 rerun accepted 101 per minute for a 100-limit customer.\n- Option 2 not prototyped. Granting `[G]` access to `[P]` needs a security review (SECURITY.md: the gateway holds no customer data).\n- Both options add one `[C]` round trip per request; measured +1.8 ms p50 for option 1 in LT-14.\n- Not verified: `[C]` capacity at peak traffic.\n\n## Constraint\nThe project's architecture decisions need owner approval (ARCHITECTURE.md). Implementation of option 1 beyond the prototype is not yet authorized.\n"
+        }
+      ],
+      "covered_findings": ["CDC-27"],
+      "expectations": [
+        "Includes a framed ASCII visual (system diagram, route per option, or trace table) that shows the gateway, both services, the plan store, and the shared cache, with each option's path or changed responsibility marked.",
+        "Places that visual, or its baseline view, before the question line, so the reader sees the system before being asked to choose.",
+        "The visual has a lead-in and a reading sentence that names what differs between the options.",
+        "Keeps the security-review requirement for option 2 and the unverified cache capacity visible, and does not describe implementation of option 1 as authorized."
+      ]
+    },
+    {
+      "id": 29,
+      "name": "simple-merge-needs-no-diagram",
+      "prompt": "Prepare the next owner-facing response from the supplied handoff.",
+      "files": [
+        {
+          "path": "inputs/handoff.md",
+          "content": "# Handoff: CLI flag rename\n\n- The approved plan (PLAN.md, step 3) renames the CLI flag `--out-dir` to `--output`.\n- PR #231 implements it. `--out-dir` stays as a deprecated alias that prints one warning line.\n- All 58 CLI tests pass on revision e41b7a0, including new tests for the alias warning.\n- CONTRIBUTING.md requires a human to approve every merge.\n- Reverting is one revert PR; no stored data or configuration format changes.\n"
+        }
+      ],
+      "covered_findings": ["CDC-27"],
+      "expectations": [
+        "Asks a short merge question for PR #231 with a recommendation and options that name their consequences.",
+        "Contains no ASCII diagram, trace table, or other visual; the change is explained in a sentence.",
+        "Stays near the T1 length signal (about 80 words for the brief, excluding any separate next-action note) without dropping the gate, the test evidence, or reversal."
+      ]
     }
   ]
 }

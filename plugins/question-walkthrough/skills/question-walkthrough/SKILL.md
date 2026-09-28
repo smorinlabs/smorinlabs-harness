@@ -61,6 +61,17 @@ by a pre-read, with the pile re-planned after every answer.
      terms the user may not know. The standard is sufficiency — whatever
      makes the decision easy to understand and make, nothing more
      (explain-skill anatomy: anchored, just-enough);
+   - **the pre-read carries a visual when the question is complex.** A visual
+     is required when the reader must hold three or more relationships at
+     once, simulate an order of events or a change of state, or compare
+     options that take different paths. This holds for process, code, and
+     architecture questions alike. Draw it in ASCII inside a fence, with one
+     lead-in line before it and one reading line after it that names what
+     differs between the options. Show the current state first, then each
+     option's path. When no trigger holds, use a sentence and draw nothing.
+     The forms and diagram rules in `clear-decision-communication`'s
+     `references/representation.md` apply when that skill is installed;
+     the pre-read turn is the channel that always renders them;
    - **the pre-read ends its turn** (the Iron Law above). Deliver it as
      plain chat text and stop — no tool call of any kind after it,
      AskUserQuestion included. The user reads at their own pace; their
@@ -80,7 +91,9 @@ by a pre-read, with the pile re-planned after every answer.
    - options wherever candidates exist, recommendation first and marked
      "(Recommended)" with the reasoning in its description; per-option
      trade-offs live in option descriptions, not the question body;
-   - previews when options are concrete artifacts (code shapes, formats);
+   - previews when options are concrete artifacts (code shapes, formats), or
+     when options take different paths: each option's path diagram goes in
+     its preview, and the full visual stays in the pre-read;
    - the built-in Other is the escape hatch;
    - "skip" parks the item (revisit at the end); "stop" ends the walk with a
      partial summary.
@@ -132,6 +145,7 @@ by a pre-read, with the pile re-planned after every answer.
 | "An extra round-trip per question is too slow" | The round-trip is the only proof the pre-read was seen. Speed comes from skipping pre-reads on obvious questions and riding the next pre-read on the previous answer's turn — never from bundling. |
 | "The question body can carry the context" | Non-obvious questions get a pre-read turn first — the dialog is too small a channel for impact, trade-offs, and terms. |
 | "More context = better framing" | The pre-read standard is sufficiency, not volume — whatever makes the decision easy, nothing more. Padding stalls the walk. |
+| "The pre-read explains it in prose; a diagram is overkill" | Three or more relationships, a sequence or state to simulate, or diverging option paths make prose the defect. Draw the smallest ASCII visual; skip it only when no trigger holds. |
 | "The note is just color — I'll fold it into the option" | Classify first. A directive folded into an option tweak is an instruction dropped. |
 | "The note says do X — I'll do it right now" | Repeat back, confirm, queue. The end-of-walk batch is the default; immediate only when the note says so. |
 | "I'll batch three related questions into one message" | One question per message. Related = adjacent, never merged. |
@@ -142,6 +156,9 @@ by a pre-read, with the pile re-planned after every answer.
 ## See also
 
 - `explain` — owns the context anatomy this skill frames questions with.
+- `clear-decision-communication` — owns the single-question brief, including
+  its grounding layers and ASCII forms catalog; the pre-read's visual uses
+  that catalog when installed.
 - `project-refine` — scoping/decomposing a *project idea*; a walkthrough that
   keeps converging on one project's shape belongs there.
 - `html-codesign` — the async sibling: a shareable decision *page* instead of
