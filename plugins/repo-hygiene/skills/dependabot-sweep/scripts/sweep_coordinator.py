@@ -1073,7 +1073,9 @@ def discover_run(store: Store, payload: dict) -> dict:
             repositories[canonical] = grant
     if "repositories" in authority:
         authority["repositories"] = repositories
-    if set(payload["scope_repositories"]) != authorized_inventory:
+    scope_repositories = {_canonical_repo_id(header, store.cards.values(), rid)
+                          for rid in payload["scope_repositories"]}
+    if scope_repositories != authorized_inventory:
         reasons.append("scope_repositories differs from the authorized visibility inventory")
     if authorized_inventory != set(repositories):
         reasons.append("inventory omits or changes previously authorized repositories")
@@ -1096,7 +1098,7 @@ def discover_run(store: Store, payload: dict) -> dict:
     snapshot = {"observed_at": payload["observed_at"], "complete": complete,
                 "coverage": deepcopy(payload["coverage"]),
                 "scope_ids": list(header.scope_ids),
-                "scope_repositories": sorted(payload["scope_repositories"]),
+                "scope_repositories": sorted(scope_repositories),
                 "open_card_ids": open_ids, "unselected_card_ids": unselected,
                 "source": payload["source"], "incomplete_reasons": sorted(set(reasons)),
                 "evidence": {"claimed_complete": payload["complete"],
@@ -1116,7 +1118,9 @@ def refresh_card(store: Store, card_id: str, snapshot: dict) -> dict:
     card = store.cards[card_id]
     observation = discovery_evidence.read_only_observation(card, snapshot)
     card.latest_observation = observation
-    card.evidence.append({"kind": "read_only_refresh", **deepcopy(observation)})
+    card.evidence.append({"kind": "read_only_refresh",
+                          "observed_at": observation["observed_at"],
+                          "observed_head": observation["observed_head"]})
     store.upsert_card(card)
     return deepcopy(observation)
 

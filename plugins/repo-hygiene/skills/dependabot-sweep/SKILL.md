@@ -1,6 +1,6 @@
 ---
 name: dependabot-sweep
-description: Sweep every open Dependabot PR across configured GitHub orgs or repos and drive each toward merge, fanning out one subagent per repo. Reads scope and behavior flags from a TOML config (assumes GitHub and gh unless told otherwise), auto-fixes by default, and delegates red CI to ci-fix and involved merges to pr-merge-flow. Use when the user says "update my dependabot PRs", "dependabot sweep", "clear the dependabot backlog", or "update all the dependency PRs". Not for fixing CI in one repo (ci-fix) or merging one PR (pr-merge-flow).
+description: Sweep every open Dependabot PR across configured GitHub orgs or repos and drive each toward merge through bounded repository workers. Reads scope and behavior flags from a TOML config (assumes GitHub and gh unless told otherwise), auto-fixes by default, and delegates red CI to ci-fix and involved merges to pr-merge-flow. Use when the user says "update my dependabot PRs", "dependabot sweep", "clear the dependabot backlog", or "update all the dependency PRs". Not for fixing CI in one repo (ci-fix) or merging one PR (pr-merge-flow).
 argument-hint: "[--check] [--no-auto-fix] [--pause-on-conflict] [--config <path>] [--org <name>] [--repo <owner/name>]"
 allowed-tools: Bash, Read, Edit, Write, AskUserQuestion, Task
 ---
@@ -15,8 +15,8 @@ Clear the configured Dependabot backlog through bounded repository workers, with
 - `--no-auto-fix` — discover and triage, but don't fix or merge (overrides config `auto_fix`).
 - `--pause-on-conflict` — stop and ask on any merge conflict instead of recording and continuing (overrides config).
 - `--config <path>` — read this config instead of `~/.config/dependabot-sweep/config.toml`.
-- `--org <name>` — select this GitHub org or user; repeatable. Matching configured repository and visibility restrictions still apply.
-- `--repo <owner/name>` — select this explicit repository; repeatable. Matching owner visibility and behavior restrictions still apply.
+- `--org <name>` — select this GitHub org or user; repeatable. Matching configured repository, visibility and behavior restrictions still apply.
+- `--repo <owner/name>` — select this explicit repository; repeatable. Overrides configured repository names while retaining matching owner visibility and behavior restrictions.
 
 Invocation flags beat config; config beats defaults.
 

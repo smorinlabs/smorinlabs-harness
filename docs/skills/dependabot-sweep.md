@@ -13,8 +13,11 @@ readable results and follow-up recommendations are both saved and printed inline
 **Triggers on:** "update my dependabot PRs", "dependabot sweep", "clear the
 dependabot backlog", "update all the dependency PRs" ·
 **Arguments:** `--check` (report only), `--no-auto-fix` (triage, don't fix),
-`--pause-on-conflict` (stop and ask), `--config <path>`, `--org <name>`,
-`--repo <owner/name>` (repeatable, overrides config scope)
+`--pause-on-conflict` (stop and ask), `--config <path>`.
+`--org <name>` (repeatable) selects owners while preserving their configured
+repository, visibility and behavior restrictions. `--repo <owner/name>`
+(repeatable) overrides configured repository names with the explicit choices,
+while retaining matching owner visibility and behavior restrictions.
 
 ## Install
 
@@ -32,11 +35,13 @@ location) as well.
 ## Example session
 
 > "Clear the dependabot backlog."
-> → reads `~/.config/dependabot-sweep/config.toml`, runs one open-only
-> Dependabot search per configured org, reports N open PRs across M repos
-> and confirms the sweep, then fans out one subagent per repo-with-PRs —
-> green PRs merged, red CI delegated to `ci-fix`, involved PRs to
-> `pr-merge-flow` — and aggregates one report.
+> → reads `~/.config/dependabot-sweep/config.toml`, combines open-only
+> Dependabot searches with repository visibility inventory, and reports the
+> scope. It uses existing authorization or confirms the sweep, then admits
+> bounded repository batches within available worker capacity. Eligible PRs
+> are merged, red CI is delegated to `ci-fix`, and involved PRs go through
+> `pr-merge-flow`. Discovery repeats after merge batches and before the final
+> report. The same complete readable report is saved and printed inline.
 
 ## Durable runs and approval
 
