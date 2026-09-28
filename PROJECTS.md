@@ -2306,7 +2306,8 @@ code, or architecture. PR #89 made the rule firm only for process decisions, and
 - [x] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
       Shipped in v0.31.1 (PR #90).
 
-## [~] Project P61: T1 briefs stay near their length signal (clear-decision-communication 0.7.0 → 0.7.1)
+## [-] Project P61: T1 briefs stay near their length signal (clear-decision-communication 0.7.0 → 0.7.1)
+**Closed 2026-09-28 (owner decision Q7.A)**: the main fix shipped in v0.31.1 (173 → 124–154 words; target about 100). Remaining run-to-run variance is not worth further eval rounds; case 29 stays in the suite as a guard.
 **Goal/Requirement**: A simple, verified ask (T1) reads in about 100 words (target raised from 80 by owner decision Q6.A, 2026-09-28, to match the skill's own example). Case 29 measured
 173 words on 0.7.0 and 141 on 0.6.0 for a verified merge, because the brief restated the
 handoff in a context paragraph and repeated facts inside the options.
@@ -2320,7 +2321,7 @@ handoff in a context paragraph and repeated facts inside the options.
 - [x] [P61-TS01] Case 29 length criterion fails on the current skill (red)
       Result: 173 words on 0.7.0.
 - [x] [P61-T01] T1 rendering recipe in `SKILL.md`
-- [ ] [P61-TS02] Case 29 passes all criteria on the revised skill, graded blind
+- [-] [P61-TS02] Case 29 passes all criteria on the revised skill, graded blind
       Result so far: blind fail at 152 words (first recipe); 133 and 141 words after the option-shape sentence (unblinded). The skill's own T1 example is 102 words, so the target needed an owner decision.
       Q6.A (2026-09-28): T1 target set to about 100 words; example trimmed to 92 words (dropped "ships with the next deploy"). Final blind grade, two runs: 124 words pass; 154 words fail (length, plus an invented release boundary and an unsupported claim about other work). Left open: 1 of 2 runs passes.
 - [x] [P61-TS03] Blind grading of cases 26–30 on the released skill (P59/P60 follow-up)
