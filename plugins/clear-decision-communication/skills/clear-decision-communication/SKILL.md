@@ -103,7 +103,7 @@ the output is the brief for that target.
 
    | ID | Tier | Fires when | Prepare | The initial view holds | Length signal |
    |---|---|---|---|---|---|
-   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 80 words |
+   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 100 words |
    | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | grounding L1 and L2 when needed, question, full recommendation or neutrality, complete option list with each option's gain and cost, the runner-up condition, relevant evidence or comparison, and exact reply | about 250 words, excluding grounding and diagrams |
    | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, grounding L1 to L3, the representation the change type requires, and a details pointer when supporting material exists | about 500 words, excluding grounding and diagrams |
 
@@ -380,7 +380,7 @@ Rendering by tier:
   CONTRIBUTING.md requires a human to approve every merge.
   I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
 
-  - Q1.A (Recommended) Merge PR #142. I merge it now, and it ships with the next deploy. Undoing it takes a revert PR and a redeploy. No stored data changes.
+  - Q1.A (Recommended) Merge PR #142. I merge it now. Undoing it takes a revert PR. No stored data changes.
   - Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
 
   Reply with A or B.

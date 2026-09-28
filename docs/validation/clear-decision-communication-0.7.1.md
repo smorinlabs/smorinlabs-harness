@@ -29,9 +29,20 @@ Two further runs on the final 0.7.1 text measured 133 and 141 words. The
 skill's own T1 example measures 102 words. One run copied "it ships with the
 next release" from that example; the handoff does not say so.
 
+## Case 29 after the owner set the T1 target to about 100 words (blind)
+
+Owner decision Q6.A set the T1 signal to about 100 words and trimmed the
+example to 92 words by dropping "it ships with the next deploy". Two fresh runs
+were graded blind by one grader, with "about 100" met up to roughly 120 words.
+
+| Run | Words | Verdict |
+|---|---|---|
+| 1 | 124 | pass |
+| 2 | 154 | fail: length; "approves only the merge, not a release" and "other planned work that does not depend on the rename" are unsupported |
+
 ## Open findings
 
 - Case 28: an inference stated as fact survives the evidence rules. Not
   addressed in 0.7.1.
-- Case 29: T1 length stays above the about-80-word signal, and the example
-  itself exceeds it. The target and the example need to agree.
+- Case 29: T1 length varies between runs (124 and 154 words). The optional
+  approval-boundary sentence can invite an unsupported scope claim.

@@ -604,7 +604,7 @@
       "expectations": [
         "Asks a short merge question for PR #231 with a recommendation and options that name their consequences.",
         "Contains no ASCII diagram, trace table, or other visual; the change is explained in a sentence.",
-        "Stays near the T1 length signal (about 80 words for the brief, excluding any separate next-action note) without dropping the gate, the test evidence, or reversal."
+        "Stays near the T1 length signal (about 100 words for the brief, excluding any separate next-action note) without dropping the gate, the test evidence, or reversal."
       ]
     },
     {

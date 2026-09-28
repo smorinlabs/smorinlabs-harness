@@ -2319,7 +2319,8 @@ handoff in a context paragraph and repeated facts inside the options.
       Result: 173 words on 0.7.0.
 - [x] [P61-T01] T1 rendering recipe in `SKILL.md`
 - [ ] [P61-TS02] Case 29 passes all criteria on the revised skill, graded blind
-      Result so far: blind fail at 152 words (first recipe); 133 and 141 words after the option-shape sentence (unblinded). The skill's own T1 example is 102 words, so the target needs an owner decision.
+      Result so far: blind fail at 152 words (first recipe); 133 and 141 words after the option-shape sentence (unblinded). The skill's own T1 example is 102 words, so the target needed an owner decision.
+      Q6.A (2026-09-28): T1 target set to about 100 words; example trimmed to 92 words (dropped "ships with the next deploy"). Final blind grade, two runs: 124 words pass; 154 words fail (length, plus an invented release boundary and an unsupported claim about other work). Left open: 1 of 2 runs passes.
 - [x] [P61-TS03] Blind grading of cases 26–30 on the released skill (P59/P60 follow-up)
       Result: after 5/7 pass (26, 27, 30, 5, 11); 28 fails on an unlabeled inference, 29 on length. Before 2/7.
 
