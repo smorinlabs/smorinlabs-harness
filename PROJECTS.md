@@ -70,7 +70,7 @@ to the monorepo; bump to v0.2.0; publish; verify the marketplace lists all 3 plu
 - [x] [P06-T01] Deprecate + archive the 2 standalone repos (README/CLAUDE.md notice → smorinlabs-harness)
 - [x] [P06-T02] Repoint 9 factor-*/project-* symlinks + activate 4 repo-hygiene skills → monorepo; preserve 4 command originals (absorbs P03-T03)
 - [x] [P06-T03] Bump v0.2.0 + RELEASE-NOTES; regenerate; commit; tag; push
-- [~] [P06-TS01] Automated: marketplace.json valid + lists 3 plugins ✓. Manual (user): `/plugin marketplace add smorinlabs/smorinlabs-harness` + install smoke test
+- [~] [P06-TS01] Automated: marketplace.json valid + lists 3 plugins ✓. Manual (user): `/plugin marketplace add smorinlabs/smorinlabs-skills` + install smoke test
 
 ## [x] Project P07: Reconcile project-harness doc drift (v0.2.1)
 **Goal**: Reconcile cosmetic internal inconsistencies carried in from the standalone

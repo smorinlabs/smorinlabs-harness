@@ -11,7 +11,7 @@ design history rather than an operating rule; it lives in the repository at
 | Ingredient | Source | License | What was taken |
 |---|---|---|---|
 | The decision-communication framework (below) | Steve Morin, specification written 2026-09-07 | author's own | the spine: gate, axes, tiers, six questions, representation by change type, inspectable confidence, self-contained references, authorization scope, decision records, the examples |
-| clear-technical-communication skill | Steve Morin, smorinlabs-harness | author's own | reader gates, sentence controls, name classes, verbatim zones, error catalog, artifact frame, diagram catalog |
+| clear-technical-communication skill | Steve Morin, smorinlabs-skills | author's own | reader gates, sentence controls, name classes, verbatim zones, error catalog, artifact frame, diagram catalog |
 | show-me skill | humanlayer/skills, https://github.com/humanlayer/skills | MIT | the forms catalog: pseudocode, call tree, component tree, file tree, diff-shaped deltas, whole block; the smallest-view rule; placement beside the text it supports |
 | grilling skill | mattpocock/skills, https://github.com/mattpocock/skills | MIT | numbered question plus recommended answer as the text form; facts are the agent's job; frontier rounds as bounded batching |
 | wayfinder skill | mattpocock/skills, https://github.com/mattpocock/skills | MIT | what resolves a question (fact, prototype, conversation, task); the sharpness test; the agent never answers for the human; refer by name with the ID attached |

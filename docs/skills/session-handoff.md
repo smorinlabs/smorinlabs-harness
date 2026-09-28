@@ -39,12 +39,12 @@ free-text outcome hint seeds scoping.
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | You just want to use it | `/plugin install session@smorinlabs-harness` |
-| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/session/skills/session-handoff" ~/.claude/skills/session-handoff` |
+| Plugin (recommended) | You just want to use it | `/plugin install session@smorinlabs-skills` |
+| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/session/skills/session-handoff" ~/.claude/skills/session-handoff` |
 | Direct copy | No marketplace access | copy **both** `plugins/session/skills/session-handoff/` and `plugins/session/skills/session-recap/` into `~/.claude/skills/` — the handoff reuses the recap skill's `transcript_digest.py`, so copying it alone leaves the digest missing |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
+(`[marketplaces.smorinlabs-skills]`) and enable the plugin — or use the
 dev-symlink path, also linking into `~/.agents/skills` (Codex's current
 skills location).
 

@@ -83,15 +83,15 @@ request, or a diff to turn into a decision request.
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | You just want to use it | `/plugin install clear-decision-communication@smorinlabs-harness` |
-| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/clear-decision-communication/skills/clear-decision-communication" ~/.claude/skills/clear-decision-communication` |
+| Plugin (recommended) | You just want to use it | `/plugin install clear-decision-communication@smorinlabs-skills` |
+| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/clear-decision-communication/skills/clear-decision-communication" ~/.claude/skills/clear-decision-communication` |
 | Direct copy | No marketplace access | copy `plugins/clear-decision-communication/skills/clear-decision-communication/` into `~/.claude/skills/` |
 
 **Codex:** install from a terminal with a Codex CLI that supports plugins:
 
 ```sh
-codex plugin marketplace add smorinlabs/smorinlabs-harness
-codex plugin add clear-decision-communication@smorinlabs-harness
+codex plugin marketplace add smorinlabs/smorinlabs-skills
+codex plugin add clear-decision-communication@smorinlabs-skills
 ```
 
 For development, link the cloned skill into `~/.agents/skills`. Dialog support

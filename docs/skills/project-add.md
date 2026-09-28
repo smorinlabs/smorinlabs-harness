@@ -18,12 +18,12 @@ skipping its confirmation
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | Just use it | `/plugin install project-harness@smorinlabs-harness` |
-| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/project-harness/skills/project-add" ~/.claude/skills/project-add` |
+| Plugin (recommended) | Just use it | `/plugin install project-harness@smorinlabs-skills` |
+| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/project-harness/skills/project-add" ~/.claude/skills/project-add` |
 | Direct copy | No marketplace access | copy `plugins/project-harness/skills/project-add/` into `~/.claude/skills/` |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`, source_type local) and enable the
+(`[marketplaces.smorinlabs-skills]`, source_type local) and enable the
 plugin — or dev-symlink into `~/.agents/skills` (Codex's current skills
 location) as well.
 

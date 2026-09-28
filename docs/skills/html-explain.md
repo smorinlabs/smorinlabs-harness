@@ -199,8 +199,8 @@ without asking for a pick. When a request could mean either, both offer both.
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-harness` (ships all three skills) |
-| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/use-html-theme/skills/html-explain" ~/.claude/skills/html-explain` |
+| Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-skills` (ships all three skills) |
+| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/use-html-theme/skills/html-explain" ~/.claude/skills/html-explain` |
 | Direct copy | No marketplace access | copy just `skills/html-explain/` — its shared references travel with it as vendored copies at `references/_shared/`. The one thing that doesn't survive a lone copy: sibling-skill theme paths (`../use-html-theme/...`) |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`. Pure skill —

@@ -50,12 +50,12 @@ not writing handoffs (`session-handoff`).
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | You just want to use it | `/plugin install session@smorinlabs-harness` |
-| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/session/skills/session-agent-list" ~/.claude/skills/session-agent-list` |
+| Plugin (recommended) | You just want to use it | `/plugin install session@smorinlabs-skills` |
+| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/session/skills/session-agent-list" ~/.claude/skills/session-agent-list` |
 | Direct copy | No marketplace access | copy `plugins/session/skills/session-agent-list/` into `~/.claude/skills/` |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
+(`[marketplaces.smorinlabs-skills]`) and enable the plugin — or use the
 dev-symlink path, also linking into `~/.agents/skills` (Codex's current
 skills location). **Muse and OpenCode** both load skills from
 `~/.agents/skills`, so the same dev symlink serves them.

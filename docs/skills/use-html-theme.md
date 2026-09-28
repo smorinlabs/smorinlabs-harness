@@ -38,8 +38,8 @@ behaves identically on Claude Code and Codex:
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-harness` |
-| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/use-html-theme/skills/use-html-theme" ~/.claude/skills/use-html-theme` |
+| Plugin (recommended) | Just use it | `/plugin install use-html-theme@smorinlabs-skills` |
+| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/use-html-theme/skills/use-html-theme" ~/.claude/skills/use-html-theme` |
 | Direct copy | No marketplace access | copy `plugins/use-html-theme/skills/use-html-theme/` into `~/.claude/skills/` |
 
 All three modes install the same **skill** — the plugin is skills-only (no

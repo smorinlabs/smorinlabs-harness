@@ -107,8 +107,8 @@ It does not redistribute Fusion, Windows installation media, or a registered VM.
 Install the two skills together as the `fusion-runner` plugin:
 
 ```text
-/plugin marketplace add smorinlabs/smorinlabs-harness
-/plugin install fusion-runner@smorinlabs-harness
+/plugin marketplace add smorinlabs/smorinlabs-skills
+/plugin install fusion-runner@smorinlabs-skills
 ```
 
 For Codex, use the marketplace installation described in the repository
@@ -116,7 +116,7 @@ For Codex, use the marketplace installation described in the repository
 
 | Mode | When to use it | Placement |
 |---|---|---|
-| Plugin | Use both skills with their references and helpers | Install `fusion-runner@smorinlabs-harness` |
+| Plugin | Use both skills with their references and helpers | Install `fusion-runner@smorinlabs-skills` |
 | Development symlink | Edit a local clone and use those changes | Link both skill directories from the clone into the tool's skills directory |
 | Direct copy | Use the skills without a marketplace connection | Copy both complete skill directories into the tool's skills directory |
 
@@ -125,8 +125,8 @@ both Claude Code and Codex. Use an existing clone when one is already available;
 do not overwrite existing skill placements.
 
 ```bash
-git clone https://github.com/smorinlabs/smorinlabs-harness.git
-fusion_skills="$(pwd)/smorinlabs-harness/plugins/fusion-runner/skills"
+git clone https://github.com/smorinlabs/smorinlabs-skills.git
+fusion_skills="$(pwd)/smorinlabs-skills/plugins/fusion-runner/skills"
 mkdir -p "$HOME/.claude/skills" "$HOME/.agents/skills"
 for fusion_skill in fusion-runner-setup fusion-runner-run; do
   ln -s "$fusion_skills/$fusion_skill" "$HOME/.claude/skills/$fusion_skill"

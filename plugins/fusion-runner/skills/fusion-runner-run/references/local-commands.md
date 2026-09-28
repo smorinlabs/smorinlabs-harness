@@ -3,7 +3,7 @@
 `ci-fix` owns selecting and capturing local source, comparing feedback costs,
 and interpreting test evidence. This skill supplies the guest transport and
 standard-account executor. Follow `ci-fix`'s
-[local Windows reference](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/repo-hygiene/skills/ci-fix/references/windows-local.md)
+[local Windows reference](https://github.com/smorinlabs/smorinlabs-skills/blob/main/plugins/repo-hygiene/skills/ci-fix/references/windows-local.md)
 for the execution specification and host commands.
 
 Use the existing VM identified by its absolute VMX path. A private image/access

@@ -21,12 +21,12 @@ the session does not already have it.
 
 ## Install
 
-Install `fusion-runner@smorinlabs-harness`, which contains this skill and
+Install `fusion-runner@smorinlabs-skills`, which contains this skill and
 `fusion-runner-setup`:
 
 ```text
-/plugin marketplace add smorinlabs/smorinlabs-harness
-/plugin install fusion-runner@smorinlabs-harness
+/plugin marketplace add smorinlabs/smorinlabs-skills
+/plugin install fusion-runner@smorinlabs-skills
 ```
 
 | Mode | When to use it | Instructions |

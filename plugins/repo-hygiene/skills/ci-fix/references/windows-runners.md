@@ -98,9 +98,9 @@ that a runner is retired. Recorded guest architecture is checked again in the
 actual diagnostic report.
 
 For a stopped or unregistered prepared guest, use Fusion's
-[registration procedure](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/fusion-runner/skills/fusion-runner-setup/references/runner-provisioning.md#one-job-diagnostic-registration)
+[registration procedure](https://github.com/smorinlabs/smorinlabs-skills/blob/main/plugins/fusion-runner/skills/fusion-runner-setup/references/runner-provisioning.md#one-job-diagnostic-registration)
 and
-[operations procedure](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/fusion-runner/skills/fusion-runner-run/references/operations.md).
+[operations procedure](https://github.com/smorinlabs/smorinlabs-skills/blob/main/plugins/fusion-runner/skills/fusion-runner-run/references/operations.md).
 Refresh the handoff and repeat the survey afterward. Audit mode stops at the
 read-only observations.
 
@@ -249,7 +249,7 @@ as verification of the repair.
 ## 5. Retire safely and complete the repair
 
 Use the Fusion
-[diagnostic retirement procedure](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/fusion-runner/skills/fusion-runner-run/references/operations.md#one-job-completion-and-failure-recovery)
+[diagnostic retirement procedure](https://github.com/smorinlabs/smorinlabs-skills/blob/main/plugins/fusion-runner/skills/fusion-runner-run/references/operations.md#one-job-completion-and-failure-recovery)
 after a pass, a failure, or partial registration. Preserve logs, host intent,
 guest receipt and invocation receipt first. A passing report is not a cleanup
 prerequisite. Current proof that the exact job ended and new work cannot be

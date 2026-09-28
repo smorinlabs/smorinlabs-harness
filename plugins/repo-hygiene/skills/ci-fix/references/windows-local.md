@@ -33,7 +33,7 @@ supply its existing configuration. This public plugin contains no saved image
 or credentials and does not require a private repository.
 
 If Fusion is absent, use setup's installation guide. If the configured guest is
-absent, use setup's [manual runner guide](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/fusion-runner/skills/fusion-runner-setup/references/create-your-own-runner.md).
+absent, use setup's [manual runner guide](https://github.com/smorinlabs/smorinlabs-skills/blob/main/plugins/fusion-runner/skills/fusion-runner-setup/references/create-your-own-runner.md).
 If only guest access or tools are missing, prepare that existing VM. Do not
 infer that Windows needs reinstalling. Follow existing authorization; a new
 security-sensitive access change may need its own concrete owner decision.
