@@ -585,7 +585,7 @@
       "covered_findings": ["CDC-27"],
       "expectations": [
         "Includes a framed ASCII visual (system diagram, route per option, or trace table) that shows the gateway, both services, the plan store, and the shared cache, with each option's path or changed responsibility marked.",
-        "Places that visual, or its baseline view, before the question line, so the reader sees the system before being asked to choose.",
+        "Places the complete visual, including the baseline and every option's path, before the question line, so the reader sees the system and each option's path before being asked to choose.",
         "The visual has a lead-in and a reading sentence that names what differs between the options.",
         "Keeps the security-review requirement for option 2 and the unverified cache capacity visible, and does not describe implementation of option 1 as authorized."
       ]

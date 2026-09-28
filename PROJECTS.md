@@ -2297,7 +2297,7 @@ code, or architecture. PR #89 made the rule firm only for process decisions, and
 - [x] [P60-T02] `references/delivery.md`: preview guidance
 - [x] [P60-T03] `question-walkthrough` SKILL.md: pre-read visual trigger and red flag
 - [x] [P60-TS02] Cases 28 and 29 pass on the revised skill; cases 2, 8, 26 still pass
-      Result (Claude, self-graded): 28 pass (diagram precedes the question), 29 pass (no diagram, 214 words). Cases 2, 8, 26 not rerun: the rules they exercise are unchanged.
+      Result (Claude, self-graded): 28 pass (the complete diagram precedes the question). 29: no-diagram criterion met; length criterion unmet (brief 173 words excluding the next-action note, against about 80; the unchanged skill gave 141, so T1 wordiness predates this change). Cases 2, 8, 26 not rerun: the rules they exercise are unchanged.
 - [x] [P60-TS03] `just all` green
 - [x] [P60-T04] Bump both plugins; update counts and docs; regenerate manifests
 - [ ] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release

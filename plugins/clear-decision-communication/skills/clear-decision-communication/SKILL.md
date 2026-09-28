@@ -147,8 +147,8 @@ the output is the brief for that target.
    the artifact types, exact names, and roles. If its connection to the goal is
    missing, show that relationship before its internals. A sentence or artifact
    table often suffices; use a small relationship diagram when several
-   connections matter. Then use the change-type table for the behavior the
-   reader must judge. Forms live in `references/representation.md`, numbered
+   connections matter. When a visual trigger below holds, use the change-type
+   table to pick the form for the behavior the reader must judge. Forms live in `references/representation.md`, numbered
    F1 to F22 so a form can be named by ID.
 
    Complexity, not the change type, decides whether a visual is required.
@@ -161,9 +161,10 @@ the output is the brief for that target.
    | The reader must hold three or more relationships at once | a gateway, two services, and a shared store |
    | The reader must simulate an order of events or a change of state | a retry, a race, a revision lifecycle |
    | Two or more options take visibly different paths | the same request routed differently under each option |
+   | The same input produces different outcomes under current and proposed behavior | a validation rule that now rejects an input it accepted |
 
-   When no trigger holds, use a sentence and draw nothing: a rename, a
-   verified merge, or a single setting. At T1 a trigger rarely holds; if it
+   When no trigger holds, use a sentence and draw nothing, whatever the
+   change-type row names: a rename, a verified merge, or a single setting. At T1 a trigger rarely holds; if it
    does, the size is probably T2. When a trigger holds, the visual is part of
    L2 grounding and precedes the question. A comparison that only confirms
    an outcome can still follow the options.

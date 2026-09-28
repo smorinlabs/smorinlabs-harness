@@ -65,7 +65,9 @@ by a pre-read, with the pile re-planned after every answer.
      is required when the reader must hold three or more relationships at
      once, simulate an order of events or a change of state, or compare
      options that take different paths. This holds for process, code, and
-     architecture questions alike. Draw it in ASCII inside a fence, with one
+     architecture questions alike. Draw it inside a fence using only ASCII
+     characters (letters, digits, `-`, `|`, `+`, `>`, `<`, `` ` ``, `[`, `]`),
+     never box-drawing glyphs such as `──►`, with one
      lead-in line before it and one reading line after it that names what
      differs between the options. Show the current state first, then each
      option's path. When no trigger holds, use a sentence and draw nothing.
@@ -92,8 +94,10 @@ by a pre-read, with the pile re-planned after every answer.
      "(Recommended)" with the reasoning in its description; per-option
      trade-offs live in option descriptions, not the question body;
    - previews when options are concrete artifacts (code shapes, formats), or
-     when options take different paths: each option's path diagram goes in
-     its preview, and the full visual stays in the pre-read;
+     when options take different paths: if the question tool supports
+     previews, each option's path diagram goes in its preview. Otherwise keep
+     each path in the option description or the pre-read. The full visual
+     always stays in the pre-read;
    - the built-in Other is the escape hatch;
    - "skip" parks the item (revisit at the end); "stop" ends the walk with a
      partial summary.
