@@ -1,5 +1,29 @@
 # Release Notes
 
+## v0.31.1 — 2026-09-28
+
+### Changed
+
+- `clear-decision-communication` 0.5.0 -> 0.7.1: decision briefs now ground the
+  reader from the situation, through the moving parts, down to evidence. They
+  say whether a question is substantive or about process, and a process
+  question names the substantive question underneath it. A new F22 process
+  view shows what waits on what. At T2 and above every option states its cost
+  and reversal, and a runner-up line says when the strongest alternative wins
+  (#89).
+- `clear-decision-communication`: complexity, not change type, now decides
+  whether a question carries a visual. The visual precedes the question, and a
+  simple ask carries none. Per-option path diagrams go in question previews
+  when the tool supports them (#90).
+- `clear-decision-communication`: an action that has not happened is stated as
+  a next step, never as in progress or done. T1 briefs have a five-part
+  recipe, and the T1 target moves to about 100 words to match the skill's own
+  example (#91).
+- `question-walkthrough` 0.2.2 -> 0.3.0: a complex question's pre-read carries
+  a framed ASCII visual under the same trigger (#90).
+- Five new behavioral evaluation cases (26-30), with blind validation: before
+  2/7, after 5/7 (`docs/validation/clear-decision-communication-0.7.1.md`).
+
 ## v0.31.0 — 2026-09-27
 
 ### Added

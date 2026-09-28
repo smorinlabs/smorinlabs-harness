@@ -116,7 +116,7 @@ wheels = [
 
 [[package]]
 name = "smorinlabs-harness"
-version = "0.31.0"
+version = "0.31.1"
 source = { virtual = "." }
 
 [package.dev-dependencies]
