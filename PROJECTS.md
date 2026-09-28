@@ -2146,7 +2146,7 @@ sentence plus the pointer. Behavior must not regress.
       Result: baseline 23/25, refactor 24/25; 22 identical verdicts; case 5 pass->fail attributed to a
       pre-existing gap (baseline case 11 shows the same slip). Record: `docs/validation/clear-decision-communication-0.5.0.md`.
 
-## [~] Project P57: Unperformed actions are stated as next steps (clear-decision-communication 0.7.0 → 0.7.1)
+## [x] Project P57: Unperformed actions are stated as next steps (clear-decision-communication 0.7.0 → 0.7.1)
 **Goal/Requirement**: A response never describes an action it has not performed as in progress or done.
 Found by the P56 parity evals: baseline case 11 ("I'm deploying ... to staging now") and refactor case 5
 ("I'm running it now") both failed on this, and no rule in the skill covers it.
@@ -2234,7 +2234,7 @@ $ just all
 - Read-only dry run 2026-09-22 (Q6.A): `python3 scripts/sweep_cli.py pr observe 'smorinlabs/gmail2pdf#40' -o json` read every section (pull, files, reviews, threads, check-runs, check-suites, statuses, queue, protection 404, branch rules with one org ruleset detail); the only changed file was `uv.lock`, so `pr evaluate ... --dependency-only --classifier "claude session c-f7, dry run" --mode inspect` returned READY (30 checks green, 8 legitimately skipped, 0 unresolved threads, `mergeable_state` clean, merge path none) and the same observation without the attestation returned BLOCKED K09. No store, no lease, no mutation; roughly ten REST calls plus one GraphQL call
 - Render `sweep_report.render_report` on a fixture with one replacement merge and one late arrival: header shows selected and delivered counts separately, unresolved cards come first, the replacement merge line reads `delivers [PR-0xx]`, one continuation line closes the report
 
-## [~] Project P59: Layered grounding, decision layer, process diagrams, and option trade-offs (clear-decision-communication 0.5.0 → 0.6.0)
+## [x] Project P59: Layered grounding, decision layer, process diagrams, and option trade-offs (clear-decision-communication 0.5.0 → 0.6.0)
 **Goal/Requirement**: A decision brief lets a reader who never watched the run
 understand the situation, the kind of decision, and what each option costs.
 Found in a Muse session (HR-B Q1, 2026-09-27): a process question about what
@@ -2272,9 +2272,10 @@ condition under which it wins.
       Result (Claude, self-graded): 26 pass 6/6, 27 pass 4/4, 2 pass, 8 pass (neutral, no invented runner-up). Briefs run long: 960 and 823 words. Blind grading not yet done.
 - [x] [P59-TS03] `just all` green
 - [x] [P59-T06] Bump to 0.6.0; update README/docs counts; regenerate manifests
-- [ ] [P59-T07] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
+- [x] [P59-T07] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
+      Shipped in v0.31.1 (PR #89).
 
-## [~] Project P60: Complexity-keyed visual trigger for decision questions (clear-decision-communication 0.6.0 → 0.7.0, question-walkthrough 0.2.2 → 0.3.0)
+## [x] Project P60: Complexity-keyed visual trigger for decision questions (clear-decision-communication 0.6.0 → 0.7.0, question-walkthrough 0.2.2 → 0.3.0)
 **Goal/Requirement**: A complex decision question carries a visual; a simple one does not.
 Whether a visual is required depends on complexity, not on change type.
 The trigger fires when the reader must hold three or more relationships, simulate order or
@@ -2302,7 +2303,8 @@ code, or architecture. PR #89 made the rule firm only for process decisions, and
       Result (Claude, self-graded): 28 pass (the complete diagram precedes the question). 29: no-diagram criterion met; length criterion unmet (brief 173 words excluding the next-action note, against about 80; the unchanged skill gave 141, so T1 wordiness predates this change). Cases 2, 8, 26 not rerun: the rules they exercise are unchanged.
 - [x] [P60-TS03] `just all` green
 - [x] [P60-T04] Bump both plugins; update counts and docs; regenerate manifests
-- [ ] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
+- [x] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
+      Shipped in v0.31.1 (PR #90).
 
 ## [~] Project P61: T1 briefs stay near their length signal (clear-decision-communication 0.7.0 → 0.7.1)
 **Goal/Requirement**: A simple, verified ask (T1) reads in about 100 words (target raised from 80 by owner decision Q6.A, 2026-09-28, to match the skill's own example). Case 29 measured
