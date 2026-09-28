@@ -365,13 +365,14 @@ Rendering by tier:
 - **T1** keeps the question, gate, checked result, supported recommendation or
   explicit neutrality, and concise options with consequences. Do not add
   sections whose content is already clear. A T1 has five parts: the question
-  line, which names the change and its purpose; one sentence with the check
-  and the gate; the recommendation sentence; the options; and the reply line.
+  line, which names the change and its purpose; the check and the gate, in
+  one or two sentences; the recommendation sentence; the options; and the reply line.
   Do not restate the handoff in a context paragraph. Give each option its
   action, what I do now, its effect, and its reversal in short clauses, as in
   the example below; do not repeat facts the question line already states. The
-  reply line is "Reply with A or B." plus at most one sentence for an approval
-  boundary. Past about 120 words, rerun the removal test before sending. For
+  reply line is "Reply with A or B." Add one sentence for an approval
+  boundary only when the handoff or a policy establishes that boundary;
+  otherwise omit it. Past about 120 words, rerun the removal test before sending. For
   example, sent as ordinary text:
 
   ```
@@ -380,7 +381,7 @@ Rendering by tier:
   CONTRIBUTING.md requires a human to approve every merge.
   I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
 
-  - Q1.A (Recommended) Merge PR #142. I merge it now. Undoing it takes a revert PR. No stored data changes.
+  - Q1.A (Recommended) Merge PR #142. I merge it as soon as you reply. Undoing it takes a revert PR. No stored data changes.
   - Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
 
   Reply with A or B.

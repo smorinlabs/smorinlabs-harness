@@ -2305,7 +2305,7 @@ code, or architecture. PR #89 made the rule firm only for process decisions, and
 - [ ] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
 
 ## [~] Project P61: T1 briefs stay near their length signal (clear-decision-communication 0.7.0 → 0.7.1)
-**Goal/Requirement**: A simple, verified ask (T1) reads in about 80 words. Case 29 measured
+**Goal/Requirement**: A simple, verified ask (T1) reads in about 100 words (target raised from 80 by owner decision Q6.A, 2026-09-28, to match the skill's own example). Case 29 measured
 173 words on 0.7.0 and 141 on 0.6.0 for a verified merge, because the brief restated the
 handoff in a context paragraph and repeated facts inside the options.
 - T1 rendering names its five parts, forbids a handoff-restating paragraph, caps options at
