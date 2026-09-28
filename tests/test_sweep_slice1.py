@@ -61,7 +61,7 @@ def test_t01_crash_accounts_every_card(tmp_path):
         discovery("acme", "one", 1), discovery("acme", "one", 2),
         discovery("acme", "two", 3),
     ])
-    taskings = coord.schedule(store, model="sol")
+    taskings = coord.schedule(store, model="sol", capacity=5, batch_size=10)
     assert len(taskings) == 2  # one worker per repo
     by_repo = {t["repo_id"]: t for t in taskings}
 
@@ -83,7 +83,7 @@ def test_t01_crash_accounts_every_card(tmp_path):
     assert "PR-003" in summary["quarantined"]
 
     # The quarantined repo is not rescheduled; the reschedulable card is.
-    retry = coord.schedule(store, model="terra")
+    retry = coord.schedule(store, model="terra", capacity=5, batch_size=10)
     assert [t["repo_id"] for t in retry] == ["acme/one"]
     assert retry[0]["card_ids"] == ["PR-002"]
 
@@ -118,7 +118,7 @@ def test_t03_ten_pr_report_fixture(tmp_path):
     store = make_store(tmp_path, [
         discovery("acme", repos[(n - 1) // 2], n, title=f"bump dep{n}")
         for n in range(1, 11)], run_id="RUN-EX-01")
-    taskings = coord.schedule(store, model="sol")
+    taskings = coord.schedule(store, model="sol", capacity=5, batch_size=10)
     assert len(taskings) == 5
 
     merged = [f"PR-00{n}" for n in range(1, 6)]
@@ -142,28 +142,32 @@ def test_t03_ten_pr_report_fixture(tmp_path):
         coord.apply_outcome(store, tasking["attempt_id"], results)
 
     text = report.render_report(store, continuation="none")
-    assert ("RUN-EX-01 automated pass ended WITH EXCEPTIONS. Selected 10; "
-            "merged 5; open 5; unknown 0; unprocessed 0. "
-            "Delivered 5 (direct 5, via replacement 0)." in text)
+    assert "RUN-EX-01 automated pass ended WITH EXCEPTIONS." in text
+    assert "Selected scope: 10 PRs." in text
+    assert "direct merged 5; delivered via replacement 0; closed without delivery 0; assessed holds 5; prepared 0; unassessed 0; unknown 0." in text
+    assert "Delivered 5 selected updates (direct 5, via replacement 0)." in text
     for n in range(1, 11):
         assert f"[PR-{n:03d}]" in text  # ten distinct stable ids
     # Human-first identity on every line.
     assert 'acme/alpha#1 "bump dep1"' in text
     assert 'acme/epsilon#10 "bump dep10"' in text
-    # Unresolved before successes; every exception has reason + next + owner.
-    assert text.index("UNRESOLVED") < text.index("MERGED (5)")
-    assert text.count("Next:") == 5
-    assert text.count("Owner:") == 5
+    # Every selected PR has its own URL, outcome, and continuation, including
+    # successful merges. Counts no longer imply an unevidenced live inventory.
+    for card in store.cards.values():
+        assert card.url in text
+    assert "Live open PRs: unknown" in text
+    assert text.count("Next:") == 10
+    assert text.count("Owner:") == 10
     assert "Continuation: none running." in text
     assert "still running" not in text
 
     approval = report.render_approval(store)
-    assert approval.startswith("APPROVAL NEEDED -- 2 PRs.")
+    assert approval.startswith("DECISIONS REQUESTED -- 2 PRs in 2 scoped decisions.")
     first, second = approval.index("#1"), approval.index("#2")
     assert "[PR-008]" in approval[first:second]  # high severity first
-    assert "MOST URGENT" in approval[first:second]
-    assert "Why you:" in approval and "Recommend:" in approval
-    assert "Reply APPROVE <n|ALL> or DECLINE <n> <reason>." in approval
+    assert "Why:" in approval and "Recommend:" in approval
+    assert "A merge approval must identify each PR and its exact head." in approval
+    assert "APPROVE <n|ALL>" not in approval
 
 
 # T10: replacements link; arrivals extend; nothing renumbers or double counts.
@@ -171,7 +175,7 @@ def test_t10_replacement_and_arrival_identity(tmp_path):
     store = make_store(tmp_path, [discovery("acme", "r", 1),
                                   discovery("acme", "r", 2)],
                        scope_fixed=False)
-    taskings = coord.schedule(store)
+    taskings = coord.schedule(store, capacity=5, batch_size=10)
     coord.apply_outcome(store, taskings[0]["attempt_id"], [
         {"card_id": "PR-001", "outcome": "merged", "commit_sha": "a" * 7,
          "merged_at": "2026-09-22T00:00:00Z"},
@@ -196,7 +200,7 @@ def test_t10_replacement_and_arrival_identity(tmp_path):
     assert counts == {"direct": 1, "via_replacement": 0, "total": 1}
 
     # Merging the replacement delivers the original's update exactly once.
-    taskings = coord.schedule(store)
+    taskings = coord.schedule(store, capacity=5, batch_size=10)
     by_card = {c: t["attempt_id"] for t in taskings for c in t["card_ids"]}
     coord.apply_outcome(store, by_card["PR-003"], [
         {"card_id": "PR-003", "outcome": "merged", "commit_sha": "b" * 7,
@@ -300,7 +304,7 @@ def test_unknown_outcome_quarantines_repo(tmp_path):
 def test_verify_merges_demotes_post_merge_surprise(tmp_path):
     store = make_store(tmp_path, [discovery("acme", "r", 1),
                                   discovery("acme", "r", 2)])
-    taskings = coord.schedule(store)
+    taskings = coord.schedule(store, capacity=5, batch_size=10)
     coord.apply_outcome(store, taskings[0]["attempt_id"], [
         {"card_id": "PR-001", "outcome": "merged", "commit_sha": "a" * 7,
          "merged_at": "2026-09-22T00:00:00Z"},
@@ -422,7 +426,7 @@ def partially_returned_run(tmp_path):
     hold for PR-001 only, then dies with PR-002 still pending."""
     store = make_store(tmp_path, [discovery("acme", "r", 1),
                                   discovery("acme", "r", 2)])
-    tasking = coord.schedule(store, model="sol")[0]
+    tasking = coord.schedule(store, model="sol", capacity=5, batch_size=10)[0]
     coord.apply_outcome(store, tasking["attempt_id"],
                         [hold_result("PR-001", "WAITING", "K01", "low")])
     assert store.leases.get("acme/r").state == "held"
@@ -465,7 +469,7 @@ def test_reconcile_outstanding_excludes_cards_proved_merged(tmp_path):
     truth, not the pre-reconcile snapshot."""
     store = make_store(tmp_path, [discovery("acme", "r", 1),
                                   discovery("acme", "r", 2)])
-    tasking = coord.schedule(store, model="sol")[0]
+    tasking = coord.schedule(store, model="sol", capacity=5, batch_size=10)[0]
     coord.reconcile(store, observed={
         "PR-001": {"merged": True, "commit": "c0ffee",
                    "at": "2026-09-22T00:00:00Z"},
@@ -579,10 +583,11 @@ def test_report_lists_ready_cards_under_prepared(tmp_path):
          "head_sha": "a" * 40,
          "evidence": [{"id": "EV-001"}]}])
     text = report.render_report(store)
-    assert "open 1;" in text
-    assert "PREPARED (1)" in text
-    assert 'acme/r#1 "bump z" [PR-001]' in text
-    assert "green. Evidence: EV-001." in text
+    assert "prepared 1; unassessed 0; unknown 0" in text
+    assert 'acme/r#1 "bump z" [PR-001] -- READY' in text
+    assert "green" in text and "EV-001" in text
+    assert "Run fresh merge gates" in text
+    assert store.cards["PR-001"].url in text
 
 
 def delivered_via_replacement(tmp_path):
@@ -604,10 +609,13 @@ def test_report_shows_delivery_via_replacement(tmp_path):
         {"card_id": replacement.id, "outcome": "merged",
          "commit_sha": "b" * 7, "merged_at": "2026-09-22T00:00:01Z"}])
     text = report.render_report(store)
-    assert "Selected 1; merged 0;" in text
-    assert "Delivered 1 (direct 0, via replacement 1)." in text
-    assert "MERGED (1)" in text
-    assert 'acme/r#2 "redo" [PR-002] delivers [PR-001]' in text
+    assert "Selected scope: 1 PRs." in text
+    assert "direct merged 0; delivered via replacement 1; closed without delivery 0" in text
+    assert "Delivered 1 selected updates (direct 0, via replacement 1)." in text
+    assert 'acme/r#1 "orig" [PR-001] -- CLOSED; delivered via replacement PR-002' in text
+    assert 'acme/r#2 "redo" [PR-002] -- MERGED' in text
+    assert "Replaces [PR-001]" in text
+    assert replacement.url in text
 
 
 def test_report_lists_unresolved_replacement_cards(tmp_path):
@@ -616,8 +624,12 @@ def test_report_lists_unresolved_replacement_cards(tmp_path):
     coord.apply_outcome(store, tasking["attempt_id"],
                         [hold_result(replacement.id, "BLOCKED", "K02")])
     text = report.render_report(store)
-    assert "Selected 1; merged 0; open 0;" in text  # denominator unchanged
-    assert 'acme/r#2 "redo" -- BLOCKED, low [PR-002] replaces [PR-001]' in text
+    assert "Selected scope: 1 PRs." in text  # denominator unchanged
+    assert "direct merged 0; delivered via replacement 0; closed without delivery 1" in text
+    assert 'acme/r#1 "orig" [PR-001] -- CLOSED without delivery' in text
+    assert 'acme/r#2 "redo" [PR-002] -- BLOCKED' in text
+    assert "Replaces [PR-001]" in text
+    assert replacement.url in text
 
 
 def test_fixed_scope_arrival_recorded_outside_scope(tmp_path):
@@ -632,9 +644,10 @@ def test_fixed_scope_arrival_recorded_outside_scope(tmp_path):
     assert coord.schedule(store) and all(
         "PR-002" not in t["card_ids"] for t in coord.schedule(store))
     text = report.render_report(store)
-    assert "Selected 1;" in text
-    assert "ARRIVED AFTER CUTOFF (1), not selected" in text
-    assert 'acme/r#2 "late" [PR-002]' in text
+    assert "Selected scope: 1 PRs." in text
+    assert "UNSELECTED ARRIVALS (1)" in text
+    assert 'acme/r#2 "late" [PR-002] -- NEW; unassessed' in text
+    assert arrival.url in text
 
 
 def test_evolving_scope_arrival_extends_scope(tmp_path):

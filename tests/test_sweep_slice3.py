@@ -90,14 +90,14 @@ def test_same_state_hold_refreshes_reason_without_transition(tmp_path):
 def test_wake_redispatches_only_named_hold_cards(tmp_path):
     store = make_store(tmp_path, [discovery("acme", "one", 1),
                                   discovery("acme", "one", 2)])
-    (task,) = coord.schedule(store)
+    (task,) = coord.schedule(store, capacity=5, batch_size=10)
     coord.apply_outcome(store, task["attempt_id"],
                         [hold("PR-001"), hold("PR-002")])
-    assert coord.schedule(store) == []  # holds are never auto-dispatched
-    (woken,) = coord.schedule(store, wake=["PR-002"])
+    assert coord.schedule(store, capacity=5, batch_size=10) == []  # holds are never auto-dispatched
+    (woken,) = coord.schedule(store, wake=["PR-002"], capacity=5, batch_size=10)
     assert woken["card_ids"] == ["PR-002"]
     with pytest.raises(StoreError):
-        coord.schedule(store, wake=["PR-404"])
+        coord.schedule(store, wake=["PR-404"], capacity=5, batch_size=10)
 
 
 # --- T04: matched baseline vs introduced regression (S3) ------------------
@@ -229,7 +229,7 @@ def test_t04_shared_baseline_incident_gets_one_issue_id(tmp_path):
     store = make_store(tmp_path, [discovery("acme", "one", 1),
                                   discovery("acme", "one", 2),
                                   discovery("acme", "two", 3)])
-    tasks = {t["repo_id"]: t for t in coord.schedule(store)}
+    tasks = {t["repo_id"]: t for t in coord.schedule(store, capacity=5, batch_size=10)}
     base = control("base1", "base")
     one = [diag.diagnose(control(f"head{n}"), base).to_outcome(f"PR-00{n}")
            for n in (1, 2)]
@@ -245,7 +245,8 @@ def test_t04_shared_baseline_incident_gets_one_issue_id(tmp_path):
     assert issue.card_ids == ["PR-001", "PR-002"]
     assert issue.reason_code == "K05"
     text = report.render_report(reloaded)
-    assert "INCIDENTS (2)" in text
+    assert "FOLLOW-UPS (2; separate from PR delivery)" in text
+    assert text.count("Kind: incident") == 2
     assert "[ISS-001] affects PR-001, PR-002" in text
 
 
@@ -358,7 +359,14 @@ def test_t09_approved_owner_hold_collects_fresh_technical_hold(
     reloaded = Store.load(store.path)
     card = reloaded.cards["PR-001"]
     assert (card.state, card.reason_code) == (state, code)
-    assert card.evidence == result.evidence
+    # Fresh receipts are retained alongside the prior successful check/review
+    # observation. The evaluated full head binds formerly abbreviated heads.
+    assert all(any(all(saved.get(key) == value for key, value in item.items())
+                   for saved in card.evidence) for item in result.evidence)
+    assert all(item.get("head_sha") == evaluator_cases.HEAD for item in card.evidence)
+    assert card.condition_history[-1]["state"] == "NEEDS_OWNER"
+    assert any("EV-green" in item["id"] for item in card.evidence)
+    assert "refresh before readiness" in report.render_report(reloaded)
     assert reloaded.diary[woken["attempt_id"]].result == "completed"
     assert reloaded.leases.get("acme/one").state == "released"
 
@@ -450,7 +458,7 @@ def test_t09_run_ending_and_stop_reason(tmp_path):
     store = make_store(tmp_path, [discovery("acme", "one", 1),
                                   discovery("acme", "two", 2)])
     assert coord.run_ending(store) == "incomplete"  # unprocessed NEW
-    tasks = {t["repo_id"]: t for t in coord.schedule(store)}
+    tasks = {t["repo_id"]: t for t in coord.schedule(store, capacity=5, batch_size=10)}
     coord.apply_outcome(store, tasks["acme/one"]["attempt_id"], [
         {"card_id": "PR-001", "outcome": "merged", "commit_sha": "c" * 40,
          "merged_at": "2026-09-22T12:00:00Z"}])
@@ -606,7 +614,7 @@ def test_t11_expire_moves_dead_work_to_budget_exhausted(tmp_path):
     store = make_store(tmp_path, [discovery("acme", "one", 1),
                                   discovery("acme", "two", 2)])
     tasks = {t["repo_id"]: t
-             for t in coord.schedule(store, pr_budget_secs=60, now=1000.0)}
+             for t in coord.schedule(store, pr_budget_secs=60, now=1000.0, capacity=5, batch_size=10)}
     coord.apply_outcome(store, tasks["acme/one"]["attempt_id"], [
         {"card_id": "PR-001", "outcome": "ready", "reason_line": "prepared",
          "head_sha": "a" * 40,
@@ -620,9 +628,9 @@ def test_t11_expire_moves_dead_work_to_budget_exhausted(tmp_path):
     assert coord.expire(store, now=1062.0) == []  # BLOCKED awaits a person
     card = Store.load(store.path).cards["PR-001"]
     assert (card.state, card.reason_code) == (State.WAITING, "K14")
-    assert coord.schedule(store, wake=[], now=1062.0) == []
+    assert coord.schedule(store, wake=[], now=1062.0, capacity=5, batch_size=10) == []
     with pytest.raises(StoreError):
-        coord.schedule(store, wake=["PR-001"], now=1062.0)
+        coord.schedule(store, wake=["PR-001"], now=1062.0, capacity=5, batch_size=10)
 
 
 # --- T08: one participating writer per repository, accurate queue state ---

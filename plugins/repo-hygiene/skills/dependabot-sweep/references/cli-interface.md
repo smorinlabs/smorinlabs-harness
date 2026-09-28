@@ -3,7 +3,7 @@
 The orchestrator CLI the sweep skill runs: `python3 scripts/sweep_cli.py`.
 Pinned to the CLI Design Standard **v1.4.14** (`cli-design-standard.md`,
 2026-06-28). Tier **minimal** (an internal skill helper, not an installed
-binary). Profile **noun-verb** (R1.1): thirteen commands across six nouns,
+binary). Profile **noun-verb** (R1.1): eighteen commands across seven nouns,
 above the Appendix A verb-first bound. Conformance record:
 [cli-conformance.md](cli-conformance.md).
 
@@ -24,17 +24,22 @@ network command and it only reads.
 |---|---|---|
 | `run create` | Create the run: header, authority from config, one NEW card per discovered PR | R2.1 `create` |
 | `run view` | Header, counts, delivered totals, stored authority | R2.1 `view` |
-| `run describe` | The full report rendered from the store | R2.1 `describe` (expanded detail) |
+| `run describe` | The full report; `--save` saves and emits the same readable snapshot | R2.1 `describe` (expanded detail) |
+| `run discover` | Record a scoped inventory snapshot and its arrivals without changing GitHub | domain verb |
 | `run reconcile` | Reconcile dead attempts and quarantined repositories against fresh observations | domain verb |
 | `run finish` | Record the stop reason and the one explicit continuation | domain verb |
-| `attempt create` | Expire dead work, then issue one tasking per free repository | R2.1 `create` |
+| `attempt create` | Admit repository batches within capacity and remaining deadlines | R2.1 `create` |
 | `attempt collect` | Apply one worker's outcome records (whole batch validated first) | domain verb |
 | `brief view` | Render an attempt's brief from the template and the run's authority | R2.1 `view` |
 | `card list` | Every card with state and reason | R2.1 `list`; empty list exits 0 (R6.2) |
 | `card view` | One card | R2.1 `view`; unknown id exits 3 (R6.2) |
+| `card refresh` | Append current read-only evidence without changing mutation authority or outcome state | domain verb |
 | `pr observe` | One full read-only observation of a PR (pull, files, reviews, threads, checks, suites, statuses, queue, effective policy) | domain verb |
 | `pr evaluate` | The five checks over an observation; prints the outcome record a worker would return | domain verb |
 | `approval list` | The approval set: every NEEDS_OWNER card, most consequential first | R2.1 `list` |
+| `incident list` | Recorded blockers and follow-ups, including resolved history | R2.1 `list` |
+| `incident record` | Record follow-up work locally, including after a merge | domain verb |
+| `incident update` | Update follow-up lifecycle and evidence locally | R2.1 `update` |
 
 Domain verbs are justified in the conformance note (R2.1).
 
@@ -69,6 +74,11 @@ the command line (R5.5).
 | | `--evolving` | boolean | false (fixed scope) | later arrivals join the selected set |
 | | `--cutoff ISO8601` | string | now | discovery instant of a fixed scope |
 | | `--authorization TEXT` | string | `dependabot-sweep run create` | the user's authorizing words or record id |
+| | `--org NAME` | repeatable | configured scope | explicit owner scope; discovered repositories alone never grant authority over all of their owner's repositories |
+| | `--repo OWNER/NAME` | repeatable | configured scope | explicit repository scope |
+| | `--exclude OWNER/NAME` | repeatable | none | exclude a repository from the stored scope |
+| `run describe` | `--save PATH` | path | none | atomically save the readable report and still emit it; JSON contains identical text in `report`; refuses the journal path and symbolic-link destinations |
+| `run discover` | `--file PATH` | path or `-`, required | | explicit inventory snapshot with timestamp, completeness, coverage, repositories, discoveries and source |
 | `run reconcile` | `--file PATH` | path or `-`, required | | `{card id: {"merged": bool\|null, "commit", "at"}}` |
 | | `--live ATTEMPT` | repeatable | none | attempt ids known to still run |
 | | `--stopped ATTEMPT` | repeatable | none | worker and all delegates verified stopped with mutation handles released; required to reclaim another session's attempt |
@@ -78,26 +88,74 @@ the command line (R5.5).
 | | `--discovery-incomplete` | boolean | false | discovery capped out; the run ends incomplete |
 | `attempt create` | `--model LABEL` | string | | worker model label |
 | | `--wake CARD` | repeatable | none | hold card whose resume trigger fired |
+| | `--capacity COUNT` | nonnegative integer | 1 | total repository slots available to this run, including its existing occupied slots; not an additional allowance on each call |
+| | `--batch-size COUNT` | positive integer | 1 | maximum cards admitted per repository attempt |
+| | `--reserve-secs SECONDS` | nonnegative number | 30 | minimum remaining window reserved before admission; workers also judge whether a specific repair and validation fit |
 | `attempt collect` | `ATTEMPT` | positional | | attempt id (identity, R2.3) |
 | | `--file PATH` | path or `-`, required | | outcome records as JSON lines |
 | `brief view` | `ATTEMPT` | positional | | attempt id |
 | | `--progress-log PATH` | path | `<store>.progress.log` | helper progress log named in the brief |
 | `card view` | `CARD` | positional | | card id |
+| `card refresh` | `CARD` | positional | | card id whose evidence is being refreshed |
+| | `--file PATH` | path or `-`, required | | read-only observation; never grants approval, adopts a changed head or releases a held/quarantined repository |
 | `pr observe` | `TARGET` | positional | | card id (with `--store`) or `owner/repo#number` |
 | `pr evaluate` | `TARGET` | positional | | as above |
 | | `--file PATH` | path or `-`, required | | observation JSON from `pr observe -o json` |
 | | `--dependency-only` | boolean | false | attest the diff is dependency-only; recorded as a receipt bound to head and file digest |
 | | `--classifier NAME` | string | `operator` | who attests |
+| | `--receipt PATH` | path or `-` | none | complete version-2 classifier receipt, including consumers, tested versions and check applicability; observation and receipt cannot both use stdin |
 | | `--mode MODE` | as above | `inspect` | authority when no store is given |
 | | `--attempt ATTEMPT` | string | | the attempt holding the repository lease; without it the lease check fails (K12) |
 | | `--reviewer-context CONTEXT` | repeatable | from config | status context of a reviewer bot |
+| `incident record` | `--file PATH` | path or `-`, required | | follow-up fields; records work locally and never files an external issue |
+| | `--card CARD` | repeatable | none | affected cards in the same repository; merged cards may be linked |
+| `incident update` | `INCIDENT` | positional | | recorded incident id |
+| | `--file PATH` | path or `-`, required | | mutable lifecycle/evidence fields; previous evidence and history remain recorded |
+
+## Discovery and reporting refresh inputs
+
+`run discover --file inventory.json` accepts a read-only inventory:
+
+```json
+{
+  "observed_at": "2026-09-27T21:40:00Z",
+  "complete": true,
+  "coverage": [{"kind": "org", "login": "example", "visibility": "public", "repos": []}],
+  "scope_repositories": ["example/tool"],
+  "repositories": [{"nameWithOwner": "example/tool", "visibility": "public"}],
+  "discoveries": [{"org": "example", "repo": "tool", "number": 1,
+                   "url": "https://github.com/example/tool/pull/1",
+                   "createdAt": "2026-09-27T21:20:00Z"}],
+  "source": "complete paginated public-repository and open-PR responses"
+}
+```
+
+Use the exact frozen selectors from `authority.discovery_scopes`, omitting
+only each selector's `authority` field, as `coverage`. Completeness requires
+the corresponding repository and visibility inventory, including repositories
+with zero open PRs. The observation must be newer than the prior inventory.
+Input grants never replace saved authorization. Incomplete scope evidence and
+out-of-scope arrivals remain visible and prevent a claim of a complete open
+count. An authorized arrival in fixed scope can be counted without being
+selected for execution. Absence from discovery never closes a recorded PR.
+
+`card refresh CARD --file observation.json` accepts the JSON from `pr observe`,
+with `repository: "owner/name"` and `number` added if the pull response lacks
+`base.repo.full_name` and `number`. It requires `observed_at`, a full `head_sha`,
+and matching PR identity. It stores `latest_observation` separately from the
+evaluated head and outcome. It never evaluates readiness or releases quarantine.
+A changed head requires a new evaluation under the existing authorization rules.
+
+`run discover` returns `{snapshot, new_card_ids}`; `card refresh` returns
+`{observed_at, observed_head, snapshot}`. Follow-up input fields are documented
+in [reporting.md](reporting.md).
 
 ## Exit codes and error codes
 
 | Exit | Meaning (R6.1) | Error codes (R7.8 `error.code`) |
 |---|---|---|
 | 0 | success | |
-| 1 | runtime error | `store_error`, `transition_refused`, `lease_refused`, `config_invalid`, `unsupported_host`, `unsupported_tool`, `no_scope`, `invalid_input`, `invalid`, `transport`, `github_error` |
+| 1 | runtime error | `store_error`, `transition_refused`, `lease_refused`, `config_invalid`, `unsupported_host`, `unsupported_tool`, `no_scope`, `invalid_input`, `invalid`, `transport`, `github_error`, `report_write_failed` |
 | 2 | usage | `usage` |
 | 3 | not found: store file, card, attempt, config file named explicitly | `not_found` |
 | 4 | authentication required: no token from `GH_MERGE_TOKEN` or `gh auth token` | `auth_required` |
@@ -138,8 +196,22 @@ the machine format and stays stable within a repo-hygiene major version:
 `{attempt, applied, pending}`; `pr observe` prints the observation
 (`observation_to_dict`); `pr evaluate` prints
 `{target, evaluation, outcome, receipt}`; `run describe` prints
-`{header, cards, attempts, issues, report}`. Fields are added, never
+`{header, cards, attempts, issues, snapshot, report}`. `snapshot` includes the
+distinct outcome counts, separately evidenced open count, complete result rows,
+follow-ups and continuation used for the readable report. Fields are added, never
 renamed or removed, within a major (R7.2).
+
+`incident list` prints a list of durable incident records; `incident record`
+and `incident update` print the resulting record. `run describe --save PATH`
+writes the readable report before emitting its result; write failure produces
+a structured error without claiming the report was saved. The report's file
+and stdout copies use one in-memory snapshot, including follow-ups. The file
+cannot replace the source journal, including through an existing hard link.
+
+The version-2 classifier receipt is defined in [dependency-evidence.md](dependency-evidence.md).
+Its fields are additive. Loading an older receipt does not establish the new
+consumer evidence: evaluation reports an evidence gap until it is refreshed.
+The legacy `--dependency-only` flag does not fabricate that evidence.
 
 New run headers include `authority.repositories`, keyed by `owner/repo`,
 with each repository's resolved mode, repairs, pause-on-conflict, and

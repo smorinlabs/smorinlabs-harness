@@ -8,6 +8,7 @@ network-shaped test runs against it.
 
 import json
 import sys
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
@@ -239,6 +240,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer  # noqa: E40
 import gh_merge  # noqa: E402
 import sweep_evaluator as ev  # noqa: E402
 import sweep_observe as obs  # noqa: E402
+from test_sweep_slice2 import receipt as dependency_receipt_fixture  # noqa: E402
 
 HEAD = "a" * 40
 BASE_SHA = "b" * 40
@@ -248,12 +250,12 @@ SCENARIO: dict = {}
 
 def scenario():
     return {
-        "pull": {"state": "open", "draft": False, "merged": False,
+        "pull": {"number": 7, "state": "open", "draft": False, "merged": False,
                  "mergeable": True, "mergeable_state": "clean",
                  "merged_at": None, "merge_commit_sha": "c" * 40,
                  "auto_merge": None,
                  "head": {"sha": HEAD, "ref": "dependabot/pip/x-1.2.3"},
-                 "base": {"sha": BASE_SHA, "ref": "main"}},
+                 "base": {"sha": BASE_SHA, "ref": "main", "repo": {"full_name": "o/r"}}},
         "pull_status": 200,
         "files": [{"filename": "pyproject.toml", "sha": "f1" * 20,
                    "status": "modified", "changes": 2},
@@ -400,6 +402,37 @@ def make_green(github):
     github["check_runs"]["total_count"] = 2
 
 
+def classifier_receipt(dependency_only=True):
+    """Reviewed fixture facts are independent of the observed check result.
+
+    The mock PR updates x to 1.2.3 in the canonical manifest/lock pair.
+    ci/test installs that pair and verifies the installed version; lint is
+    an independently required source check, not installation evidence.
+    """
+    receipt = dependency_receipt_fixture(head=HEAD, dependency_only=dependency_only)
+    update = receipt.dependency_evidence["updates"][0]
+    update.update(name="x", requested="1.2.3",
+                  evidence="fixture: complete x 1.2.3 manifest/lock diff review")
+    update["consumers"][0].update(
+        resolved="1.2.3", tested="1.2.3", validation={
+            "kind": "check_run", "head_sha": HEAD, "context": "ci/test",
+            "producer_id": CI_APP, "run_id": 1,
+            "evidence": "fixture: ci/test run 1 frozen install and x.__version__ assertion"})
+    receipt.check_evidence["checks"] = receipt.check_evidence["checks"][:1]
+    receipt.check_evidence["checks"].append({
+        "context": "lint", "producer_id": CI_APP, "applicability": "applicable",
+        "scope": "source", "paths": ["pyproject.toml", "uv.lock"],
+        "reason": "ruleset 9 requires the repository's source lint job",
+        "evidence": "fixture: reviewed workflow and required lint producer"})
+    return replace(receipt, base_sha=BASE_SHA, classifier="test",
+                   at="2026-09-22T00:12:00Z")
+
+
+def receipt_file(tmp_path, dependency_only=True):
+    name = "receipt.json" if dependency_only else "involved-receipt.json"
+    return write(tmp_path, json.dumps(asdict(classifier_receipt(dependency_only))), name)
+
+
 def test_observe_builds_a_complete_observation(github):
     observation = fetch()
     assert observation.head_sha == HEAD
@@ -424,9 +457,7 @@ def test_observe_builds_a_complete_observation(github):
 def test_observe_feeds_the_evaluator(github):
     make_green(github)
     observation = fetch()
-    receipt = ev.ClassifierReceipt.for_files(
-        HEAD, observation.files["data"], dependency_only=True,
-        classifier="test", at="2026-09-22T00:12:00Z")
+    receipt = classifier_receipt()
     result = ev.evaluate(observation, receipt, ev.Authority(),
                          ev.Tracking(), now=1.0)
     assert result.state.value == "READY", result.reason_line
@@ -448,8 +479,8 @@ def test_observe_pull_unreadable_stops_without_guessing_head(github):
     assert observation.files["status"] is None
     assert "not fetched" in observation.files["error"]
     assert len([c for c in github["calls"] if c.startswith("GET")]) == 1
-    result = ev.evaluate(observation, ev.ClassifierReceipt.for_files(
-        HEAD, [], True, "t", "x"), ev.Authority(), ev.Tracking(), now=1.0)
+    result = ev.evaluate(observation, classifier_receipt(), ev.Authority(),
+                         ev.Tracking(), now=1.0)
     assert result.reason_code == "K13"
 
 
@@ -459,8 +490,7 @@ def test_observe_transport_failure_marks_only_that_section(github):
     assert observation.statuses["status"] is None
     assert "transport" in observation.statuses["error"]
     assert observation.check_runs["status"] == 200
-    result = ev.evaluate(observation, ev.ClassifierReceipt.for_files(
-        HEAD, observation.files["data"], True, "t", "x"), ev.Authority(),
+    result = ev.evaluate(observation, classifier_receipt(), ev.Authority(),
         ev.Tracking(), now=1.0)
     assert result.reason_code == "K13" and "statuses" in result.reason_line
 
@@ -490,18 +520,19 @@ def test_observe_deadline_passed_fetches_nothing(github):
 
 
 def test_observation_round_trips_through_json(github):
+    make_green(github)
     observation = fetch()
     payload = json.loads(json.dumps(obs.observation_to_dict(observation)))
     restored = obs.observation_from_dict(payload)
     assert restored.policy == observation.policy
     assert ev.fingerprint_of(restored) == ev.fingerprint_of(observation)
-    receipt = ev.ClassifierReceipt.for_files(
-        HEAD, observation.files["data"], True, "t", "x")
+    receipt = classifier_receipt()
     before = ev.evaluate(observation, receipt, ev.Authority(), ev.Tracking(),
                          now=1.0)
     after = ev.evaluate(restored, receipt, ev.Authority(), ev.Tracking(),
                         now=1.0)
     assert (before.state, before.reason_code) == (after.state, after.reason_code)
+    assert before.state.value == "READY"
     assert ev.stale_reasons(before, restored) == []
 
 
@@ -592,7 +623,7 @@ def test_cli_run_lifecycle(tmp_path, capsys):
     assert created["authority"]["helper_path"].endswith("gh_merge.py")
     assert Store.load(store).header.authority == created["authority"]
 
-    code, out, err = run(common + ["attempt", "create", "--model", "sol",
+    code, out, err = run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10", "--model", "sol",
                                    "-o", "json"], capsys)
     assert code == 0, err
     taskings = json.loads(out)
@@ -621,7 +652,9 @@ def test_cli_run_lifecycle(tmp_path, capsys):
     assert json.loads(out)["applied"] == ["PR-001", "PR-002"]
 
     code, out, err = run(common + ["run", "describe"], capsys)
-    assert code == 0 and "Selected 2; merged 1;" in out and "MERGED (1)" in out
+    assert code == 0 and "Selected scope: 2 PRs" in out
+    assert "direct merged 1" in out and "assessed holds 1" in out
+    assert 'acme/r#1 "bump 1" [PR-001] -- MERGED' in out
     code, out, err = run(common + ["approval", "list"], capsys)
     assert code == 0 and out.startswith("No approvals needed")
     code, out, err = run(common + ["card", "list", "-o", "json"], capsys)
@@ -669,7 +702,7 @@ def test_cli_scoped_inspect_authority_survives_replay_brief_and_evaluation(
     # Later invocations must use the persisted restriction, not a widened file.
     Path(config_path).write_text('[org."o"]\nauto_fix = true\n'
                                 'mode = "automated"\n', encoding="utf-8")
-    code, out, err = run(common + ["attempt", "create", "--json"], capsys)
+    code, out, err = run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10", "--json"], capsys)
     assert code == 0, err
     attempt = json.loads(out)[0]["attempt_id"]
     code, out, err = run(common + ["brief", "view", attempt, "--json"], capsys)
@@ -682,7 +715,7 @@ def test_cli_scoped_inspect_authority_survives_replay_brief_and_evaluation(
     code, out, err = run(common + ["brief", "view", attempt], capsys)
     assert code == 0 and "scope-reviewer" in out, err
     code, out, err = run(common + ["pr", "evaluate", "PR-001", "--file",
-                                   observation_path, "--dependency-only",
+                                   observation_path, "--receipt", receipt_file(tmp_path),
                                    "--attempt", attempt, "--json"], capsys)
     assert code == 0, err
     result = json.loads(out)["evaluation"]
@@ -693,8 +726,11 @@ def test_cli_scoped_inspect_authority_survives_replay_brief_and_evaluation(
 def test_cli_mixed_scope_grants_and_global_approvals_stay_distinct(
         github, tmp_path, capsys):
     make_green(github)
-    observation_path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())),
-                              "observation.json")
+    observed = obs.observation_to_dict(fetch())
+    # The two fixture repositories share this commit/tree, but evaluation
+    # must carry the identity of the developer/r card whose authority varies.
+    observed["pull"]["data"]["base"]["repo"]["full_name"] = "developer/r"
+    observation_path = write(tmp_path, json.dumps(observed), "observation.json")
     config_path = config_file(
         tmp_path, '[defaults]\nmode = "automated"\n'
         '[org."o"]\nmode = "inspect"\nrepairs = []\n'
@@ -718,7 +754,7 @@ def test_cli_mixed_scope_grants_and_global_approvals_stay_distinct(
     code, out, err = run(common + ["run", "view"], capsys)
     assert code == 0 and "mixed authority" in out, err
     assert "o/r: mode inspect" in out and "developer/r: mode gated" in out
-    code, out, err = run(common + ["attempt", "create", "--json"], capsys)
+    code, out, err = run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10", "--json"], capsys)
     assert code == 0, err
     tasks = {task["repo_id"]: task for task in json.loads(out)}
     for repo_id, mode, repairs in (("o/r", "inspect", []),
@@ -730,7 +766,7 @@ def test_cli_mixed_scope_grants_and_global_approvals_stay_distinct(
         assert (brief["mode"], brief["repairs"]) == (mode, repairs)
 
     evaluate = common + ["pr", "evaluate", "PR-002", "--file", observation_path,
-                         "--dependency-only", "--attempt",
+                         "--receipt", receipt_file(tmp_path), "--attempt",
                          tasks["developer/r"]["attempt_id"], "--json"]
     code, out, err = run(evaluate, capsys)
     assert code == 0, err
@@ -769,7 +805,7 @@ def test_cli_creation_flags_resolve_each_repository(
     assert repo["repairs"] == ([] if expected_mode == "inspect" else ["lockfile"])
 
 
-def test_cli_explicit_discovery_overrides_repo_list_but_preserves_authority(
+def test_cli_raw_discovery_cannot_override_configured_repo_list(
         tmp_path, capsys):
     store_path = str(tmp_path / "run.jsonl")
     config_path = config_file(tmp_path, '[org."acme"]\nrepos = ["allowed"]\n'
@@ -780,24 +816,26 @@ def test_cli_explicit_discovery_overrides_repo_list_but_preserves_authority(
     assert code == 0, err
     stored = Store.load(store_path)
     assert stored.cards["PR-001"].repo_id == "acme/r"
-    assert stored.header.authority["repositories"]["acme/r"] == {
-        "mode": "inspect", "repairs": [], "pause_on_conflict": False,
-        "reviewer_contexts": []}
+    assert "acme/r" not in stored.header.authority["repositories"]
+    assert stored.header.scope_ids == []
+    assert stored.header.discovery_complete is False
+    assert "Unselected discovery" in stored.cards["PR-001"].reason_line
 
 
 @pytest.mark.parametrize("legacy", [False, True], ids=["missing-entry", "legacy-flat"])
 def test_cli_repository_authority_requires_entry_except_for_legacy_store(
         github, tmp_path, capsys, legacy):
     make_green(github)
-    observation_path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())),
-                              "observation.json")
+    observed = obs.observation_to_dict(fetch())
+    observed["pull"]["data"]["base"]["repo"]["full_name"] = "acme/r"
+    observation_path = write(tmp_path, json.dumps(observed), "observation.json")
     store_path = str(tmp_path / "run.jsonl")
     common = ["--store", store_path, "--config", config_file(tmp_path)]
     items = [{"org": "acme", "repo": "r", "number": 7, "head_sha": HEAD}]
     code, out, err = run(common + ["run", "create", "--run-id", "R", "--file",
                                    discoveries_file(tmp_path, items)], capsys)
     assert code == 0, err
-    code, out, err = run(common + ["attempt", "create", "--json"], capsys)
+    code, out, err = run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10", "--json"], capsys)
     assert code == 0, err
     attempt = json.loads(out)[0]["attempt_id"]
     persisted = Store.load(store_path)
@@ -809,7 +847,7 @@ def test_cli_repository_authority_requires_entry_except_for_legacy_store(
     persisted.set_header(persisted.header)
     for args in (["brief", "view", attempt],
                   ["pr", "evaluate", "PR-001", "--file", observation_path,
-                   "--dependency-only", "--attempt", attempt]):
+                   "--receipt", receipt_file(tmp_path), "--attempt", attempt]):
         code, out, err = run(common + args + ["--json"], capsys)
         if legacy:
             assert code == 0, err
@@ -848,7 +886,7 @@ def test_cli_not_found_and_runtime_errors(tmp_path, capsys):
     assert code == 3 and json.loads(err)["error"]["code"] == "not_found"
     code, out, err = run(common + ["card", "view", "PR-999"], capsys)
     assert code == 3 and err.startswith("error: ") and not err.rstrip().endswith(".")
-    run(common + ["attempt", "create"], capsys)
+    run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10"], capsys)
     bad = tmp_path / "bad.jsonl"
     bad.write_text(json.dumps({"card_id": "PR-001", "outcome": "merged"}) + "\n",
                    encoding="utf-8")
@@ -862,7 +900,7 @@ def test_cli_reconcile_from_file(tmp_path, capsys):
     common = ["--store", store, "--config", config_file(tmp_path)]
     run(common + ["run", "create", "--run-id", "R", "--file",
                   discoveries_file(tmp_path)], capsys)
-    run(common + ["attempt", "create"], capsys)
+    run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10"], capsys)
     observed = tmp_path / "observed.json"
     observed.write_text(json.dumps({
         "PR-001": {"merged": True, "commit": "c" * 40,
@@ -891,8 +929,9 @@ def test_cli_pr_observe_and_evaluate_dry_run(github, tmp_path, capsys,
     assert code == 0, err
     observation = json.loads(out)
     assert observation["head_sha"] == HEAD
+    classified = receipt_file(tmp_path)
     code, out, err = run(["pr", "evaluate", "o/r#7", "--file", "-",
-                          "--dependency-only", "--classifier", "test",
+                          "--receipt", classified,
                           "--mode", "inspect", "-o", "json"], capsys,
                          monkeypatch, stdin=json.dumps(observation))
     assert code == 0, err
@@ -900,14 +939,102 @@ def test_cli_pr_observe_and_evaluate_dry_run(github, tmp_path, capsys,
     assert result["outcome"]["outcome"] == "ready"
     assert result["evaluation"]["merge_path"] == "none"
     assert result["receipt"]["classifier"] == "test"
+    assert result["receipt"]["schema_version"] == 2
+    assert result["receipt"]["base_sha"] == BASE_SHA
     code, out, err = run(["pr", "evaluate", "o/r#7", "--file", "-",
+                          "--receipt", receipt_file(tmp_path, dependency_only=False),
                           "--mode", "inspect", "-o", "json"], capsys,
                          monkeypatch, stdin=json.dumps(observation))
     assert code == 0 and json.loads(out)["outcome"]["reason_code"] == "K09"
     code, out, err = run(["pr", "evaluate", "o/r#7", "--file", "-",
-                          "--dependency-only", "--mode", "inspect"], capsys,
+                          "--receipt", classified, "--mode", "inspect"], capsys,
                          monkeypatch, stdin=json.dumps(observation))
     assert code == 0 and "READY" in out and "identity" in out
+
+
+def test_cli_dependency_only_flag_cannot_fabricate_v2_evidence(github, tmp_path, capsys):
+    make_green(github)
+    path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())), "obs.json")
+    code, out, err = run(["pr", "evaluate", "o/r#7", "--file", path,
+                          "--dependency-only", "--json"], capsys)
+    assert code == 0, err
+    result = json.loads(out)
+    assert result["evaluation"]["reason_code"] == "K13"
+    assert result["evaluation"]["merge_path"] == "none"
+    assert result["outcome"]["outcome"] == "hold"
+
+
+def test_cli_legacy_receipt_loads_but_cannot_claim_current_analysis(github, tmp_path, capsys):
+    make_green(github)
+    path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())), "obs.json")
+    legacy = asdict(classifier_receipt())
+    for key in ("schema_version", "base_sha", "dependency_evidence", "check_evidence"):
+        legacy.pop(key)
+    classified = write(tmp_path, json.dumps(legacy), "legacy-receipt.json")
+    code, out, err = run(["pr", "evaluate", "o/r#7", "--file", path,
+                          "--receipt", classified, "--json"], capsys)
+    assert code == 0, err
+    result = json.loads(out)
+    assert result["receipt"]["schema_version"] == 1
+    assert result["evaluation"]["reason_code"] == "K13"
+    assert "legacy" in result["evaluation"]["reason_line"]
+    assert result["evaluation"]["merge_path"] == "none"
+
+
+@pytest.mark.parametrize("payload", ["{", "[]", "{}"])
+def test_cli_malformed_receipt_reports_invalid_input(github, tmp_path, capsys, payload):
+    make_green(github)
+    path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())), "obs.json")
+    classified = write(tmp_path, payload, "bad-receipt.json")
+    code, out, err = run(["pr", "evaluate", "o/r#7", "--file", path,
+                          "--receipt", classified, "--json"], capsys)
+    assert code == 1 and not out
+    assert json.loads(err)["error"]["code"] == "invalid_input"
+
+
+@pytest.mark.parametrize("change,fragment", [
+    ({"check_evidence": []}, "evidence"),
+    ({"dependency_evidence": {"complete": True}}, "missing fields"),
+    ({"head_sha": "f" * 40}, "receipt is for head"),
+    ({"base_sha": "f" * 40}, "base/head"),
+])
+def test_cli_incomplete_or_stale_receipt_returns_k13_not_ready(
+        github, tmp_path, capsys, change, fragment):
+    make_green(github)
+    path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())), "obs.json")
+    payload = asdict(classifier_receipt())
+    payload.update(change)
+    classified = write(tmp_path, json.dumps(payload), "receipt.json")
+    code, out, err = run(["pr", "evaluate", "o/r#7", "--file", path,
+                          "--receipt", classified, "--json"], capsys)
+    assert code == 0, err
+    result = json.loads(out)
+    assert result["evaluation"]["reason_code"] == "K13"
+    assert result["evaluation"]["merge_path"] == "none"
+    assert fragment in result["evaluation"]["reason_line"]
+
+
+def test_cli_accepts_receipt_on_stdin_without_overriding_its_classification(
+        github, tmp_path, capsys, monkeypatch):
+    make_green(github)
+    path = write(tmp_path, json.dumps(obs.observation_to_dict(fetch())), "obs.json")
+    args = ["pr", "evaluate", "o/r#7", "--file", path, "--receipt", "-", "--json"]
+    code, out, err = run(args, capsys, monkeypatch,
+                         stdin=json.dumps(asdict(classifier_receipt())))
+    assert code == 0, err
+    assert json.loads(out)["outcome"]["outcome"] == "ready"
+    code, out, err = run([*args, "--dependency-only"], capsys, monkeypatch,
+                         stdin=json.dumps(asdict(classifier_receipt(False))))
+    assert code == 0, err
+    assert json.loads(out)["outcome"]["reason_code"] == "K09"
+
+
+def test_cli_observation_and_receipt_cannot_both_consume_stdin(capsys):
+    code, out, err = run(["pr", "evaluate", "o/r#7", "--file", "-",
+                          "--receipt", "-", "--json"], capsys)
+    assert code == 1 and not out
+    assert json.loads(err)["error"]["code"] == "invalid_input"
+    assert "both read stdin" in json.loads(err)["error"]["message"]
 
 
 def test_cli_pr_evaluate_with_store_uses_header_authority_and_lease(
@@ -915,7 +1042,7 @@ def test_cli_pr_evaluate_with_store_uses_header_authority_and_lease(
     make_green(github)
     monkeypatch.setenv("GH_MERGE_TOKEN", "t")
     store = str(tmp_path / "run.jsonl")
-    common = ["--store", store, "--config", config_file(tmp_path)]
+    common = ["--store", store, "--config", config_file(tmp_path, '[org."o"]\n')]
     items = [{"org": "o", "repo": "r", "number": 7, "url": "u", "title": "t",
               "owner": "o", "head_sha": HEAD, "base_ref": "main"}]
     run(common + ["run", "create", "--run-id", "R", "--file",
@@ -925,13 +1052,14 @@ def test_cli_pr_evaluate_with_store_uses_header_authority_and_lease(
     assert code == 0, err
     obs_path = tmp_path / "obs.json"
     obs_path.write_text(out, encoding="utf-8")
+    classified = receipt_file(tmp_path)
     code, out, err = run(common + ["pr", "evaluate", "PR-001", "--file",
-                                   str(obs_path), "--dependency-only",
+                                   str(obs_path), "--receipt", classified,
                                    "-o", "json"], capsys)
     assert code == 0 and json.loads(out)["outcome"]["reason_code"] == "K12"
-    run(common + ["attempt", "create"], capsys)
+    run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10"], capsys)
     code, out, err = run(common + ["pr", "evaluate", "PR-001", "--file",
-                                   str(obs_path), "--dependency-only",
+                                   str(obs_path), "--receipt", classified,
                                    "--attempt", "AGT-001.1", "-o", "json"],
                          capsys)
     assert code == 0, err
@@ -967,7 +1095,7 @@ def test_cli_named_store_never_falls_back_to_dry_run(github, tmp_path, capsys,
     make_green(github)
     monkeypatch.setenv("GH_MERGE_TOKEN", "t")
     store = str(tmp_path / "run.jsonl")
-    common = ["--store", store, "--config", config_file(tmp_path)]
+    common = ["--store", store, "--config", config_file(tmp_path, '[org."o"]\n')]
     code, out, err = run(["--store", str(tmp_path / "missing.jsonl"), "pr",
                           "observe", "o/r#7", "--json"], capsys)
     assert code == 3 and json.loads(err)["error"]["code"] == "not_found"
@@ -980,7 +1108,8 @@ def test_cli_named_store_never_falls_back_to_dry_run(github, tmp_path, capsys,
     assert code == 0, err
     obs_path = tmp_path / "obs.json"
     obs_path.write_text(out, encoding="utf-8")
-    run(common + ["attempt", "create"], capsys)
+    classified = receipt_file(tmp_path)
+    run(common + ["attempt", "create", "--capacity", "5", "--batch-size", "10"], capsys)
     unknown = tmp_path / "unknown.jsonl"
     unknown.write_text(json.dumps({"card_id": "PR-001", "outcome": "unknown",
                                    "op_note": "PUT response lost"}) + "\n",
@@ -989,14 +1118,14 @@ def test_cli_named_store_never_falls_back_to_dry_run(github, tmp_path, capsys,
         capsys)
     assert Store.load(store).leases.get("o/r").state == "quarantined"
     code, out, err = run(common + ["pr", "evaluate", "o/r#7", "--file",
-                                   str(obs_path), "--dependency-only",
+                                   str(obs_path), "--receipt", classified,
                                    "--json"], capsys)
     assert code == 3, (out, err)
     assert json.loads(err)["error"]["code"] == "not_found"
     code, out, err = run(common + ["pr", "observe", "o/r#7", "--json"], capsys)
     assert code == 3 and json.loads(err)["error"]["code"] == "not_found"
     code, out, err = run(common + ["pr", "evaluate", "PR-001", "--file",
-                                   str(obs_path), "--dependency-only",
+                                   str(obs_path), "--receipt", classified,
                                    "--attempt", "AGT-001.1", "-o", "json"],
                          capsys)
     assert code == 0, err

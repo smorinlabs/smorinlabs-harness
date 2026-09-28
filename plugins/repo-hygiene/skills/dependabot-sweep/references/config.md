@@ -1,7 +1,8 @@
 # dependabot-sweep config
 
 TOML file. Default location: `~/.config/dependabot-sweep/config.toml`.
-`--config <path>` overrides it; `--org` / `--repo` override the scope tables.
+`--config <path>` overrides it. Scope flags select owners or explicit
+repositories while preserving the restrictions described below.
 
 ## Schema
 
@@ -47,9 +48,14 @@ pr_budget_secs = 600    # per-PR deadline span; one absolute epoch per PR
 - The behavior keys `auto_fix`, `pause_on_conflict`, `mode`, `repairs`, and
   `reviewer_contexts` may be repeated inside a scope table to override them
   for that scope only.
-- Explicit scope flags and the selected discovery inventory passed to
-  `run create --file` can override the configured repository selection.
-  Matching owner behavior restrictions still apply to those repositories.
+- Explicit `--org` flags select owners while preserving their configured
+  repository, visibility and behavior restrictions. Explicit `--repo` flags
+  override configured repository names with the named repositories while
+  retaining matching owner visibility and behavior restrictions.
+  The discovery inventory passed to `run create --file` supplies observations;
+  it does not widen configured scope. Out-of-scope PRs are recorded as unselected.
+  Without configured or explicit scope, discovered identities supply only their
+  exact repositories, never an owner-wide grant.
 - Run creation resolves mode, repair permissions, pause-on-conflict, and
   reviewer contexts for each selected repository and stores them under
   `authority.repositories`. Later briefs and evaluations use this saved

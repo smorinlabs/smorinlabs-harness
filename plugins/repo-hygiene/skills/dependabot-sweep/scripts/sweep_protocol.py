@@ -66,6 +66,31 @@ def approval_head(authority: dict, card_id: str, legacy_head: str) -> str:
     return _full_head(legacy_head)
 
 
+def _structured_hold_applies(hold, action: str) -> bool:
+    """A scoped owner instruction restricts only the action it names."""
+    if not isinstance(hold, dict) or not hold or not hold.get("active", True):
+        return False
+    scope = hold.get("scope", "merge")
+    return (scope == "other"
+            or (scope == "merge" and action in MERGE_ACTIONS)
+            or (scope == "repair" and action in REPAIRS))
+
+
+def effective_owner_hold(authority: dict, card, *, claimed=False) -> tuple[bool, str]:
+    """Reporting may add a protective hold, never release frozen authority."""
+    frozen = claimed or card.id in authority.get("holds", [])
+    records = authority.get("hold_records", {})
+    saved = records.get(card.id, {}) if isinstance(records, dict) else {}
+    structured = getattr(card, "owner_hold", {})
+    active = _structured_hold_applies(structured, "merge")
+    source = ""
+    if frozen and isinstance(saved, dict) and saved.get("active", True):
+        source = saved.get("source", "")
+    if active and not source:
+        source = structured.get("source", "")
+    return bool(frozen or active), source if isinstance(source, str) else ""
+
+
 @dataclass
 class Tasking:
     """One worker attempt's exact authority over one repository."""
@@ -90,8 +115,14 @@ class Tasking:
     run_deadline_epoch: float = 0.0
     reviewer_contexts: list = field(default_factory=list)
     approval_heads: dict | None = None
+    hold_sources: dict = field(default_factory=dict)
+    # Frozen authority and legacy tasking holds restrict every mutation.
+    # New structured holds retain their action scope in each card record.
+    broad_holds: list | None = None
 
     def __post_init__(self) -> None:
+        if self.broad_holds is None:
+            self.broad_holds = list(self.holds)
         # Old serialized taskings carried only IDs. Bind those once to
         # their existing valid heads; later card edits cannot widen approval.
         if self.approval_heads is None:
@@ -138,9 +169,26 @@ class Tasking:
                           "human_id": card.human_id,
                           "state": card.state.value,
                           "reason_code": card.reason_code,
+                          "blockers": getattr(card, "blockers", []),
+                          "execution_stop": getattr(card, "execution_stop", {}),
+                          "owner_hold": getattr(card, "owner_hold", {}),
+                          "action": card.action, "action_owner": card.action_owner,
+                          "resume_trigger": card.resume_trigger,
                           "deadline_epoch": card.deadline_epoch})
         header = store.header
         authority = header.authority if header else {}
+        broad_holds = [card["id"] for card in cards
+                       if card["id"] in holds
+                       or card["id"] in authority.get("holds", [])]
+        hold_sources = {}
+        effective_holds = []
+        for card in cards:
+            held, source = effective_owner_hold(
+                authority, store.cards[card["id"]], claimed=card["id"] in holds)
+            if not held:
+                continue
+            effective_holds.append(card["id"])
+            hold_sources[card["id"]] = source or "source not recorded"
         approved_heads = {}
         if mode == "gated":
             for card in cards:
@@ -154,7 +202,8 @@ class Tasking:
             card_ids=card_ids, cards=cards, mode=mode,
             merge_allowed=mode != "inspect",
             approved=list(approved_heads), approval_heads=approved_heads,
-            holds=list(holds),
+            holds=effective_holds, hold_sources=hold_sources,
+            broad_holds=broad_holds,
             repairs=[] if mode == "inspect" else sorted(set(repairs or ())),
             deadlines={c["id"]: c["deadline_epoch"] for c in cards},
             op_timeout_secs=int(op_timeout_secs),
@@ -202,6 +251,22 @@ def render_brief(tasking: Tasking, template_path=None) -> str:
             f"- {card['human_id']} [{card['id']}] head "
             f"{card.get('head_sha') or '?'} · "
             f"GH_MERGE_DEADLINE_EPOCH={_epoch(deadline) if deadline else 'unset'}")
+        for blocker in card.get("blockers", []):
+            pr_lines.append(f"  Recorded {blocker.get('kind', 'condition')}: "
+                            f"{blocker.get('reason_code', '')} {blocker.get('reason_line', '')}")
+        stop = card.get("execution_stop") or {}
+        if stop:
+            pr_lines.append(f"  Prior execution stop: {stop.get('reason_code', '')} "
+                            f"{stop.get('reason_line', '')}")
+        hold = card.get("owner_hold") or {}
+        if hold:
+            pr_lines.append(f"  Owner instruction: active={hold.get('active', True)}; "
+                            f"scope={hold.get('scope', 'merge')}; "
+                            f"{hold.get('reason', '')}; source={hold.get('source', 'not recorded')}")
+        if card.get("action"):
+            pr_lines.append(f"  Recommended next action: {card['action']}; "
+                            f"owner={card.get('action_owner') or 'unassigned'}; "
+                            f"resume={card.get('resume_trigger') or 'refresh current evidence'}")
     values = {
         "ATTEMPT_ID": tasking.attempt_id, "OWNER": owner, "REPO": repo,
         "PR_COUNT": str(len(tasking.cards)), "PR_LIST": "\n".join(pr_lines),
@@ -210,6 +275,15 @@ def render_brief(tasking: Tasking, template_path=None) -> str:
         "APPROVED": (_listing(tasking.approved) if tasking.mode == "gated"
                      else "not applicable"),
         "HOLDS": _listing(tasking.holds),
+        "HOLD_SOURCES": ("; ".join(
+            f"{card_id}: {tasking.hold_sources.get(card_id, 'source not recorded')}"
+            for card_id in tasking.holds) or "none"),
+        "PROTOCOL": str(Path(__file__).resolve()),
+        "PATIENCE": str(Path(__file__).resolve().with_name("sweep_patience.py")),
+        "DEPENDENCY_EVIDENCE": str(Path(__file__).resolve().parent.parent
+                                   / "references" / "dependency-evidence.md"),
+        "REPORTING_REFERENCE": str(Path(__file__).resolve().parent.parent
+                                   / "references" / "reporting.md"),
         "REPAIRS": _listing(tasking.repairs),
         "REVIEWER_CONTEXTS": _listing(tasking.reviewer_contexts),
         "PAUSE_ON_CONFLICT": "true" if tasking.pause_on_conflict else "false",
@@ -268,8 +342,9 @@ def authorize(tasking: Tasking, action: str, card_id: str,
               now: float) -> tuple:
     """May this attempt take `action` on this card now?
 
-    Read-only actions are always allowed. Every mutation is refused on an
-    owner hold (K16), after the card's or run's deadline (K14), and in
+    Read-only actions are always allowed. Frozen authority holds restrict
+    every mutation; structured holds restrict their named action scope.
+    Mutations are refused after the card's or run's deadline (K14), and in
     inspect mode. merge/enqueue need automated mode or a gated approval,
     and are refused for a card already in the merge queue. A repair needs
     its own permission. Returns (allowed, reason).
@@ -281,12 +356,15 @@ def authorize(tasking: Tasking, action: str, card_id: str,
         return False, f"{action!r} is not a worker action"
     if tasking.mode == "inspect":
         return False, "inspect mode performs no mutation"
-    if card_id in tasking.holds:
+    if card_id in tasking.broad_holds:
         return False, "K16 owner hold in effect"
+    if (action in MERGE_ACTIONS and card_id in tasking.holds) \
+            or _structured_hold_applies(card.get("owner_hold"), action):
+        return False, "K16 owner hold in effect for this action"
     deadline = min((d for d in (card.get("deadline_epoch"),
                                 tasking.run_deadline_epoch) if d),
                    default=0)
-    if deadline and now > deadline:
+    if deadline and now >= deadline:
         return False, "K14 budget exhausted; observation only"
     if action in MERGE_ACTIONS:
         if card.get("state") == "WAITING" and card.get("reason_code") == "K10":

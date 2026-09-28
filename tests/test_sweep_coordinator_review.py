@@ -185,8 +185,8 @@ def test_stale_sessions_allocate_distinct_attempts_across_repos(tmp_path, monkey
     original = first.locks.claim
     monkeypatch.setattr(first.locks, "claim", lambda repo, holder:
                         False if repo == "acme/two" else original(repo, holder))
-    a = coord.schedule(first)
-    b = coord.schedule(second)
+    a = coord.schedule(first, capacity=5, batch_size=10)
+    b = coord.schedule(second, capacity=5, batch_size=10)
     assert [t["repo_id"] for t in a] == ["acme/one"]
     assert [t["repo_id"] for t in b] == ["acme/two"]
     assert a[0]["attempt_id"] != b[0]["attempt_id"]
@@ -385,7 +385,7 @@ def collected_result(kind, card_id):
 def test_incremental_collection_completes_and_releases_after_final_card(
         tmp_path, kind, legacy_initial_outstanding):
     store = make_store(tmp_path, [discovery(1), discovery(2)])
-    attempt_id = coord.schedule(store)[0]["attempt_id"]
+    attempt_id = coord.schedule(store, capacity=5, batch_size=10)[0]["attempt_id"]
     if legacy_initial_outstanding:
         attempt = store.diary[attempt_id]
         attempt.outstanding = []
@@ -410,7 +410,7 @@ def test_incremental_collection_completes_and_releases_after_final_card(
 @pytest.mark.parametrize("kind", ["ready", "hold"])
 def test_collecting_an_already_returned_card_refuses_the_entire_batch(tmp_path, kind):
     store = make_store(tmp_path, [discovery(1), discovery(2)])
-    attempt_id = coord.schedule(store)[0]["attempt_id"]
+    attempt_id = coord.schedule(store, capacity=5, batch_size=10)[0]["attempt_id"]
     coord.apply_outcome(store, attempt_id, [collected_result(kind, "PR-001")])
     resumed = replay(store)
     before = Path(store.path).read_bytes()

@@ -1,19 +1,23 @@
 # dependabot-sweep
 
-Clears the Dependabot backlog across every configured GitHub org or repo —
-one open-only app search per org finds every open dependency PR (~1 API
-call per result page, not ~1 per repo; visibility-filtered scopes add one
-`gh repo list`), then one subagent per repo-with-PRs reviews, fixes,
-and merges each, delegating red CI to `ci-fix` and involved merges to
+Clears the Dependabot backlog across configured GitHub organizations or repos.
+An initial open-only app search per owner finds dependency PRs. A repository
+inventory supplies visibility and includes repositories with no matching PRs.
+Bounded subagent batches review, fix and merge each eligible PR, delegating red CI to `ci-fix` and involved merges to
 `pr-merge-flow`. Scope and behavior come from a TOML config; v1 supports
 GitHub and `gh` only (anything else stops the sweep). Auto-fix is the
-default, with report-only and pause-on-conflict escapes.
+default, with report-only and pause-on-conflict escapes. Further discovery
+passes after merge batches and at the end keep evolving scope visible. Full
+readable results and follow-up recommendations are both saved and printed inline.
 
 **Triggers on:** "update my dependabot PRs", "dependabot sweep", "clear the
 dependabot backlog", "update all the dependency PRs" ·
 **Arguments:** `--check` (report only), `--no-auto-fix` (triage, don't fix),
-`--pause-on-conflict` (stop and ask), `--config <path>`, `--org <name>`,
-`--repo <owner/name>` (repeatable, overrides config scope)
+`--pause-on-conflict` (stop and ask), `--config <path>`.
+`--org <name>` (repeatable) selects owners while preserving their configured
+repository, visibility and behavior restrictions. `--repo <owner/name>`
+(repeatable) overrides configured repository names with the explicit choices,
+while retaining matching owner visibility and behavior restrictions.
 
 ## Install
 
@@ -31,16 +35,18 @@ location) as well.
 ## Example session
 
 > "Clear the dependabot backlog."
-> → reads `~/.config/dependabot-sweep/config.toml`, runs one open-only
-> Dependabot search per configured org, reports N open PRs across M repos
-> and confirms the sweep, then fans out one subagent per repo-with-PRs —
-> green PRs merged, red CI delegated to `ci-fix`, involved PRs to
-> `pr-merge-flow` — and aggregates one report.
+> → reads `~/.config/dependabot-sweep/config.toml`, combines open-only
+> Dependabot searches with repository visibility inventory, and reports the
+> scope. It uses existing authorization or confirms the sweep, then admits
+> bounded repository batches within available worker capacity. Eligible PRs
+> are merged, red CI is delegated to `ci-fix`, and involved PRs go through
+> `pr-merge-flow`. Discovery repeats after merge batches and before the final
+> report. The same complete readable report is saved and printed inline.
 
 ## Durable runs and approval
 
-Each sweep stores its selected PRs, worker attempts, repository leases, and
-outcomes in a JSONL transaction journal. Concurrent coordinator processes
+Each sweep stores its selected PRs, worker attempts, repository leases,
+outcomes and follow-ups in a JSONL transaction journal. Concurrent coordinator processes
 serialize changes, and replay restores complete transactions. A torn final
 append is preserved before recovery repairs the uncommitted tail. Restart
 reconciliation checks unfinished attempts before another worker receives the
@@ -79,6 +85,36 @@ Commands are relative to the installed skill directory. See the
 [CLI interface](../../plugins/repo-hygiene/skills/dependabot-sweep/references/cli-interface.md)
 and [configuration schema](../../plugins/repo-hygiene/skills/dependabot-sweep/references/config.md).
 
-The final report accounts for every selected PR, reports skipped checks
-separately from successful checks, and names the owner and resume condition for
-each hold. It states whether a verified continuation is running.
+## Complete results and follow-ups
+
+The complete readable report is saved to a file and printed inline. Every PR
+has its title, link and result; each unresolved PR has a recommendation, a
+responsible party and the evidence or event needed to resume. Shared causes and
+decisions can be grouped without dropping individual PR rows. Closing a PR is
+reported separately from delivering its update through a merge or replacement.
+
+Follow-ups remain visible even after a merge. Their records distinguish the
+problem, cause or uncertainty, current status, recommendation, evidence and any
+external issue actually filed. An expired budget is an execution stop; an
+explicit owner hold cites the instruction that imposed it. The report preserves
+completed repair evidence and states whether a verified continuation is running.
+
+Run `python3 scripts/sweep_cli.py --store run.jsonl run describe --save report.md`
+from the installed skill directory to save and emit the same report snapshot.
+See the [report contract](../../plugins/repo-hygiene/skills/dependabot-sweep/references/reporting.md).
+
+## Bounded work and dependency evidence
+
+Scheduling uses the capacity available to this run and small repository batches.
+Waiting for admission does not start a PR's execution clock; retries inherit its
+original deadline. Partial worker returns record completed PRs while retaining
+outstanding cards and exclusive repository ownership. Discovery preserves both
+PR creation time and sweep discovery time and never grants mutation authority
+from a newly encountered repository alone.
+
+Classification identifies actual installers and fixture consumers, generated
+exports, and requested/resolved/tested versions. A passing frozen-lock workflow
+does not prove that another requirements installer tested the requested version.
+Relevant check applicability is recorded with evidence; documented exclusions
+are distinguished from unexplained missing analysis. Required merge checks are
+never waived. See the [receipt contract](../../plugins/repo-hygiene/skills/dependabot-sweep/references/dependency-evidence.md).
