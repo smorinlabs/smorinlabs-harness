@@ -2271,3 +2271,33 @@ condition under which it wins.
 - [x] [P59-TS03] `just all` green
 - [x] [P59-T06] Bump to 0.6.0; update README/docs counts; regenerate manifests
 - [ ] [P59-T07] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
+
+## [~] Project P60: Complexity-keyed visual trigger for decision questions (clear-decision-communication 0.6.0 → 0.7.0, question-walkthrough 0.2.2 → 0.3.0)
+**Goal/Requirement**: A complex decision question carries a visual; a simple one does not.
+Whether a visual is required depends on complexity, not on change type.
+The trigger fires when the reader must hold three or more relationships, simulate order or
+state, or compare paths that differ between options, whether the decision is about process,
+code, or architecture. PR #89 made the rule firm only for process decisions, and
+`question-walkthrough`, which framed the HR-B Q1 that started this work, has no visual guidance.
+- `clear-decision-communication` step 4: one visual trigger; the change-type table picks the form.
+- Step 6 check: when the trigger fires, a framed visual precedes the question.
+- `references/delivery.md`: per-option path diagrams go in `AskUserQuestion` previews when supported.
+- `question-walkthrough`: pre-reads apply the same trigger and forms; the visual rides the turn-ending pre-read.
+
+**Out of Scope**
+- Rendered or HTML diagrams (html-explain, show-me).
+- New ASCII forms.
+
+### Tests & Tasks
+- [x] [P60-TS01] Eval case 28 (architecture decision needs a visual before the question) and case 29 (simple control, no diagram); run on the unchanged skill (red)
+      Result (Claude, self-graded): both PASS on 0.6.0. PR #89's L2 grounding already puts the diagram before the question, so neither case discriminates; they stay as regression guards.
+- [x] [P60-TS01b] Walkthrough red/green: the case-28 design note as a one-question walk, staged skill-only workspace, one run each
+      Result: unchanged walkthrough gave a 590-word pre-read with tables and no path visual; revised gave a framed today/option-1/option-2 path diagram with a reading line (777 words). Slip: Unicode box characters instead of ASCII.
+- [x] [P60-T01] `clear-decision-communication` SKILL.md: visual trigger in step 4, step 6 check, template placement, red flag
+- [x] [P60-T02] `references/delivery.md`: preview guidance
+- [x] [P60-T03] `question-walkthrough` SKILL.md: pre-read visual trigger and red flag
+- [x] [P60-TS02] Cases 28 and 29 pass on the revised skill; cases 2, 8, 26 still pass
+      Result (Claude, self-graded): 28 pass (the complete diagram precedes the question). 29: no-diagram criterion met; length criterion unmet (brief 173 words excluding the next-action note, against about 80; the unchanged skill gave 141, so T1 wordiness predates this change). Cases 2, 8, 26 not rerun: the rules they exercise are unchanged.
+- [x] [P60-TS03] `just all` green
+- [x] [P60-T04] Bump both plugins; update counts and docs; regenerate manifests
+- [ ] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release

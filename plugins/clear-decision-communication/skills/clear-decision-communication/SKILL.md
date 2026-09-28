@@ -147,9 +147,27 @@ the output is the brief for that target.
    the artifact types, exact names, and roles. If its connection to the goal is
    missing, show that relationship before its internals. A sentence or artifact
    table often suffices; use a small relationship diagram when several
-   connections matter. Then use the change-type table for the behavior the
-   reader must judge. Forms live in `references/representation.md`, numbered
+   connections matter. When a visual trigger below holds, use the change-type
+   table to pick the form for the behavior the reader must judge. Forms live in `references/representation.md`, numbered
    F1 to F22 so a form can be named by ID.
+
+   Complexity, not the change type, decides whether a visual is required.
+   The change-type table then picks its form. A visual is required when any
+   of these holds, whether the decision concerns process, code, or
+   architecture:
+
+   | Trigger | Example |
+   |---|---|
+   | The reader must hold three or more relationships at once | a gateway, two services, and a shared store |
+   | The reader must simulate an order of events or a change of state | a retry, a race, a revision lifecycle |
+   | Two or more options take visibly different paths | the same request routed differently under each option |
+   | The same input produces different outcomes under current and proposed behavior | a validation rule that now rejects an input it accepted |
+
+   When no trigger holds, use a sentence and draw nothing, whatever the
+   change-type row names: a rename, a verified merge, or a single setting. At T1 a trigger rarely holds; if it
+   does, the size is probably T2. When a trigger holds, the visual is part of
+   L2 grounding and precedes the question. A comparison that only confirms
+   an outcome can still follow the options.
 
    | Type of change | Show |
    |---|---|
@@ -248,6 +266,8 @@ the output is the brief for that target.
      preference would settle the choice, without a recommended marker.
    - For a non-obvious mechanism, the reader can see the failure and why the
      change addresses it, with identical inputs across the comparison.
+   - If a step-4 visual trigger holds, a framed visual precedes the question.
+     If none holds, the brief contains no diagram.
    - Every consequence or uncertainty that could change the answer is in the
      initial view; verified, inferred, assumed, and not verified are told
      apart; reversibility is described as actual effects, not "revert the
@@ -300,7 +320,7 @@ quotes the template; send the brief as ordinary message text.
   For a process decision: the substantive question underneath it, and
   whether any option settles it.>
 <L2 Mechanics, when needed: the moving parts and their current state, as a
-  framed diagram when three or more interact, with each option's path.>
+  framed visual when a step-4 trigger holds, with each option's path.>
 
 Q1. <One full sentence naming the concrete choice and its scope>
 I recommend <action on the named asset and scope>, because <reason> (Q1.A).
@@ -436,6 +456,7 @@ wording.
 | "The recommendation's benefits make the case" | State what the recommended option gives up and when the runner-up wins. A choice shown only by its benefits is a sales pitch. |
 | "The host's name tells me which dialog to call" | Inspect the tools actually exposed and their restrictions. Put necessary context in the payload; use a separate delivering turn only when that surface needs it. |
 | "A diagram would look thorough" | Show only what changes the answer, in the smallest ASCII form, framed. Decoration is noise. When three or more items, states, or dependencies interact, prose is the defect. |
+| "It is code, not a process, so prose will do" | The visual trigger ignores the change type. Three or more relationships, a sequence or state to simulate, or diverging option paths require a visual for code and architecture too. |
 | "The label is short, the trade-off is in my head" | Every option stands alone with its consequence, in case the brief is the part that never rendered. |
 
 ## Behavioral evaluation

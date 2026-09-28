@@ -13,7 +13,7 @@
       "name": "clear-decision-communication",
       "source": "./plugins/clear-decision-communication",
       "description": "Decision requests from an agent to a human during a run. Checks existing authorization, investigates discoverable facts, and requests unavailable human-supplied information without turning it into an approval. Sizes preparation and explanation by seven axes into three tiers, rechecks uncertainty after verification, and keeps material caveats visible beyond the length targets. Uses same-input tables, worked examples, event sequences, and ASCII diagrams with exact verbatim content. Questions and options have stable meanings; revised choices supersede old IDs. Recommendations use option A when supported, with an explicit neutral form otherwise. Silence and skip never grant authority. Adapts a self-contained brief to the available question tool or ordinary text, with independent work continuing while required answers remain pending. Significant decisions retain their rationale and approval scope. Includes behavioral evaluation cases. Never produces HTML artifacts.",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "author": {
         "name": "Steve Morin"
       },
@@ -191,8 +191,8 @@
     {
       "name": "question-walkthrough",
       "source": "./plugins/question-walkthrough",
-      "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time. Every non-obvious question is fronted by a pre-read \u2014 why it exists, impact, trade-offs, terms \u2014 delivered in a chat turn that ends BEFORE the dialog is raised (same-turn context is invisible context). Answer notes are classified and honored: option modifiers apply immediately; directives \u2014 extra work or a redirect that replaces the answer \u2014 get a one-line repeat-back and confirm, then run in an end-of-walk batch by default. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source and summarized in a final outcome table with parked items and directive outcomes called out. Pure-markdown skill, portable across Claude Code and Codex.",
-      "version": "0.2.2",
+      "description": "Adaptive one-question-at-a-time decision walkthrough. Takes a pile of open questions or undecided to-dos \u2014 mined from the conversation, read from a pointed-at document, given inline, or pulled from task systems \u2014 confirms the pile, sequences it by leverage (answers that could moot or reshape other questions go first), then walks it one AskUserQuestion at a time. Every non-obvious question is fronted by a pre-read \u2014 why it exists, impact, trade-offs, terms \u2014 with an ASCII visual when the question is complex (three or more relationships, a sequence or state to simulate, or diverging option paths) \u2014 delivered in a chat turn that ends BEFORE the dialog is raised (same-turn context is invisible context). Answer notes are classified and honored: option modifiers apply immediately; directives \u2014 extra work or a redirect that replaces the answer \u2014 get a one-line repeat-back and confirm, then run in an end-of-walk batch by default. After every answer the remaining pile is re-planned: mooted questions dropped loudly, order revised, implied follow-ups added with consent. Decisions are recorded back at their source and summarized in a final outcome table with parked items and directive outcomes called out. Pure-markdown skill, portable across Claude Code and Codex.",
+      "version": "0.3.0",
       "author": {
         "name": "Steve Morin"
       },

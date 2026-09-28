@@ -7,7 +7,7 @@ pulled from task systems — confirms the pile with you, sequences it by
 leverage (questions whose answers could moot or reshape others go first), then
 walks it one AskUserQuestion at a time. Every non-obvious question is fronted
 by a **pre-read** — why it exists, impact, trade-offs, pros and cons, terms
-you may not know — delivered as a turn-ending message (the prose is the
+you may not know, and an ASCII visual when the question is complex — delivered as a turn-ending message (the prose is the
 turn's final content, no tool call after it; the dialog opens the *next*
 turn), because same-turn prose may never render once the dialog takes over.
 The rule is universal: a turn that raises a dialog carries no prose you

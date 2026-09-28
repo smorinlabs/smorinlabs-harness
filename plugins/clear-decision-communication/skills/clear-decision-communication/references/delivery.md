@@ -35,7 +35,7 @@ These are adaptation examples, not fixed cross-product schemas:
 
 | Available shape | Mapping from the brief |
 |---|---|
-| `AskUserQuestion` with header, question, labels, and descriptions | Put the ID and subject in the header within its declared limit; put all necessary context in the question; pair each consequence with its option. Use `multiSelect` or previews only if that schema supports them and they fit the decision. |
+| `AskUserQuestion` with header, question, labels, and descriptions | Put the ID and subject in the header within its declared limit; put all necessary context in the question; pair each consequence with its option. Use `multiSelect` or previews only if that schema supports them and they fit the decision. When a step-4 visual trigger holds and options take different paths, put each option's path diagram in its preview; the full visual still stays in the plain-text brief. |
 | `request_user_input` with question objects | Follow its current limits and mode restrictions. Use its question and option-description fields; do not assume it supports four options, previews, or `multiSelect`. |
 | `request_user_input_async` with `title` and string `options` | Put the self-contained question in `title`; put each ID, outcome, and consequence in one option string. Continue independent authorized work while the question remains pending. |
 | No suitable or permitted question tool | Send the ordinary-text brief and obtain the answer in conversation. |
