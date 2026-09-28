@@ -2146,7 +2146,7 @@ sentence plus the pointer. Behavior must not regress.
       Result: baseline 23/25, refactor 24/25; 22 identical verdicts; case 5 pass->fail attributed to a
       pre-existing gap (baseline case 11 shows the same slip). Record: `docs/validation/clear-decision-communication-0.5.0.md`.
 
-## [ ] Project P57: Unperformed actions are stated as next steps (clear-decision-communication)
+## [~] Project P57: Unperformed actions are stated as next steps (clear-decision-communication 0.7.0 → 0.7.1)
 **Goal/Requirement**: A response never describes an action it has not performed as in progress or done.
 Found by the P56 parity evals: baseline case 11 ("I'm deploying ... to staging now") and refactor case 5
 ("I'm running it now") both failed on this, and no rule in the skill covers it.
@@ -2157,9 +2157,11 @@ Found by the P56 parity evals: baseline case 11 ("I'm deploying ... to staging n
 - Other P56 findings.
 
 ### Tests & Tasks
-- [ ] [P57-TS01] New eval case fails on the current skill (red)
-- [ ] [P57-T01] Add the rule
-- [ ] [P57-TS02] New case plus cases 5 and 11 pass on the revised skill, graded blind
+- [x] [P57-TS01] New eval case (30) fails on the current skill (red)
+      Result: case 30 did not discriminate (the unchanged skill stated the action as a next step); case 5 did ("I'm running the test first").
+- [x] [P57-T01] Add the rule
+- [x] [P57-TS02] New case plus cases 5 and 11 pass on the revised skill, graded blind
+      Result: 30, 5, and 11 pass blind. Record: `docs/validation/clear-decision-communication-0.7.1.md`.
 
 ## [x] Project P58: dependabot-sweep durable core — S1–S6 in four slices (repo-hygiene 0.16.1 → 0.17.0)
 **Historical ID**: P52 in Claude session `76b20680-b740-4ff9-8f48-1d9db6474b2a`; renumbered to P58 on 2026-09-26 because main assigned P52 to the guided-research index change.
@@ -2301,3 +2303,23 @@ code, or architecture. PR #89 made the rule firm only for process decisions, and
 - [x] [P60-TS03] `just all` green
 - [x] [P60-T04] Bump both plugins; update counts and docs; regenerate manifests
 - [ ] [P60-T05] Merge the PR; fast-forward the main checkout; remove the worktree; release notes with the next harness release
+
+## [~] Project P61: T1 briefs stay near their length signal (clear-decision-communication 0.7.0 → 0.7.1)
+**Goal/Requirement**: A simple, verified ask (T1) reads in about 80 words. Case 29 measured
+173 words on 0.7.0 and 141 on 0.6.0 for a verified merge, because the brief restated the
+handoff in a context paragraph and repeated facts inside the options.
+- T1 rendering names its five parts, forbids a handoff-restating paragraph, caps options at
+  two sentences, and sets a review signal at about 120 words.
+
+**Out of Scope**
+- T2 and T3 length; grounding layers.
+
+### Tests & Tasks
+- [x] [P61-TS01] Case 29 length criterion fails on the current skill (red)
+      Result: 173 words on 0.7.0.
+- [x] [P61-T01] T1 rendering recipe in `SKILL.md`
+- [ ] [P61-TS02] Case 29 passes all criteria on the revised skill, graded blind
+      Result so far: blind fail at 152 words (first recipe); 133 and 141 words after the option-shape sentence (unblinded). The skill's own T1 example is 102 words, so the target needs an owner decision.
+- [x] [P61-TS03] Blind grading of cases 26–30 on the released skill (P59/P60 follow-up)
+      Result: after 5/7 pass (26, 27, 30, 5, 11); 28 fails on an unlabeled inference, 29 on length. Before 2/7.
+

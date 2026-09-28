@@ -292,6 +292,10 @@ the output is the brief for that target.
      action separately for each choice: deferring a policy leaves it open;
      a shared closing sentence must not imply that every answer approves work.
      The reader knows how to reply.
+   - Only actions that have actually happened are reported as done or in
+     progress. An authorized action not yet performed is a next step
+     ("Next, I will run the dry run"), never present progressive ("I'm
+     running it now") and never given a result.
    - The brief passes the four reader gates in `references/clarity.md` and
      applies its error catalog.
 
@@ -360,7 +364,15 @@ Rendering by tier:
 
 - **T1** keeps the question, gate, checked result, supported recommendation or
   explicit neutrality, and concise options with consequences. Do not add
-  sections whose content is already clear. For example, sent as ordinary text:
+  sections whose content is already clear. A T1 has five parts: the question
+  line, which names the change and its purpose; one sentence with the check
+  and the gate; the recommendation sentence; the options; and the reply line.
+  Do not restate the handoff in a context paragraph. Give each option its
+  action, what I do now, its effect, and its reversal in short clauses, as in
+  the example below; do not repeat facts the question line already states. The
+  reply line is "Reply with A or B." plus at most one sentence for an approval
+  boundary. Past about 120 words, rerun the removal test before sending. For
+  example, sent as ordinary text:
 
   ```
   Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
@@ -445,6 +457,7 @@ wording.
 
 | Thought | Reality |
 |---|---|
+| "I'm running it now" | Say so only after starting it. An action you have not performed is a next step: "Next, I will run it." Never report a result you have not observed. |
 | "The user knows the plan; 'Approve Phase 2?' is enough" | Connect the goal to the exact artifact and its role, then state what answering changes now. |
 | "It is a quick yes or no" | Yes and No hide the consequence. Options name what happens: "Merge" and "Hold". |
 | "I will assume yes and keep going" | Silence grants no authority. A stated fallback can pause, defer, or perform already-authorized work; skip selects none of it. |

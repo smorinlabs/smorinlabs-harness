@@ -151,12 +151,12 @@ Runs that invoke a CLI also retain its output and version. Process completion
 is not a behavioral pass: a reviewer
 must judge the actual response against the expectations, including positive
 and negative controls for approval, silence, skip, and superseded replies.
-The twenty-nine scenarios include artifact identification, recovery of project
+The thirty scenarios include artifact identification, recovery of project
 context, approval stage, confusion, changed implementation requirements, and
 permission-preserving simplification. Measurement cases cover opposing metric
 directions, missing absolute values, and documented workflow usage and author
 restrictions. Three further cases cover a development-tool policy with registry
-evidence, unavailable setup context and roles, and a stale-letter reply. Cases 26 and 27 cover a process decision about what a revision carries while work is held, and option trade-offs for the recommended option and the runner-up. Case 28 requires a visual before the question for an architecture decision; case 29 is a simple merge that must carry no diagram. A separate reader receives only the
+evidence, unavailable setup context and roles, and a stale-letter reply. Cases 26 and 27 cover a process decision about what a revision carries while work is held, and option trade-offs for the recommended option and the runner-up. Case 28 requires a visual before the question for an architecture decision; case 29 is a simple merge that must carry no diagram and stay near the T1 length. Case 30 checks that an authorized action not yet performed is stated as a next step. A separate reader receives only the
 generated brief and neutral questions. Their answers are recorded before a
 reviewer compares them with the source facts, so prior familiarity cannot
 supply context that the brief omitted.
