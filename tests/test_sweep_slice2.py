@@ -246,10 +246,48 @@ def observe(**over):
 
 
 def receipt(head=HEAD, file_list=None, dependency_only=True):
+    observed = files() if file_list is None else file_list
+    workflow = ".github/workflows/ci.yml"
+    inputs = [f["filename"] for f in observed]
+    mappings = [{"path": f["filename"], "blob_sha": f["sha"],
+                 "role": "lockfile" if f["filename"] == "uv.lock" else "manifest",
+                 "generated_from": ["pyproject.toml"] if f["filename"] == "uv.lock" else []}
+                for f in observed]
+    mappings.append({"path": workflow, "blob_sha": "f3" * 20,
+                     "role": "workflow", "generated_from": []})
+    dependency_evidence = {
+        "complete": True, "files": mappings,
+        "consumers": [{"id": "uv", "kind": "install", "files": inputs,
+                       "entrypoints": [workflow], "usage": "uv sync --frozen",
+                       "evidence": "fixture: CI workflow reads pyproject.toml and uv.lock"}],
+        "updates": [{"name": "requests", "requested": "2.32.5", "files": inputs,
+                     "evidence": "fixture: reviewed pin and distribution hashes",
+                     "consumers": [{"consumer": "uv", "resolved": "2.32.5",
+                                    "tested": "2.32.5", "validation": {
+                                        "kind": "local", "head_sha": head,
+                                        "command": "uv run --frozen verify_requests_version.py",
+                                        "result": "success",
+                                        "evidence": "fixture: exact-head install/version assertion"}}]}],
+    }
+    check_evidence = {"complete": True,
+        "basis": {"files": [workflow], "evidence": "fixture: complete workflow trigger review"},
+        "checks": [
+            {"context": "ci/test", "producer_id": CI_APP,
+             "applicability": "applicable", "scope": "source_and_dependencies",
+             "paths": inputs, "reason": "PR runs frozen installation and tests",
+             "evidence": "fixture: workflow and current check run"},
+            {"context": "deploy", "producer_id": CI_APP,
+             "applicability": "excluded", "scope": "source", "paths": inputs,
+             "reason": "deployment is limited to main push events",
+             "evidence": "fixture: deploy job condition reviewed",
+             "exclusion": {"source": f"{workflow}@{'f3' * 20}:deploy.if",
+                           "reason": "this pull_request event does not deploy"}},
+        ]}
     return ev.ClassifierReceipt.for_files(
-        head, files() if file_list is None else file_list,
+        head, observed,
         dependency_only=dependency_only, classifier="test-classifier",
-        at="2026-09-22T00:09:00Z")
+        at="2026-09-22T00:09:00Z", base_sha=BASE,
+        dependency_evidence=dependency_evidence, check_evidence=check_evidence)
 
 
 def authority(mode="automated", **over):
@@ -534,7 +572,8 @@ def test_gated_mode_needs_owner_with_decision_block():
 
 
 def test_owner_hold_and_budget_wait():
-    held = evaluate(auth=authority(owner_hold=True))
+    held = evaluate(auth=authority(owner_hold=True,
+                    owner_hold_source="owner instruction recorded in run authority"))
     assert held.state == State.WAITING and held.reason_code == "K16"
     spent = evaluate(auth=authority(deadline_epoch=NOW - 1))
     assert spent.state == State.WAITING and spent.reason_code == "K14"
@@ -591,14 +630,14 @@ def merged_obs(commit="c" * 40, at="2026-09-22T00:20:00Z"):
 def test_t06_lost_response_restart_retains_hold_then_reconciles(tmp_path):
     store = two_card_run(tmp_path)
     tasking = coord.schedule(store, model="sol", pr_budget_secs=600,
-                             now=1000.0)[0]
+                             now=1000.0, capacity=5, batch_size=10)[0]
     coord.apply_outcome(store, tasking["attempt_id"], [
         {"card_id": "PR-001", "outcome": "unknown",
          "op_note": "merge PUT accepted by transport; response lost"}])
     # Restart: only the JSONL survives.
     store = Store.load(str(tmp_path / "run.jsonl"), session="slice2-coordinator")
     assert store.leases.get("acme/r").state == "quarantined"
-    assert coord.schedule(store) == []  # the hold survives the restart
+    assert coord.schedule(store, capacity=5, batch_size=10) == []  # the hold survives the restart
     try:
         coord.apply_outcome(store, tasking["attempt_id"], [
             {"card_id": "PR-002", "outcome": "merged", "commit_sha": "d" * 40,
@@ -615,7 +654,7 @@ def test_t06_lost_response_restart_retains_hold_then_reconciles(tmp_path):
     assert store.leases.get("acme/r").state == "released"
     dead = store.diary[tasking["attempt_id"]]
     assert dead.result == "crashed" and dead.outstanding == ["PR-002"]
-    retry = coord.schedule(store, model="terra", now=1500.0)
+    retry = coord.schedule(store, model="terra", now=1500.0, capacity=5, batch_size=10)
     assert retry == [{"attempt_id": "AGT-001.2", "repo_id": "acme/r",
                       "card_ids": ["PR-002"]}]
     assert store.diary["AGT-001.1"].successor == "AGT-001.2"
@@ -624,7 +663,7 @@ def test_t06_lost_response_restart_retains_hold_then_reconciles(tmp_path):
 
 def test_reconcile_ambiguous_merged_observation_keeps_quarantine(tmp_path):
     store = two_card_run(tmp_path)
-    attempt = coord.schedule(store)[0]["attempt_id"]
+    attempt = coord.schedule(store, capacity=5, batch_size=10)[0]["attempt_id"]
     coord.apply_outcome(store, attempt, [
         {"card_id": "PR-001", "outcome": "unknown", "op_note": "lost"},
         {"card_id": "PR-002", "outcome": "unknown", "op_note": "lost too"}])
@@ -641,7 +680,7 @@ def test_reconcile_ambiguous_merged_observation_keeps_quarantine(tmp_path):
 
 def test_reconcile_restores_unknown_card_observed_unmerged(tmp_path):
     store = two_card_run(tmp_path)
-    attempt = coord.schedule(store)[0]["attempt_id"]
+    attempt = coord.schedule(store, capacity=5, batch_size=10)[0]["attempt_id"]
     coord.apply_outcome(store, attempt, [
         {"card_id": "PR-001", "outcome": "unknown", "op_note": "lost"},
         {"card_id": "PR-002", "outcome": "merged", "commit_sha": "d" * 40,
@@ -651,7 +690,7 @@ def test_reconcile_restores_unknown_card_observed_unmerged(tmp_path):
     assert summary["rescheduled"] == ["PR-001"]
     assert summary["resolved"] == ["acme/r"]
     assert store.leases.get("acme/r").state == "free"
-    assert coord.schedule(store)[0]["card_ids"] == ["PR-001"]
+    assert coord.schedule(store, capacity=5, batch_size=10)[0]["card_ids"] == ["PR-001"]
 
 
 def test_successor_chain_and_replay_uniqueness(tmp_path):
@@ -674,21 +713,21 @@ def test_successor_chain_and_replay_uniqueness(tmp_path):
 
 def test_ready_cards_are_rescheduled_for_merge(tmp_path):
     store = two_card_run(tmp_path)
-    attempt = coord.schedule(store)[0]["attempt_id"]
+    attempt = coord.schedule(store, capacity=5, batch_size=10)[0]["attempt_id"]
     coord.apply_outcome(store, attempt, [
         {"card_id": "PR-001", "outcome": "ready", "reason_line": "inspect",
          "head_sha": "a" * 40,
          "evidence": [{"id": "EV-1"}]},
         {"card_id": "PR-002", "outcome": "merged", "commit_sha": "d" * 40,
          "merged_at": "2026-09-22T00:21:00Z"}])
-    assert coord.schedule(store)[0]["card_ids"] == ["PR-001"]
+    assert coord.schedule(store, capacity=5, batch_size=10)[0]["card_ids"] == ["PR-001"]
 
 
 # --- P12: who records supersession ---
 
 def test_worker_closed_after_coordinator_supersession_is_idempotent(tmp_path):
     store = two_card_run(tmp_path)
-    attempt = coord.schedule(store)[0]["attempt_id"]
+    attempt = coord.schedule(store, capacity=5, batch_size=10)[0]["attempt_id"]
     replacement = coord.register_replacement(store, "PR-001", {
         "org": "acme", "repo": "r", "number": 3, "title": "redo"})
     coord.apply_outcome(store, attempt, [
@@ -740,7 +779,7 @@ TEMPLATE = SCRIPTS.parent / "templates" / "agent-brief.md"
 def tasked_store(tmp_path, mode="automated"):
     store = two_card_run(tmp_path, run_id="RUN-PROTO")
     tasking = coord.schedule(store, model="sol", pr_budget_secs=600,
-                             now=1000.0)[0]
+                             now=1000.0, capacity=5, batch_size=10)[0]
     return store, tasking
 
 

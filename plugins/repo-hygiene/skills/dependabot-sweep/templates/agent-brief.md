@@ -1,6 +1,6 @@
 # Subagent brief — one repo of a dependabot-sweep
 
-Rendered by `scripts/sweep_protocol.py` (`render_brief`) from one Tasking
+Rendered by `{{PROTOCOL}}` (`render_brief`) from one Tasking
 record. Every double-brace placeholder is filled by the coordinator; the
 renderer refuses to emit a brief with any placeholder left, so the agent
 never sees one.
@@ -26,6 +26,8 @@ Authority for this attempt (exact; never widen it):
 - scope: {{SCOPE}}
 - merge allowed: {{MERGE_ALLOWED}}; approved: {{APPROVED}}
 - owner hold: {{HOLDS}} (a held PR is evaluated and reported, never merged)
+- owner-hold sources: {{HOLD_SOURCES}}. Missing provenance remains an evidence
+  gap; never invent an owner instruction or lift a recorded hold yourself.
 - reviewer status contexts: {{REVIEWER_CONTEXTS}} (use these identities when
   distinguishing reviewer outages from CI failures)
 - repairs permitted: {{REPAIRS}}. Each repair (`branch_update`,
@@ -49,6 +51,12 @@ Five checks, in this order, for every PR at one pinned head:
    check-runs, check suites, statuses, queue, effective policy), every
    section bound to the head. The classifier receipt must match that head
    and file set. Truncated or unreadable evidence is K13, never a pass.
+   Identify every affected manifest, lock and generated export, its actual
+   installation or fixture consumers, and requested/resolved/tested versions.
+   A passing frozen-lock test does not validate a separate requirements
+   installer. A path name alone does not establish fixture use. Supply the
+   complete receipt described in `{{DEPENDENCY_EVIDENCE}}`; never fabricate
+   coverage from a green status.
 2. Did no one lose track? Evaluate only under your lease. A quarantined
    repository is never evaluated for merge; report and stop.
 3. Is it green? Complete effective policy (branch protection plus branch
@@ -57,6 +65,9 @@ Five checks, in this order, for every PR at one pinned head:
    change requests, required approvals, and threads clear;
    `mergeable_state` clean; not in a merge queue. A reviewer bot's own
    rate limit is reviewer-unavailable, never CI red.
+   Record relevant check applicability and its source. A documented exclusion
+   can explain a missing analysis; unexplained missing coverage remains a
+   hold. No classification claim waives a required check or producer.
 4. Allowed? Mode, approval, owner hold, dependency-only receipt, budget.
 5. Did it actually merge? After any merge attempt, GET the PR again:
    `merged` with merge commit and timestamp is MERGED; anything else is
@@ -88,10 +99,19 @@ Transport rules:
   confidence. Every one of these still holds the PR: CI is never waived.
   Then `ci-fix` with the PR's remaining budget.
 - No foreground `sleep` over 30 seconds. Never wait on one call twice.
+- Before starting a repair, preserve enough of its remaining deadline for the
+  required post-push validation. Call `plan_repair(expected_secs, now,
+  deadline_epoch, reserve_secs)` from `{{PATIENCE}}`, estimating both the repair
+  and validation from the actual commands or prior runs. Proceed only on
+  `decision: repair`; its `repair_until` reserves the validation window.
+  Report the next action if it does not fit. Never extend the inherited deadline.
 
-Return exactly one outcome record per assigned PR as JSON lines, nothing
-else. The coordinator refuses a batch with a missing field, so fill every
-field from evidence:
+Return exactly one outcome record per assigned PR over the life of this
+attempt, as JSON lines. Send completed records incrementally or in one final
+batch; do not repeat an already returned card. A partial batch leaves the
+remaining cards and the repository lease with this attempt. The coordinator
+validates every submitted batch before applying any record and refuses missing
+required fields, so fill each field from evidence:
 
 - `{"card_id": "PR-001", "outcome": "merged", "commit_sha": "<40 hex>", "merged_at": "<ISO 8601>"}`
 - `{"card_id": "PR-001", "outcome": "ready", "head_sha": "<40 hex>", "reason_line": "...", "evidence": [{"id": "EV-...", "what": "...", "establishes": "..."}]}`
@@ -105,3 +125,13 @@ full evaluated `head_sha`. Include that field on a hold only when the identity
 check passed; omit it when observation or classification could not establish
 the head. Collection saves the evaluated head and revokes approvals for other
 heads. The next attempt then receives that head in its assigned card.
+
+Include any follow-up discovered during or after a merge in the same return,
+using the record contract in `{{REPORTING_REFERENCE}}`.
+State its repository, problem, cause or attribution uncertainty, status,
+recommendation, responsible party and evidence. Record external issue links
+only when an issue was actually filed. Preserve completed repair evidence;
+distinguish the remaining technical conditions from the reason execution
+stopped. An explicit owner hold must cite the instruction that imposed it.
+Group a common disposition across related PRs while retaining all their
+identities and keeping closure, settings and merge authority separate.

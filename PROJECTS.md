@@ -2327,3 +2327,29 @@ handoff in a context paragraph and repeated facts inside the options.
 - [x] [P61-TS03] Blind grading of cases 26–30 on the released skill (P59/P60 follow-up)
       Result: after 5/7 pass (26, 27, 30, 5, 11); 28 fails on an unlabeled inference, 29 on length. Before 2/7.
 
+## [x] Project P62: Dependabot sweep reporting, follow-ups and bounded execution (repo-hygiene 0.17.0 → 0.18.0)
+
+**Purpose:** Turn sweep results into a complete saved and inline report, with
+actionable recommendations for every unresolved PR and follow-up. The public
+repository sweep exposed ambiguous counts, unsupported owner-hold labels,
+dependency-consumer gaps, expired work admission and late discovery.
+
+**Scope:** Seven accepted changes: complete delivery; durable follow-up
+lifecycle; separate technical conditions, execution stops and owner decisions;
+dependency/check applicability evidence; bounded scheduling; complete accounting
+and incremental discovery; accurate partial-return instructions. Preserve the
+existing exact-commit merge gates, one repository executor, durable recovery,
+quarantine and inherited deadlines. Open-PR repairs are a separate workstream.
+
+- [x] [P62-T01] Complete renderer and matching saved/inline delivery, including closures, replacements, late arrivals and recommendations
+- [x] [P62-T02] Extend incidents and current-condition records, preserving history and sourced owner holds
+- [x] [P62-T03] Bound admission by capacity, batch size and remaining time; support scoped discovery and read-only evidence refresh
+- [x] [P62-T04] Require consumer/version/check evidence in classifier receipts without waiving required checks
+- [x] [P62-T05] Refresh skill, worker brief, CLI reference, user docs and generated plugin metadata
+- [x] [P62-TS01] Focused behavior tests, old-journal replay and complete saved campaign report acceptance
+- [x] [P62-TS02] Independent task reviews, integration review, skill-quality/load checks and full repository validation
+
+P62 validation: 1,122 tests passed, 4 skipped; generated manifests checked.
+Independent integration review passed. The archived 36-PR report replay and
+fresh Claude/Codex simulated-report delivery passed. These implementation checks
+precede PR delivery; installation synchronization and release remain separate actions.

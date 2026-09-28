@@ -136,6 +136,12 @@ class Card:
     action_owner: str = ""
     resume_trigger: str = ""
     decision: dict = field(default_factory=dict)
+    # Current evaluated conditions are distinct from why execution stopped.
+    # Receipts and prior-head conditions stay available after a later outcome.
+    blockers: list = field(default_factory=list)
+    execution_stop: dict = field(default_factory=dict)
+    owner_hold: dict = field(default_factory=dict)
+    condition_history: list = field(default_factory=list)
     replaces: str = ""
     replaced_by: str = ""
     issue_ids: list = field(default_factory=list)
@@ -145,6 +151,11 @@ class Card:
     created_at: str = ""
     updated_at: str = ""
     last_observation: str = ""
+    # GitHub creation and first discovery are distinct from card creation.
+    pr_created_at: str = ""
+    discovered_at: str = ""
+    # Read-only facts never replace the evaluated head or worker outcome.
+    latest_observation: dict = field(default_factory=dict)
     # Absolute per-PR deadline, set when first scheduled. Successor
     # attempts inherit it: handoffs and retries never reset the clock.
     deadline_epoch: float = 0.0
@@ -268,6 +279,8 @@ class RunHeader:
     # by it and no handoff or retry resets it.
     deadline_epoch: float = 0.0
     discovery_complete: bool = True
+    # Latest explicit inventory, bound to its coverage and selected scope.
+    discovery_snapshot: dict = field(default_factory=dict)
     # Who continues after this pass: {"kind": watcher|scheduled|none,
     # "ref": ..., "verified_at": ...}. Empty means none.
     continuation: dict = field(default_factory=dict)
@@ -317,8 +330,12 @@ class Lease:
 
 @dataclass
 class Issue:
-    """One shared incident, such as a baseline failure on a base revision.
-    Every PR it blocks links the same issue id instead of repeating it."""
+    """One durable incident or follow-up, including findings after a merge.
+
+    External references describe recorded links; recording this model never
+    files an issue or grants repair, closure, settings, or merge authority.
+    New fields default so journals written before follow-ups still replay.
+    """
 
     id: str
     key: str
@@ -329,6 +346,16 @@ class Issue:
     action: str = ""
     action_owner: str = ""
     created_at: str = ""
+    target: str = ""
+    kind: str = "incident"
+    status: str = "open"
+    attribution: str = "unknown"
+    attribution_note: str = ""
+    evidence: list = field(default_factory=list)
+    external_links: list = field(default_factory=list)
+    updated_at: str = ""
+    resolved_at: str = ""
+    history: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -336,7 +363,12 @@ class Issue:
     @classmethod
     def from_dict(cls, data: dict) -> "Issue":
         known = {f.name for f in cls.__dataclass_fields__.values()}
-        return cls(**{k: v for k, v in data.items() if k in known})
+        values = {k: v for k, v in data.items() if k in known}
+        # Journal envelopes reserve `kind`; model dictionaries use it for
+        # incident/follow-up classification. Old issue events have no subtype.
+        if data.get("kind") == "issue":
+            values["kind"] = data.get("issue_kind", "incident")
+        return cls(**values)
 
 
 class RepoLocks:
@@ -800,7 +832,9 @@ class Store:
     @_serialized_write
     def record_issue(self, issue: Issue) -> None:
         self.issues[issue.id] = issue
-        self._append("issue", issue.to_dict())
+        payload = issue.to_dict()
+        payload["issue_kind"] = payload.pop("kind")
+        self._append("issue", payload)
 
     @_serialized_write
     def record_ids(self) -> None:

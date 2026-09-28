@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import time
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
@@ -20,9 +21,12 @@ import sweep_patience as patience  # noqa: E402
 import sweep_protocol as proto  # noqa: E402
 import sweep_report as report  # noqa: E402
 from sweep_core import State, Store  # noqa: E402
+from test_sweep_slice2 import receipt as dependency_receipt_fixture  # noqa: E402
 
 OLD_HEAD = "a" * 40
 HEAD = "b" * 40
+BASE = "d" * 40
+CI_APP = 15368
 
 
 def section(data):
@@ -32,23 +36,51 @@ def section(data):
 def observation(head=HEAD):
     return ev.Observation(
         head_sha=head, observed_at="2026-09-27T08:00:00Z",
-        pull=section({"state": "open", "merged": False, "draft": False,
-                      "head": {"sha": head}, "base": {"ref": "main"},
+        pull=section({"number": 1, "state": "open", "merged": False, "draft": False,
+                      "head": {"sha": head}, "base": {"ref": "main", "sha": BASE,
+                                                        "repo": {"full_name": "acme/r"}},
                       "mergeable": True, "mergeable_state": "clean"}),
         files=section([{"filename": "uv.lock", "sha": "c" * 40,
                         "status": "modified", "changes": 2}]),
         reviews=section([]), threads=section([]),
-        check_runs=section({"total_count": 0, "check_runs": []}),
+        check_runs=section({"total_count": 1, "check_runs": [
+            {"id": 1, "name": "ci/test", "status": "completed",
+             "conclusion": "success", "head_sha": head, "app": {"id": CI_APP}}]}),
         check_suites=section({}),
         statuses=section({"statuses": [], "total_count": 0, "sha": head}),
         queue=section({}), policy=ev.EffectivePolicy())
 
 
+def classifier_receipt(obs):
+    """The reviewed lock-only update retains its manifest and install consumer.
+
+    The independent install/version assertion is the shared fixture's local
+    validation. The required-producer regression varies only GitHub's check
+    versus status transport; the receipt never supplies an app-bound waiver.
+    """
+    receipt = dependency_receipt_fixture(head=obs.head_sha)
+    receipt.dependency_evidence["files"][1]["blob_sha"] = "c" * 40
+    receipt.dependency_evidence["updates"][0]["files"] = ["uv.lock"]
+    receipt.check_evidence["checks"] = receipt.check_evidence["checks"][:1]
+    if not obs.check_runs["data"]["check_runs"]:
+        receipt.check_evidence["checks"][0].update(
+            producer_id=None,
+            proof={"kind": "status", "head_sha": obs.head_sha,
+                   "creator": "unattributed-bot", "target_url": "https://ci.example/runs/1",
+                   "evidence": "fixture: current successful commit status and creator"})
+    return replace(receipt, base_sha=BASE,
+                   files_digest=ev.files_digest(obs.files["data"]), file_count=1,
+                   classifier="boundary-regression", at=obs.observed_at)
+
+
+def receipt_path(tmp_path, observed):
+    path = tmp_path / "classifier-receipt.json"
+    path.write_text(json.dumps(asdict(classifier_receipt(observed))))
+    return str(path)
+
+
 def evaluate(obs, mode="automated"):
-    receipt = ev.ClassifierReceipt.for_files(
-        obs.head_sha, obs.files["data"], dependency_only=True,
-        classifier="boundary-regression", at=obs.observed_at)
-    return ev.evaluate(obs, receipt, ev.Authority(mode=mode),
+    return ev.evaluate(obs, classifier_receipt(obs), ev.Authority(mode=mode),
                        ev.Tracking(lease_held=True), now=1_800_000_000)
 
 
@@ -62,9 +94,10 @@ def test_required_producer_cannot_be_satisfied_by_commit_status(
         producer, run_app, expected):
     obs = observation()
     obs.policy.required_checks = [ev.RequiredCheck("ci/test", producer)]
-    obs.statuses = section({"statuses": [
+    obs.statuses = section({"sha": HEAD, "total_count": 1, "statuses": [
         {"context": "ci/test", "state": "success",
-         "creator": {"login": "unattributed-bot"}}]})
+         "creator": {"login": "unattributed-bot"}, "target_url": "https://ci.example/runs/1"}]})
+    obs.check_runs = section({"total_count": 0, "check_runs": []})
     if run_app is not None:
         obs.check_runs = section({"total_count": 1, "check_runs": [
             {"id": 1, "name": "ci/test", "status": "completed",
@@ -140,7 +173,7 @@ def test_linked_replacement_appears_in_human_and_json_approval(
 def test_valid_identity_outcomes_carry_the_evaluated_head(kind, expected):
     obs = observation()
     if kind == "waiting":
-        obs.statuses = section({"statuses": [
+        obs.statuses = section({"sha": HEAD, "total_count": 1, "statuses": [
             {"context": "ci/test", "state": "pending"}]})
     result = evaluate(obs, "gated" if kind == "needs_owner" else "automated")
     assert result.state == expected
@@ -177,12 +210,13 @@ def test_cli_approval_is_bound_to_explicit_or_legacy_saved_head(
     store.set_header(store.header)
     attempt = coord.schedule(store)[0]["attempt_id"]
     input_path = tmp_path / "observation.json"
-    input_path.write_text(json.dumps(observe.observation_to_dict(observation())))
+    observed = observation()
+    input_path.write_text(json.dumps(observe.observation_to_dict(observed)))
+    classified = receipt_path(tmp_path, observed)
     before = Path(store.path).read_bytes()
     code = cli.main(["--store", store.path, "--session", "boundary", "pr",
                      "evaluate", "PR-001", "--file", str(input_path),
-                     "--attempt", attempt, "--dependency-only",
-                     "--classifier", "boundary-regression", "-o", "json"])
+                     "--attempt", attempt, "--receipt", classified, "-o", "json"])
     captured = capsys.readouterr()
     assert code == 0, captured.err
     result = json.loads(captured.out)
@@ -304,9 +338,11 @@ def test_exact_approval_blocks_old_head_transport_then_survives_new_head_collect
                 "transport_called": False}
 
     input_path = tmp_path / "new-observation.json"
-    input_path.write_text(json.dumps(observe.observation_to_dict(observation())))
+    observed = observation()
+    input_path.write_text(json.dumps(observe.observation_to_dict(observed)))
+    classified = receipt_path(tmp_path, observed)
     result = cli_json([*args, "pr", "evaluate", "PR-001", "--attempt", attempt,
-                       "--file", str(input_path), "--dependency-only",
+                       "--file", str(input_path), "--receipt", classified,
                        "-o", "json"], capsys)
     assert result["evaluation"]["state"] == "READY"
     coord.apply_outcome(store, attempt, [result["outcome"]])
