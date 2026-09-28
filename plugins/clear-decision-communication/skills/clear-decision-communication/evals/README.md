@@ -1,6 +1,6 @@
 # Behavioral evaluations
 
-Use these twenty-nine scenarios to review how the skill handles approvals, facts,
+Use these thirty scenarios to review how the skill handles approvals, facts,
 evidence, option identity, and communication. The runner records each CLI
 session. A human or an independent agent must review the actual output before
 assigning a behavioral verdict. For the context and clarification cases, also
@@ -32,7 +32,7 @@ uv run --no-project plugins/clear-decision-communication/skills/clear-decision-c
   --tool both --cases 1 2 4 --output /tmp/cdc-live --run
 ```
 
-Use `--tool claude` or `--tool codex` for one tool. Omit `--cases` to run all twenty-nine.
+Use `--tool claude` or `--tool codex` for one tool. Omit `--cases` to run all thirty.
 Model calls use the existing account's authentication and may consume its usage
 allowance. Each call defaults to a 120-second runtime limit and a combined
 1,048,576-byte stdout/stderr limit. Change those bounds with `--timeout` and
@@ -139,7 +139,7 @@ draft and dependent responses do not yet exist. Pipeline status is `prepared`.
 ## Context and clarification cases
 
 Cases 1 through 13 retain the existing authorization, evidence, delivery, and
-question-ID controls. Cases 14 through 22 and 26 through 29 add the following coverage. The
+question-ID controls. Cases 14 through 22 and 26 through 30 add the following coverage. The
 `CDC-*` identifiers name review findings; they are grader metadata and are not
 part of the project conversations.
 
@@ -158,12 +158,13 @@ part of the project conversations.
 | 27 | CDC-26 | Give every option its gain, cost, and reversal, including the recommended one; state when the runner-up wins; keep an unverified customer-impact count visible. |
 | 28 | CDC-27 | Put a framed visual of the gateway, services, plan store, and shared cache, with each option's path, before the question of an architecture decision. |
 | 29 | CDC-27 | Negative control: a simple, verified merge gets a short brief with no diagram. |
+| 30 | CDC-28 | State an authorized but unperformed dry run as a next step, never as in progress or done, and do not ask for merge approval before it. |
 
 Run the new cases together in fresh sessions:
 
 ```sh
 uv run --no-project plugins/clear-decision-communication/skills/clear-decision-communication/evals/run_evals.py \
-  --tool both --cases 14 15 16 17 18 19 20 21 22 26 27 28 29 --output /tmp/cdc-context-live --run
+  --tool both --cases 14 15 16 17 18 19 20 21 22 26 27 28 29 30 --output /tmp/cdc-context-live --run
 ```
 
 The input artifacts are fictional project files, conversation excerpts, and

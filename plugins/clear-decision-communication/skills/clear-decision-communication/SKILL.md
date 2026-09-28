@@ -103,7 +103,7 @@ the output is the brief for that target.
 
    | ID | Tier | Fires when | Prepare | The initial view holds | Length signal |
    |---|---|---|---|---|---|
-   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 80 words |
+   | T1 | Confirm | all six rated axes low, such as a required gate on an on-plan, verified, reversible change | the prepared result and its verification, nothing more | a self-contained question, the full recommendation or explicit neutrality, and concise options with consequences | about 100 words |
    | T2 | Compact brief | any axis elevated, none high | facts resolved, verification run, the strongest alternative prepared | grounding L1 and L2 when needed, question, full recommendation or neutrality, complete option list with each option's gain and cost, the runner-up condition, relevant evidence or comparison, and exact reply | about 250 words, excluding grounding and diagrams |
    | T3 | Full brief | any axis high | plus a prototype or experiment where authorized, a correctness argument, and decision sensitivity | every applicable section, grounding L1 to L3, the representation the change type requires, and a details pointer when supporting material exists | about 500 words, excluding grounding and diagrams |
 
@@ -292,6 +292,10 @@ the output is the brief for that target.
      action separately for each choice: deferring a policy leaves it open;
      a shared closing sentence must not imply that every answer approves work.
      The reader knows how to reply.
+   - Only actions that have actually happened are reported as done or in
+     progress. An authorized action not yet performed is a next step
+     ("Next, I will run the dry run"), never present progressive ("I'm
+     running it now") and never given a result.
    - The brief passes the four reader gates in `references/clarity.md` and
      applies its error catalog.
 
@@ -360,7 +364,17 @@ Rendering by tier:
 
 - **T1** keeps the question, gate, checked result, supported recommendation or
   explicit neutrality, and concise options with consequences. Do not add
-  sections whose content is already clear. For example, sent as ordinary text:
+  sections whose content is already clear. A T1 has five parts: the question
+  line, which names the change and its purpose; the check and the gate, in
+  one or two sentences; the recommendation sentence; the options; and the reply line.
+  Do not restate the handoff in a context paragraph. Give each option its
+  action, what I do now, its effect, and its reversal in short clauses, as in
+  the example below; do not repeat facts the question line already states. The
+  reply line is "Reply with A or B." Add one sentence for an approval
+  boundary only when the handoff or a policy establishes that boundary;
+  otherwise omit it. Past about 120 words, cut repeated facts and any claim
+  the handoff does not support, then rerun the removal test before sending.
+  For example, sent as ordinary text:
 
   ```
   Q1. Merge PR #142, the fix that stops Tab from moving keyboard focus behind the search dialog?
@@ -368,8 +382,8 @@ Rendering by tier:
   CONTRIBUTING.md requires a human to approve every merge.
   I recommend merging the fix, because it implements the approved change without deviation (Q1.A).
 
-  - Q1.A (Recommended) Merge PR #142. I merge it now, and it ships with the next deploy. Undoing it takes a revert PR and a redeploy. No stored data changes.
-  - Q1.B Hold PR #142. It stays open and unmerged. I continue with the other planned work.
+  - Q1.A (Recommended) Merge PR #142. I merge it as soon as you reply. Undoing it takes a revert PR. No stored data changes.
+  - Q1.B Hold PR #142. It stays open and unmerged, and you can approve the merge later. I continue with the other planned work.
 
   Reply with A or B.
   ```
@@ -445,6 +459,7 @@ wording.
 
 | Thought | Reality |
 |---|---|
+| "I'm running it now" | Say so only after starting it. An action you have not performed is a next step: "Next, I will run it." Never report a result you have not observed. |
 | "The user knows the plan; 'Approve Phase 2?' is enough" | Connect the goal to the exact artifact and its role, then state what answering changes now. |
 | "It is a quick yes or no" | Yes and No hide the consequence. Options name what happens: "Merge" and "Hold". |
 | "I will assume yes and keep going" | Silence grants no authority. A stated fallback can pause, defer, or perform already-authorized work; skip selects none of it. |
