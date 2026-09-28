@@ -12,4 +12,8 @@ gen-check:
 test:
     uv run pytest
 
-all: gen-check test
+# fail if a pre-rename repo name appears in a live file
+check-names:
+    bash scripts/check-no-old-name.sh
+
+all: gen-check test check-names

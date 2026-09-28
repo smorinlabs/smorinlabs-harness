@@ -283,7 +283,7 @@ For an x64 guest, replace `ARM64` with `X64`. Keep the selector specific and ver
 For the protected helper's exclusive registration, use only its actual custom
 label list. A `ci-fix` workflow takes that JSON label list and the selected tests
 through the
-[Windows diagnostic contract](https://github.com/smorinlabs/smorinlabs-harness/blob/main/plugins/repo-hygiene/skills/ci-fix/references/windows-runners.md).
+[Windows diagnostic contract](https://github.com/smorinlabs/smorinlabs-skills/blob/main/plugins/repo-hygiene/skills/ci-fix/references/windows-runners.md).
 Verify the job's actual OS/process architecture and non-administrator token;
 the label name alone supplies none of those observations.
 

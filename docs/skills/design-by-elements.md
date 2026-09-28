@@ -26,12 +26,12 @@ that keeps looping. NOT general feature/product brainstorming (that's
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | You just want to use it | `/plugin install design-by-elements@smorinlabs-harness` |
-| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/design-by-elements/skills/design-by-elements" ~/.claude/skills/design-by-elements` |
+| Plugin (recommended) | You just want to use it | `/plugin install design-by-elements@smorinlabs-skills` |
+| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/design-by-elements/skills/design-by-elements" ~/.claude/skills/design-by-elements` |
 | Direct copy | No marketplace access | copy `plugins/design-by-elements/skills/design-by-elements/` into `~/.claude/skills/` |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
+(`[marketplaces.smorinlabs-skills]`) and enable the plugin — or use the
 dev-symlink path, also linking into `~/.agents/skills` (Codex's current
 skills location).
 

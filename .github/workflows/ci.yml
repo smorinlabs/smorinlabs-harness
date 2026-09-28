@@ -75,6 +75,9 @@ jobs:
             *) echo "::error::personal-path scan failed (exit $status)"; exit "$status" ;;
           esac
 
+      - name: No live references to the pre-rename repo names
+        run: bash scripts/check-no-old-name.sh
+
       - name: No private-tooling references
         run: |
           needle='skill''smith'

@@ -24,12 +24,12 @@ asked up front.
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | You just want to use it | `/plugin install document-merge@smorinlabs-harness` |
-| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/document-merge/skills/document-merge" ~/.claude/skills/document-merge` |
+| Plugin (recommended) | You just want to use it | `/plugin install document-merge@smorinlabs-skills` |
+| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/document-merge/skills/document-merge" ~/.claude/skills/document-merge` |
 | Direct copy | No marketplace access | copy `plugins/document-merge/skills/document-merge/` into `~/.claude/skills/` |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
+(`[marketplaces.smorinlabs-skills]`) and enable the plugin — or use the
 dev-symlink path, also linking into `~/.agents/skills` (Codex's current
 skills location).
 

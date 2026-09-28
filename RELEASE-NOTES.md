@@ -1,5 +1,35 @@
 # Release Notes
 
+## v0.32.0 — 2026-09-28
+
+### Changed — breaking: the marketplace is now `smorinlabs-skills`
+
+- The repository moved from `smorinlabs/smorinlabs-harness` to
+  `smorinlabs/smorinlabs-skills`, and the marketplace name changed to match.
+  Every plugin id changes from `<plugin>@smorinlabs-harness` to
+  `<plugin>@smorinlabs-skills`. Old GitHub URLs redirect.
+- **Claude Code:** re-add the marketplace under its new name:
+
+  ```
+  /plugin marketplace remove smorinlabs-harness
+  /plugin marketplace add smorinlabs/smorinlabs-skills
+  ```
+
+  Then reinstall each plugin as `<plugin>@smorinlabs-skills`.
+- **Codex:** rename the `[marketplaces.smorinlabs-harness]` table to
+  `[marketplaces.smorinlabs-skills]`, and rename each
+  `[plugins."<plugin>@smorinlabs-harness"]` table to
+  `[plugins."<plugin>@smorinlabs-skills"]`.
+- The sibling private marketplace `smorin-harness` is now `smorin-skills`;
+  links to it were updated.
+- CI now fails if either old repository name appears in a live file
+  (`scripts/check-no-old-name.sh`); dated history keeps the old names.
+- `repo-hygiene` 0.17.0 -> 0.18.0: `dependabot-sweep` saves one complete
+  report and repeats it inline, with a recommendation for every remaining
+  item; records follow-ups durably; separates technical blockers, execution
+  stops, and owner holds; ties dependency receipts to the evaluated PR; and
+  bounds admission by worker capacity, batch size, and deadlines (#94).
+
 ## v0.31.1 — 2026-09-28
 
 ### Changed

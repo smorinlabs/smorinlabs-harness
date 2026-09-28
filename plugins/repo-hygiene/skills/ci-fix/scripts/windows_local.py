@@ -150,7 +150,7 @@ def selected_windows_job(inventory, spec):
 
 def helper(path, *args):
     if not Path(path).is_file():
-        raise Failure("fusion_skill_missing", "install fusion-runner@smorinlabs-harness, then supply --fusion-setup and --fusion-run with its actual skill directories")
+        raise Failure("fusion_skill_missing", "install fusion-runner@smorinlabs-skills, then supply --fusion-setup and --fusion-run with its actual skill directories")
     result = subprocess.run([sys.executable, str(path), *map(str, args), "--json"],
                             capture_output=True, timeout=330, check=False)
     if result.returncode:

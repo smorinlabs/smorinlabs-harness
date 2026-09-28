@@ -24,12 +24,12 @@ research · **Arguments:** none
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | Just use it | `/plugin install guided-research@smorinlabs-harness` |
-| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/guided-research/skills/guided-research" ~/.claude/skills/guided-research` |
+| Plugin (recommended) | Just use it | `/plugin install guided-research@smorinlabs-skills` |
+| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/guided-research/skills/guided-research" ~/.claude/skills/guided-research` |
 | Direct copy | No marketplace access | copy `plugins/guided-research/skills/guided-research/` into `~/.claude/skills/` |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`, source_type local) and enable the
+(`[marketplaces.smorinlabs-skills]`, source_type local) and enable the
 plugin — or dev-symlink into `~/.agents/skills` (Codex's current skills
 location) as well.
 

@@ -34,13 +34,13 @@ but installs a moving CLI, and a stale comment cannot be retracted atomically.
 
 | Mode | Use |
 |---|---|
-| Plugin | Add `/plugin marketplace add smorinlabs/smorinlabs-harness`, then `/plugin install muse-github@smorinlabs-harness` |
-| Development | Clone `https://github.com/smorinlabs/smorinlabs-harness`, then run `ln -s "$(pwd)/smorinlabs-harness/plugins/muse-github/skills/muse-github-setup" ~/.claude/skills/muse-github-setup` from its parent directory |
+| Plugin | Add `/plugin marketplace add smorinlabs/smorinlabs-skills`, then `/plugin install muse-github@smorinlabs-skills` |
+| Development | Clone `https://github.com/smorinlabs/smorinlabs-skills`, then run `ln -s "$(pwd)/smorinlabs-skills/plugins/muse-github/skills/muse-github-setup" ~/.claude/skills/muse-github-setup` from its parent directory |
 | Direct copy | Copy `plugins/muse-github/skills/muse-github-setup/` from the clone into `~/.claude/skills/muse-github-setup/` |
 
 For Codex, use the same development/copy mode with `~/.agents/skills` instead
 of `~/.claude/skills`, or register this repository as the local
-`smorinlabs-harness` marketplace as described in the root README. Installing the
+`smorinlabs-skills` marketplace as described in the root README. Installing the
 skill does not install or activate a workflow in any repository.
 
 ## Example

@@ -22,12 +22,12 @@ three)
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | Just use it | `/plugin install factor-harness@smorinlabs-harness` |
-| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/factor-harness/skills/factor-scan" ~/.claude/skills/factor-scan` |
+| Plugin (recommended) | Just use it | `/plugin install factor-harness@smorinlabs-skills` |
+| Dev symlink | Tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/factor-harness/skills/factor-scan" ~/.claude/skills/factor-scan` |
 | Direct copy | No marketplace access | copy `plugins/factor-harness/skills/factor-scan/` into `~/.claude/skills/` |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`, source_type local) and enable the
+(`[marketplaces.smorinlabs-skills]`, source_type local) and enable the
 plugin — or dev-symlink into `~/.agents/skills` (Codex's current skills
 location) as well.
 

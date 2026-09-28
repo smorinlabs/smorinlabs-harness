@@ -149,12 +149,12 @@ executes, and the report does not claim clean completion.
 
 | Mode | When | How |
 |---|---|---|
-| Plugin (recommended) | You just want to use it | `/plugin install repo-hygiene@smorinlabs-harness` |
-| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-harness` then `ln -s "$(pwd)/smorinlabs-harness/plugins/repo-hygiene/skills/pr-merge-flow" ~/.claude/skills/pr-merge-flow` and `ln -s "$(pwd)/smorinlabs-harness/plugins/repo-hygiene/skills/ci-fix" ~/.claude/skills/ci-fix` |
+| Plugin (recommended) | You just want to use it | `/plugin install repo-hygiene@smorinlabs-skills` |
+| Dev symlink | You want to tweak/iterate | `git clone https://github.com/smorinlabs/smorinlabs-skills` then `ln -s "$(pwd)/smorinlabs-skills/plugins/repo-hygiene/skills/pr-merge-flow" ~/.claude/skills/pr-merge-flow` and `ln -s "$(pwd)/smorinlabs-skills/plugins/repo-hygiene/skills/ci-fix" ~/.claude/skills/ci-fix` |
 | Direct copy | No marketplace access | copy both `plugins/repo-hygiene/skills/pr-merge-flow/` and `plugins/repo-hygiene/skills/ci-fix/` into `~/.claude/skills/`; keep them as siblings for the shared validation references |
 
 **Codex:** register the marketplace in `~/.codex/config.toml`
-(`[marketplaces.smorinlabs-harness]`) and enable the plugin — or use the
+(`[marketplaces.smorinlabs-skills]`) and enable the plugin — or use the
 dev-symlink path, also linking into `~/.agents/skills` (Codex's current
 skills location).
 
