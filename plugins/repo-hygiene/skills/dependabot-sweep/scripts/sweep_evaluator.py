@@ -186,10 +186,12 @@ import hashlib  # noqa: E402
 import os  # noqa: E402
 import re  # noqa: E402
 import sys  # noqa: E402
+from datetime import datetime  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sweep_core import State  # noqa: E402
+from sweep_evidence import latest_runs, validate_evidence  # noqa: E402
 
 SECTIONS = ("pull", "files", "reviews", "threads", "check_runs",
             "check_suites", "statuses", "queue")
@@ -268,12 +270,20 @@ class ClassifierReceipt:
     dependency_only: bool
     classifier: str
     at: str
+    schema_version: int = 1  # old receipts load, but lack v2 analysis
+    base_sha: str = ""
+    dependency_evidence: dict | None = None
+    check_evidence: dict | None = None
 
     @classmethod
     def for_files(cls, head_sha: str, files: list, dependency_only: bool,
-                  classifier: str, at: str) -> "ClassifierReceipt":
+                  classifier: str, at: str, *, base_sha: str = "",
+                  dependency_evidence: dict | None = None,
+                  check_evidence: dict | None = None,
+                  schema_version: int = 2) -> "ClassifierReceipt":
         return cls(head_sha, files_digest(files), len(files or []),
-                   dependency_only, classifier, at)
+                   dependency_only, classifier, at, schema_version, base_sha,
+                   dependency_evidence, check_evidence)
 
 
 @dataclass
@@ -285,6 +295,7 @@ class Authority:
     owner_hold: bool = False
     approved: bool = False
     deadline_epoch: float | None = None
+    owner_hold_source: str = ""
 
 
 @dataclass
@@ -407,7 +418,7 @@ def evaluate(observation: Observation, receipt: ClassifierReceipt,
     result.fingerprint = fingerprint_of(observation)
     steps = (("identity", lambda: _identity(observation, receipt, result)),
              ("tracked", lambda: _tracked(tracking, result)),
-             ("green", lambda: _green(observation, reviewer_contexts,
+             ("green", lambda: _green(observation, receipt, reviewer_contexts,
                                       result)),
              ("allowed", lambda: _allowed(authority, receipt, observation,
                                           now, result)))
@@ -495,7 +506,7 @@ def _identity(obs: Observation, receipt: ClassifierReceipt,
                     f"the evaluated head {head[:12]}")
     if receipt.head_sha != head:
         raise _Hold(State.BLOCKED, "K13",
-                    f"classifier receipt is for head {receipt.head_sha[:12]}, "
+                    f"classifier receipt is for head {str(receipt.head_sha)[:12]}, "
                     f"not the observed head {head[:12]}")
     observed_files = obs.files["data"] or []
     digest = files_digest(observed_files)
@@ -504,6 +515,37 @@ def _identity(obs: Observation, receipt: ClassifierReceipt,
                     f"classifier receipt files digest does not match the "
                     f"observed files ({receipt.file_count} attested, "
                     f"{len(observed_files)} observed)")
+    if type(receipt.schema_version) is not int or receipt.schema_version != 2:
+        raise _Hold(State.BLOCKED, "K13",
+                    "legacy or unsupported classifier receipt lacks current "
+                    "dependency/consumer and check-applicability analysis; "
+                    "refresh a version 2 receipt")
+    if (not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40}", head)
+            or not isinstance(receipt.base_sha, str)
+            or not re.fullmatch(r"[0-9a-f]{40}", receipt.base_sha or "")
+            or receipt.base_sha != (pull.get("base") or {}).get("sha")):
+        raise _Hold(State.BLOCKED, "K13",
+                    "classifier receipt base/head is missing, invalid or stale; "
+                    "refresh analysis at the observed head and base")
+    if (type(receipt.file_count) is not int
+            or receipt.file_count != len(observed_files)
+            or type(receipt.dependency_only) is not bool
+            or not isinstance(receipt.classifier, str) or not receipt.classifier.strip()
+            or not isinstance(receipt.at, str) or not receipt.at.strip()):
+        raise _Hold(State.BLOCKED, "K13", "classifier receipt metadata is malformed")
+    try:
+        inspected_at = datetime.fromisoformat(receipt.at.replace("Z", "+00:00"))
+        if inspected_at.tzinfo is None:
+            raise ValueError("missing timezone")
+    except ValueError as exc:
+        raise _Hold(State.BLOCKED, "K13",
+                    "classifier receipt inspection time must be an ISO8601 "
+                    "timestamp with a timezone") from exc
+    if not isinstance(receipt.dependency_evidence, dict) \
+            or not isinstance(receipt.check_evidence, dict):
+        raise _Hold(State.BLOCKED, "K13",
+                    "classifier receipt lacks dependency/consumer or "
+                    "check-applicability evidence")
     if pull.get("draft"):
         raise _Hold(State.BLOCKED, "K09", "PR is a draft")
     _ev(result.evidence, "identity", f"GET pull at {obs.observed_at}",
@@ -533,17 +575,11 @@ def _tracked(tracking: Tracking, result: Evaluation) -> None:
 # --- Check 3: is it green? -------------------------------------------------
 
 def _latest_runs(check_runs: dict) -> dict:
-    """Latest run per check name: a rerun supersedes its predecessor."""
-    latest: dict = {}
-    for run in (check_runs or {}).get("check_runs", []):
-        name = run.get("name", "")
-        key = (run.get("completed_at") or "", run.get("id") or 0)
-        if name not in latest or key > latest[name][0]:
-            latest[name] = (key, run)
-    return {name: run for name, (_, run) in latest.items()}
+    """Shared execution selection for policy, coverage, and fingerprints."""
+    return latest_runs(check_runs)
 
 
-def _green(obs: Observation, reviewer_contexts: set,
+def _green(obs: Observation, receipt: ClassifierReceipt, reviewer_contexts: set,
            result: Evaluation) -> None:
     head = obs.head_sha
     policy = obs.policy
@@ -565,7 +601,10 @@ def _green(obs: Observation, reviewer_contexts: set,
     statuses = {s.get("context", ""): s
                 for s in (obs.statuses["data"] or {}).get("statuses", [])}
     pending, red, outages, skipped_ok = [], [], [], []
-    for name, run in latest.items():
+    for (name, _), run in latest.items():
+        if run.get("head_sha") != head:
+            raise _Hold(State.BLOCKED, "K13",
+                        f"{name}: no matching-head check run; refresh the observation")
         if run.get("status") != "completed":
             pending.append(name)
             continue
@@ -583,6 +622,9 @@ def _green(obs: Observation, reviewer_contexts: set,
             continue
         red.append(f"{name} ({conclusion})")
     for context, status in statuses.items():
+        if (obs.statuses["data"] or {}).get("sha") != head:
+            raise _Hold(State.BLOCKED, "K13",
+                        f"status {context}: response is not bound to this head")
         state = status.get("state")
         if state == "success":
             continue
@@ -617,7 +659,10 @@ def _green(obs: Observation, reviewer_contexts: set,
                             f"({description or 'no description'}); the PR "
                             f"is correspondingly less reviewed")
     for req in policy.required_checks:
-        run = latest.get(req.context)
+        matches = [run for (context, producer), run in latest.items()
+                   if context == req.context and (
+                       req.producer_id is None or producer == req.producer_id)]
+        run = matches[0] if matches else None
         status = statuses.get(req.context)
         if req.producer_id is not None and (
                 run is None
@@ -625,14 +670,15 @@ def _green(obs: Observation, reviewer_contexts: set,
             raise _Hold(State.WAITING, "K01",
                         f"required check {req.context} has no run from the "
                         f"required producer (app {req.producer_id})")
-        if run is None and status is not None and status.get("state") == "success":
-            continue
         if run is None:
-            if status is None or status.get("state") != "pending":
+            if status is None:
                 raise _Hold(State.WAITING, "K01",
                             f"required check {req.context} has no run on "
                             f"this head yet")
-            continue  # pending status, reported below
+            # The current status is already classified above. Do not turn
+            # a reported failure into a missing-run wait. An app-bound
+            # requirement has already required its matching run producer.
+            continue
     if red:
         raise _Hold(State.BLOCKED, "K04",
                     f"applicable check failed on head {head[:12]}: "
@@ -641,6 +687,24 @@ def _green(obs: Observation, reviewer_contexts: set,
     if pending:
         raise _Hold(State.WAITING, "K01",
                     f"checks pending: {', '.join(sorted(pending))}")
+    try:
+        coverage, involved = validate_evidence(receipt, obs, reviewer_contexts)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise _Hold(State.BLOCKED, "K13",
+                    f"dependency/check analysis incomplete: {exc}",
+                    action="Review every affected installation consumer and "
+                           "the applicable checks at this head/base. Supply "
+                           "the missing evidence; do not infer coverage from "
+                           "green unrelated checks.") from exc
+    if receipt.dependency_only and involved:
+        raise _Hold(State.BLOCKED, "K09",
+                    "changed fixture/source/config files require ordinary "
+                    f"review, not dependency-only treatment: {', '.join(involved)}",
+                    action_owner="pr-merge-flow",
+                    action="Review the actual file usage and recommend its "
+                           "disposition through pr-merge-flow. Fixture usage "
+                           "alone is not an owner veto or runtime security fix.",
+                    resume_trigger="ordinary review complete")
     reviews = obs.reviews["data"] or []
     decisive: dict = {}
     for item in sorted(reviews, key=lambda r: r.get("submitted_at", "")):
@@ -690,6 +754,8 @@ def _green(obs: Observation, reviewer_contexts: set,
         f"; {approvals} approval(s); 0 unresolved threads; "
         f"mergeable_state clean; policy sources {policy.sources or ['none']}",
         head)
+    for what, establishes in coverage:
+        _ev(result.evidence, "green", what, establishes, head)
 
 
 # --- Check 1: allowed? -----------------------------------------------------
@@ -697,10 +763,17 @@ def _green(obs: Observation, reviewer_contexts: set,
 def _allowed(authority: Authority, receipt: ClassifierReceipt,
              obs: Observation, now: float, result: Evaluation) -> None:
     head = obs.head_sha
-    if authority.deadline_epoch is not None and now > authority.deadline_epoch:
+    if authority.deadline_epoch is not None and now >= authority.deadline_epoch:
         raise _Hold(State.WAITING, "K14", "per-PR budget exhausted")
     if authority.owner_hold:
-        raise _Hold(State.WAITING, "K16", "owner hold in effect")
+        if not isinstance(authority.owner_hold_source, str) \
+                or not authority.owner_hold_source.strip():
+            raise _Hold(State.BLOCKED, "K13",
+                        "claimed owner hold has no recorded source; establish "
+                        "the actual authority instead of assuming an owner veto")
+        raise _Hold(State.WAITING, "K16", "owner hold in effect",
+                    decision={"source": authority.owner_hold_source,
+                              "why": "explicit owner hold"})
     if not receipt.dependency_only:
         raise _Hold(State.BLOCKED, "K09",
                     "diff is not dependency-only per the classifier; involved "
@@ -719,6 +792,7 @@ def _allowed(authority: Authority, receipt: ClassifierReceipt,
                     f"eligible at head {head[:12]}; gated mode requires "
                     f"your approval to merge",
                     decision={
+                        "source": "saved authority: mode=gated",
                         "why": "gated mode: every merge needs an explicit "
                                "owner approval",
                         "approve_effect": f"merge at head {head[:12]} via "
@@ -778,9 +852,13 @@ def fingerprint_of(obs: Observation) -> dict:
         "unresolved_threads": tuple(sorted(
             t.get("id", "?") for t in threads if not t.get("isResolved"))),
         "check_states": tuple(sorted(
-            (name, run.get("status"), run.get("conclusion"))
-            for name, run in latest.items())),
-        "statuses": tuple(sorted((s.get("context", ""), s.get("state"))
+            ((name, run.get("status"), run.get("conclusion"), run.get("id"),
+              run.get("head_sha"), producer)
+             for (name, producer), run in latest.items()),
+            key=lambda row: (row[0], str(row[-1])))),
+        "statuses": tuple(sorted((s.get("context", ""), s.get("state"),
+                                   (s.get("creator") or {}).get("login"),
+                                   s.get("target_url"))
                                  for s in statuses)),
         "reviews": tuple(sorted(decisive.items())),
         "mergeable_state": pull.get("mergeable_state"),

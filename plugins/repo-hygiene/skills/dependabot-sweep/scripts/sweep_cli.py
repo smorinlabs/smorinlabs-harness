@@ -23,6 +23,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -32,6 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gh_merge  # noqa: E402
 import sweep_config as cfg  # noqa: E402
 import sweep_coordinator as coord  # noqa: E402
+import sweep_discovery as discovery_evidence  # noqa: E402
 import sweep_evaluator as ev  # noqa: E402
 import sweep_observe as observe  # noqa: E402
 import sweep_patience as patience  # noqa: E402
@@ -182,10 +184,25 @@ def build_parser() -> Parser:
                    help="discovery instant (default: now)")
     p.add_argument("--authorization", metavar="TEXT",
                    help="the user's authorizing words or record id")
+    p.add_argument("--org", action="append", default=[], metavar="OWNER",
+                   help="explicit owner discovery scope (repeatable; config restrictions still apply)")
+    p.add_argument("--repo", action="append", default=[], metavar="OWNER/REPO",
+                   help="explicit repository scope (repeatable)")
+    p.add_argument("--exclude", action="append", default=[], metavar="IDENTITY",
+                   help="exclude an owner, owner/repo, owner/repo#PR, or PR URL (repeatable)")
+    p = verb(run_verbs, "discover",
+             "Record a timestamped inventory and incremental arrivals using frozen scope authority.",
+             f"  {TOOL} --store run.jsonl run discover --file inventory.json -o json")
+    p.add_argument("--file", required=True, metavar="PATH",
+                   help="JSON observed_at, complete, coverage, scope_repositories, repositories, "
+                        "discoveries, source; - reads stdin")
     verb(run_verbs, "view", "Show the run header, counts, and authority.",
          f"  {TOOL} --store run.jsonl run view -o json")
-    verb(run_verbs, "describe", "Render the full report from the store.",
-         f"  {TOOL} --store run.jsonl run describe")
+    p = verb(run_verbs, "describe", "Render the full report from the store.",
+             f"  {TOOL} --store run.jsonl run describe --save report.md")
+    p.add_argument("--save", metavar="PATH",
+                   help="save the complete readable report and also emit it; "
+                        "JSON output includes the same report text")
     p = verb(run_verbs, "reconcile",
              "Reconcile dead attempts and quarantined repositories against "
              "fresh observations before any new mutation.",
@@ -222,6 +239,12 @@ def build_parser() -> Parser:
     p.add_argument("--model", default="", help="worker model label")
     p.add_argument("--wake", action="append", default=[], metavar="CARD",
                    help="hold card whose resume trigger fired (repeatable)")
+    p.add_argument("--capacity", type=int, default=1, metavar="N",
+                   help="maximum occupied repository slots, including existing claims (default 1; 0 admits none)")
+    p.add_argument("--batch-size", type=int, default=1, metavar="N",
+                   help="maximum cards admitted per repository (default 1)")
+    p.add_argument("--reserve-secs", type=float, default=30, metavar="SECONDS",
+                   help="validation time that must remain at admission (default 30; nonnegative)")
     p = verb(attempt_verbs, "collect",
              "Apply one worker's outcome records; the whole batch is "
              "validated before any record changes.",
@@ -245,6 +268,12 @@ def build_parser() -> Parser:
     p = verb(card_verbs, "view", "Show one card.",
              f"  {TOOL} --store run.jsonl card view PR-003")
     p.add_argument("card_id", metavar="CARD")
+    p = verb(card_verbs, "refresh",
+             "Append read-only PR facts without changing outcomes, evaluated heads, or authority.",
+             f"  {TOOL} --store run.jsonl card refresh PR-003 --file observation.json")
+    p.add_argument("card_id", metavar="CARD")
+    p.add_argument("--file", required=True, metavar="PATH",
+                   help="full pr observe JSON with identity, observed_at and head_sha; - reads stdin")
 
     _, pr_verbs = noun("pr", "one pull request on GitHub, read-only")
     p = verb(pr_verbs, "observe",
@@ -271,6 +300,10 @@ def build_parser() -> Parser:
                         "as a receipt bound to this head and file set")
     p.add_argument("--classifier", default="operator",
                    help="who makes the attestation (default operator)")
+    p.add_argument("--receipt", metavar="PATH",
+                   help="complete classifier receipt with dependency and "
+                        "check evidence, bound to this head and file set; "
+                        "- reads stdin")
     p.add_argument("--mode", choices=tuple(proto.MODES),
                    help="authority mode when no store is given "
                         "(default inspect)")
@@ -284,6 +317,26 @@ def build_parser() -> Parser:
     verb(approval_verbs, "list", "Render the approval set: every NEEDS_OWNER "
                                  "card, most consequential first.",
          f"  {TOOL} --store run.jsonl approval list")
+
+    _, incident_verbs = noun("incident", "durable blockers and follow-up work")
+    verb(incident_verbs, "list", "List recorded incidents and follow-ups.",
+         f"  {TOOL} --store run.jsonl incident list -o json")
+    p = verb(incident_verbs, "record",
+             "Record a follow-up locally, including after a PR merged. "
+             "Does not file an external issue.",
+             f"  {TOOL} --store run.jsonl incident record --file followup.json "
+             "--card PR-003")
+    p.add_argument("--file", required=True, metavar="PATH",
+                   help="follow-up fields as JSON; - reads stdin")
+    p.add_argument("--card", action="append", default=[], metavar="CARD",
+                   help="affected card id (repeatable, same repository)")
+    p = verb(incident_verbs, "update",
+             "Update an incident's lifecycle and evidence locally.",
+             f"  {TOOL} --store run.jsonl incident update ISS-001 "
+             "--file resolution.json")
+    p.add_argument("issue_id", metavar="INCIDENT")
+    p.add_argument("--file", required=True, metavar="PATH",
+                   help="changed incident fields as JSON; - reads stdin")
     return root
 
 
@@ -368,27 +421,7 @@ def _read_jsonl(path: str) -> list:
 def normalize_discoveries(items) -> list:
     """Accept the coordinator's discovery shape or `gh search prs --json
     number,title,url,repository` output."""
-    if not isinstance(items, list):
-        raise CliError("discoveries must be a JSON list", "invalid_input")
-    out = []
-    for item in items:
-        if "repository" in item and "org" not in item:
-            full = (item["repository"] or {}).get("nameWithOwner", "")
-            owner, _, name = full.partition("/")
-            if not owner or not name:
-                raise CliError(f"discovery {item!r}: repository."
-                               f"nameWithOwner must be owner/name",
-                               "invalid_input")
-            item = {"org": owner, "repo": name, "number": item.get("number"),
-                    "url": item.get("url", ""), "title": item.get("title", ""),
-                    "owner": owner, "head_sha": item.get("head_sha", ""),
-                    "base_ref": item.get("base_ref", "")}
-        for key in ("org", "repo", "number"):
-            if not item.get(key):
-                raise CliError(f"discovery {item!r} is missing {key!r}",
-                               "invalid_input")
-        out.append(item)
-    return out
+    return discovery_evidence.normalize(items)
 
 
 def _authority(store: Store, repo_id: str | None = None) -> dict:
@@ -463,19 +496,26 @@ def cmd_run_create(args, ctx: Context) -> None:
     flags = {"config": ctx.config_path, "mode": args.mode,
              "no_auto_fix": args.no_auto_fix,
              "pause_on_conflict": args.pause_on_conflict,
-             "org": sorted({d["org"] for d in discoveries})}
-    run_config = cfg.load_config(ctx.config_path, flags, dict(os.environ))
-    authority = run_config.to_authority(
-        HELPER_PATH, repositories=[f"{d['org']}/{d['repo']}" for d in discoveries])
+             "org": args.org, "repo": args.repo}
+    try:
+        run_config = cfg.load_config(ctx.config_path, flags, dict(os.environ))
+    except cfg.ConfigError as exc:
+        if exc.code != "no_scope" or not discoveries:
+            raise
+        # Legacy list-only invocations authorize exactly their listed repos.
+        # An owner inferred from a search result is not a broad owner grant.
+        flags["repo"] = sorted({f"{d['org']}/{d['repo']}" for d in discoveries})
+        run_config = cfg.load_config(ctx.config_path, flags, dict(os.environ))
+    authority = run_config.to_authority(HELPER_PATH, repositories=[])
+    authority["discovery_scopes"] = discovery_evidence.frozen_scopes(run_config)
     store = Store(ctx.store_path, session=ctx.session)
     with store.transaction():
         header = coord.create_run(
             store, args.run_id, mode=run_config.mode,
             authorization=args.authorization or f"{TOOL} run create",
             discoveries=discoveries, scope_fixed=not args.evolving,
-            cutoff=args.cutoff or utc_now())
-        header.authority = authority
-        store.set_header(header)
+            cutoff=args.cutoff or utc_now(), exclusions=args.exclude,
+            authority=authority)
         if run_config.run_budget_secs:
             coord.start_run_clock(store, run_config.run_budget_secs)
     label = report.authority_label(header)
@@ -508,14 +548,69 @@ def cmd_run_view(args, ctx: Context) -> None:
     ctx.emit(header, "\n".join(lines))
 
 
+def cmd_run_discover(args, ctx: Context) -> None:
+    result = coord.discover_run(ctx.store(), _read_json(args.file))
+    snapshot = result["snapshot"]
+    ctx.emit(result, f"inventory {snapshot['observed_at']}: "
+             f"{'complete' if snapshot['complete'] else 'incomplete'}; "
+             f"{len(result['new_card_ids'])} new card(s); "
+             f"{len(snapshot['unselected_card_ids'])} unselected discovery(s)")
+
+
+def cmd_card_refresh(args, ctx: Context) -> None:
+    observation = coord.refresh_card(ctx.store(), args.card_id, _read_json(args.file))
+    ctx.emit(observation, f"{args.card_id}: read-only observation saved for "
+             f"{observation['observed_head']} at {observation['observed_at']}")
+
+
 def cmd_run_describe(args, ctx: Context) -> None:
     store = ctx.store()
-    text = report.render_report(store)
+    snapshot = report.report_snapshot(store)
+    text = report.render_report(store, snapshot=snapshot)
+    if args.save:
+        _save_report(args.save, text, ctx.store_path)
     ctx.emit({"header": store.header.to_dict(),
               "cards": [c.to_dict() for c in store.cards.values()],
               "attempts": [a.to_dict() for a in store.diary.values()],
               "issues": [i.to_dict() for i in store.issues.values()],
+              "snapshot": snapshot,
               "report": text}, text)
+
+
+def _save_report(path: str, text: str, store_path: str) -> None:
+    """Publish one complete snapshot without risking the durable journal."""
+    if path == "-":
+        raise CliError("--save needs a file path; the report already goes to "
+                       "stdout", "invalid_input")
+    target = Path(path)
+    journal = Path(store_path)
+    try:
+        same_file = (target.resolve() == journal.resolve()
+                     or (target.exists() and journal.exists()
+                         and os.path.samefile(target, journal)))
+        if same_file:
+            raise CliError("report path must differ from the run journal",
+                           "invalid_input")
+        if target.is_symlink():
+            raise CliError("report path must not be a symbolic link",
+                           "invalid_input")
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                    mode="w", encoding="utf-8", dir=target.parent,
+                    prefix=f".{target.name}.", delete=False) as handle:
+                temporary = handle.name
+                handle.write(text)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, target)
+            temporary = None
+        finally:
+            if temporary is not None:
+                os.unlink(temporary)
+    except OSError as exc:
+        raise CliError(f"cannot save report to {path!r}: {exc}",
+                       "report_write_failed") from exc
 
 
 def cmd_run_reconcile(args, ctx: Context) -> None:
@@ -537,7 +632,7 @@ def cmd_run_finish(args, ctx: Context) -> None:
     continuation = patience.continuation(args.continuation, args.ref,
                                          args.verified_at)
     ending = coord.finish_run(store, continuation,
-                              discovery_complete=not args.discovery_incomplete)
+                              discovery_complete=False if args.discovery_incomplete else None)
     ctx.emit({"stop_reason": ending, "continuation": continuation},
              f"{store.header.run_id} ended {ending}; continuation "
              f"{continuation['kind']}"
@@ -547,12 +642,14 @@ def cmd_run_finish(args, ctx: Context) -> None:
 def cmd_attempt_create(args, ctx: Context) -> None:
     store = ctx.store()
     authority = _authority(store)
-    expired = coord.expire(store)
+    with store.transaction():
+        expired = coord.expire(store)
+        taskings = coord.schedule(store, model=args.model,
+                                  pr_budget_secs=authority.get("pr_budget_secs"),
+                                  wake=tuple(args.wake), capacity=args.capacity,
+                                  batch_size=args.batch_size, reserve_secs=args.reserve_secs)
     if expired:
         ctx.note(f"expired before dispatch: {', '.join(expired)}")
-    taskings = coord.schedule(store, model=args.model,
-                              pr_budget_secs=authority.get("pr_budget_secs"),
-                              wake=tuple(args.wake))
     ctx.emit(taskings, "\n".join(
         f"{t['attempt_id']} {t['repo_id']}: {', '.join(t['card_ids'])}"
         for t in taskings) or "nothing to schedule")
@@ -660,29 +757,65 @@ def _approved_for_head(authority: dict, card, head_sha: str) -> bool:
 def cmd_pr_evaluate(args, ctx: Context) -> None:
     store = _store_or_none(ctx)
     owner, repo, number, card = _resolve_target(ctx, args.target, store)
+    if args.file == "-" and args.receipt == "-":
+        raise CliError("observation and receipt cannot both read stdin",
+                       "invalid_input")
     payload = _read_json(args.file)
+    if not isinstance(payload, dict):
+        raise CliError("observation must be a JSON object", "invalid_input")
     try:
         observation = observe.observation_from_dict(payload)
-    except (KeyError, TypeError) as exc:
+    except (KeyError, TypeError, AttributeError) as exc:
         raise CliError(f"observation is missing {exc}; use `pr observe -o "
                        f"json`", "invalid_input") from exc
+    if any(not isinstance(getattr(observation, name), dict)
+           for name in observe.SECTION_NAMES):
+        raise CliError("observation sections must be JSON objects",
+                       "invalid_input")
+    pull = observation.pull.get("data") or {}
+    base = (pull.get("base") or {}) if isinstance(pull, dict) else {}
+    base_repo = (base.get("repo") or {}) if isinstance(base, dict) else {}
+    identity = base_repo.get("full_name", "") if isinstance(base_repo, dict) else ""
+    if (not isinstance(pull, dict) or not isinstance(identity, str)
+            or identity.casefold() != f"{owner}/{repo}".casefold()
+            or type(pull.get("number")) is not int or pull["number"] != number):
+        raise CliError("observation PR identity is missing or differs from the "
+                       "requested target; refresh `pr observe` for that PR",
+                       "invalid_input")
     files = observation.files.get("data") or []
-    receipt = ev.ClassifierReceipt.for_files(
-        observation.head_sha, files, dependency_only=args.dependency_only,
-        classifier=args.classifier, at=utc_now())
+    if args.receipt:
+        receipt_payload = _read_json(args.receipt)
+        if not isinstance(receipt_payload, dict):
+            raise CliError("receipt must be a JSON object", "invalid_input")
+        try:
+            receipt = ev.ClassifierReceipt(**receipt_payload)
+        except (TypeError, ValueError) as exc:
+            raise CliError(f"invalid classifier receipt: {exc}",
+                           "invalid_input") from exc
+    else:
+        # Legacy flags cannot fabricate consumer or check-applicability
+        # evidence. The evaluator reports the missing receipt as incomplete.
+        receipt = ev.ClassifierReceipt.for_files(
+            observation.head_sha, files, dependency_only=args.dependency_only,
+            classifier=args.classifier, at=utc_now())
     notes = []
     if store is not None and card is not None:
         authority = _authority(store, card.repo_id)
+        held, hold_source = proto.effective_owner_hold(authority, card)
         auth = ev.Authority(mode=authority["mode"],
                             repairs=frozenset(authority["repairs"]),
-                            owner_hold=card.id in authority.get("holds", []),
+                            owner_hold=held,
+                            owner_hold_source=hold_source,
                             approved=_approved_for_head(
                                 authority, card, observation.head_sha),
                             deadline_epoch=card.deadline_epoch or None)
         lease = store.leases.get(card.repo_id)
+        attempt = store.diary.get(args.attempt)
         tracking = ev.Tracking(
-            lease_held=bool(args.attempt) and lease.state == "held"
-            and lease.holder == args.attempt,
+            lease_held=bool(attempt) and not attempt.result
+            and lease.state == "held" and lease.holder == args.attempt
+            and card.id in lease.pr_ids and card.id in attempt.assigned
+            and card.id in (attempt.outstanding or attempt.assigned),
             repo_quarantined=lease.state == "quarantined")
         reviewers = set(authority.get("reviewer_contexts", []))
         card_id = card.id
@@ -726,9 +859,43 @@ def cmd_approval_list(args, ctx: Context) -> None:
     ctx.emit(needy, report.render_approval(store))
 
 
+def cmd_incident_list(args, ctx: Context) -> None:
+    store = ctx.store()
+    records = [issue.to_dict() for issue in sorted(
+        store.issues.values(), key=lambda item: item.id)]
+    lines = [f"{item['id']} {item['repo_id']}: "
+             f"{item.get('status', 'open')} — {item['claim']}\n"
+             f"  Next: {item['action'] or 'recommendation not recorded'}; "
+             f"owner: {item['action_owner'] or 'unassigned'}"
+             for item in records]
+    ctx.emit(records, "\n".join(lines) or "No incidents or follow-ups recorded.")
+
+
+def cmd_incident_record(args, ctx: Context) -> None:
+    store = ctx.store()
+    fields = _read_json(args.file)
+    if not isinstance(fields, dict):
+        raise CliError("follow-up must be a JSON object", "invalid_input")
+    issue = coord.record_followup(store, fields, card_ids=args.card)
+    ctx.emit(issue.to_dict(), f"{issue.id}: recorded locally — {issue.claim}")
+
+
+def cmd_incident_update(args, ctx: Context) -> None:
+    store = ctx.store()
+    if args.issue_id not in store.issues:
+        raise CliError(f"incident {args.issue_id!r} not found; run `incident list`",
+                       "not_found", EXIT_NOT_FOUND)
+    changes = _read_json(args.file)
+    if not isinstance(changes, dict):
+        raise CliError("incident changes must be a JSON object", "invalid_input")
+    issue = coord.update_incident(store, args.issue_id, changes)
+    ctx.emit(issue.to_dict(), f"{issue.id}: {issue.status} — {issue.claim}")
+
+
 COMMANDS = {
     ("run", "create"): cmd_run_create,
     ("run", "view"): cmd_run_view,
+    ("run", "discover"): cmd_run_discover,
     ("run", "describe"): cmd_run_describe,
     ("run", "reconcile"): cmd_run_reconcile,
     ("run", "finish"): cmd_run_finish,
@@ -737,9 +904,13 @@ COMMANDS = {
     ("brief", "view"): cmd_brief_view,
     ("card", "list"): cmd_card_list,
     ("card", "view"): cmd_card_view,
+    ("card", "refresh"): cmd_card_refresh,
     ("pr", "observe"): cmd_pr_observe,
     ("pr", "evaluate"): cmd_pr_evaluate,
     ("approval", "list"): cmd_approval_list,
+    ("incident", "list"): cmd_incident_list,
+    ("incident", "record"): cmd_incident_record,
+    ("incident", "update"): cmd_incident_update,
 }
 
 

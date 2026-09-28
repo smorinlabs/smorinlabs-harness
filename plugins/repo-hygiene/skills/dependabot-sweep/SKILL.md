@@ -7,7 +7,7 @@ allowed-tools: Bash, Read, Edit, Write, AskUserQuestion, Task
 
 # Dependabot sweep
 
-Clear the Dependabot backlog across every configured repo with one discovery pass and one subagent per repo that has open PRs.
+Clear the configured Dependabot backlog through bounded repository workers, with complete results saved to a file and presented inline.
 
 ## Arguments (from the user's request)
 
@@ -15,8 +15,8 @@ Clear the Dependabot backlog across every configured repo with one discovery pas
 - `--no-auto-fix` — discover and triage, but don't fix or merge (overrides config `auto_fix`).
 - `--pause-on-conflict` — stop and ask on any merge conflict instead of recording and continuing (overrides config).
 - `--config <path>` — read this config instead of `~/.config/dependabot-sweep/config.toml`.
-- `--org <name>` — sweep only this GitHub org or user (overrides config scope).
-- `--repo <owner/name>` — sweep only this repo; repeatable (overrides config scope).
+- `--org <name>` — select this GitHub org or user; repeatable. Matching configured repository and visibility restrictions still apply.
+- `--repo <owner/name>` — select this explicit repository; repeatable. Matching owner visibility and behavior restrictions still apply.
 
 Invocation flags beat config; config beats defaults.
 
@@ -37,23 +37,41 @@ visibility = "all"  # all | public | private, or use repos = [...] instead
 
 Non-GitHub hosts are out of scope in v1 — say so and stop rather than guessing at another forge's CLI.
 
-## 2. Discover (one cheap pass per org)
+## 2. Discover (one cheap initial pass per org)
 
-Cost discipline is the point of this skill: discovery costs ~1 API call per org, not ~1 per repo.
+Start with owner-level searches and a repository inventory; paginate when
+needed. Do not send a worker to a repository with no matching PRs.
 
 - Org/user scope: one open-only app search per org (raise `--limit` toward 1000 for large backlogs):
-  `gh search prs --app dependabot --state open --owner <org> --limit 100 --json number,title,url,repository`
-  `--state open` is mandatory — without it, closed PRs pollute the results. Each page of results costs exactly 1 search-API call and 0 core calls.
+  `gh search prs --app dependabot --state open --owner <org> --limit 100 --json number,title,url,repository,createdAt`
+  `--state open` is mandatory — without it, closed PRs pollute the results.
 - Explicit repo list (`repos = [...]` or `--repo`): one call per listed repo only —
-  `gh pr list --app dependabot -R <owner/name> --json number,title,url`
-- `visibility = "public"|"private"`: run the org search, then join `gh repo list <org> --limit 1000` for visibility and drop the rest. Still a handful of calls for the whole org.
+  `gh pr list --app dependabot --state open -R <owner/name> --limit 100 --json number,title,url,createdAt`
+  Add the known `org` and `repo` to each row because this response omits them.
+- Collect `gh repo list <org> --limit 1000 --json nameWithOwner,visibility`
+  and join by repository identity. Preserve zero-PR repositories in the
+  inventory. Each discovery row must carry the observed `visibility`, normalized
+  to lowercase, either at top level or in `repository.visibility`. Apply the
+  configured public/private filter before admission; missing visibility is an
+  evidence gap, not permission to widen scope.
 - Never silently truncate: if any result count hits its `--limit` (search page, per-repo list, repo list), page further or raise the limit; if it still caps out, report discovery as INCOMPLETE with the capped scope instead of claiming a full sweep.
 
-Group the open PRs by repo. Repos with no PRs get no subagent.
+Group the open PRs by repo. Repos with no PRs get no subagent. Keep the
+complete inventory in one run store. Record each PR's creation time separately
+from the time this sweep discovered it. After a merge batch, repeat the
+bounded discovery pass while time remains; repeat it once more before the
+final report. Apply the original scope and visibility filters on every pass.
+An evolving run may admit authorized arrivals within its original deadline;
+a fixed run reports arrivals separately. A newly encountered repository never
+inherits mutation authority from a search result alone.
 
 ## 3. Gate the sweep
 
-Report the discovery (N open PRs across M repos, grouped by repo with titles). Under `--check`, stop here — no dispatch, no merges. Otherwise confirm via AskUserQuestion — sweep all (Recommended), or check-only instead, with notes to narrow the repo set. One question; notes modify the set.
+Report the discovery (N open PRs across M repos, grouped by repo with titles).
+Under `--check`, save that complete discovery report and print it inline, then
+stop without dispatch. If the user's existing instructions authorize the
+current scope and mode, proceed under them. Otherwise ask one scope question:
+sweep all (Recommended), or check-only, honoring notes that narrow the scope.
 
 ## 4. Dispatch (bounded dispatcher, one executor per repo)
 
@@ -71,11 +89,18 @@ dispatcher never issues a second merge. The orchestrator commands are
 [references/cli-interface.md](references/cli-interface.md)); the rules
 below are what those commands enforce.
 
-- **Run wiring**: `run create --run-id <id> --file <discoveries>` (the
-  `gh search` JSON from step 2 is accepted as is) stores the header, the
+- **Run wiring**: `run create --run-id <id> --file <discoveries>` accepts the
+  identity-complete, visibility-enriched rows from step 2 and stores the header, the
   effective authority resolved per repository from config, and one card per PR;
-  later briefs and evaluations use that saved authority. `attempt create`
-  expires dead work and issues one tasking per free repository;
+  carry explicit invocation scope through `--org`, `--repo`, and `--exclude`.
+  Later briefs and evaluations use that saved authority. Record the complete
+  initial inventory using `run discover --file <inventory>` with the frozen
+  coverage selectors and all observed repositories, including those with no PRs.
+  Use the same command after merge batches and before final reporting. Its
+  JSON contract is in [references/cli-interface.md](references/cli-interface.md).
+  `attempt create`
+  expires dead work and admits bounded repository batches within available
+  worker capacity and the remaining run budget;
   `brief view <attempt>` renders that worker's brief; hand it to a Task
   subagent; `attempt collect <attempt> --file <outcomes.jsonl>` applies
   the returned outcome records; on any restart, `run reconcile --file
@@ -88,7 +113,7 @@ below are what those commands enforce.
   command takes `--store <run.jsonl>` and `-o json`. `pr observe` and
   `pr evaluate` inspect one PR read-only, for diagnosis or a dry run.
 
-- **Tasking**: one Task subagent per repo with schedulable cards, never one
+- **Tasking**: at most one active Task subagent per repo with schedulable cards, never one
   per PR (same-repo PRs share lockfiles and CI) and never one per quiet
   repo. The brief is rendered from
   [templates/agent-brief.md](templates/agent-brief.md) by
@@ -108,6 +133,17 @@ below are what those commands enforce.
   session's held or quarantined attempt until explicitly confirmed stopped,
   regardless of heartbeat age. Missing session identities remain protected
   too; use a stable `--session` value across commands for the same coordinator.
+  Set capacity to the worker slots actually available. Use small repository
+  batches; unassigned cards remain in the same inventory. A card receives its
+  execution deadline only when admitted, and a successor keeps that deadline.
+  Do not begin a repair unless the remaining window covers the repair and its
+  required post-push validation. Call `plan_repair(expected_secs, now,
+  deadline_epoch, reserve_secs)` in [sweep_patience.py](scripts/sweep_patience.py) first, with a
+  reserve sufficient for that validation. Proceed only on `decision: repair`
+  and stop preparation by its `repair_until` boundary. The default 30-second
+  reserve is a floor for admission, not an estimate of every CI run.
+  Record a budget continuation instead of
+  extending a deadline or claiming that untested preparation is complete.
 - **Five checks** (`scripts/sweep_evaluator.py`) at one pinned head decide
   every PR. *Is it what we think?* A full refresh (pull, files, reviews,
   threads, check-runs, check suites, statuses, queue, effective policy)
@@ -123,6 +159,15 @@ below are what those commands enforce.
   timestamp; queue acceptance and auto-merge arming are pending. Missing
   or truncated evidence is `K13` and never merges. A reviewer bot's own
   rate limit is reviewer-unavailable (`K08`), never CI red.
+  Classification must also identify the changed files' roles and their actual
+  consumers, including secondary installers and generated exports. Record the
+  requested, resolved and tested versions for each affected installation path.
+  A frozen-lock test does not validate another manifest's requested version.
+  Establish fixture use from consumers, not the directory name alone. Record
+  relevant check applicability with evidence: an unknown or missing applicable
+  analysis remains a hold; a documented exclusion is reported as such. A
+  classifier cannot waive a repository-required check. Use the receipt contract
+  in [references/dependency-evidence.md](references/dependency-evidence.md).
 - **Merge path**: use `sweep_protocol.helper_command` or the exact command
   in the rendered worker brief. It invokes
   `python3 scripts/sweep_merge.py --expected-head <head> --helper-path scripts/gh_merge.py -- <owner> <repo> <pr> merge <progress-log> --assert-trivial`,
@@ -164,8 +209,14 @@ below are what those commands enforce.
   authority. `pause_on_conflict` stops the repo at the first conflict.
 - **Returns and recovery**: workers return one outcome record per assigned
   PR (`merged` / `ready` / `hold` / `unknown` / `closed`, fields per the
-  brief); the coordinator refuses an incomplete batch before any record
-  changes. Evaluated READY records carry the full head; a changed head
+  brief), either incrementally or in one final batch. The coordinator validates
+  every submitted batch before changing records; missing required fields
+  refuse that batch. Partial returns retain outstanding cards and repository
+  ownership until the attempt is fully accounted for. Include follow-ups on any
+  outcome, including a merge. Preserve completed repair evidence and distinguish
+  current blockers from execution stops. An owner hold needs its actual source;
+  a technical migration or an expired observation window does not imply an
+  owner veto. Evaluated READY records carry the full head; a changed head
   revokes any approval that does not match it. After a crash or restart,
   replay restores only committed transactions. A torn final append is
   reported and preserved separately before a locked writer repairs the
@@ -193,21 +244,46 @@ Anything else dispatches per step 4.
 
 ## 6. Report
 
-`scripts/sweep_report.py` renders one report from the record store: a
-header with selected and delivered counts (direct plus via replacement),
-unresolved cards first by consequence and owner (each with reason code,
-evidence, next action, owner, and resume trigger), prepared cards, merges
-with commit and timestamp, shared incidents with every PR they block, late
-arrivals, worker reconciliation, and one explicit continuation state. The
+**Save the full readable report and print that same report inline.** A file
+link, counts-only summary or referral to a ledger does not replace the inline
+result. Run `run describe --save <report-path>` to save and emit the same
+snapshot, then include its complete human-readable output in the conversation.
+For a large sweep, use consecutive repository tables; retain every PR row and
+follow-up recommendation. Raw logs and machine journals may remain linked.
+
+The renderer in scripts/sweep_report.py accounts for selected PRs, prepared
+work, merges with proof, closures and replacements, unknown outcomes and late
+arrivals. Every PR has a title, URL and result. Every unresolved PR has the
+current condition, concrete next action, responsible party and evidence or
+event needed to resume. Show the execution stop separately from technical
+blockers and explicit owner decisions. Group a shared decision once while
+keeping every affected PR visible; PR closure and alert/settings changes are
+separate scopes. Never turn grouped presentation into blanket merge approval.
+
+Include follow-up work discovered by the sweep even when its associated PR
+merged. Give the affected repository, observed problem, cause or uncertainty,
+status, recommendation, responsible party and next step. Distinguish local
+records from issues actually filed. Say when no follow-ups were identified.
+Use the existing incident records for this lifecycle rather than maintaining
+an unrelated manual list. See [references/reporting.md](references/reporting.md).
+
+Use non-overlapping outcome counts. Give an observed open-PR total only when
+the discovery evidence is complete for the stated scope, and label its time.
+Explain unknown or stale counts. Closing an original is not update delivery
+unless a linked replacement actually merged. The
 ending is COMPLETE (every selected PR terminal), WITH EXCEPTIONS (every
 PR processed, the rest held with a reason and owner), or INCOMPLETE (a PR
 never processed, or discovery incomplete). A watcher or scheduled
-invocation counts as continuation only with a concrete reference and the
-time it was verified running; otherwise the report says none is
-running. The approval presenter lists selected `NEEDS_OWNER` cards and their
+invocation counts as a verified continuation only with a concrete reference
+and the time it was verified running. Report missing liveness evidence as
+unverified; say none is running only when that absence is established.
+The approval presenter lists selected `NEEDS_OWNER` cards and their
 linked replacements most-consequential-first with a fixed decision block,
 including the head to approve. Unselected late arrivals remain separate.
-Add the discovery cost in API calls. Conflicts under `pause_on_conflict`
+Recommend an execution order for the remaining work. Name only genuine
+uncovered owner decisions; reuse existing authority. Finish with the verified
+continuation, unverified work, or established absence of running work, and link the saved
+report and supporting evidence. Add the discovery cost in API calls. Conflicts under `pause_on_conflict`
 surface as AskUserQuestion follow-ups, one repo at a time.
 
 ## See also

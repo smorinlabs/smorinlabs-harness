@@ -15,6 +15,7 @@ Stdlib only. POSIX process groups; the sweep's CI runs on Linux.
 from __future__ import annotations
 
 import os
+import math
 import signal
 import subprocess
 import time
@@ -119,6 +120,28 @@ def plan_observation(expected_secs: float, now: float, window_secs: float,
     return {"decision": "observe", "until": finish,
             "reason": f"expected {int(expected_secs)}s fits in "
                       f"{int(limit - now)}s"}
+
+
+def plan_repair(expected_secs: float, now: float, deadline_epoch: float,
+                reserve_secs: float = 30) -> dict:
+    """Reserve post-push validation before beginning a repair.
+
+    This is an admission decision, not a new deadline. Workers still use
+    the inherited absolute deadline with run_bounded for every operation.
+    """
+    for name, value in (("expected_secs", expected_secs), ("now", now),
+                        ("deadline_epoch", deadline_epoch), ("reserve_secs", reserve_secs)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) \
+                or not math.isfinite(value) or value < 0:
+            raise ValueError(f"{name} must be a finite nonnegative number")
+    if not deadline_epoch:
+        return {"decision": "defer", "reason": "repair requires an inherited finite deadline"}
+    repair_until = deadline_epoch - reserve_secs
+    if now >= deadline_epoch or now + expected_secs >= repair_until:
+        return {"decision": "defer", "reason": "repair and validation reserve do not fit before deadline",
+                "deadline_epoch": deadline_epoch, "reserve_secs": reserve_secs}
+    return {"decision": "repair", "repair_until": repair_until,
+            "deadline_epoch": deadline_epoch, "reserve_secs": reserve_secs}
 
 
 CONTINUATION_KINDS = ("watcher", "scheduled", "none")
